@@ -161,6 +161,7 @@ plt.hist(np.asarray(efficiency_T),bins=x,label="Efficiency of triple coincidence
 plt.xlabel("Efficiency", fontsize = 14)
 plt.ylabel(r"Number of counts", fontsize = 14)
 plt.legend(fontsize = 12)
+plt.savefig('Effdistribution.png')
 
 x = np.arange(np.mean(tdcr),1.001,0.001)
 plt.figure("TDCR distribution")
@@ -170,6 +171,4 @@ plt.plot(x,st.norm.pdf(x, TDCR_measure, u_TDCR_measure),label="measured TDCR")[0
 plt.xlabel("Efficiency", fontsize = 14)
 plt.ylabel(r"Number of counts", fontsize = 14)
 plt.legend(fontsize = 12)
-
-
-
+plt.savefig('TDCRdistribution.png')
