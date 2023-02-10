@@ -2,11 +2,20 @@
 import radioactivedecay as rd
 import matplotlib.pyplot as plt
 
-Ac225_t0 = rd.Inventory({'Ac-225': 1}, 'Bq')
-Ac225_t1 = Ac225_t0.decay(2, 'd')
-Ac225_t1.activities('Bq')
-print(Ac225_t1)
+rad = "Ra-223" # Radionuclide
+A0 = 1         # Inital activity
+unit = 'Bq'    # unit for the activity
+decaytime = 2  # decay time
+unitt = 'd'    # unit for the time 
 
-nuc = rd.Nuclide('Ac-225')
+rad_t0 = rd.Inventory({rad: A0}, unit)
+rad_t1 = rad_t0.decay(decaytime, unitt)
+rad_t1.activities(unit)
+print(rad_t1)
+
+decayGraph = rad_t0.plot(decaytime, unitt, yunits=unit)
+plt.savefig('decayGraph.png')
+
+nuc = rd.Nuclide(rad)
 decayChain = nuc.plot()
 plt.savefig('decayChain.png')
