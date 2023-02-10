@@ -1,5 +1,6 @@
 import radioactivedecay as rd
 
-Mo99_t0 = rd.Inventory({'Mo-99': 2.0}, 'Bq')
-Mo99_t1 = Mo99_t0.decay(20.0, 'h')
-Mo99_t1.activities('Bq')
+Ac225_t0 = rd.Inventory({'Ac-225': 1}, 'Bq')
+Ac225_t1 = Ac225_t0.decay(2, 'd')
+Ac225_t1.activities('Bq')
+print(Ac225_t1)
