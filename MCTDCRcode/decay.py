@@ -1,3 +1,11 @@
+"""
+This program aims to calculate the relative composition of radionuclides
+decaying in chain using the Bateman model implemented in the radioactivedecay module form (MIT)
+
+Romain Coulon, Jialin Hu
+Bureau International des Poids et Mesures
+"""
+
 # pip install radioactivedecay
 import radioactivedecay as rd
 import matplotlib.pyplot as plt
