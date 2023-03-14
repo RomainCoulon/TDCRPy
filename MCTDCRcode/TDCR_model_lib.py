@@ -109,7 +109,7 @@ def readPenNuc(rad):
       """
       LOOP IN NTRANS (Transitions depopulating this level)
       """
-      if d[0] == "GA" or d[0] == "EL1" or d[0] == "EL2" or d[0] == "EL3" or d[0] == "EM" or d[0] == "EN":
+      if d[0] == "GA" or d[0] == "EK" or d[0] == "EL1" or d[0] == "EL2" or d[0] == "EL3" or d[0] == "EM" or d[0] == "EN":
           if d[1] == '  ' or d[1] == '   ': d[1] = 0
           if d[2] == '  ': d[2] = 0
           if d[4] == '  ': d[4] = 0
@@ -120,6 +120,7 @@ def readPenNuc(rad):
     
     transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
     return particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value
+
 
 
 def stoppingpowerA(e,*,rho=0.98,I=60): # To debbug not valid !!!!!!!!!!!
@@ -139,6 +140,9 @@ def stoppingpowerA(e,*,rho=0.98,I=60): # To debbug not valid !!!!!!!!!!!
     dEdx=(4*np.pi/(mec2*echarge)) * (n*z**2/beta**2) * (echarge**4/(4*np.pi*epsilon0)**2) * (np.log(2*mec2*beta**2/(I*(1-beta**2)))-beta**2)
 
     return dEdx
+
+#print("alpha",stoppingpowerA(5e6))
+
 
 file_TanXia=open('TandataUG.txt', "r"); data_TanXia=file_TanXia.read(); file_TanXia.close()
 data_TanXia=data_TanXia.split("\n"); data_TanXia_f = np.empty(len(data_TanXia))

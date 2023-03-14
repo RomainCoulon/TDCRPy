@@ -19,8 +19,8 @@ import scipy.stats as st
 N=100 # number of simulated decay (MC trials)
 
 
-Rad=["H-3", "Co-60"]       # list of radionuclides
-pmf_1=[0.10, 0.91]         # relative abondance (pmf)
+Rad=["Am-241"]       # list of radionuclides
+pmf_1=[1]         # relative abondance (pmf)
 if sum(pmf_1 != 1): print("warning p not equal to 1")
 
 kB = 0.01                  # Birks constant in cm/MeV
