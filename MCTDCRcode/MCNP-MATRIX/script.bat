@@ -1,0 +1,1 @@
+mcnp6 i=input/input_50keV.mcn r=run/run_50keV.r o=output/output_50keV.o
