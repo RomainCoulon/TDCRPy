@@ -123,25 +123,23 @@ def readPenNuc(rad):
 
 
 
-def stoppingpowerA(e,*,rho=0.98,I=60): # To debbug not valid !!!!!!!!!!!
-    z = 2                           # charge of the incident particle
-    N_A = 6.02214076e23             # avogadro number /mol-1
-    Z = (6+1)/2                     # atomic number
-    A = (12.0107+1.00794)/2         # atomic mass
-    n = N_A*Z*rho/(A*1e-3)          # electron density / m3
-    mec2=511000                     # mass energy of an electron /eV
-    mac2=3727379406.6               # mass energy of an alpha particle /eV
-    c = 299792458                   # speed of light / m s-1
-    echarge = 1.602176364e-19       # electron charge / C
-    beta=np.sqrt((2*e)/mac2)
-#    beta=(np.sqrt(2*e*echarge/9.109e-31))/c            # relative velocity
-    epsilon0 = 8.8541878128e-12     # vacuum permittivity / (F m-1)
-   
-    dEdx=(4*np.pi/(mec2*echarge)) * (n*z**2/beta**2) * (echarge**4/(4*np.pi*epsilon0)**2) * (np.log(2*mec2*beta**2/(I*(1-beta**2)))-beta**2)
+def stoppingpowerA(e,doc):          # doc-data of stopping power of alpha(.txt)(unit:MeV) from 1keV to 8MeV 
+    f = open(doc)                         
+    data = f.readlines()
+    energy = []      #energie du particule alpha/MeV
+    dEdx = []         #stopping power (MeV.cm^2.g)
+
+    for i in range(np.size(data)):
+        data[i] = data[i].split()
+        for j in range(2):
+            data[i][j] = float(data[i][j])
+        energy.append(data[i][0])
+        dEdx.append(data[i][1])
+    dEdx = np.interp(x,energy,dEdx)
 
     return dEdx
 
-#print("alpha",stoppingpowerA(5e6))
+print("alpha",stoppingpowerA(1e-3,'alpha_toulene.txt'))
 
 
 file_TanXia=open('TandataUG.txt', "r"); data_TanXia=file_TanXia.read(); file_TanXia.close()
