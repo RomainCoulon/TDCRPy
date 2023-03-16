@@ -20,8 +20,9 @@ N=1 # number of simulated decay (MC trials)
 
 
 Rad=["Am-241"]       # list of radionuclides
-pmf_1=[1]         # relative abondance (pmf)
-if sum(pmf_1 != 1): print("warning p not equal to 1")
+pmf_1=[1.0]         # relative abondance (pmf)
+#if sum(pmf_1 != 1): print("warning p not equal to 1")
+
 
 kB = 0.01                  # Birks constant in cm/MeV
 L = 0.0056                  # the free parameter /MeV-1
@@ -139,7 +140,7 @@ for i in range(N): # Main Loop
         delta_e = e_discrete[2]-e_discrete[1]
         if p == "alpha":
             energy_vec[i] = 0
-            energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(j))
+            energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(i,'alpha_toulene.txt'))
             #!!!!!!! Develop the function stoppingpowerA() to calculate the stopping power for alpha particles 
         if p == "electron":
             energy_vec[i] = 0
