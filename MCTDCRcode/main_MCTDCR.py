@@ -140,8 +140,8 @@ for i in range(N): # Main Loop
         delta_e = e_discrete[2]-e_discrete[1]
         if p == "alpha":
             energy_vec[i] = 0
-            energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(i,'alpha_toulene.txt'))
-            #!!!!!!! Develop the function stoppingpowerA() to calculate the stopping power for alpha particles 
+            for j in e_discrete:
+                energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(j,'alpha_toulene.txt'))
         if p == "electron":
             energy_vec[i] = 0
             for j in e_discrete:
