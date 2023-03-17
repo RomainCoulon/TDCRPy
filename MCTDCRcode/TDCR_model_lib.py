@@ -123,42 +123,21 @@ def readPenNuc(rad):
 
 
 
-<<<<<<< HEAD
-def stoppingpowerA(e,doc):          # doc-data of stopping power of alpha(.txt)(unit:MeV) from 1keV to 8MeV 
-    f = open(doc)                         
-    data = f.readlines()
-    energy = []      #energie du particule alpha/MeV
-    dEdx = []         #stopping power (MeV.cm^2.g)
-
-=======
 def stoppingpowerA(e,doc): # doc-data of ASTAR(.txt)(unit:MeV)
     f = open(doc)
     data = f.readlines()
     energy = []
     dEdx_data = []
->>>>>>> 29fcd9c7c582acfd7ae977f018492dbfa3fbd4ee
     for i in range(np.size(data)):
         data[i] = data[i].split()
         for j in range(2):
             data[i][j] = float(data[i][j])
-<<<<<<< HEAD
         energy.append(data[i][0])
         dEdx.append(data[i][1])
     dEdx = np.interp(x,energy,dEdx)
 
     return dEdx
 
-print("alpha",stoppingpowerA(1e-3,'alpha_toulene.txt'))
-=======
-        energy.append(data[i][j])
-        dEdx_data.append(data[i][j])
-
-    dEdx = np.interp(e,energy,dEdx_data)
-
-    return dEdx
-
-#print("alpha",stoppingpowerA(1.2,'alpha_toulene.txt'))
->>>>>>> 29fcd9c7c582acfd7ae977f018492dbfa3fbd4ee
 
 
 file_TanXia=open('TandataUG.txt', "r"); data_TanXia=file_TanXia.read(); file_TanXia.close()
