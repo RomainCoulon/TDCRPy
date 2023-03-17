@@ -133,9 +133,8 @@ def stoppingpowerA(e,doc): # doc-data of ASTAR(.txt)(unit:MeV)
         for j in range(2):
             data[i][j] = float(data[i][j])
         energy.append(data[i][0])
-        dEdx.append(data[i][1])
-    dEdx = np.interp(x,energy,dEdx)
-
+        dEdx_data.append(data[i][1])
+    dEdx = np.interp(x,energy,dEdx_data)
     return dEdx
 
 
