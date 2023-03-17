@@ -12,7 +12,7 @@ Bureau International des Poids et Mesures
 import urllib.request as rq
 import numpy as np
 from numpy.core.multiarray import where
-
+import zipfile as zf
 
 def sampling(p_x):
     """
@@ -227,3 +227,30 @@ def readBetaSpectrum(rad):
     f.close() #close the file
     return e, p, ne
 
+def readBetaShape(rad):
+    url = "http://www.lnhb.fr/nuclides/"+rad+".BetaShape.zip"
+    file = rq.urlopen(url)
+    z = zf.ZipFile(file)
+    z_content = z.namelist()
+    for index,p in enumerate(z_content):
+        if "trans0" in p: i_trans0 = index
+        if "trans1" in p: i_trans1 = index
+    with z.open(z_content[i_trans0]) as file_tran0:
+        data = file_trans.readlines()
+    for i in range(np.size(data)):
+        data[i] = str(data[i])
+        data[i] = data[i].split("b'")
+
+    del_term = data[1]
+    e = []
+    dNdx = []
+
+    for i in range(np.size(data)):
+        data[i] = data[i].split(del_term)
+    for ind, p in enumerate(data):
+        if p == ['E(keV)', 'dN/dE', 'calc.', 'unc.'] : break
+    for j in range(ind,np.size(data)):
+        e.append(data[j][0])
+        dNdx.append(data[j][1])
+    return e,dNdx
+    
