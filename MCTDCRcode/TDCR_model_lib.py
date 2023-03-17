@@ -125,7 +125,7 @@ def readPenNuc(rad):
 
 def stoppingpowerA(e,doc,rho): 
     # doc-data of ASTAR(.txt)(unit:MeV)
-    # rho: density of the absorber (g/cm3)
+    # rho: density of the absorber (g.cm-3)
     f = open(doc)
     data = f.readlines()
     energy = []
@@ -133,13 +133,13 @@ def stoppingpowerA(e,doc,rho):
     for i in range(np.size(data)):
         data[i] = data[i].split()
         for j in range(2):
-            data[i][j] = float(data[i][j])*1e3
+            data[i][j] = float(data[i][j])*1e3    #  unit from MeV to keV 
         energy.append(data[i][0])
         dEdx_data.append(data[i][1])
-    energy = np.array(energy)  #unit from MeV to keV
-    dEdx_data = np.array(dEdx_data) # unit:MeV.cm^2.g-1
-    dEdx = np.interp(e,energy,dEdx_data)
-    return dEdx*rho
+    energy = np.array(energy)  
+    dEdx_data = np.array(dEdx_data)        # unit:keV.cm^2.g-1
+    dEdx = np.interp(e,energy,dEdx_data)   
+    return dEdx*rho                        #unit keV.cm-1
 
 
 file_TanXia=open('TandataUG.txt', "r"); data_TanXia=file_TanXia.read(); file_TanXia.close()
