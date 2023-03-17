@@ -123,7 +123,9 @@ def readPenNuc(rad):
 
 
 
-def stoppingpowerA(e,doc): # doc-data of ASTAR(.txt)(unit:MeV)
+def stoppingpowerA(e,doc,rho): 
+    # doc-data of ASTAR(.txt)(unit:MeV)
+    # rho: density of the absorber (g/cm3)
     f = open(doc)
     data = f.readlines()
     energy = []
@@ -134,8 +136,10 @@ def stoppingpowerA(e,doc): # doc-data of ASTAR(.txt)(unit:MeV)
             data[i][j] = float(data[i][j])
         energy.append(data[i][0])
         dEdx_data.append(data[i][1])
+    energy = energy*1e3  #unit from MeV to keV
+    dEdx_data = dEdx_data*1e3 # unit:MeV.cm^2.g-1
     dEdx = np.interp(x,energy,dEdx_data)
-    return dEdx
+    return dEdx*rho
 
 
 
