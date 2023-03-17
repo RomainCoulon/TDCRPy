@@ -133,14 +133,13 @@ def stoppingpowerA(e,doc,rho):
     for i in range(np.size(data)):
         data[i] = data[i].split()
         for j in range(2):
-            data[i][j] = float(data[i][j])
+            data[i][j] = float(data[i][j])*1e3
         energy.append(data[i][0])
         dEdx_data.append(data[i][1])
-    energy = energy*1e3  #unit from MeV to keV
-    dEdx_data = dEdx_data*1e3 # unit:MeV.cm^2.g-1
-    dEdx = np.interp(x,energy,dEdx_data)
+    energy = np.array(energy)  #unit from MeV to keV
+    dEdx_data = np.array(dEdx_data) # unit:MeV.cm^2.g-1
+    dEdx = np.interp(e,energy,dEdx_data)
     return dEdx*rho
-
 
 
 file_TanXia=open('TandataUG.txt', "r"); data_TanXia=file_TanXia.read(); file_TanXia.close()
