@@ -1,0 +1,4 @@
+MatrixGamma
+SI1 L 0.007             $ Energy in MeV
+E18:P,E 0 100i 20       $ binning of energy
+NPS 100000          $ number of source particles

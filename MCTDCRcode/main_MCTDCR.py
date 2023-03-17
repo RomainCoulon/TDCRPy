@@ -16,12 +16,13 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 
-N=100 # number of simulated decay (MC trials)
+N=1 # number of simulated decay (MC trials)
 
 
 Rad=["Am-241"]       # list of radionuclides
-pmf_1=[1]         # relative abondance (pmf)
-if sum(pmf_1 != 1): print("warning p not equal to 1")
+pmf_1=[1.0]         # relative abondance (pmf)
+#if sum(pmf_1 != 1): print("warning p not equal to 1")
+
 
 kB = 0.01                  # Birks constant in cm/MeV
 L = 0.0056                  # the free parameter /MeV-1
@@ -135,11 +136,16 @@ for i in range(N): # Main Loop
 
     ## Calculation of the scintillation quenching with the Birks Model
     for i, p in enumerate(particle_vec):
+        e_discrete = np.linspace(0,energy_vec[i]*1e3,10000) # vector for the quenched  energy calculation in eV
+        delta_e = e_discrete[2]-e_discrete[1]
         if p == "alpha":
-            energy_vec[i] = energy_vec[i]/(1+kB*tl.stoppingpowerA(energy_vec[i]*1e3))
-            #!!!!!!! Develop the function stoppingpowerA() to calculate the stopping power for alpha particles 
+            energy_vec[i] = 0
+            for j in e_discrete:
+                energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(j,'alpha_toulene.txt'))
         if p == "electron":
-            energy_vec[i] = energy_vec[i]/(1+kB*tl.stoppingpowerE(energy_vec[i]*1e3))
+            energy_vec[i] = 0
+            for j in e_discrete:
+                energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerE(j))
     
     print("\t\t quenched energy : ", energy_vec, "keV")
     
