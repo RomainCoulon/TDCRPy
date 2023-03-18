@@ -24,7 +24,7 @@ pmf_1=[1.0]         # relative abondance (pmf)
 if np.size(pmf_1) > 1:
     if sum(pmf_1 !=1): print("warning p not equal to 1")
 elif pmf_1[0] != 1: print("warning")
-rho = 0.866         #density of absorber (Toluene) g/cm3
+RHO = 0.866         #density of absorber (Toluene) g/cm3
 
 #kB = 0.01                  # Birks constant in cm/MeV
 #L = 0.0056                  # the free parameter /MeV-1
@@ -146,11 +146,11 @@ for i in range(N): # Main Loop
         if p == "alpha":
             energy_vec[i] = 0
             for j in e_discrete:
-                energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(j*1e-3,'alpha_toulene.txt',rho))
+                energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(j*1e-3,'alpha_toulene.txt',RHO))
         if p == "electron":
             energy_vec[i] = 0
             for j in e_discrete:
-                energy_vec[i] += (delta_e/(1+kB*tl.stoppingpowerE(j,rho=0.866)))*1e-3
+                energy_vec[i] += (delta_e/(1+kB*tl.stoppingpowerE(j,rho=RHO)))*1e-3
     
     print("\t\t quenched energy : ", energy_vec, "keV")
     
