@@ -148,7 +148,7 @@ for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
 
-def stoppingpowerE(e,*,za=0.5459,rho=0.98,I=60,spmodel="Beth_Tan_Xia",emin=0,file=data_TanXia_f): # valid
+def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=data_TanXia_f): # valid
     c1=0.57
     c2=1.16
     Cte=0.307075*c1           # Relativist constant /(eV.cm^2) 
