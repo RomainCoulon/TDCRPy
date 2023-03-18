@@ -26,8 +26,11 @@ if np.size(pmf_1) > 1:
 elif pmf_1[0] != 1: print("warning")
 rho = 0.866         #density of absorber (Toluene) g/cm3
 
-kB = 0.01                  # Birks constant in cm/MeV
-L = 0.0056                  # the free parameter /MeV-1
+#kB = 0.01                  # Birks constant in cm/MeV
+#L = 0.0056                  # the free parameter /MeV-1
+kB = 1e-5    #cm/keV
+L = 5.6e-6    # MeV-1
+
 
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
