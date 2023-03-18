@@ -146,7 +146,7 @@ for i in range(N): # Main Loop
         if p == "alpha":
             energy_vec[i] = 0
             for j in e_discrete:
-                energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(j*1e-3,'alpha_toulene.txt',RHO))
+                energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(j*1e3,'alpha_toulene.txt',RHO))
         if p == "electron":
             energy_vec[i] = 0
             for j in e_discrete:
