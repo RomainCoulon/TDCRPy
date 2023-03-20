@@ -228,15 +228,16 @@ def readBetaSpectrum(rad):
     return e, p, ne
 
 def readBetaShape(rad):
-    url = "http://www.lnhb.fr/nuclides/"+rad+".BetaShape.zip"
-    file = rq.urlopen(url)
+    #url = "http://www.lnhb.fr/nuclides/"+rad+".BetaShape.zip"
+    #file = rq.urlopen(url)
+    file = rad + ".BetaShape.zip"
     z = zf.ZipFile(file)
     z_content = z.namelist()
     for index,p in enumerate(z_content):
         if "trans0" in p: i_trans0 = index
         if "trans1" in p: i_trans1 = index
-    with z.open(z_content[i_trans0]) as file_tran0:
-        data = file_trans.readlines()
+    with z.open(z_content[i_trans0]) as file_trans0:
+        data = file_trans0.readlines()
     for i in range(np.size(data)):
         data[i] = str(data[i])
         data[i] = data[i].split("b'")
@@ -254,3 +255,4 @@ def readBetaShape(rad):
         dNdx.append(data[j][1])
     return e,dNdx
     
+print(readBetaShape("Co-60"))
