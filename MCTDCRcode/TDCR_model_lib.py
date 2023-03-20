@@ -228,6 +228,9 @@ def readBetaSpectrum(rad):
     return e, p, ne
 
 def readBetaShape(rad,mode,trans):
+    # mode(str): 'beta-','beta+'
+    # trans(str):'trans0','trans1' ....
+    
     Rad = rad.replace('-','')
     file = "All-nuclides_BetaShape.zip"
     z = zf.ZipFile(file)
