@@ -19,7 +19,7 @@ import scipy.stats as st
 N=1 # number of simulated decay (MC trials)
 
 
-Rad=["Am-241"]       # list of radionuclides
+Rad=["H-3"]       # list of radionuclides
 pmf_1=[1.0]         # relative abondance (pmf)
 if np.size(pmf_1) > 1:
     if sum(pmf_1 !=1): print("warning p not equal to 1")
@@ -29,7 +29,7 @@ RHO = 0.866         #density of absorber (Toluene) g/cm3
 #kB = 0.01                  # Birks constant in cm/MeV
 #L = 0.0056                  # the free parameter /MeV-1
 kB = 1e-5    #cm/keV
-L = 5.6e-6    # MeV-1
+L = 5.6e-6    # keV-1
 
 
 TDCR_measure = 0.977784        # Measured TDCR value
@@ -141,16 +141,16 @@ for i in range(N): # Main Loop
 
     ## Calculation of the scintillation quenching with the Birks Model
     for i, p in enumerate(particle_vec):
-        e_discrete = np.linspace(0,energy_vec[i]*1e3,10000) # vector for the quenched  energy calculation in eV
+        e_discrete = np.linspace(0,energy_vec[i],10000) # vector for the quenched  energy calculation keV
         delta_e = e_discrete[2]-e_discrete[1]
         if p == "alpha":
             energy_vec[i] = 0
             for j in e_discrete:
-                energy_vec[i] += delta_e*1e-3/(1+kB*tl.stoppingpowerA(j*1e3,'alpha_toulene.txt',RHO))
+                energy_vec[i] += delta_e/(1+kB*tl.stoppingpowerA(j,'alpha_toulene.txt',RHO)) # input keV / output (keV.cm-1)
         if p == "electron":
             energy_vec[i] = 0
             for j in e_discrete:
-                energy_vec[i] += (delta_e/(1+kB*tl.stoppingpowerE(j,rho=RHO)))*1e-3
+                energy_vec[i] += (delta_e/((1+kB*1e3*tl.stoppingpowerE(j*1e3,rho=RHO)))) # input in eV / output in keV.cm
     
     print("\t\t quenched energy : ", energy_vec, "keV")
     
