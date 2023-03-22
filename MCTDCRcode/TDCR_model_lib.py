@@ -282,4 +282,7 @@ for i in range(800000):
     spa.append(stoppingpowerA(e_2,doc,rho=0.866))
 #plt.plot(e1,spe,label='stoppingpowerE')
 plt.plot(e2,spa,label='stoppingpowerA')
+plt.xscale('log')
+plt.xlabel('kinetic Energy(keV)')
+plt.ylabel('stopping power (keV.cm-1)')
 plt.savefig('stoppingpowerA.png')
