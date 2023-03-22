@@ -266,23 +266,24 @@ def readBetaShape(rad,mode,trans):
         
     return e,dNdx
 
-e1 = np.linspace(0,8e3,8000) # eV
+e1 = np.linspace(0,8e5,800000) # eV
 e2 = np.linspace(0,8e3,800000) #keV
 doc = 'alpha_toulene.txt'
 spe = []
 spa = []
-'''
-for i in range(8000):
+#'''
+for i in range(800000):
     e = e1[i]
     spe.append(stoppingpowerE(e,rho=0.866))
+#'''
 '''
-
 for i in range(800000):
     e_2 = e2[i]
     spa.append(stoppingpowerA(e_2,doc,rho=0.866))
-#plt.plot(e1,spe,label='stoppingpowerE')
-plt.plot(e2,spa,label='stoppingpowerA')
+'''
+plt.plot(e1,spe,label='stoppingpowerE')
+#plt.plot(e2,spa,label='stoppingpowerA')
 plt.xscale('log')
-plt.xlabel('kinetic Energy(keV)')
-plt.ylabel('stopping power (keV.cm-1)')
-plt.savefig('stoppingpowerA.png')
+plt.xlabel('kinetic Energy(eV)')
+plt.ylabel('stopping power (eV.cm-1)')
+plt.savefig('stoppingpowerE.png')
