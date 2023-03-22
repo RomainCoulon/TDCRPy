@@ -273,10 +273,10 @@ spe = []
 spa = []
 for i in range(800000):
     e = e1[i]
-    e_2 = e2[i]
+    #e_2 = e2[i]
     spe.append(stoppingpowerE(e,rho=0.866))
-    spa.append(stoppingpowerA(e_2,doc,rho=0.866)*1e3)
+    #spa.append(stoppingpowerA(e_2,doc,rho=0.866)*1e3)
 
 plt.plot(e1,spe,label='stoppingpowerE')
-plt.plot(e1,spa,label='stoppingpowerA')
-plt.savefig('stoppingpower.png')
+#plt.plot(e1,spa,label='stoppingpowerA')
+plt.savefig('stoppingpowerE.png')
