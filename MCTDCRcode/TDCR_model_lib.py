@@ -14,6 +14,8 @@ import numpy as np
 from numpy.core.multiarray import where
 import zipfile as zf
 
+import matplotlib.pyplot as plt
+
 def sampling(p_x):
     """
     This function aims to sample in a pdf or a pmf
@@ -212,6 +214,8 @@ def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=dat
         dEdx=0
     return dEdx
 
+
+
 def readBetaSpectrum(rad):
     f=open("spectrum_"+rad+".txt", "r") # open the file 
     ne = 1000   # number of energy bins
@@ -261,3 +265,18 @@ def readBetaShape(rad,mode,trans):
         dNdx.append(data[j][1])
         
     return e,dNdx
+
+e1 = np.linspace(0,8e6,800000) # eV
+e2 = np.linspace(0,8e3,800000) #keV
+doc = 'alpha_toulene.txt'
+spe = []
+spa = []
+for i in range(800000):
+    e = e1[i]
+    e_2 = e2[i]
+    spe.append(stoppingpowerE(e,rho=0.866))
+    spa.append(stoppingpowerA(e_2,doc,rho=0.866)*1e3)
+
+plt.plot(e1,spe,label='stoppingpowerE')
+plt.plot(e1,spa,label='stoppingpowerA')
+plt.savefig('stoppingpower.png')
