@@ -271,12 +271,15 @@ e2 = np.linspace(0,8e3,800000) #keV
 doc = 'alpha_toulene.txt'
 spe = []
 spa = []
+'''
 for i in range(8000):
     e = e1[i]
-    #e_2 = e2[i]
     spe.append(stoppingpowerE(e,rho=0.866))
-    #spa.append(stoppingpowerA(e_2,doc,rho=0.866)*1e3)
+'''
 
-plt.plot(e1,spe,label='stoppingpowerE')
-#plt.plot(e1,spa,label='stoppingpowerA')
-plt.savefig('stoppingpowerE.png')
+for i in range(800000):
+    e_2 = e2[i]
+    spa.append(stoppingpowerA(e_2,doc,rho=0.866))
+#plt.plot(e1,spe,label='stoppingpowerE')
+plt.plot(e2,spa,label='stoppingpowerA')
+plt.savefig('stoppingpowerA.png')
