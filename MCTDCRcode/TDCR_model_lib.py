@@ -273,12 +273,12 @@ def stop(e,rho,Z,A):
 
 dEdx1 = []
 dEdx2 = []
-e1 = np.linspace(1e4,2e4,1000)
+e1 = np.linspace(1e4,2e4,100)
 for i in e1:
     dEdx1.append(stop(i,rho=0.866,Z=5.199,A=11.04))
 #'''
-e2 = np.linspace(20,2e4,2000)
-for i in range(2000):
+e2 = np.linspace(0,2e4,20000)
+for i in range(20000):
      position = int(e2[i])
      dEdx2.append(float(data_TanXia_f[position]))
 #'''
@@ -356,10 +356,13 @@ for i in range(800000):
 '''
 #'''
 #e1 = np.linspace(2e-5,2e-2,1000)
-plt.plot(e1,dEdx1,label='stoppingpowerE_nist')
-plt.plot(e2,dEdx2,label='stoppingpower_tan')
+x1 = np.linspace(1e-2,2e-2,100)
+x2 = np.linspace(0,2e-2,20000)
+plt.plot(x1,dEdx1,label='stoppingpowerE_nist')
+plt.plot(x2,dEdx2,label='stoppingpower_tan')
 plt.xscale('log')
 plt.yscale('log')
+plt.legend(fontsize=12,loc='best')
 plt.xlabel('kinetic Energy(eV)')
 plt.ylabel('stopping power (MeV.cm-1)')
 plt.savefig('stoppingpowerE.png')
