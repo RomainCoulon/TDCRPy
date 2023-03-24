@@ -271,11 +271,10 @@ def stop(e,rho,Z,A):
     dEdx = (sc + sr)*rho  #MeV.cm-1
     return dEdx
 '''
+'''
 dEdx1 = []
 #dEdx2 = []
-e1 = np.linspace(10,2e6,200000)
-for i in e1:
-    dEdx1.append(stoppingpower(i,rho=0.96,Z=72,A=151))
+
 #'''
 #e2 = np.linspace(1e4,1.999e4,10000)
 '''
@@ -338,29 +337,34 @@ def readBetaShape(rad,mode,trans):
         dNdx.append(data[j][1])
         
     return e,dNdx
-'''
-e1 = np.linspace(20e3,8e8,20000) # eV
-e2 = np.linspace(0,8e3,800000) #keV
+#'''
+#e1 = np.linspace(20e3,8e8,20000) # eV
+e2 = np.linspace(0,8e3,80000) #keV
 doc = 'alpha_toulene.txt'
-spe = []
+#spe = []
 spa = []
-'''
+#'''
 '''
 for i in range(20000):
     e = e1[i]
     spe.append(stoppingpowerE(e,rho=0.866))
 '''
-'''
-for i in range(800000):
+#'''
+for i in range(80000):
     e_2 = e2[i]
     spa.append(stoppingpowerA(e_2,doc,rho=0.866))
-'''
 #'''
+#'''
+dEdx1=[]
+e1 = np.linspace(10,2e8,200000)
+for i in e1:
+    dEdx1.append(stoppingpower(i,rho=0.96,Z=72,A=151))
+
 #e1 = np.linspace(2e-5,2e-2,1000)
-x1 = np.linspace(1e-5,2,200000)
-#x2 = np.linspace(1e-2,1.999e-2,10000)
+x1 = np.linspace(1e-5,2e2,200000)
+x2 = np.linspace(0,8,80000)
 plt.plot(x1,dEdx1,label='stoppingpowerE')
-#plt.plot(x2,dEdx2,label='stoppingpower_tan')
+plt.plot(x2,spa,label='stoppingpowerA')
 plt.xscale('log')
 plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
