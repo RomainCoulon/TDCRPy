@@ -314,10 +314,11 @@ def E_quench_a(e,kB): # e : keV
     for i in e_dis:
         q += delta/(1+kB*stoppingpowerA(i,doc='alpha_toulene.txt',rho=0.96))
     return q #keV
+
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(1,8e3,4000) 
+x = np.linspace(1,8,4000) 
 
 for i in x:
     s1.append(E_quench_e(i,kB=7e-6))
