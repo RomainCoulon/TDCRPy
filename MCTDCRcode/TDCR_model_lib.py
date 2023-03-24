@@ -339,7 +339,7 @@ def readBetaShape(rad,mode,trans):
     return e,dNdx
 #'''
 #e1 = np.linspace(20e3,8e8,20000) # eV
-e2 = np.linspace(1,8e3,80000) #keV
+e2 = np.linspace(1,8e3,8000) #keV
 doc = 'alpha_toulene.txt'
 #spe = []
 spa = []
@@ -350,21 +350,26 @@ for i in range(20000):
     spe.append(stoppingpowerE(e,rho=0.866))
 '''
 #'''
-for i in range(80000):
+for i in range(8000):
     e_2 = e2[i]
     spa.append(stoppingpowerA(e_2,doc,rho=0.866)*1e-3)
 #'''
 #'''
 dEdx1=[]
-e1 = np.linspace(10,2e8,200000)
+e1 = np.linspace(10,1.99e4,2000)
 for i in e1:
     dEdx1.append(stoppingpower(i,rho=0.96,Z=72,A=151))
-
+e = np.linspace(1.999e4,1e8,10000)
+dEdx = []
+for i in e:
+    dEdx.append(stoppingpower(i,rho=0.96,Z=73,A=151))
 #e1 = np.linspace(2e-5,2e-2,1000)
-x1 = np.linspace(1e-5,2e2,200000)
-x2 = np.linspace(1e-3,8,80000)
-plt.plot(x1,dEdx1,label='stoppingpowerE')
+x1 = np.linspace(1e-5,1.99e-2,2000)
+x2 = np.linspace(1e-3,8,8000)
+x = np.linspace(1.999e-2,1e2,10000)
+plt.plot(x1,dEdx1,label='stoppingpowerE_TanXia')
 plt.plot(x2,spa,label='stoppingpowerA')
+plt.plot(x,dEdx,label='modèle_NIST')
 plt.xscale('log')
 plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
