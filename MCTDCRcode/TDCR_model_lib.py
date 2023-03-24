@@ -325,5 +325,5 @@ plt.plot(x,s3,label='E_quenched_0.014')
 plt.legend(fontsize=12,loc='best')
 plt.xlabel('E_emitted(eV)')
 plt.ylabel('quenching energy (keV)')
-plt.savefig('quenching energy.png')
+plt.savefig('quenching energy_20keV.png')
 #'''
