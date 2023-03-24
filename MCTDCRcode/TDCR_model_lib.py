@@ -299,36 +299,26 @@ def readBetaShape(rad,mode,trans):
     return e,dNdx
 
 
+def E_quench_e(e,kB): #MeV
+    e_dis = np.linspace(0,e,1000)
+    delta = e_dis[2] - e_dis[1]
+    q = 0
+    for i in e_dis:
+        q += delta/(1+kB*stoppingpower(i,rho=0.96,Z=72,A=151))
+    return q
 
-#'''
-'''
-e_alpha = np.linspace(1,8e3,8000) #keV
-delta_a = e_alpha[2] - e_alpha[1]
-doc = 'alpha_toulene.txt'
-kB1 = np.linspace(7e-6,14e-6,20)#cm/keV
-Eq_a = []
-for i in kB1:
-    spa = 0
-    for j in range(8000):
-        e_2 = e_alpha[j]
-        spa += delta_a/(1+i*stoppingpowerA(e_2,'alpha_toulene.txt',rho=0.96)) #keV
-    Eq_a.append(spa)
+s1 = []
+s2 = []
+s3 = []
+for i in np.linspace(1e-5,2e-2,1000):
+    s1.append(E_quench_e(i,kB=0.007))
+    s2.append(E_quench_e(i,kB=0.01))
+    s3.append(E_quench_e(i,kB=0.014))
 
-'''
-Eq_e=[]
-kB2 = np.linspace(0.007,0.014,20) #cm/MeV
-e_e = np.linspace(1e3,8e6,8000) #eV
-delta_e = (e_e[2] - e_e[1])*1e-3 #keV
-for i in kB2:
-    spe = 0
-    for j in e_e:
-        spe += delta_e/(1+i*stoppingpower(j,rho=0.96,Z=72,A=152))
-    Eq_e.append(spe)
-#'''
-#kB2 = np.linspace(0.007,0.014,20) #cm/MeV
-#plt.plot(kB2,Eq_a,label='E_quenched_A')
-plt.plot(kB2,Eq_e,label='E_quenched_E')
-#plt.plot(x,dEdx,label='modèle_ESTAR')
+x = np.linspace(1e-5,2e-2,1000)
+plt.plot(x,s2,label='E_quenched_0.01')
+plt.plot(x,s1,label='E_quenched_0.007')
+plt.plot(x,s3,label='E_quenched_0.014')
 #plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
