@@ -215,6 +215,44 @@ def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=dat
     return dEdx
 
 
+def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
+    # e:eV
+    mc_2 = 0.511 #MeV
+    I = 65e-6 #MeV
+    NA = 6.02e23
+    ahc = 1.437e-13   #MeV.cm
+    if e>=20000:
+        e1 = e*1e-6 #MeV
+        gamma = (e1+mc_2)/mc_2
+        gamma_2 = gamma*gamma
+        beta = np.sqrt(1-(1/gamma_2))
+        beta_2 = beta**2
+        tau = e1/mc_2
+        terma = np.log(tau**2*(tau+2)/2)
+        termb = 1+tau*tau/8-(2*tau+1)*np.log(2)
+        termc = (tau+1)**2
+        B0 = terma + termb/termc
+        sc = 0.1535/beta_2*Z/A*(B0-2*np.log(I/mc_2))
+        term3 = NA*(Z**2)*rho*(e1+mc_2)/(137*(mc_2**2)*A)
+        term4 = 4* np.log(2*gamma) -4/3
+        sr = (ahc**2)*term3*term4
+        #if T<1:sr=0
+        dEdx = (sc + sr)*rho  #MeV.cm-1
+    else:
+            if e>emin:
+                dEdx=float(file[int(e)]) #MeV.cm-1
+            else:
+                dEdx=0
+    if dEdx<0:
+        dEdx=0
+    return dEdx    
+
+dEdx = []
+e = np.linspace(1e4,1e9,100000)
+for i in e:
+    dEdx.append(stoppingpower(i,rho=0.866,Z=5.199,A=11.04))
+
+
 
 def readBetaSpectrum(rad):
     f=open("spectrum_"+rad+".txt", "r") # open the file 
@@ -265,26 +303,28 @@ def readBetaShape(rad,mode,trans):
         dNdx.append(data[j][1])
         
     return e,dNdx
-
+'''
 e1 = np.linspace(20e3,8e8,20000) # eV
 e2 = np.linspace(0,8e3,800000) #keV
 doc = 'alpha_toulene.txt'
 spe = []
 spa = []
-#'''
+'''
+'''
 for i in range(20000):
     e = e1[i]
     spe.append(stoppingpowerE(e,rho=0.866))
-#'''
+'''
 '''
 for i in range(800000):
     e_2 = e2[i]
     spa.append(stoppingpowerA(e_2,doc,rho=0.866))
 '''
-plt.plot(e1,spe,label='stoppingpowerE')
+e1 = np.linspace(1e-2,1e3,100000)
+plt.plot(e1,dEdx,label='stoppingpowerE')
 #plt.plot(e2,spa,label='stoppingpowerA')
 plt.xscale('log')
 plt.yscale('log')
-plt.xlabel('kinetic Energy(eV)')
+plt.xlabel('kinetic Energy(MeV)')
 plt.ylabel('stopping power (MeV.cm-1)')
 plt.savefig('stoppingpowerE.png')
