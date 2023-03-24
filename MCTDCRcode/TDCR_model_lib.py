@@ -310,7 +310,7 @@ def E_quench_e(e,kB): # e : eV
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(2e4,2e5,2000) 
+x = np.linspace(2e4,2e6,2000) 
 
 for i in x:
     s1.append(E_quench_e(i,kB=0.007)*1e-3)
@@ -320,8 +320,8 @@ for i in x:
 plt.plot(x,s2,label='E_quenched_0.01',ls=':',color='red',lw=3)
 plt.plot(x,s1,label='E_quenched_0.007',color='green',lw=2)
 plt.plot(x,s3,label='E_quenched_0.014')
-#plt.xscale('log')
-#plt.yscale('log')
+plt.xscale('log')
+plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
 plt.xlabel('E_emitted(eV)')
 plt.ylabel('quenching energy (keV)')
