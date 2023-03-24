@@ -248,7 +248,7 @@ def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
     return dEdx    
 
 dEdx = []
-e = np.linspace(20,2.5e4,10000)
+e = np.linspace(20,2.5e5,100000)
 for i in e:
     dEdx.append(stoppingpower(i,rho=0.866,Z=5.199,A=11.04))
 
@@ -320,7 +320,7 @@ for i in range(800000):
     e_2 = e2[i]
     spa.append(stoppingpowerA(e_2,doc,rho=0.866))
 '''
-e1 = np.linspace(2e-5,2.5e-2,10000)
+e1 = np.linspace(2e-5,2.5e-1,100000)
 plt.plot(e1,dEdx,label='stoppingpowerE')
 #plt.plot(e2,spa,label='stoppingpowerA')
 plt.xscale('log')
