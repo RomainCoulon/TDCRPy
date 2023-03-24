@@ -318,12 +318,12 @@ def E_quench_a(e,kB): # e : keV
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(1,2,4000) 
+x = np.linspace(1,8e3,4000) 
 
 for i in x:
-    s1.append(E_quench_e(i,kB=7e-6))
-    s2.append(E_quench_e(i,kB=1e-5))
-    s3.append(E_quench_e(i,kB=1.4e-5))
+    s1.append(E_quench_a(i,kB=7e-6))
+    s2.append(E_quench_a(i,kB=1e-5))
+    s3.append(E_quench_a(i,kB=1.4e-5))
 
 plt.plot(x,s2,label='E_quenched_0.01',ls=':',color='red',lw=3)
 plt.plot(x,s1,label='E_quenched_0.007',color='green',lw=2)
