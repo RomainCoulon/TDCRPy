@@ -300,7 +300,7 @@ def readBetaShape(rad,mode,trans):
 
 
 def E_quench_e(e,kB): # e : eV
-    e_dis = np.linspace(0,e,1000)
+    e_dis = np.linspace(0,e,500)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
@@ -310,15 +310,16 @@ def E_quench_e(e,kB): # e : eV
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(2e2,1e7,20000) 
+x = np.linspace(10,1.9e4,20000) 
+
 for i in x:
     s1.append(E_quench_e(i,kB=0.007)*1e-3)
     s2.append(E_quench_e(i,kB=0.01)*1e-3)
-    #s3.append(E_quench_e(i,kB=0.014)*1e-3)
+    s3.append(E_quench_e(i,kB=0.014)*1e-3)
 
 plt.plot(x,s2,label='E_quenched_0.01',ls=':',color='red',lw=3)
 plt.plot(x,s1,label='E_quenched_0.007',color='green',lw=2)
-#plt.plot(x,s3,label='E_quenched_0.014')
+plt.plot(x,s3,label='E_quenched_0.014')
 #plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
