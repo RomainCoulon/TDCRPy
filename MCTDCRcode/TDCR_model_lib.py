@@ -277,7 +277,7 @@ e1 = np.linspace(1e4,2e4,100)
 for i in e1:
     dEdx1.append(stop(i,rho=0.866,Z=5.199,A=11.04))
 #'''
-e2 = np.linspace(0,2e4,20000)
+e2 = np.linspace(0,1.9e4,20000)
 for i in range(20000):
      position = int(e2[i])
      dEdx2.append(float(data_TanXia_f[position]))
@@ -357,7 +357,7 @@ for i in range(800000):
 #'''
 #e1 = np.linspace(2e-5,2e-2,1000)
 x1 = np.linspace(1e-2,2e-2,100)
-x2 = np.linspace(0,2e-2,20000)
+x2 = np.linspace(0,1.9e-2,20000)
 plt.plot(x1,dEdx1,label='stoppingpowerE_nist')
 plt.plot(x2,dEdx2,label='stoppingpower_tan')
 plt.xscale('log')
