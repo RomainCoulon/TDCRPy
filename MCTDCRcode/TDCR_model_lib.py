@@ -363,7 +363,7 @@ plt.plot(x2,dEdx2,label='stoppingpower_tan')
 plt.xscale('log')
 plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
-plt.xlabel('kinetic Energy(eV)')
+plt.xlabel('kinetic Energy(MeV)')
 plt.ylabel('stopping power (MeV.cm-1)')
 plt.savefig('stoppingpowerE.png')
 #'''
