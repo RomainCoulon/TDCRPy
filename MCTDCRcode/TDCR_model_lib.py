@@ -299,22 +299,22 @@ def readBetaShape(rad,mode,trans):
     return e,dNdx
 
 
-def E_quench_e(e,kB): #MeV
-    e_dis = np.linspace(0,e,10000)
+def E_quench_e(e,kB): # e : eV
+    e_dis = np.linspace(0,e,1000)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
         q += delta/(1+kB*stoppingpower(i,rho=0.96,Z=72,A=151))
-    return q
+    return q #eV
 
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(2e2,4e2,200)
+x = np.linspace(2e2,1e7,20000) 
 for i in x:
-    s1.append(E_quench_e(i,kB=0.007)*1e3)
-    s2.append(E_quench_e(i,kB=0.01)*1e3)
-    #s3.append(E_quench_e(i,kB=0.014)*1e3)
+    s1.append(E_quench_e(i,kB=0.007)*1e-3)
+    s2.append(E_quench_e(i,kB=0.01)*1e-3)
+    #s3.append(E_quench_e(i,kB=0.014)*1e-3)
 
 plt.plot(x,s2,label='E_quenched_0.01',ls=':',color='red',lw=3)
 plt.plot(x,s1,label='E_quenched_0.007',color='green',lw=2)
@@ -322,7 +322,7 @@ plt.plot(x,s1,label='E_quenched_0.007',color='green',lw=2)
 #plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
-plt.xlabel('E_emitted(MeV)')
+plt.xlabel('E_emitted(eV)')
 plt.ylabel('quenching energy (keV)')
 plt.savefig('quenching energy.png')
 #'''
