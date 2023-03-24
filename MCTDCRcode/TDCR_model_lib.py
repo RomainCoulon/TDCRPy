@@ -310,23 +310,23 @@ for i in kB1:
     spa = 0
     for j in range(8000):
         e_2 = e_alpha[j]
-        spa += (delta_a/(1+i*stoppingpowerA(e_2,'alpha_toulene.txt',rho=0.96)))*1e-3 #MeV
+        spa += delta_a/(1+i*stoppingpowerA(e_2,'alpha_toulene.txt',rho=0.96)) #keV
     Eq_a.append(spa)
 
+'''
 Eq_e=[]
 kB2 = np.linspace(0.007,0.014,20) #cm/MeV
 e_e = np.linspace(10,1e8,200000) #eV
-delta_e = (e_e[2] - e_e[1])*1e-3
+delta_e = (e_e[2] - e_e[1])*1e-3 #keV
 for i in kB2:
     spe = 0
     for j in e_e:
-        #dEdx1.append(stoppingpower(i,rho=0.96,Z=72,A=151))
         spe += delta_e/(1+i*stoppingpower(j,rho=0.96,Z=72,A=152))
     Eq_e.append(spe)
-
-
+'''
+kB2 = np.linspace(0.007,0.014,20) #cm/MeV
 plt.plot(kB2,Eq_a,label='E_quenched_A')
-plt.plot(kB2,Eq_e,label='E_quenched_E')
+#plt.plot(kB2,Eq_e,label='E_quenched_E')
 #plt.plot(x,dEdx,label='modèle_ESTAR')
 #plt.xscale('log')
 #plt.yscale('log')
