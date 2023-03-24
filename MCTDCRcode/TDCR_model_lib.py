@@ -317,7 +317,7 @@ for i in kB1:
 '''
 Eq_e=[]
 kB2 = np.linspace(0.007,0.014,20) #cm/MeV
-e_e = np.linspace(10,1e8,200000) #eV
+e_e = np.linspace(1e3,8e6,8000) #eV
 delta_e = (e_e[2] - e_e[1])*1e-3 #keV
 for i in kB2:
     spe = 0
