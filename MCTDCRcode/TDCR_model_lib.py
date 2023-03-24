@@ -214,7 +214,7 @@ def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=dat
         dEdx=0
     return dEdx
 
-
+'''
 def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
     # e:eV
     mc_2 = 0.511 #MeV
@@ -246,11 +246,45 @@ def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
     if dEdx<0:
         dEdx=0
     return dEdx    
+'''
 
-dEdx = []
-e = np.linspace(20,2e4,1000)
-for i in e:
-    dEdx.append(stoppingpower(i,rho=0.866,Z=5.199,A=11.04))
+def stop(e,rho,Z,A):
+    mc_2 = 0.511 #MeV
+    I = 65e-6 #MeV
+    NA = 6.02e23
+    ahc = 1.437e-13   #MeV.cm
+    e1 = e*1e-6 #MeV
+    gamma = (e1+mc_2)/mc_2
+    gamma_2 = gamma*gamma
+    beta = np.sqrt(1-(1/gamma_2))
+    beta_2 = beta**2
+    tau = e1/mc_2
+    terma = np.log(tau**2*(tau+2)/2)
+    termb = 1+tau*tau/8-(2*tau+1)*np.log(2)
+    termc = (tau+1)**2
+    B0 = terma + termb/termc
+    sc = 0.1535/beta_2*Z/A*(B0-2*np.log(I/mc_2))
+    term3 = NA*(Z**2)*rho*(e1+mc_2)/(137*(mc_2**2)*A)
+    term4 = 4* np.log(2*gamma) -4/3
+    sr = (ahc**2)*term3*term4
+    #if T<1:sr=0
+    dEdx = (sc + sr)*rho  #MeV.cm-1
+    return dEdx
+
+dEdx1 = []
+dEdx2 = []
+e1 = np.linspace(1e4,2e4,1000)
+for i in e1:
+    dEdx1.append(stop(i,rho=0.866,Z=5.199,A=11.04))
+#'''
+e2 = np.linspace(20,2e4,2000)
+for i in range(2000):
+     position = int(e2[i])
+     dEdx2.append(float(data_TanXia_f[position]))
+#'''
+#e2 = np.linspace(20,2e3,2000)
+#for i in range(2000):
+ #   print(int(e2[i]))
 
 
 
@@ -320,11 +354,13 @@ for i in range(800000):
     e_2 = e2[i]
     spa.append(stoppingpowerA(e_2,doc,rho=0.866))
 '''
-e1 = np.linspace(2e-5,2e-2,1000)
-plt.plot(e1,dEdx,label='stoppingpowerE')
-#plt.plot(e2,spa,label='stoppingpowerA')
+#'''
+#e1 = np.linspace(2e-5,2e-2,1000)
+plt.plot(e1,dEdx1,label='stoppingpowerE_nist')
+plt.plot(e2,dEdx2,label='stoppingpower_tan')
 plt.xscale('log')
 plt.yscale('log')
-plt.xlabel('kinetic Energy(MeV)')
+plt.xlabel('kinetic Energy(eV)')
 plt.ylabel('stopping power (MeV.cm-1)')
 plt.savefig('stoppingpowerE.png')
+#'''
