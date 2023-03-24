@@ -214,7 +214,7 @@ def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=dat
         dEdx=0
     return dEdx
 
-#'''
+
 def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
     # e:eV
     mc_2 = 0.511 #MeV
@@ -246,46 +246,6 @@ def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
     if dEdx<0:
         dEdx=0
     return dEdx    
-#'''
-'''
-def stop(e,rho,Z,A):
-    mc_2 = 0.511 #MeV
-    I = 65e-6 #MeV
-    NA = 6.02e23
-    ahc = 1.437e-13   #MeV.cm
-    e1 = e*1e-6 #MeV
-    gamma = (e1+mc_2)/mc_2
-    gamma_2 = gamma*gamma
-    beta = np.sqrt(1-(1/gamma_2))
-    beta_2 = beta**2
-    tau = e1/mc_2
-    terma = np.log(tau**2*(tau+2)/2)
-    termb = 1+tau*tau/8-(2*tau+1)*np.log(2)
-    termc = (tau+1)**2
-    B0 = terma + termb/termc
-    sc = 0.1535/beta_2*Z/A*(B0-2*np.log(I/mc_2))
-    term3 = NA*(Z**2)*rho*(e1+mc_2)/(137*(mc_2**2)*A)
-    term4 = 4* np.log(2*gamma) -4/3
-    sr = (ahc**2)*term3*term4
-    #if T<1:sr=0
-    dEdx = (sc + sr)*rho  #MeV.cm-1
-    return dEdx
-'''
-'''
-dEdx1 = []
-#dEdx2 = []
-
-#'''
-#e2 = np.linspace(1e4,1.999e4,10000)
-'''
-for i in range(10000):
-     position = int(e2[i])
-     dEdx2.append(float(data_TanXia_f[position]))
-'''
-#e2 = np.linspace(20,2e3,2000)
-#for i in range(2000):
- #   print(int(e2[i]))
-
 
 
 def readBetaSpectrum(rad):
@@ -337,43 +297,41 @@ def readBetaShape(rad,mode,trans):
         dNdx.append(data[j][1])
         
     return e,dNdx
+
+
+
 #'''
-#e1 = np.linspace(20e3,8e8,20000) # eV
-e2 = np.linspace(1,8e3,8000) #keV
+e_alpha = np.linspace(1,8e3,8000) #keV
+delta_a = e_alpha[2] - e_alpha[1]
 doc = 'alpha_toulene.txt'
-#spe = []
-spa = []
-#'''
-'''
-for i in range(20000):
-    e = e1[i]
-    spe.append(stoppingpowerE(e,rho=0.866))
-'''
-#'''
-for i in range(8000):
-    e_2 = e2[i]
-    spa.append(stoppingpowerA(e_2,doc,rho=0.866)*1e-3)
-#'''
-#'''
-dEdx1=[]
-e1 = np.linspace(10,1.99e4,2000)
-for i in e1:
-    dEdx1.append(stoppingpower(i,rho=0.96,Z=72,A=151))
-e = np.linspace(1.999e4,1e8,10000)
-dEdx = []
-for i in e:
-    dEdx.append(stoppingpower(i,rho=0.96,Z=73,A=151))
-#e1 = np.linspace(2e-5,2e-2,1000)
-x1 = np.linspace(1e-5,1.99e-2,2000)
-x2 = np.linspace(1e-3,8,8000)
-x = np.linspace(1.999e-2,1e2,10000)
-plt.plot(x1,dEdx1,label='stoppingpowerE_TanXia')
-plt.plot(x2,spa,label='stoppingpowerA')
-plt.plot(x,dEdx,label='modèle_ESTAR')
-plt.xscale('log')
-plt.yscale('log')
+kB1 = np.linspace(7e-6,14e-6,20)#cm/keV
+Eq_a = []
+for i in kB1:
+    spa = 0
+    for j in range(8000):
+        e_2 = e_alpha[j]
+        spa += (delta_a/(1+i*stoppingpowerA(e_2,'alpha_toulene.txt',rho=0.96)))*1e-3 #MeV
+    Eq_a.append(spa)
+
+Eq_e=[]
+kB2 = np.linspace(0.007,0.014,20) #cm/MeV
+e_e = np.linspace(10,1e8,200000) #eV
+delta_e = (e_e[2] - e_e[1])*1e-3
+for i in kB2:
+    spe = 0
+    for j in e_e:
+        #dEdx1.append(stoppingpower(i,rho=0.96,Z=72,A=151))
+        spe += delta_e/(1+i*stoppingpower(j,rho=0.96,Z=72,A=152))
+    Eq_e.append(spe)
+
+
+plt.plot(kB2,Eq_a,label='E_quenched_A')
+plt.plot(kB2,Eq_e,label='E_quenched_E')
+#plt.plot(x,dEdx,label='modèle_ESTAR')
+#plt.xscale('log')
+#plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
-plt.xlabel('kinetic Energy(MeV)')
-plt.ylabel('stopping power (MeV.cm-1)')
-plt.savefig('stoppingpowerAE.png')
+plt.xlabel('cst Birks(cm/MeV)')
+plt.ylabel('quenching energy (keV)')
+plt.savefig('quenching energy.png')
 #'''
