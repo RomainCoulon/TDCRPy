@@ -318,7 +318,7 @@ def E_quench_a(e,kB): # e : keV
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(1,8,4000) 
+x = np.linspace(1,2,4000) 
 
 for i in x:
     s1.append(E_quench_e(i,kB=7e-6))
