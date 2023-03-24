@@ -301,6 +301,7 @@ def readBetaShape(rad,mode,trans):
 
 
 #'''
+'''
 e_alpha = np.linspace(1,8e3,8000) #keV
 delta_a = e_alpha[2] - e_alpha[1]
 doc = 'alpha_toulene.txt'
@@ -323,10 +324,10 @@ for i in kB2:
     for j in e_e:
         spe += delta_e/(1+i*stoppingpower(j,rho=0.96,Z=72,A=152))
     Eq_e.append(spe)
-'''
-kB2 = np.linspace(0.007,0.014,20) #cm/MeV
-plt.plot(kB2,Eq_a,label='E_quenched_A')
-#plt.plot(kB2,Eq_e,label='E_quenched_E')
+#'''
+#kB2 = np.linspace(0.007,0.014,20) #cm/MeV
+#plt.plot(kB2,Eq_a,label='E_quenched_A')
+plt.plot(kB2,Eq_e,label='E_quenched_E')
 #plt.plot(x,dEdx,label='modèle_ESTAR')
 #plt.xscale('log')
 #plt.yscale('log')
