@@ -316,7 +316,7 @@ for i in np.linspace(1e-5,2e-2,1000):
     #s3.append(E_quench_e(i,kB=0.014)*1e3)
 
 x = np.linspace(1e-5,2e-2,1000)
-plt.plot(x,s2,label='E_quenched_0.01')
+plt.plot(x,s2,label='E_quenched_0.01',ls=':')
 plt.plot(x,s1,label='E_quenched_0.007')
 #plt.plot(x,s3,label='E_quenched_0.014')
 #plt.xscale('log')
