@@ -207,7 +207,7 @@ def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=dat
             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)
         else:
             if e>emin:
-                dEdx=float(file[int(e)])
+                dEdx=(float(file[int(e)]))*1e6
             else:
                 dEdx=0
     if dEdx<0:
@@ -266,13 +266,13 @@ def readBetaShape(rad,mode,trans):
         
     return e,dNdx
 
-e1 = np.linspace(0,8e5,800000) # eV
+e1 = np.linspace(20e3,8e8,20000) # eV
 e2 = np.linspace(0,8e3,800000) #keV
 doc = 'alpha_toulene.txt'
 spe = []
 spa = []
 #'''
-for i in range(800000):
+for i in range(20000):
     e = e1[i]
     spe.append(stoppingpowerE(e,rho=0.866))
 #'''
@@ -284,6 +284,7 @@ for i in range(800000):
 plt.plot(e1,spe,label='stoppingpowerE')
 #plt.plot(e2,spa,label='stoppingpowerA')
 plt.xscale('log')
+plt.yscale('log')
 plt.xlabel('kinetic Energy(eV)')
-plt.ylabel('stopping power (eV.cm-1)')
+plt.ylabel('stopping power (MeV.cm-1)')
 plt.savefig('stoppingpowerE.png')
