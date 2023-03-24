@@ -275,7 +275,7 @@ dEdx1 = []
 dEdx2 = []
 e1 = np.linspace(1e4,2e4,1000)
 for i in e1:
-    dEdx1.append(stop(i,rho=0.866,Z=5.199,A=11.04))
+    dEdx1.append(stop(i,rho=0.866,Z=8,A=15))
 #'''
 e2 = np.linspace(1e4,1.999e4,10000)
 for i in range(10000):
