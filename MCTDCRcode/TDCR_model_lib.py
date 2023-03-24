@@ -273,9 +273,9 @@ def stop(e,rho,Z,A):
 '''
 dEdx1 = []
 #dEdx2 = []
-e1 = np.linspace(0,2e6,200000)
+e1 = np.linspace(10,2e6,200000)
 for i in e1:
-    dEdx1.append(stoppingpower(i,rho=0.866,Z=20,A=45))
+    dEdx1.append(stoppingpower(i,rho=0.866,Z=50,A=110))
 #'''
 #e2 = np.linspace(1e4,1.999e4,10000)
 '''
@@ -357,7 +357,7 @@ for i in range(800000):
 '''
 #'''
 #e1 = np.linspace(2e-5,2e-2,1000)
-x1 = np.linspace(0,2,200000)
+x1 = np.linspace(1e-5,2,200000)
 #x2 = np.linspace(1e-2,1.999e-2,10000)
 plt.plot(x1,dEdx1,label='stoppingpowerE')
 #plt.plot(x2,dEdx2,label='stoppingpower_tan')
