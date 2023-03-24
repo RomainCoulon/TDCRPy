@@ -339,7 +339,7 @@ def readBetaShape(rad,mode,trans):
     return e,dNdx
 #'''
 #e1 = np.linspace(20e3,8e8,20000) # eV
-e2 = np.linspace(0,8e3,80000) #keV
+e2 = np.linspace(1,8e3,80000) #keV
 doc = 'alpha_toulene.txt'
 #spe = []
 spa = []
@@ -362,7 +362,7 @@ for i in e1:
 
 #e1 = np.linspace(2e-5,2e-2,1000)
 x1 = np.linspace(1e-5,2e2,200000)
-x2 = np.linspace(0,8,80000)
+x2 = np.linspace(1e-3,8,80000)
 plt.plot(x1,dEdx1,label='stoppingpowerE')
 plt.plot(x2,spa,label='stoppingpowerA')
 plt.xscale('log')
