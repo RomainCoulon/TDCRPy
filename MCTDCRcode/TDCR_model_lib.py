@@ -352,7 +352,7 @@ for i in range(20000):
 #'''
 for i in range(80000):
     e_2 = e2[i]
-    spa.append(stoppingpowerA(e_2,doc,rho=0.866))
+    spa.append(stoppingpowerA(e_2,doc,rho=0.866)*1e-3)
 #'''
 #'''
 dEdx1=[]
@@ -370,5 +370,5 @@ plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
 plt.xlabel('kinetic Energy(MeV)')
 plt.ylabel('stopping power (MeV.cm-1)')
-plt.savefig('stoppingpowerE.png')
+plt.savefig('stoppingpowerAE.png')
 #'''
