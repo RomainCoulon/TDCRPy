@@ -221,7 +221,7 @@ def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
     I = 65e-6 #MeV
     NA = 6.02e23
     ahc = 1.437e-13   #MeV.cm
-    if e>=20000:
+    if e>=15000:
         e1 = e*1e-6 #MeV
         gamma = (e1+mc_2)/mc_2
         gamma_2 = gamma*gamma
@@ -248,7 +248,7 @@ def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
     return dEdx    
 
 dEdx = []
-e = np.linspace(20,2.5e5,100000)
+e = np.linspace(20,2e4,1000)
 for i in e:
     dEdx.append(stoppingpower(i,rho=0.866,Z=5.199,A=11.04))
 
@@ -320,7 +320,7 @@ for i in range(800000):
     e_2 = e2[i]
     spa.append(stoppingpowerA(e_2,doc,rho=0.866))
 '''
-e1 = np.linspace(2e-5,2.5e-1,100000)
+e1 = np.linspace(2e-5,2e-2,1000)
 plt.plot(e1,dEdx,label='stoppingpowerE')
 #plt.plot(e2,spa,label='stoppingpowerA')
 plt.xscale('log')
