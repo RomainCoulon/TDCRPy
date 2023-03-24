@@ -307,15 +307,22 @@ def E_quench_e(e,kB): # e : eV
         q += delta/(1+kB*stoppingpower(i,rho=0.96,Z=72,A=151))
     return q #eV
 
+def E_quench_a(e,kB): # e : keV
+    e_dis = np.linspace(0,e,1000)
+    delta = e_dis[2] - e_dis[1]
+    q = 0
+    for i in e_dis:
+        q += delta/(1+kB*stoppingpowerA(i,doc='alpha_toulene.txt',rho=0.96))
+    return q #keV
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(2e4,2e5,2000) 
+x = np.linspace(1,8e3,4000) 
 
 for i in x:
-    s1.append(E_quench_e(i,kB=0.007)*1e-3)
-    s2.append(E_quench_e(i,kB=0.01)*1e-3)
-    s3.append(E_quench_e(i,kB=0.014)*1e-3)
+    s1.append(E_quench_e(i,kB=7e-6))
+    s2.append(E_quench_e(i,kB=1e-5))
+    s3.append(E_quench_e(i,kB=1.4e-5))
 
 plt.plot(x,s2,label='E_quenched_0.01',ls=':',color='red',lw=3)
 plt.plot(x,s1,label='E_quenched_0.007',color='green',lw=2)
@@ -323,7 +330,7 @@ plt.plot(x,s3,label='E_quenched_0.014')
 #plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
-plt.xlabel('E_emitted(eV)')
+plt.xlabel('E_emitted(keV)')
 plt.ylabel('quenching energy (keV)')
-plt.savefig('quenching energy_20keV-200keV.png')
+plt.savefig('quenching energy_alpha.png')
 #'''
