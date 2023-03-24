@@ -214,7 +214,7 @@ def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=dat
         dEdx=0
     return dEdx
 
-'''
+#'''
 def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
     # e:eV
     mc_2 = 0.511 #MeV
@@ -246,8 +246,8 @@ def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
     if dEdx<0:
         dEdx=0
     return dEdx    
+#'''
 '''
-
 def stop(e,rho,Z,A):
     mc_2 = 0.511 #MeV
     I = 65e-6 #MeV
@@ -270,18 +270,19 @@ def stop(e,rho,Z,A):
     #if T<1:sr=0
     dEdx = (sc + sr)*rho  #MeV.cm-1
     return dEdx
-
+'''
 dEdx1 = []
-dEdx2 = []
-e1 = np.linspace(1e4,2e4,1000)
+#dEdx2 = []
+e1 = np.linspace(0,2e6,20000)
 for i in e1:
-    dEdx1.append(stop(i,rho=0.866,Z=16,A=30))
+    dEdx1.append(stoppingpower(i,rho=0.866,Z=20,A=45))
 #'''
-e2 = np.linspace(1e4,1.999e4,10000)
+#e2 = np.linspace(1e4,1.999e4,10000)
+'''
 for i in range(10000):
      position = int(e2[i])
      dEdx2.append(float(data_TanXia_f[position]))
-#'''
+'''
 #e2 = np.linspace(20,2e3,2000)
 #for i in range(2000):
  #   print(int(e2[i]))
@@ -356,10 +357,10 @@ for i in range(800000):
 '''
 #'''
 #e1 = np.linspace(2e-5,2e-2,1000)
-x1 = np.linspace(1e-2,2e-2,1000)
-x2 = np.linspace(1e-2,1.999e-2,10000)
-plt.plot(x1,dEdx1,label='stoppingpowerE_nist')
-plt.plot(x2,dEdx2,label='stoppingpower_tan')
+x1 = np.linspace(0,2,20000)
+#x2 = np.linspace(1e-2,1.999e-2,10000)
+plt.plot(x1,dEdx1,label='stoppingpowerE')
+#plt.plot(x2,dEdx2,label='stoppingpower_tan')
 plt.xscale('log')
 plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
