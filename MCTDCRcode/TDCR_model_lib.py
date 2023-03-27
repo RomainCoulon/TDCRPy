@@ -123,24 +123,26 @@ def readPenNuc(rad):
     transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
     return particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value
 
+f_alpha = open('alpha_toulene.txt')
+data_ASTAR = f_alpha.readlines()
+f_alpha.close()
+energy_alpha = []
+dEdx_alpha = []
+for i in range(np.size(data_ASTAR)):
+    data_ASTAR[i] = data_ASTAR[i].split()
+    for j in range(2):
+        data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
+    energy_alpha.append(data_ASTAR[i][0])
+    dEdx_alpha.append(data_ASTAR[i][1])
+energy_alpha = np.array(energy_alpha)
+dEdx_alpha = np.array(dEdx_alpha)
 
-
-def stoppingpowerA(e,doc,rho): 
-    # doc-data of ASTAR(.txt)(unit:MeV)
+def stoppingpowerA(e,energy=energy_alpha,dEdx=dEdx_alpha,rho=0.96): 
     # rho: density of the absorber (g.cm-3)
-    f = open(doc)
-    data = f.readlines()
-    energy = []
-    dEdx_data = []
-    for i in range(np.size(data)):
-        data[i] = data[i].split()
-        for j in range(2):
-            data[i][j] = float(data[i][j])*1e3    #  unit from MeV to keV 
-        energy.append(data[i][0])
-        dEdx_data.append(data[i][1])
-    energy = np.array(energy)  
-    dEdx_data = np.array(dEdx_data)        # unit:keV.cm^2.g-1
-    dEdx = np.interp(e,energy,dEdx_data)   
+    # e keV
+    # energy keV
+    # dEdx: keV.cm2/g
+    dEdx = np.interp(e,energy,dEdx)   
     return dEdx*rho                        #unit keV.cm-1
 
 
@@ -215,7 +217,7 @@ def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=dat
     return dEdx
 
 
-def stoppingpower(e,rho,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
+def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
     # e:eV ;rho: g.cm-3
     mc_2 = 0.511 #MeV
     I = 65e-6 #MeV
@@ -304,7 +306,7 @@ def E_quench_e(e,kB): # e : eV  kB:cm/MeV
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
-        q += delta/(1+kB*stoppingpower(i,rho=0.96,Z=72,A=151))
+        q += delta/(1+kB*stoppingpower(i))
     return q #eV
 
 def E_quench_a(e,kB): # e : keV   kB:cm/keV
@@ -312,13 +314,15 @@ def E_quench_a(e,kB): # e : keV   kB:cm/keV
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
-        q += delta/(1+kB*stoppingpowerA(i,doc='alpha_toulene.txt',rho=0.96))
+        q += delta/(1+kB*stoppingpowerA(i))
     return q #keV
 
+
+'''
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(10,2e4,10000) 
+x = np.linspace(2e4,2e5,2000) 
 
 for i in x:
     s1.append(E_quench_e(i,kB=7e-3)/i)
@@ -331,6 +335,7 @@ plt.plot(x,s3,label='E_quenched/E_0.014')
 #plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
-plt.xlabel('E_emitted(eV)')
-plt.ylabel('quenching energy/E_emitted (eV)')
-plt.savefig('quenching E.pdf')
+plt.xlabel('E_emitted/eV')
+plt.ylabel('quenching energy/E_emitted')
+plt.savefig('quenching E_20k-200keV.png')
+'''
