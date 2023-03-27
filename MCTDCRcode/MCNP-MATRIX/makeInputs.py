@@ -24,7 +24,7 @@ for i in energy_i:
             file.write(a)
         file.write("E18:P,E "+str(start_E)+" "+str(int(end_E/delta_E))+"i "+str(end_E)+"       $ binning of energy\n") # line 49
         file.write("NPS "+str(int(NPS))+"          $ number of source particles") # line 49
-
+    f = open("output/output_"+str(int(i))+"keV.o",'w')
 
 with open("script.bat", "w") as file2:
     for i in energy_i:

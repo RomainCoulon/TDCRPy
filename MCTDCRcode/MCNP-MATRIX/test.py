@@ -20,5 +20,4 @@ with open("input/test_input.mcn",mode='w') as file:
     file.write("E18:P,E "+str(15)+" "+str(int(15))+"i "+str(20)+"       $ binning of energy\n") # line 49
     file.write("NPS "+str(int(15))+"          $ number of source particles") # line 50
 
-
-    
+output = open("output/test.o",'w') 
