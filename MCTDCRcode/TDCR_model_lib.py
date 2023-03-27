@@ -215,13 +215,13 @@ def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=dat
     return dEdx
 
 
-def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
-    # e:eV
+def stoppingpower(e,rho,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
+    # e:eV ;rho: g.cm-3
     mc_2 = 0.511 #MeV
     I = 65e-6 #MeV
     NA = 6.02e23
     ahc = 1.437e-13   #MeV.cm
-    if e>=15000:
+    if e>=20000:
         e1 = e*1e-6 #MeV
         gamma = (e1+mc_2)/mc_2
         gamma_2 = gamma*gamma
@@ -232,7 +232,7 @@ def stoppingpower(e,rho,Z,A,emin=0,file=data_TanXia_f):
         termb = 1+tau*tau/8-(2*tau+1)*np.log(2)
         termc = (tau+1)**2
         B0 = terma + termb/termc
-        sc = 0.1535/beta_2*Z/A*(B0-2*np.log(I/mc_2))
+        sc = 0.1535/beta_2*Z/A*(B0-2*np.log(I/mc_2))  
         term3 = NA*(Z**2)*rho*(e1+mc_2)/(137*(mc_2**2)*A)
         term4 = 4* np.log(2*gamma) -4/3
         sr = (ahc**2)*term3*term4
@@ -299,7 +299,7 @@ def readBetaShape(rad,mode,trans):
     return e,dNdx
 
 
-def E_quench_e(e,kB): # e : eV
+def E_quench_e(e,kB): # e : eV  kB:cm/MeV
     e_dis = np.linspace(0,e,1000)
     delta = e_dis[2] - e_dis[1]
     q = 0
@@ -307,7 +307,7 @@ def E_quench_e(e,kB): # e : eV
         q += delta/(1+kB*stoppingpower(i,rho=0.96,Z=72,A=151))
     return q #eV
 
-def E_quench_a(e,kB): # e : keV
+def E_quench_a(e,kB): # e : keV   kB:cm/keV
     e_dis = np.linspace(0,e,1000)
     delta = e_dis[2] - e_dis[1]
     q = 0
@@ -318,20 +318,19 @@ def E_quench_a(e,kB): # e : keV
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(1,8e3,4000) 
+x = np.linspace(10,2e4,10000) 
 
 for i in x:
-    s1.append(E_quench_a(i,kB=7e-6))
-    s2.append(E_quench_a(i,kB=1e-5))
-    s3.append(E_quench_a(i,kB=1.4e-5))
+    s1.append(E_quench_e(i,kB=7e-3)/i)
+    s2.append(E_quench_e(i,kB=1e-2)/i)
+    s3.append(E_quench_e(i,kB=1.4e-2)/i)
 
-plt.plot(x,s2,label='E_quenched_0.01',ls=':',color='red',lw=3)
-plt.plot(x,s1,label='E_quenched_0.007',color='green',lw=2)
-plt.plot(x,s3,label='E_quenched_0.014')
+plt.plot(x,s2,label='E_quenched/E_0.01',ls=':',color='red',lw=3)
+plt.plot(x,s1,label='E_quenched/E_0.007',color='green',lw=2)
+plt.plot(x,s3,label='E_quenched/E_0.014')
 #plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
-plt.xlabel('E_emitted(keV)')
-plt.ylabel('quenching energy (keV)')
-plt.savefig('quenching energy_alpha.png')
-#'''
+plt.xlabel('E_emitted(eV)')
+plt.ylabel('quenching energy/E_emitted (eV)')
+plt.savefig('quenching E.pdf')
