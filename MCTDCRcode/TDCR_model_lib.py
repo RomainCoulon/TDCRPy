@@ -123,6 +123,8 @@ def readPenNuc(rad):
     transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
     return particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value
 
+
+
 f_alpha = open('alpha_toulene.txt')
 data_ASTAR = f_alpha.readlines()
 f_alpha.close()
@@ -144,6 +146,8 @@ def stoppingpowerA(e,energy=energy_alpha,dEdx=dEdx_alpha,rho=0.96):
     # dEdx: keV.cm2/g
     dEdx = np.interp(e,energy,dEdx)   
     return dEdx*rho                        #unit keV.cm-1
+
+
 
 
 file_TanXia=open('TandataUG.txt', "r"); data_TanXia=file_TanXia.read(); file_TanXia.close()
@@ -250,6 +254,8 @@ def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
     return dEdx    
 
 
+
+
 def readBetaSpectrum(rad):
     f=open("spectrum_"+rad+".txt", "r") # open the file 
     ne = 1000   # number of energy bins
@@ -318,11 +324,11 @@ def E_quench_a(e,kB): # e : keV   kB:cm/keV
     return q #keV
 
 
-'''
+
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(2e4,2e5,2000) 
+x = np.linspace(10,1e8,5000) 
 
 for i in x:
     s1.append(E_quench_e(i,kB=7e-3)/i)
@@ -337,5 +343,4 @@ plt.plot(x,s3,label='E_quenched/E_0.014')
 plt.legend(fontsize=12,loc='best')
 plt.xlabel('E_emitted/eV')
 plt.ylabel('quenching energy/E_emitted')
-plt.savefig('quenching E_20k-200keV.png')
-'''
+plt.savefig("quenching E_E_emitted _10-10MeV.png")
