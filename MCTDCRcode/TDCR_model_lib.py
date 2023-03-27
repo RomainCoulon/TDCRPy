@@ -338,7 +338,7 @@ for i in x:
 plt.plot(x,s2,label='E_quenched/E_0.01',ls=':',color='red',lw=3)
 plt.plot(x,s1,label='E_quenched/E_0.007',color='green',lw=2)
 plt.plot(x,s3,label='E_quenched/E_0.014')
-#plt.xscale('log')
+plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
 plt.xlabel('E_emitted/eV')
