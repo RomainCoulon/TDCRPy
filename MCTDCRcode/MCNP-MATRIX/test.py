@@ -8,7 +8,7 @@ delta_E= 0.2                             # the step the distribution / keV
 NPS = 1e5 
 
 
-with open("input/input_test.txt",mode='w') as file:
+with open("input/test_input.mcn",mode='w') as file:
     for i in range(1,44):
         a = lc.getline('input/template.txt',i)
         file.write(a)
