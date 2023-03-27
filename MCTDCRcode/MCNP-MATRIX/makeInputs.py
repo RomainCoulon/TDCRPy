@@ -27,4 +27,4 @@ for i in energy_i:
 
 with open("script.bat", "w") as file2:
     for i in energy_i:
-        file2.write("mcnp6 i=input\input_"+str(int(i))+"keV.mcn r=run/run_"+str(int(i))+"keV.r o=output/output_"+str(int(i))+"keV.o\n")
+        file2.write("mcnp6 i=input_"+str(int(i))+"keV.mcn r=run/run_"+str(int(i))+"keV.r o=output/output_"+str(int(i))+"keV.o\n")
