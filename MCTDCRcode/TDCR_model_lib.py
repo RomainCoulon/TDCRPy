@@ -324,7 +324,7 @@ def E_quench_a(e,kB): # e : keV   kB:cm/keV
     return q #keV
 
 
-
+'''
 s1 = []
 s2 = []
 s3 = []
@@ -344,3 +344,4 @@ plt.legend(fontsize=12,loc='best')
 plt.xlabel('E_emitted/eV')
 plt.ylabel('quenching energy/E_emitted')
 plt.savefig("quenching E_E_emitted _10-10MeV.png")
+'''
