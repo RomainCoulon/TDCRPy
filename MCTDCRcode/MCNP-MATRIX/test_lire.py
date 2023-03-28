@@ -19,6 +19,8 @@ def readMCNP(energy,np):
         data[j] = data[j].split()
         e.append(float(data[j][0]))
         p.append(float(data[j][1]))
+        
+    p /= sum(np.asarray(p)) # normaliser p
     return e,p
 
 e,p = readMCNP(1,100)
@@ -27,6 +29,7 @@ print(sum(p))
 plt.plot(e,p)
 plt.xlabel('Energy/MeV')
 plt.ylabel('Probability')
+plt.yscale('log')
 plt.title('spectre gamma at E=1MeV')
 plt.savefig('proba = f(E)_1MeV.png')
 #'''
