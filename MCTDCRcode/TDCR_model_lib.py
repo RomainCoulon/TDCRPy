@@ -124,7 +124,7 @@ def readPenNuc(rad):
     return particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value
 
 
-def stoppingpowerA(e,rho=0.866): 
+def stoppingpowerA(e,rho=0.96): 
     # rho: density of the absorber (g.cm-3)
     # e keV
     # energy keV
@@ -154,7 +154,7 @@ for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
 
-def stoppingpowerE(e,*,za=0.5459,rho=0.866,I=65,spmodel="Beth_Tan_Xia",emin=0,file=data_TanXia_f): # valid
+def stoppingpowerE(e,*,za=0.5459,rho=0.96,I=65,spmodel="Beth_Tan_Xia",emin=0,file=data_TanXia_f): # valid
     c1=0.57
     c2=1.16
     Cte=0.307075*c1           # Relativist constant /(eV.cm^2) 
@@ -326,7 +326,7 @@ def E_quench_e(e,kB): # e : eV  kB:cm/MeV
     return q #eV
 
 def E_quench_a(e,kB): # e : keV   kB:cm/keV
-    e_dis = np.linspace(0,e,10000)
+    e_dis = np.linspace(1,e,10000)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
