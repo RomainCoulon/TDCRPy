@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 def readMCNP(energy,np):
     e = []
     p = []
-    f = open('output/output_'+str(int(energy))+'keV.o')
+    f = open('output/output_'+str(int(energy))+'MeV.o')
     data = f.readlines()
     f.close()
 
@@ -21,12 +21,12 @@ def readMCNP(energy,np):
         p.append(float(data[j][1]))
     return e,p
 
-e,p = readMCNP(19,100)
+e,p = readMCNP(1,100)
 print(sum(p))
-'''
+#'''
 plt.plot(e,p)
 plt.xlabel('Energy/MeV')
 plt.ylabel('Probability')
-plt.title('spectre gamma at E=19keV')
-plt.savefig('proba = f(E)_19keV.png')
-'''
+plt.title('spectre gamma at E=1MeV')
+plt.savefig('proba = f(E)_1MeV.png')
+#'''
