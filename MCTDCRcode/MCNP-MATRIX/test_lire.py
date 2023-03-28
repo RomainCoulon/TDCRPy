@@ -1,5 +1,6 @@
 import numpy as np
 import linecache as lc
+import matplotlib.pyplot as plt
 
 def readMCNP(energy,np):
     e = []
@@ -16,9 +17,13 @@ def readMCNP(energy,np):
     end_point = m + 2 + np + 2
     for j in range(m+2,end_point):
         data[j] = data[j].split()
-        e.append(data[j][0])
-        p.append(data[j][1])
+        e.append(float(data[j][0]))
+        p.append(float(data[j][1]))
     return e,p
 
 e,p = readMCNP(8,100)
-print(p)
+plt.plot(e,p)
+plt.xlabel('Energy')
+plt.ylabel('Probability')
+plt.title('spectre gamma at E=8keV')
+plt.savefig('proba = f(E)_8keV.png')
