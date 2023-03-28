@@ -19,7 +19,7 @@ import scipy.stats as st
 N=1 # number of simulated decay (MC trials)
 
 
-Rad=["Pu-239"]       # list of radionuclides
+Rad=["H-3"]       # list of radionuclides
 pmf_1=[1.0]         # relative abondance (pmf)
 if np.size(pmf_1) > 1:
     if sum(pmf_1 !=1): print("warning p not equal to 1")
