@@ -333,7 +333,7 @@ def E_quench_a(e,kB): # e : keV   kB:cm/keV
         q += delta/(1+kB*stoppingpowerA(i))
     return q #keV
 
-print(E_quench_a(5.5e3,1e-5))
+#print(E_quench_a(5.5e3,1e-5))
 '''
 s1 = []
 s2 = []

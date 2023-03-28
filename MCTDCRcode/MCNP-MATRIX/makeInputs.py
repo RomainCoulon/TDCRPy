@@ -22,8 +22,8 @@ for i in energy_i:
         for l in range(45,49):
             a = lc.getline('input/template.txt',l) 
             file.write(a)
-        file.write("E18:P,E "+str(start_E)+" "+str(int(end_E/delta_E))+"i "+str(end_E)+"       $ binning of energy\n") # line 49
-        file.write("NPS "+str(int(NPS))+"          $ number of source particles") # line 49
+        file.write("E18:P,E "+str(start_E)+" "+str(int(end_E/delta_E))+"i "+str(end_E*1e-3)+"       $ binning of energy\n") # line 49
+        file.write("NPS "+str(int(NPS))+"          $ number of source particles") # line 50
     f = open("output/output_"+str(int(i))+"keV.o",'w')
     fr = open("run/run_"+str(int(i))+"keV.r",'w')
 
