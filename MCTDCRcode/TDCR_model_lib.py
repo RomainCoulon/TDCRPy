@@ -301,11 +301,21 @@ def readBetaShape(rad,mode,trans):
         if data[i][0] == 'E(keV)':break
     
     for j in range(i+1,len(data)):
-        e.append(data[j][0])
-        dNdx.append(data[j][1])
-        
+        e.append(float(data[j][0])) # convert to float
+        dNdx.append(float(data[j][1])) # convert to float
+    dNdx /= sum(np.asarray(dNdx)) # normalization
     return e,dNdx
 
+## Display beta spectra
+# out = readBetaShape("Eu-152", "beta-", "tot")
+# print(sum(out[1]))
+# plt.figure("beta spectrum")
+# plt.plot(out[0],out[1],label='Beta spectrum',ls='-',color='red',lw=3)
+# plt.xscale('linear')
+# plt.legend(fontsize=12,loc='best')
+# plt.xlabel(r'$E$ /keV', fontsize=12)
+# plt.ylabel(r'd$N$/d$E$ /keV$^{-1}$',fontsize=12)
+# plt.savefig("BetaSpectrum.png")
 
 def E_quench_e(e,kB): # e : eV  kB:cm/MeV
     e_dis = np.linspace(0,e,1000)
