@@ -19,12 +19,12 @@ import scipy.stats as st
 N=1 # number of simulated decay (MC trials)
 
 
-Rad=["Cs-137"]       # list of radionuclides
+Rad=["Am-241"]       # list of radionuclides
 pmf_1=[1.0]         # relative abondance (pmf)
 if np.size(pmf_1) > 1:
     if sum(pmf_1 !=1): print("warning p not equal to 1")
 elif pmf_1[0] != 1: print("warning")
-RHO = 0.866         #density of absorber (Toluene) g/cm3
+RHO = 0.96         #density of absorber (Toluene) g/cm3
 
 #kB = 0.01                  # Birks constant in cm/MeV
 #L = 0.0056                  # the free parameter /MeV-1
@@ -137,21 +137,21 @@ for i in range(N): # Main Loop
     print("\t Summary of the final charged particles")
     print("\t\t particles : ", particle_vec)
     print("\t\t energy : ", energy_vec, "keV")
- 
+
     ## Now we have the (particle, energy) vectors that we would like
 
     ## Calculation of the scintillation quenching with the Birks Model
     for i, p in enumerate(particle_vec):
         e_discrete = np.linspace(0,energy_vec[i],10000) # vector for the quenched  energy calculation keV
-        delta_e = e_discrete[2]-e_discrete[1]
+        delta_e = e_discrete[2]-e_discrete[1]  #keV
         if p == "alpha":
             energy_vec[i] = 0
             for j in e_discrete:
-                energy_vec[i] += delta_e/(1+kB*tl.stoppingpowerA(j,rho=RHO)) # input keV / output (keV.cm-1)
+                energy_vec[i] += delta_e/(1+kB*tl.stoppingpowerA(j)) # input keV / output (keV.cm-1)
         if p == "electron":
             energy_vec[i] = 0
             for j in e_discrete:
-                energy_vec[i] += (delta_e/((1+kB*1e3*tl.stoppingpowerE(j*1e3,rho=RHO)))) # input in eV / output in keV.cm
+                energy_vec[i] += delta_e/(1+kB*1e3*tl.stoppingpower(j*1e3)) # stoppingpower :input in eV / output in MeV.cm
     
     print("\t\t quenched energy : ", energy_vec, "keV")
     

@@ -124,7 +124,7 @@ def readPenNuc(rad):
     return particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value
 
 
-def stoppingpowerA(e,rho=0.96): 
+def stoppingpowerA(e,rho=0.866): 
     # rho: density of the absorber (g.cm-3)
     # e keV
     # energy keV
@@ -154,7 +154,7 @@ for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
 
-def stoppingpowerE(e,*,za=0.5459,rho,I=60,spmodel="Beth_Tan_Xia",emin=0,file=data_TanXia_f): # valid
+def stoppingpowerE(e,*,za=0.5459,rho=0.866,I=65,spmodel="Beth_Tan_Xia",emin=0,file=data_TanXia_f): # valid
     c1=0.57
     c2=1.16
     Cte=0.307075*c1           # Relativist constant /(eV.cm^2) 
@@ -304,6 +304,8 @@ def readBetaShape(rad,mode,trans):
     dNdx /= sum(np.asarray(dNdx)) # normalization
     return e,dNdx
 
+
+
 ## Display beta spectra
 # out = readBetaShape("H-3", "beta-", "tot")
 # print(sum(out[1]))
@@ -316,7 +318,7 @@ def readBetaShape(rad,mode,trans):
 # plt.savefig("BetaSpectrum.png")
 
 def E_quench_e(e,kB): # e : eV  kB:cm/MeV
-    e_dis = np.linspace(0,e,1000)
+    e_dis = np.linspace(0,e,10000)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
@@ -324,32 +326,32 @@ def E_quench_e(e,kB): # e : eV  kB:cm/MeV
     return q #eV
 
 def E_quench_a(e,kB): # e : keV   kB:cm/keV
-    e_dis = np.linspace(0,e,1000)
+    e_dis = np.linspace(0,e,10000)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
         q += delta/(1+kB*stoppingpowerA(i))
     return q #keV
 
-
+print(E_quench_a(5.5e3,1e-5))
 '''
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(10,1e8,5000) 
+x = np.linspace(10,1e4,1000) 
 
 for i in x:
-    s1.append(E_quench_e(i,kB=7e-3)/i)
-    s2.append(E_quench_e(i,kB=1e-2)/i)
-    s3.append(E_quench_e(i,kB=1.4e-2)/i)
+    s1.append(E_quench_e(i,kB=7e-3)*1e-3)
+    s2.append(E_quench_e(i,kB=1e-2)*1e-3)
+    s3.append(E_quench_e(i,kB=1.4e-2)*1e-3)
 
 plt.plot(x,s2,label='E_quenched/E_0.01',ls=':',color='red',lw=3)
 plt.plot(x,s1,label='E_quenched/E_0.007',color='green',lw=2)
 plt.plot(x,s3,label='E_quenched/E_0.014')
-plt.xscale('log')
+#plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
 plt.xlabel('E_emitted/eV')
-plt.ylabel('quenching energy/E_emitted')
-plt.savefig("quenching E_E_emitted _10-10MeV.png")
+plt.ylabel('quenching energy/E_emitted /keV')
+plt.savefig("quenching E_test 10-10k.png")
 '''
