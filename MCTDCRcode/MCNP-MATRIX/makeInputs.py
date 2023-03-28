@@ -5,7 +5,7 @@ import linecache as lc
 Matrix basse energie
 """
 
-energy_i = np.linspace(0, 20, 20)        # emitted energy / keV
+energy_i = np.linspace(0, 20, 21)        # emitted energy / keV
 start_E = 0                              # start for the deposited energy / keV
 end_E = 20                               # end for the deposited energy / keV
 delta_E= 0.2                             # the step the distribution / keV
@@ -24,8 +24,9 @@ for i in energy_i:
             file.write(a)
         file.write("E18:P,E "+str(start_E)+" "+str(int(end_E/delta_E))+"i "+str(end_E*1e-3)+"       $ binning of energy\n") # line 49
         file.write("NPS "+str(int(NPS))+"          $ number of source particles") # line 50
-    f = open("output1/output_"+"keV.txt",'w')
-    fr = open("run/run_"+str(int(i))+"keV.r",'w')
+    
+#f = open("output1/output_"+"keV.txt",'w')
+    
 
 with open("script.bat", "w") as file2:
     for i in energy_i:

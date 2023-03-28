@@ -41,7 +41,7 @@ M5   6000   0.33 $ C2F4
 M6   82000  1 $ Pb
 MODE P E
 SDEF POS=0 0 0.1 AXS=0 0 1 RAD=D2 EXT=D3 ERG=D1 PAR=P
-SI1 L 0.019             $ Energy in MeV
+SI1 L 0.018             $ Energy in MeV
 SP1   1                 $ Emission probability
 SI2 0 1.3               $ from 0 to 1.3 cm of radius
 SI3 0 1.885             $ from 0 to 1.9 cm of height

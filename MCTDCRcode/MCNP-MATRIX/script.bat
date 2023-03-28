@@ -17,4 +17,5 @@ mcnp6 i=input/input_15keV.mcn r=run/run_15keV.r o=output/output_15keV.o
 mcnp6 i=input/input_16keV.mcn r=run/run_16keV.r o=output/output_16keV.o
 mcnp6 i=input/input_17keV.mcn r=run/run_17keV.r o=output/output_17keV.o
 mcnp6 i=input/input_18keV.mcn r=run/run_18keV.r o=output/output_18keV.o
+mcnp6 i=input/input_19keV.mcn r=run/run_19keV.r o=output/output_19keV.o
 mcnp6 i=input/input_20keV.mcn r=run/run_20keV.r o=output/output_20keV.o
