@@ -22,8 +22,11 @@ def readMCNP(energy,np):
     return e,p
 
 e,p = readMCNP(19,100)
+print(sum(p))
+'''
 plt.plot(e,p)
 plt.xlabel('Energy/MeV')
 plt.ylabel('Probability')
 plt.title('spectre gamma at E=19keV')
 plt.savefig('proba = f(E)_19keV.png')
+'''
