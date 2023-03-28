@@ -307,7 +307,7 @@ def readBetaShape(rad,mode,trans):
     return e,dNdx
 
 ## Display beta spectra
-# out = readBetaShape("Eu-152", "beta-", "tot")
+# out = readBetaShape("H-3", "beta-", "tot")
 # print(sum(out[1]))
 # plt.figure("beta spectrum")
 # plt.plot(out[0],out[1],label='Beta spectrum',ls='-',color='red',lw=3)

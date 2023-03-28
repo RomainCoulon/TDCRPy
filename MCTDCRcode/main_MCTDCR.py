@@ -126,10 +126,11 @@ for i in range(N): # Main Loop
     # Once we have the matrix, build a function to sample in the matrix given E + interpolation feature
     for i, p in enumerate(particle_vec):
         if p == "beta":
-            e_beta, p_beta, n_bin = tl.readBetaSpectrum(rad_i)
+            # e_beta, p_beta, n_bin = tl.readBetaSpectrum(rad_i) # deprecated
+            e_beta, p_beta = tl.readBetaShape(rad_i, "beta-", "tot")
             index_beta_energy = tl.sampling(p_beta)
             particle_vec[i] = "electron"
-            energy_vec[i] = e_beta[index_beta_energy]*1e-3
+            energy_vec[i] = e_beta[index_beta_energy]
         if p == "gamma" or p == "x":
             particle_vec[i] = "electron" # false Compton scattering... to develop...!!!!!!!!!!!!!!
                
