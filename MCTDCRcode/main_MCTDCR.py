@@ -19,7 +19,7 @@ import scipy.stats as st
 N=1 # number of simulated decay (MC trials)
 
 
-Rad=["H-3"]       # list of radionuclides
+Rad=["Am-241"]       # list of radionuclides
 pmf_1=[1.0]         # relative abondance (pmf)
 if np.size(pmf_1) > 1:
     if sum(pmf_1 !=1): print("warning p not equal to 1")
@@ -147,7 +147,7 @@ for i in range(N): # Main Loop
         if p == "alpha":
             energy_vec[i] = 0
             for j in e_discrete:
-                energy_vec[i] += delta_e/(1+kB*tl.stoppingpowerA(j,'alpha_toulene.txt',RHO)) # input keV / output (keV.cm-1)
+                energy_vec[i] += delta_e/(1+kB*tl.stoppingpowerA(j,rho=RHO)) # input keV / output (keV.cm-1)
         if p == "electron":
             energy_vec[i] = 0
             for j in e_discrete:

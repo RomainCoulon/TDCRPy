@@ -124,27 +124,25 @@ def readPenNuc(rad):
     return particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value
 
 
-
-f_alpha = open('alpha_toulene.txt')
-data_ASTAR = f_alpha.readlines()
-f_alpha.close()
-energy_alpha = []
-dEdx_alpha = []
-for i in range(np.size(data_ASTAR)):
-    data_ASTAR[i] = data_ASTAR[i].split()
-    for j in range(2):
-        data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
-    energy_alpha.append(data_ASTAR[i][0])
-    dEdx_alpha.append(data_ASTAR[i][1])
-energy_alpha = np.array(energy_alpha)
-dEdx_alpha = np.array(dEdx_alpha)
-
-def stoppingpowerA(e,energy=energy_alpha,dEdx=dEdx_alpha,rho=0.96): 
+def stoppingpowerA(e,rho=0.96): 
     # rho: density of the absorber (g.cm-3)
     # e keV
     # energy keV
     # dEdx: keV.cm2/g
-    dEdx = np.interp(e,energy,dEdx)   
+    f_alpha = open('alpha_toulene.txt')
+    data_ASTAR = f_alpha.readlines()
+    f_alpha.close()
+    energy_alpha = []
+    dEdx_alpha = []
+    for i in range(np.size(data_ASTAR)):
+        data_ASTAR[i] = data_ASTAR[i].split()
+        for j in range(2):
+            data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
+        energy_alpha.append(data_ASTAR[i][0])
+        dEdx_alpha.append(data_ASTAR[i][1])
+    energy_alpha = np.array(energy_alpha)
+    dEdx_alpha = np.array(dEdx_alpha)
+    dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
     return dEdx*rho                        #unit keV.cm-1
 
 
