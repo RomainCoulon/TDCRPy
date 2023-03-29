@@ -54,11 +54,11 @@ taille_y = npas+1
 energy_inci = np.linspace(start_energy,end_energy,taille_x)
 matrice_p = np.zeros((taille_y,taille_x))
 matrice_cdf = np.zeros((taille_y,taille_x))
-
+#print(taille_x)
 
 for i in range(taille_x):
     energy = energy_inci[i]
-    if energy==0:continue
+    if energy==0.:continue
     e,p = readMCNP(energy,npas)
     cdf = np.cumsum(p)
     matrice_p[0][i] = energy
@@ -67,7 +67,12 @@ for i in range(taille_x):
         matrice_p[j][i] = p[j-1]
         matrice_cdf[j][i] = cdf[j-1]
 
-#print(type(matrice_cdf[5][5]))
+if energy_inci[0] == 0.:
+    matrice_p = np.delete(matrice_p,0,axis=1)
+    matrice_cdf = np.delete(matrice_cdf,0,axis=1)
+    taille_x = taille_x - 1
+    #print(energy)
+#print(matrice_p[0][:])
 
 #'''
 with open('matrice/matrice_0_20k.txt','w') as file:
