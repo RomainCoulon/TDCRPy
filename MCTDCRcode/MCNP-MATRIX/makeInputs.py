@@ -5,11 +5,11 @@ import linecache as lc
 Matrix basse energie
 """
 
-energy_i = np.linspace(0, 20, 21)        # emitted energy / keV
+energy_i = np.linspace(0, 200, 201)        # emitted energy / keV
 start_E = 0                              # start for the deposited energy / keV
-end_E = 20                               # end for the deposited energy / keV
+end_E = 200                               # end for the deposited energy / keV
 delta_E= 0.2                             # the step the distribution / keV
-NPS = 1e5                                # number of source particlules for the MC calculation
+NPS = 1e6                                # number of source particlules for the MC calculation
 
 
 for i in energy_i:
