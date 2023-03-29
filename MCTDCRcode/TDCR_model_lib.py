@@ -124,6 +124,10 @@ def readPenNuc(rad):
     return particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value
 
 
+#===============================================================================================================
+
+#================================== StoppingPower for alpha particle ===========================================
+
 def stoppingpowerA(e,rho=0.96): 
     # rho: density of the absorber (g.cm-3)
     # e keV
@@ -146,6 +150,10 @@ def stoppingpowerA(e,rho=0.96):
     return dEdx*rho                        #unit keV.cm-1
 
 
+#===================================================================================================================
+
+
+#===================================================================================================================
 
 
 file_TanXia=open('TandataUG.txt', "r"); data_TanXia=file_TanXia.read(); file_TanXia.close()
@@ -219,6 +227,12 @@ def stoppingpowerE(e,*,za=0.5459,rho=0.96,I=65,spmodel="Beth_Tan_Xia",emin=0,fil
     return dEdx
 
 
+
+
+#===============================================================================================
+
+#========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
+
 def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
     # e:eV ;rho: g.cm-3
     mc_2 = 0.511 #MeV
@@ -250,8 +264,9 @@ def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
     if dEdx<0:
         dEdx=0
     return dEdx    
+#===================================================================================================
 
-
+#===================================================================================================
 
 
 def readBetaSpectrum(rad):
@@ -268,6 +283,11 @@ def readBetaSpectrum(rad):
     p=p/sumP # re-normilize to make the sum of probabilities equal to 1
     f.close() #close the file
     return e, p, ne
+
+
+#=============================================================================================
+
+#====================  Fonction pour lire BetaShape   ========================================
 
 def readBetaShape(rad,mode,trans):
     # mode(str): 'beta-','beta+'
@@ -304,7 +324,7 @@ def readBetaShape(rad,mode,trans):
     dNdx /= sum(np.asarray(dNdx)) # normalization
     return e,dNdx
 
-
+#=====================================================================================
 
 ## Display beta spectra
 # out = readBetaShape("H-3", "beta-", "tot")
@@ -316,6 +336,11 @@ def readBetaShape(rad,mode,trans):
 # plt.xlabel(r'$E$ /keV', fontsize=12)
 # plt.ylabel(r'd$N$/d$E$ /keV$^{-1}$',fontsize=12)
 # plt.savefig("BetaSpectrum.png")
+
+
+#=======================================================================================
+
+#============================  Fonction quenching  =====================================
 
 def E_quench_e(e,kB): # e : eV  kB:cm/MeV
     e_dis = np.linspace(0,e,10000)
@@ -333,7 +358,16 @@ def E_quench_a(e,kB): # e : keV   kB:cm/keV
         q += delta/(1+kB*stoppingpowerA(i))
     return q #keV
 
+#=========================================================================================
+
+
+
 #print(E_quench_a(5.5e3,1e-5))
+
+#======================================================================================
+
+#========================= Tracer les courbes avec kB différents ======================
+
 '''
 s1 = []
 s2 = []
@@ -355,3 +389,6 @@ plt.xlabel('E_emitted/eV')
 plt.ylabel('quenching energy/E_emitted /keV')
 plt.savefig("quenching E_test 10-10k.png")
 '''
+#============================================================================================
+
+#============================================================================================
