@@ -23,8 +23,8 @@ def readMCNP(energy,np1):
     p /= sum(np.asarray(p)) # normaliser p
     return e,p
 
-e,p = readMCNP(4,100)
-print(np.cumsum(p))
+e,p = readMCNP(4,1000)
+print(sum(p))
 
 '''
 plt.plot(e,p)
