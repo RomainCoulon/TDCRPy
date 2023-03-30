@@ -1,6 +1,8 @@
 # code pour créer un fichier pour la matrice d'énergie incidente et d'énergie déposée et la matrice CDF
 
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 start_energy = 0      #keV --- debut de enrgie incidente
 end_energy = 20      #keV --- fin de energie incidente
@@ -73,6 +75,10 @@ if energy_inci[0] == 0.:
     taille_x = taille_x - 1
     #print(energy)
 #print(matrice_p[0][:])
+
+plt.matshow(matrice_p,cmap=plt.cm.Reds)
+plt.savefig('matrice/matrice.png')
+
 
 #'''
 with open('matrice/matrice_0_20k.txt','w') as file:
