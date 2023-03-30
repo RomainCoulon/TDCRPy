@@ -113,6 +113,7 @@ for i in range(N): # Main Loop
     ## Probably in link with the internal conversion EK, EL, EM (voir variable transitionType)
     ## You can try to see how we can use data from file".lara.txt"  (L icon on LNHB web site)
     ## We can trick/simply at first time
+    ## Look at the EADL https://www.nndc.bnl.gov/nndc/proceedings/2010csewgusndp/Tuesday/USNDP/eadl.pdf
     
     
     ## Calculation of deposited energy in the liquid source in the vial
@@ -128,6 +129,7 @@ for i in range(N): # Main Loop
         if p == "beta":
             # e_beta, p_beta, n_bin = tl.readBetaSpectrum(rad_i) # deprecated
             e_beta, p_beta = tl.readBetaShape(rad_i, "beta-", "tot")
+            # We will have to do the same as for gamma rays (a matrix) to account wall effects at high energy
             index_beta_energy = tl.sampling(p_beta)
             particle_vec[i] = "electron"
             energy_vec[i] = e_beta[index_beta_energy]
