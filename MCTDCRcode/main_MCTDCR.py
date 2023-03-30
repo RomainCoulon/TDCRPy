@@ -112,9 +112,8 @@ for i in range(N): # Main Loop
     ## to produce x-rays and Auger electrons
     ## Probably in link with the internal conversion EK, EL, EM (voir variable transitionType)
     ## You can try to see how we can use data from file".lara.txt"  (L icon on LNHB web site)
-    ## We can trick/simply at first time
     ## Look at the EADL https://www.nndc.bnl.gov/nndc/proceedings/2010csewgusndp/Tuesday/USNDP/eadl.pdf
-    
+    ## Also BrIccEmisDB ...
     
     ## Calculation of deposited energy in the liquid source in the vial
     # For alpha particle - do nothing / we consider that all the energy is release in the solution
