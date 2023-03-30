@@ -126,24 +126,29 @@ def readPenNuc(rad):
 
 #===============================================================================================================
 
+
+
 #================================== StoppingPower for alpha particle ===========================================
 
-def stoppingpowerA(e,rho=0.96): 
+f_alpha = open('alpha_toulene.txt')
+data_ASTAR = f_alpha.readlines()
+f_alpha.close()
+energy_alph = []
+dEdx_alph = []
+for i in range(np.size(data_ASTAR)):
+    data_ASTAR[i] = data_ASTAR[i].split()
+    for j in range(2):
+        data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
+    energy_alpha.append(data_ASTAR[i][0])
+    dEdx_alpha.append(data_ASTAR[i][1])
+
+
+
+def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph): 
     # rho: density of the absorber (g.cm-3)
     # e keV
     # energy keV
     # dEdx: keV.cm2/g
-    f_alpha = open('alpha_toulene.txt')
-    data_ASTAR = f_alpha.readlines()
-    f_alpha.close()
-    energy_alpha = []
-    dEdx_alpha = []
-    for i in range(np.size(data_ASTAR)):
-        data_ASTAR[i] = data_ASTAR[i].split()
-        for j in range(2):
-            data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
-        energy_alpha.append(data_ASTAR[i][0])
-        dEdx_alpha.append(data_ASTAR[i][1])
     energy_alpha = np.array(energy_alpha)
     dEdx_alpha = np.array(dEdx_alpha)
     dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
@@ -265,6 +270,37 @@ def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
         dEdx=0
     return dEdx    
 #===================================================================================================
+
+#===================================================================================================
+#============================tracer stopping power of electron and alpha ===========================
+
+'''
+e1 = np.linspace(10,1.99e4,10000)
+e2 = np.linspace(1.99e4,1e8,20000)
+sp1 = []
+for i in e1:
+    sp1.append(stoppingpower(i))
+sp2=[]
+for i in e2:
+    sp2.append(stoppingpower(i))
+
+ea = np.linspace(1,8e3,4000)
+spa = []
+for i in ea:
+    spa.append(stoppingpowerA(i)*1e-3)
+x = ea*1e3
+plt.plot(e1,sp1,color='blue',label="pouvoir d'arrête électron")
+plt.plot(e2,sp2,color='blue')
+plt.plot(x,spa,label="pouvoir d'arrête alpha")
+plt.xscale('log')
+plt.yscale('log')
+plt.title("pouvoir d'arrête d'electron et alpha")
+plt.ylabel("pouvoir d'arrête/MeV.cm-1")
+plt.xlabel('énergie cinétique/eV')
+plt.legend(fontsize=10,loc='best')
+plt.savefig('stoppingpowerE_A.png')
+
+'''
 
 #===================================================================================================
 
