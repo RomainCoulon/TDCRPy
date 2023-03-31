@@ -3,6 +3,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 #import matplotlib.colors as mcolors
+import matplotlib.axes as ma
+
 
 start_energy = 0      #keV --- debut de enrgie incidente
 end_energy = 20      #keV --- fin de energie incidente
@@ -79,6 +81,7 @@ x = matrice_p.shape[1]
 y = matrice_p.shape[0]
 #print(x,y)
 
+'''
 for i in range(x):
     x1 = matrice_p[0][i]
     #a = energy_inci[i]
@@ -91,6 +94,11 @@ for i in range(x):
 plt.yscale('log')
 plt.xticks(np.arange(1,21,1))  
 plt.savefig('matrice/matrice.png')
+'''
+
+plt.imshow(matrice_p,aspect='auto')
+plt.savefig('matrice/matr.png')
+
 
 
 
