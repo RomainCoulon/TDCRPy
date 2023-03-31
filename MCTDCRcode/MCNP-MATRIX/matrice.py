@@ -97,7 +97,7 @@ plt.savefig('matrice/matrice.png')
 '''
 #m = matrice_p[0:15][:]
 #print(m)
-plt.imshow(matrice_p[0:15][:],aspect='auto')
+plt.imshow(matrice_p[1:15][:],aspect='auto')
 plt.savefig('matrice/matr.png')
 
 
