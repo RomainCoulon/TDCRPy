@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-
+#import matplotlib.colors as mcolors
 
 start_energy = 0      #keV --- debut de enrgie incidente
 end_energy = 20      #keV --- fin de energie incidente
@@ -75,12 +75,26 @@ if energy_inci[0] == 0.:
     taille_x = taille_x - 1
     #print(energy)
 #print(matrice_p[0][:])
+x = matrice_p.shape[1]
+y = matrice_p.shape[0]
+#print(x,y)
 
-plt.matshow(matrice_p,cmap=plt.cm.Reds)
+for i in range(x):
+    x1 = matrice_p[0][i]
+    #a = energy_inci[i]
+    #x = np.linspace(a,a,1002)
+    col = tuple(np.random.rand(3))
+    for j in range(1,y):
+        y1 = matrice_p[j][i]
+        plt.scatter(x1,y1,color=col)  
+        #print(x1,y1)
+plt.yscale('log')
+plt.xticks(np.arange(1,21,1))  
 plt.savefig('matrice/matrice.png')
 
 
-#'''
+
+'''
 with open('matrice/matrice_0_20k.txt','w') as file:
     file.write('# matrice energy\n')
     for i in range(taille_y):
@@ -95,4 +109,4 @@ with open('matrice/matrice_0_20k.txt','w') as file:
             file.write("%e"%matrice_cdf[i][j])
             file.write('         ')
         file.write('\n')
-#'''    
+'''   
