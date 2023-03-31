@@ -98,7 +98,8 @@ plt.savefig('matrice/matrice.png')
 #m = matrice_p[0:15][:]
 #print(m)
 plt.imshow(matrice_p[1:15][:],aspect='auto')
-plt.xticks(np.arange(1,21,1))
+plt.xticks(np.arange(1,20,1))
+plt.yticks(e[0:15])
 plt.savefig('matrice/matr.png')
 
 
