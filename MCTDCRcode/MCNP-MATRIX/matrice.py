@@ -54,7 +54,7 @@ def readMCNP(energy,npas,mode='N'):
 
 
 taille_x = int((end_energy - start_energy + 1)/delta_incident)
-taille_y = npas+1
+taille_y = npas+2
 energy_inci = np.linspace(start_energy,end_energy,taille_x)
 matrice_p = np.zeros((taille_y,taille_x))
 matrice_cdf = np.zeros((taille_y,taille_x))
@@ -77,8 +77,8 @@ if energy_inci[0] == 0.:
     taille_x = taille_x - 1
     #print(energy)
 #print(matrice_p[0][:])
-x = matrice_p.shape[1]
-y = matrice_p.shape[0]
+#x = matrice_p.shape[1]
+#y = matrice_p.shape[0]
 #print(x,y)
 
 '''
@@ -95,8 +95,9 @@ plt.yscale('log')
 plt.xticks(np.arange(1,21,1))  
 plt.savefig('matrice/matrice.png')
 '''
-
-plt.imshow(matrice_p,aspect='auto')
+#m = matrice_p[0:15][:]
+#print(m)
+plt.imshow(matrice_p[0:15][:],aspect='auto')
 plt.savefig('matrice/matr.png')
 
 
