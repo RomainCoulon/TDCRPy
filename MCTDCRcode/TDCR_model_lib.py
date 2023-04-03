@@ -139,12 +139,12 @@ for i in range(np.size(data_ASTAR)):
     data_ASTAR[i] = data_ASTAR[i].split()
     for j in range(2):
         data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
-    energy_alpha.append(data_ASTAR[i][0])
-    dEdx_alpha.append(data_ASTAR[i][1])
+    energy_alph.append(data_ASTAR[i][0])
+    dEdx_alph.append(data_ASTAR[i][1])
 
 
 
-def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph): 
+def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     # rho: density of the absorber (g.cm-3)
     # e keV
     # energy keV
