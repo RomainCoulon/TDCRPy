@@ -16,7 +16,7 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=1               # number of simulated decay (MC trials)
+N=5               # number of simulated decay (MC trials)
 Rad=["H-3"]       # list of radionuclides
 pmf_1=[1.0]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
@@ -150,11 +150,11 @@ for L_i in L: # loop on the free parameter values
             if p == "alpha":
                 energy_vec[i] = 0
                 for j in e_discrete:
-                    energy_vec[i] += delta_e/(1+kB*tl.stoppingpowerA(j)) # input keV / output (keV.cm-1)
+                    energy_vec[i] += delta_e/(1+kB*tl.stoppingpowerA(j)) # input (keV) / output (keV)
             if p == "electron":
                 energy_vec[i] = 0
                 for j in e_discrete:
-                    energy_vec[i] += delta_e/(1+kB*1e3*tl.stoppingpower(j*1e3)) # stoppingpower :input in eV / output in MeV.cm
+                    energy_vec[i] += delta_e/(1+kB*1e3*tl.stoppingpower(j*1e3)) # stoppingpower :input in (eV) / output (keV)
     
        print("\t\t quenched energy : ", energy_vec, "keV")
 
@@ -162,6 +162,7 @@ for L_i in L: # loop on the free parameter values
        ## We fill our 3 results vectors
        efficiency_T.append((1-np.exp(-L_i*sum(energy_vec)/3))**3)
        efficiency_D.append(3*(1-np.exp(-L_i*sum(energy_vec)/3))**2-2*efficiency_T[-1])
+
 
     # We calculate the final estimator
     mean_efficiency_T.append(np.mean(efficiency_T)) # average
