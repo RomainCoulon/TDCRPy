@@ -17,10 +17,10 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=5               # number of simulated decay (MC trials)
-Rad=["Sr-90"]       # list of radionuclides
+Rad=["H-3"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
-L = np.arange(1e-2,5,5e-2) # Free paramete in keV-1
+L = np.arange(1e-2,3,5e-2) # Free paramete in keV-1
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 RHO = 0.96         #density of absorber (Toluene) g/cm3
@@ -160,8 +160,9 @@ for L_i in L: # loop on the free parameter values
 
        ## Calculation of the TDCR ratio 
        ## We fill our 3 results vectors
-       efficiency_T.append((1-np.exp(-L_i*sum(energy_vec)/3))**3)
-       efficiency_D.append(3*(1-np.exp(-L_i*sum(energy_vec)/3))**2-2*efficiency_T[-1])
+       p_single = 1-np.exp(-L_i*sum(energy_vec)/3)
+       efficiency_T.append((p_single)**3)
+       efficiency_D.append(3*(p_single)**2-2*efficiency_T[-1])
 
 
     # We calculate the final estimator
@@ -199,6 +200,7 @@ for L_i in L: # loop on the free parameter values
     plt.figure("Efficiency curve")
     plt.title(''.join(Rad))
     plt.plot(TDCR_calcul_vec,efficiency_D,".k")[0]
+    plt.plot(TDCR_calcul_vec,efficiency_T,".b")[0]
     #plt.plot([TDCR_measure, TDCR_measure], [min(mean_efficiency_D), max(mean_efficiency_D)], '-r', label="Measurement")
     plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
     plt.ylabel(r"$\epsilon_D$", fontsize = 14)
