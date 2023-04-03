@@ -17,8 +17,8 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=5               # number of simulated decay (MC trials)
-Rad=["H-3"]       # list of radionuclides
-pmf_1=[1.0]       # relative abondance (pmf)
+Rad=["Sr-90"]       # list of radionuclides
+pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 L = np.arange(1e-2,5,5e-2) # Free paramete in keV-1
 TDCR_measure = 0.977784        # Measured TDCR value
@@ -26,7 +26,7 @@ u_TDCR_measure = 0.000711      # standard uncertainty
 RHO = 0.96         #density of absorber (Toluene) g/cm3
 
 if np.size(pmf_1) > 1:
-    if sum(pmf_1 !=1): print("warning p not equal to 1")
+    if sum(pmf_1) !=1: print("warning p not equal to 1")
 elif pmf_1[0] != 1: print("warning")
 
 plt.figure("Efficiency curve")
