@@ -16,12 +16,15 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=5               # number of simulated decay (MC trials)
-Rad=["H-3"]       # list of radionuclides
+N=20              # number of simulated decay (MC trials)
+Rad=["C-14"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 #L=[1e-1]
-L = np.arange(1e-2,3,5e-2) # Free paramete in keV-1 (for H-3)
+#L = np.logspace(-4,-2,10) # Free paramete in keV-1 (for Co-60)
+#L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
+#L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
+L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 RHO = 0.96         #density of absorber (Toluene) g/cm3
@@ -30,13 +33,11 @@ if np.size(pmf_1) > 1:
     if sum(pmf_1) !=1: print("warning p not equal to 1")
 elif pmf_1[0] != 1: print("warning")
 
-plt.figure("Efficiency curve")
-plt.clf()
-plt.close()
 mean_efficiency_T = []  # efficiency of triple coincidence counte rate
 std_efficiency_T = []   # std
 mean_efficiency_D = []  # efficiency of double coincidence counte rate
 std_efficiency_D = []   # std
+TDCR_calcul = []
 for L_i in L: # loop on the free parameter values
 
     ## RUN THE MC CALCULATION
@@ -171,7 +172,8 @@ for L_i in L: # loop on the free parameter values
     std_efficiency_T.append(np.std(efficiency_T))   # standard deviation
     mean_efficiency_D.append(np.mean(efficiency_D))
     std_efficiency_D.append(np.std(efficiency_D))
-
+    TDCR_calcul.append(mean_efficiency_T[-1]/mean_efficiency_D[-1])
+    
     print("\t TDCR calculation")
     print("\t\t Free parameter : ", L_i, " keV-1")
     print("\t\t Efficiency of Triple coincident events : ", round(100*mean_efficiency_T[-1],3), "+/-", round(100*std_efficiency_T[-1],3), " %")
@@ -197,24 +199,28 @@ for L_i in L: # loop on the free parameter values
 #    plt.legend(fontsize = 12)
 #    plt.savefig('TDCRdistribution.png')
 
-    TDCR_calcul_vec = np.asarray(efficiency_T)/np.asarray(efficiency_D)
-    plt.figure("Efficiency curve")
-    plt.title(''.join(Rad))
-    plt.plot(np.mean(TDCR_calcul_vec),np.mean(efficiency_D),".k")[0]
-    plt.plot(np.mean(TDCR_calcul_vec),np.mean(efficiency_T),".b")[0]
-    #plt.plot([TDCR_measure, TDCR_measure], [min(mean_efficiency_D), max(mean_efficiency_D)], '-r', label="Measurement")
-    plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
-    plt.ylabel(r"$\epsilon_D$", fontsize = 14)
-    # plt.legend(fontsize = 12)
-    plt.savefig("EfficiencyCurves/"+''.join(Rad)+".png")
+# TDCR_calcul_vec = np.asarray(efficiency_T)/np.asarray(efficiency_D)
+
+
+plt.figure("Efficiency curve I")
+plt.title(''.join(Rad))
+plt.plot(L,mean_efficiency_D,".k",label = "D")[0]
+plt.plot(L,mean_efficiency_T,".r", label = "T")[0]
+plt.xscale("log")
+#plt.plot(np.mean(TDCR_calcul_vec)*np.ones(N),efficiency_T,".b")[0]
+#plt.plot([TDCR_measure, TDCR_measure], [min(mean_efficiency_D), max(mean_efficiency_D)], '-r', label="Measurement")
+plt.xlabel(r"$L$ /keV$^{-1}$", fontsize = 14)
+plt.ylabel(r"$\epsilon$", fontsize = 14)
+plt.legend(fontsize = 12)
+plt.savefig("EfficiencyCurves/fom_"+''.join(Rad)+".png")
 plt.close()
 
-#TDCR_calcul = np.asarray(mean_efficiency_T)/np.asarray(mean_efficiency_D)
-#plt.figure("Efficiency curve")
-#plt.clf()
-#plt.plot(TDCR_calcul,mean_efficiency_D,".k",label="efficiency curve")[0]
-##plt.plot([TDCR_measure, TDCR_measure], [min(mean_efficiency_D), max(mean_efficiency_D)], '-r', label="Measurement")
-#plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
-#plt.ylabel(r"$\epsilon_D$", fontsize = 14)
-#plt.legend(fontsize = 12)
-#plt.savefig("EfficiencyCurves/"+str(Rad)+".png")
+plt.figure("Efficiency curve II")
+plt.title(''.join(Rad))
+plt.plot(TDCR_calcul,mean_efficiency_D,".k", label = "D")[0]
+plt.plot(TDCR_calcul,mean_efficiency_T,".r",label = "T")[0]
+plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
+plt.ylabel(r"$\epsilon_D$", fontsize = 14)
+plt.legend(fontsize = 12)
+plt.savefig("EfficiencyCurves/tdcr_"+''.join(Rad)+".png")
+plt.close()
