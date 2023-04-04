@@ -6,23 +6,29 @@ import matplotlib.pyplot as plt
 import matplotlib.axes as ma
 
 
-start_energy = 0      #keV --- debut de enrgie incidente
-end_energy = 20      #keV --- fin de energie incidente
+start_energy = 0         # keV --- debut de enrgie incidente
+end_energy = 20          # keV --- fin de energie incidente
 
-if end_energy <= 200:
-     delta_incident = 1    #keV --- delta de energie incidente
-     #npas = 1000  # nombre de pas 
-     #delta_E = 0.2         #keV --- delta_E de l'energie deposee
-elif end_energy <=2000:
-     delta_incident = 1    #keV --- delta de energie incidente
-     #npas = 2000  # nombre de pas 
-     #delta_E = 1         #keV --- delta_E de l'energie deposee
-else:
-     delta_incident = 10    #keV --- delta de energie incidente
-     #npas = 1000  # nombre de pas 
-     #delta_E = 10         #keV --- delta_E de l'energie deposee
+'''
+if end_energy <= 200:       # 1k - 200k
+     delta_incident = 1     # keV --- delta de energie incidente
+     #n_ei = 200            # nombre de pas de l'énergie incidente
+     #npas = 1000           # nombre de pas de l'énergie déposée
+     #delta_E = 0.2         # keV --- delta_E de l'energie deposee
 
-npas = 1000  # nombre de pas 
+elif end_energy <=2000:     # 200k - 2M
+     delta_incident = 2     # keV --- delta de energie incidente
+     #n_ei = 1800           # nombre de pas de l'énergie incidente (200k - 2M)
+     #npas = 1000           # nombre de pas de l'énergie déposée
+     #delta_E = 2           # keV --- delta_E de l'energie deposee
+
+else:                       # 2M - 10M 
+     delta_incident = 10    # keV --- delta de energie incidente
+     #n_ei = 800            # nombre de pas de l'énergie incidente (2M - 10M)
+     #npas = 1000           # nombre de pas de l'énergie déposée 
+     #delta_E = 10          # keV --- delta_E de l'energie deposee
+'''
+npas = 1000                 # nombre de pas de l'énergie déposée
 
 #========================================================================================
 
@@ -52,24 +58,44 @@ def readMCNP(energy,npas,mode='N'):
     return e,p
 
 
+# ---------------------- créer la matrice de pdf et cdf -----------------------
 
-taille_x = int((end_energy - start_energy + 1)/delta_incident)
-taille_y = npas+2
-energy_inci = np.linspace(start_energy,end_energy,taille_x)
-matrice_p = np.zeros((taille_y,taille_x))
-matrice_cdf = np.zeros((taille_y,taille_x))
-#print(taille_x)
+def creat_matrice(niveau,mode,npas=1000):
+    # niveau : 1 -- énergie basse (0-200k); 2 -- énergie moyenne (200k-2M); 3 -- haute énergie (2M-10M)
+    # mode : pdf -- probabilité ; cdf -- cumsum
+    if niveau == 0:
+        end_energy = 200
+        start_energy = 1
+        taille_x = 200      # 1k-200k où delta=1k
 
-for i in range(taille_x):
-    energy = energy_inci[i]
-    if energy==0.:continue
-    e,p = readMCNP(energy,npas)
-    cdf = np.cumsum(p)
-    matrice_p[0][i] = energy
-    matrice_cdf[0][i] = energy
-    for j in range(1,taille_y):
-        matrice_p[j][i] = p[j-1]
-        matrice_cdf[j][i] = cdf[j-1]
+    elif niveau == 1:
+        end_energy = 2000
+        start_energy = 200
+        taille_x = 901     # 200k-2000k où delta=1k
+
+    else:
+        end_energy = 1e4
+        start_energy = 2e3
+        taille_x = 801      #2M-10M où delta = 0.1M
+
+    taille_y = npas+2
+    energy_inci = np.linspace(start_energy,end_energy,taille_x)
+    matrice_p = np.zeros((taille_y,taille_x))
+    #matrice_cdf = np.zeros((taille_y,taille_x))
+
+    for i in range(taille_x):
+        energy = energy_inci[i]
+        e,p = readMCNP(energy,npas)
+        if mode=="cdf":
+            p = np.cumsum(p)
+        matrice_p[0][i] = energy
+        #matrice_cdf[0][i] = energy
+        for j in range(1,taille_y):
+            matrice_p[j][i] = p[j-1]
+            #matrice_cdf[j][i] = cdf[j-1]
+
+    return e,matrice_p
+
 
 if energy_inci[0] == 0.:
     matrice_p = np.delete(matrice_p,0,axis=1)
@@ -81,34 +107,90 @@ if energy_inci[0] == 0.:
 #y = matrice_p.shape[0]
 #print(x,y)
 
+#'''
+def matrice_fig(matrice_p,start,end,e): 
+    # matrice_p : la matrice complète de chaque gamme
+    # vecteur de l'énergie déposée pour chaque gamme
+    # start et end en keV
+
+    if end <= 200:      # delta_Ei = 1
+        delta_Ei = 1
+        d_end = int(end/201*1000)
+        i_st = int(start-1)
+        i_end = int(end-1)
+        x = i_end - i_st
+
+    elif end <= 2000:    # delta_Ei = 1
+        delta_Ei = 1
+        d_end = int(end/2001*1000)
+        i_st = int(start-200)
+        i_end = int(end-200)
+        x = i_end - i_st
+
+    else:               # 
+        delta_Ei = 10
+        d_end = int(end/(1e4+1)*1000)
+        i_st = int((start-2000)/10)
+        i_end = int((end-2000)/10)
+        x = i_end - i_st
+
+    zz = matrice_p[1:d_end+1,i_st:i_end]  # matrice 
+    xx = np.ones((d_end,x))
+    yy = np.ones((d_end,x))
+    
+    for i in range(x):
+        xx[:,i] = i * delta_Ei + start
+        yy[:,i] = e[0:d_end]
+    
+    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot)
+    cb = plt.colorbar(h)
+    cb.set_label("probabilité")
+    plt.xlabel("énergie incidente/keV")
+    plt.ylabel("énergie déposée/MeV")
+    name = "matrice/matrice_" + str(start) + "_" + str(end) + "k.png"
+    plt.savefig(name)
+
+#'''
+
+
+
+
+def ecrit_matrice(matrice_p,matrice_cdf,niveau):
+    if niveau == 0:
+        end_energy = 200
+        start_energy = 1
+        taille_x = 200      # 1k-200k où delta=1k
+
+    elif niveau == 1:
+        end_energy = 2000
+        start_energy = 200
+        taille_x = 901     # 200k-2000k où delta=1k
+
+    else:
+        end_energy = 1e4
+        start_energy = 2e3
+        taille_x = 801      #2M-10M où delta = 0.1M
+
+    name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
+    with open(name,'w') as file:
+    file.write('# matrice energy\n')
+    for i in range(taille_y):
+        for j in range(taille_x):
+            file.write("%e"%matrice_p[i][j])
+            file.write('         ')
+        file.write('\n')
+    file.write('\n')
+    file.write('\n')
+    for i in range(taille_y):
+        for j in range(taille_x):
+            file.write("%e"%matrice_cdf[i][j])
+            file.write('         ')
+        file.write('\n')
+
+    
 '''
-for i in range(x):
-    x1 = matrice_p[0][i]
-    #a = energy_inci[i]
-    #x = np.linspace(a,a,1002)
-    col = tuple(np.random.rand(3))
-    for j in range(1,y):
-        y1 = matrice_p[j][i]
-        plt.scatter(x1,y1,color=col)  
-        #print(x1,y1)
-plt.yscale('log')
-plt.xticks(np.arange(1,21,1))  
-plt.savefig('matrice/matrice.png')
-'''
-#m = matrice_p[0:15][:]
-#print(m)
-#yl = e[15]
-plt.imshow(matrice_p[1:][:],aspect='auto')
-plt.xticks(matrice_p[0][:])
-#plt.ylim(0,yl)
-#plt.yticks(e[0:15])
-plt.savefig('matrice/matr.png')
-
-
-
-
-'''
-with open('matrice/matrice_0_20k.txt','w') as file:
+name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
+with open(name,'w') as file:
     file.write('# matrice energy\n')
     for i in range(taille_y):
         for j in range(taille_x):
