@@ -20,7 +20,8 @@ N=5               # number of simulated decay (MC trials)
 Rad=["H-3"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
-L = np.arange(1e-2,3,5e-2) # Free paramete in keV-1
+#L=[1e-1]
+L = np.arange(1e-2,3,5e-2) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 RHO = 0.96         #density of absorber (Toluene) g/cm3
@@ -199,8 +200,8 @@ for L_i in L: # loop on the free parameter values
     TDCR_calcul_vec = np.asarray(efficiency_T)/np.asarray(efficiency_D)
     plt.figure("Efficiency curve")
     plt.title(''.join(Rad))
-    plt.plot(TDCR_calcul_vec,efficiency_D,".k")[0]
-    plt.plot(TDCR_calcul_vec,efficiency_T,".b")[0]
+    plt.plot(np.mean(TDCR_calcul_vec),np.mean(efficiency_D),".k")[0]
+    plt.plot(np.mean(TDCR_calcul_vec),np.mean(efficiency_T),".b")[0]
     #plt.plot([TDCR_measure, TDCR_measure], [min(mean_efficiency_D), max(mean_efficiency_D)], '-r', label="Measurement")
     plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
     plt.ylabel(r"$\epsilon_D$", fontsize = 14)
