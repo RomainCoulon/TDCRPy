@@ -428,3 +428,35 @@ plt.savefig("quenching E_test 10-10k.png")
 #============================================================================================
 
 #============================================================================================
+
+#========================= énergie gamma ===================================================
+def energie_dep_gamma(e_inci):
+    if e_inci <= 200:
+        index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        f = open('MCNP-MATRIX/matrice_p_1_200k.txt')
+        taille_x = 200
+    
+    elif e_inci <= 2000:
+        index = int(e_inci)-200
+        f = open('MCNP-MATRIX/matrice_p_200_2000k.txt')
+        taille_x = 901
+
+    else:
+        index = (int(e_inci)-2000)%10
+        f = open('MCNP-MATRIX/matrice_p_2000_10000k.txt')
+        taille_x = 801
+
+    data = f.readlines()
+    
+    matrice = np.zeros((1002,taille_x))
+
+    for i in range(np.size(data)):
+        data[i] = data[i].split()
+        for j in range(taille_x):
+            matrice[i][j] = float(data[i][j])
+
+    result = sampling(matrice[1:,index])
+
+    return(result)
+
+    

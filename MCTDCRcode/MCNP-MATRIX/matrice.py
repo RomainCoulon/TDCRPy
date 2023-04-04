@@ -147,7 +147,7 @@ def matrice_fig(matrice_p,start,end,e):
     cb.set_label("probabilité")
     plt.xlabel("énergie incidente/keV")
     plt.ylabel("énergie déposée/MeV")
-    name = "matrice/matrice_" + str(start) + "_" + str(end) + "k.png"
+    name = "matrice/matricep_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
 
 #'''
@@ -171,9 +171,9 @@ def ecrit_matrice(matrice_p,matrice_cdf,niveau):
         start_energy = 2e3
         taille_x = 801      #2M-10M où delta = 0.1M
 
-    name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
+    name = 'matrice/matrice_p_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
     with open(name,'w') as file:
-    file.write('# matrice energy\n')
+    #file.write('# matrice energy\n')
     for i in range(taille_y):
         for j in range(taille_x):
             file.write("%e"%matrice_p[i][j])
