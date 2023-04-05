@@ -60,7 +60,7 @@ def readMCNP(energy,npas,mode='N'):
 
 # ---------------------- créer la matrice de pdf et cdf -----------------------
 
-def creat_matrice(niveau,mode,npas=1000):
+def creat_matrice(niveau,mode='pdf',npas=1000):
     # niveau : 1 -- énergie basse (0-200k); 2 -- énergie moyenne (200k-2M); 3 -- haute énergie (2M-10M)
     # mode : pdf -- probabilité ; cdf -- cumsum
     if niveau == 0:
@@ -86,7 +86,7 @@ def creat_matrice(niveau,mode,npas=1000):
     for i in range(taille_x):
         energy = energy_inci[i]
         e,p = readMCNP(energy,npas)
-        if mode=="cdf":
+        if mode == "cdf":
             p = np.cumsum(p)
         matrice_p[0][i] = energy
         #matrice_cdf[0][i] = energy
@@ -96,11 +96,13 @@ def creat_matrice(niveau,mode,npas=1000):
 
     return e,matrice_p
 
-
+'''
 if energy_inci[0] == 0.:
     matrice_p = np.delete(matrice_p,0,axis=1)
     matrice_cdf = np.delete(matrice_cdf,0,axis=1)
     taille_x = taille_x - 1
+'''
+
     #print(energy)
 #print(matrice_p[0][:])
 #x = matrice_p.shape[1]
@@ -155,7 +157,7 @@ def matrice_fig(matrice_p,start,end,e):
 
 
 
-def ecrit_matrice(matrice_p,matrice_cdf,niveau):
+def ecrit_matrice(matrice,niveau):
     if niveau == 0:
         end_energy = 200
         start_energy = 1
@@ -171,23 +173,29 @@ def ecrit_matrice(matrice_p,matrice_cdf,niveau):
         start_energy = 2e3
         taille_x = 801      #2M-10M où delta = 0.1M
 
+    taille_y = 1002
     name = 'matrice/matrice_p_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
     with open(name,'w') as file:
     #file.write('# matrice energy\n')
-    for i in range(taille_y):
-        for j in range(taille_x):
-            file.write("%e"%matrice_p[i][j])
-            file.write('         ')
-        file.write('\n')
-    file.write('\n')
-    file.write('\n')
-    for i in range(taille_y):
-        for j in range(taille_x):
-            file.write("%e"%matrice_cdf[i][j])
-            file.write('         ')
+        for i in range(taille_y):
+            for j in range(taille_x):
+                file.write("%e"%matrice[i][j])
+                file.write('         ')
+            file.write('\n')
         file.write('\n')
 
-    
+        '''
+        file.write('\n')
+        for i in range(taille_y):
+            for j in range(taille_x):
+                file.write("%e"%matrice_cdf[i][j])
+                file.write('         ')
+            file.write('\n')
+        '''
+
+e,matrice_p = creat_matrice(0)
+#print(np.size(matrice_p))
+ecri = ecrit_matrice(matrice_p,0) 
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
 with open(name,'w') as file:
