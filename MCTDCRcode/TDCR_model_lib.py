@@ -457,6 +457,6 @@ def energie_dep_gamma(e_inci):
 
     result = sampling(matrice[1:,index])
 
-    return(result)
+    return result
 
     
