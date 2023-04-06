@@ -430,33 +430,65 @@ plt.savefig("quenching E_test 10-10k.png")
 #============================================================================================
 
 #========================= énergie gamma ===================================================
-def energie_dep_gamma(e_inci):
+#'''
+f1 = open('MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
+#f2 = open('MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
+#f3 = open('MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
+data1 = f1.readlines()
+#data2 = f2.readlines()
+#data3 = f3.readlines()
+matrice1 = np.zeros((1002,200))
+#matrice2 = np.zeros((1002,901))
+#matrice3 = np.zeros((1002,801))
+for i in range(1002):
+    data1[i] = data1[i].split()
+    #data2[i] = data2[i].split()
+    #data3[i] = data3[i].split()
+    for j in range(200):
+        matrice1[i][j] = float(data1[i][j])
+    #for k in range(901):
+        #matrice2[i][k] = float(data2[i][k])
+    #for l in range(801):
+        #matrice3[i][l] = float(data3[i][l])
+#'''
+
+def energie_dep_gamma(e_inci,matrice1):
     if e_inci <= 200:
         index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche 
-        f = open('MCNP-MATRIX/matrice_p_1_200k.txt')
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_1_200k.txt'
+        matrice = matrice1
         taille_x = 200
     
     elif e_inci <= 2000:
         index = int(e_inci)-200
-        f = open('MCNP-MATRIX/matrice_p_200_2000k.txt')
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_200_2000k.txt'
+        #matrice = matrice2
         taille_x = 901
 
     else:
         index = (int(e_inci)-2000)%10
-        f = open('MCNP-MATRIX/matrice_p_2000_10000k.txt')
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt'
+        #matrice = matrice3
         taille_x = 801
-
-    data = f.readlines()
     
-    matrice = np.zeros((1002,taille_x))
+    '''
+    with open(doc) as f:
+        data = f.readlines()
+    
+        matrice = np.zeros((1002,taille_x))
 
-    for i in range(np.size(data)):
-        data[i] = data[i].split()
-        for j in range(taille_x):
-            matrice[i][j] = float(data[i][j])
-
+        for i in range(1002):
+            data[i] = data[i].split()
+            for j in range(taille_x):
+                matrice[i][j] = float(data[i][j])
+    '''
     result = sampling(matrice[1:,index])
 
     return result
+#'''
+r = []   
+for i in range(100):
+    r.append(energie_dep_gamma(61,matrice1))
+print(r)
+#'''
 
-    

@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 #import matplotlib.colors as mcolors
-import matplotlib.axes as ma
+from matplotlib.pyplot import MultipleLocator
 
 
 start_energy = 0         # keV --- debut de enrgie incidente
@@ -120,23 +120,23 @@ def matrice_fig(matrice_p,start,end,e):
         d_end = int(end/201*1000)
         i_st = int(start-1)
         i_end = int(end-1)
-        x = i_end - i_st
+        x = i_end - i_st +1
 
     elif end <= 2000:    # delta_Ei = 1
         delta_Ei = 1
         d_end = int(end/2001*1000)
         i_st = int(start-200)
         i_end = int(end-200)
-        x = i_end - i_st
+        x = i_end - i_st + 1
 
     else:               # 
         delta_Ei = 10
         d_end = int(end/(1e4+1)*1000)
         i_st = int((start-2000)/10)
         i_end = int((end-2000)/10)
-        x = i_end - i_st
+        x = i_end - i_st +1
 
-    zz = matrice_p[1:d_end+1,i_st:i_end]  # matrice 
+    zz = matrice_p[1:d_end+1,i_st:i_end+1]  # matrice 
     xx = np.ones((d_end,x))
     yy = np.ones((d_end,x))
     
@@ -144,15 +144,23 @@ def matrice_fig(matrice_p,start,end,e):
         xx[:,i] = i * delta_Ei + start
         yy[:,i] = e[0:d_end]
     
-    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot,vmin=0,vmax=0.1)
+    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot,vmin=0)
     cb = plt.colorbar(h)
     cb.set_label("probabilité")
+    #plt.xticks(xs,s)
     #plt.yticks(np.linspace(0,end,10))
+    x_maj = MultipleLocator(1)
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(x_maj)
+    #plt.ylim(0,e[d_end])
+    plt.xlim(start,end)
     plt.xlabel("énergie incidente/keV")
     plt.ylabel("énergie déposée/MeV")
+    title = "probabilité d'énergie déposée par des électrons de " + str(start) + "-" + str(end) + "k"
+    plt.title(title)
     name = "matrice/matricep_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
-
+    return xx[0,:]
 #'''
 
 
@@ -194,11 +202,12 @@ def ecrit_matrice(matrice,niveau):
             file.write('\n')
         '''
 
-#e,matrice_p = creat_matrice(0)
+e,matrice_p = creat_matrice(0)
 #print(np.size(matrice_p))
-#ecri = ecrit_matrice(matrice_p,0) 
+ecri = ecrit_matrice(matrice_p,0) 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-#fig2 = matrice_fig(matrice_p,1,20,e)
+fig2 = matrice_fig(matrice_p,1,20,e)
+print(fig2)
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
 with open(name,'w') as file:
