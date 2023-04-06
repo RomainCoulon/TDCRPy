@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-#import matplotlib.colors as mcolors
+from matplotlib.ticker import LogLocator
 from matplotlib.pyplot import MultipleLocator
 
 
@@ -144,7 +144,7 @@ def matrice_fig(matrice_p,start,end,e):
         xx[:,i] = i * delta_Ei + start
         yy[:,i] = e[0:d_end]
     
-    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot,vmin=0)
+    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot,vmin=0,vmax=0.001)
     cb = plt.colorbar(h)
     cb.set_label("probabilité")
     #plt.xticks(xs,s)
@@ -152,6 +152,8 @@ def matrice_fig(matrice_p,start,end,e):
     x_maj = MultipleLocator(1)
     ax = plt.gca()
     ax.xaxis.set_major_locator(x_maj)
+    #ax.yaxis.set_major_locator(LogLocator(base=10))
+    #plt.yscale('log')
     #plt.ylim(0,e[d_end])
     plt.xlim(start,end)
     plt.xlabel("énergie incidente/keV")
@@ -206,7 +208,7 @@ e,matrice_p = creat_matrice(0)
 #print(np.size(matrice_p))
 ecri = ecrit_matrice(matrice_p,0) 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-fig2 = matrice_fig(matrice_p,1,20,e)
+fig2 = matrice_fig(matrice_p,180,200,e)
 print(fig2)
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
