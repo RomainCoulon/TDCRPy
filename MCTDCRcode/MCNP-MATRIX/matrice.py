@@ -144,9 +144,10 @@ def matrice_fig(matrice_p,start,end,e):
         xx[:,i] = i * delta_Ei + start
         yy[:,i] = e[0:d_end]
     
-    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot)
+    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot,vmin=0,vmax=0.1)
     cb = plt.colorbar(h)
     cb.set_label("probabilité")
+    #plt.yticks(np.linspace(0,end,10))
     plt.xlabel("énergie incidente/keV")
     plt.ylabel("énergie déposée/MeV")
     name = "matrice/matricep_" + str(start) + "_" + str(end) + "k.png"
@@ -183,7 +184,7 @@ def ecrit_matrice(matrice,niveau):
                 file.write('         ')
             file.write('\n')
         file.write('\n')
-
+    
         '''
         file.write('\n')
         for i in range(taille_y):
@@ -196,6 +197,8 @@ def ecrit_matrice(matrice,niveau):
 e,matrice_p = creat_matrice(0)
 #print(np.size(matrice_p))
 ecri = ecrit_matrice(matrice_p,0) 
+fig1 = matrice_fig(matrice_p,41,80,e)
+#fig2 = matrice_fig(matrice_p,1,20,e)
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
 with open(name,'w') as file:
