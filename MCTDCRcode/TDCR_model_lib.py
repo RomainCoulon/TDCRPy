@@ -55,7 +55,11 @@ def readPenNuc(rad):
       if "NDA " in decayData[-1]:    decayData[-1] = decayData[-1].replace("NDA ", "NDA; ") # number of daughter
       if "DDE " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DDE ", "DDE; ") # daughter description : probability of disintegration to NDA, uncertainty, number of excited levels of NDA; number of branche to NDA
       if "Q " in decayData[-1]:      decayData[-1] = decayData[-1].replace("Q ", "Q; ")     # total energy of the branch, uncertainty 
-      if "ALP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("ALP ", "ALP; ") # type of the disintegration
+      if "ALP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("ALP ", "ALP; ") # type of the disintegration = alpha
+      if "CK " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CK ", "CK; ") # type of the disintegration = Electron Capture K shell
+      if "CL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL1 ", "CL1; ") # type of the disintegration = Electron Capture L shell 1
+      if "CL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL2 ", "CL2; ") # type of the disintegration = Electron Capture L shell 2
+      if "CM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CM ", "CL2; ") # type of the disintegration = Electron Capture L shell 2
       if "BEM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEM ", "BEM; ") # type disintegration-beta- :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
       if "LED " in decayData[-1]:    decayData[-1] = decayData[-1].replace("LED ", "LED; ") # level description:energy of level,uncertainty, number of transitions that depopulate this level,level time,uncertainty,level number
       if "GA " in decayData[-1]:     decayData[-1] = decayData[-1].replace("GA ", "GA; ")   # type transition: gamma

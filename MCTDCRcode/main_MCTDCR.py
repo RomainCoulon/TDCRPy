@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=20              # number of simulated decay (MC trials)
-Rad=["C-14"]       # list of radionuclides
+Rad=["Cd-109"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 #L=[1e-1]
@@ -69,6 +69,7 @@ for L_i in L: # loop on the free parameter values
     
      ## sampling of the decay branch
        multiplicity_branch = sum(np.asarray(p_branch))
+       print(out_PenNuc)
        index_branch = tl.sampling(p_branch)
        particle_branch = particle[index_branch]            # sampled particle emitted by the mother
        energy_branch =  e_branch[index_branch]             # energy of the particle emitted by the mother
