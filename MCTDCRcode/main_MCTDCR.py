@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=20              # number of simulated decay (MC trials)
-Rad=["Cd-109"]       # list of radionuclides
+Rad=["Mn-54"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 #L=[1e-1]
@@ -158,7 +158,9 @@ for L_i in L: # loop on the free parameter values
                 energy_vec[i] = 0
                 for j in e_discrete:
                     energy_vec[i] += delta_e/(1+kB*1e3*tl.stoppingpower(j*1e3)) # stoppingpower :input in (eV) / output (keV)
-    
+            if p == False: # Electron capture
+                energy_vec[i] = 0
+                
        print("\t\t quenched energy : ", energy_vec, "keV")
 
        ## Calculation of the TDCR ratio 

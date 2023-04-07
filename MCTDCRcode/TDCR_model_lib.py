@@ -59,7 +59,8 @@ def readPenNuc(rad):
       if "CK " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CK ", "CK; ") # type of the disintegration = Electron Capture K shell
       if "CL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL1 ", "CL1; ") # type of the disintegration = Electron Capture L shell 1
       if "CL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL2 ", "CL2; ") # type of the disintegration = Electron Capture L shell 2
-      if "CM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CM ", "CL2; ") # type of the disintegration = Electron Capture L shell 2
+      if "CM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CM ", "CM; ") # type of the disintegration = Electron Capture M shell
+      if "CN " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CN ", "CN; ") # type of the disintegration = Electron Capture N shell
       if "BEM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEM ", "BEM; ") # type disintegration-beta- :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
       if "LED " in decayData[-1]:    decayData[-1] = decayData[-1].replace("LED ", "LED; ") # level description:energy of level,uncertainty, number of transitions that depopulate this level,level time,uncertainty,level number
       if "GA " in decayData[-1]:     decayData[-1] = decayData[-1].replace("GA ", "GA; ")   # type transition: gamma
@@ -88,10 +89,12 @@ def readPenNuc(rad):
       LOOP IN NBRANCH (Branches of each daughter)
       """
     
-      if d[0] == "ALP" or d[0] == "BEM":                         # Read information on the decay branch
+      if d[0] == "ALP" or d[0] == "BEM" or d[0] == "CK" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
         if d[0] == "ALP": particle.append("alpha")
         if d[0] == "BEM": particle.append("beta")
+        if d[0] == "CK" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN": particle.append(False)
         if d[2] == "  ": d[2]=0
+
         p_branch.append(float(d[1])); u_p_branch.append(float(d[2])); # Branching ratio of the decay branch
         e_branch.append(float(d[4])); u_e_branch.append(float(d[5])); # Energy of the decay branch (kinetic energy of the particle)
         LevelDaughter.append(int(d[3]))                               # Level fed in daughter
