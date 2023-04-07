@@ -92,7 +92,11 @@ def readPenNuc(rad):
       if d[0] == "ALP" or d[0] == "BEM" or d[0] == "CK" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
         if d[0] == "ALP": particle.append("alpha")
         if d[0] == "BEM": particle.append("beta")
-        if d[0] == "CK" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN": particle.append(False)
+        if d[0] == "CK": particle.append("Atom_K")
+        if d[0] == "CL1": particle.append("Atom_L1")
+        if d[0] == "CL2": particle.append("Atom_L2")
+        if d[0] == "CM": particle.append("Atom_M")
+        if d[0] == "CN": particle.append("Atom_N")
         if d[2] == "  ": d[2]=0
 
         p_branch.append(float(d[1])); u_p_branch.append(float(d[2])); # Branching ratio of the decay branch
