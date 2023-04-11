@@ -16,15 +16,15 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=20              # number of simulated decay (MC trials)
-Rad=["Cd-109"]       # list of radionuclides
+N=1              # number of simulated decay (MC trials)
+Rad=["H-3"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
-#L=[1e-1]
+L=[1e-1]
 #L = np.logspace(-4,-2,10) # Free paramete in keV-1 (for Co-60)
 #L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
-#L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
-L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
+L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
+# L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 RHO = 0.96         #density of absorber (Toluene) g/cm3
@@ -100,7 +100,25 @@ for L_i in L: # loop on the free parameter values
          if transitionType[i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
            particle_vec.append("gamma")               # Update of the particle vector
          else:                                          # if not, it is a internal conversion, so an electron
-            particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
+           particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
+           if transitionType[i_level+1][index_t] == "EK":
+              particle_vec.append("Atom_K")
+              energy_vec.append(0)
+           if transitionType[i_level+1][index_t] == "EL1":
+              particle_vec.append("Atom_L1")
+              energy_vec.append(0)
+           if transitionType[i_level+1][index_t] == "EL2":
+              particle_vec.append("Atom_L2")
+              energy_vec.append(0)
+           if transitionType[i_level+1][index_t] == "EL3":
+              particle_vec.append("Atom_L3")
+              energy_vec.append(0)
+           if transitionType[i_level+1][index_t] == "EM":
+              particle_vec.append("Atom_M")
+              energy_vec.append(0)
+           if transitionType[i_level+1][index_t] == "EN":
+              particle_vec.append("Atom_N")
+              energy_vec.append(0)
          energy_vec.append(e_trans[i_level+1][index_t])    # Update the energy vector
          e_sum += e_trans[i_level+1][index_t]              # Energy summary
 
@@ -139,6 +157,8 @@ for L_i in L: # loop on the free parameter values
              energy_vec[i] = e_beta[index_beta_energy]
          if p == "gamma" or p == "x":
              particle_vec[i] = "electron" # false Compton scattering... to develop...!!!!!!!!!!!!!!
+         if p[:4] == "Atom": # Electron capture
+             energy_vec[i] = 0
 
        print("\t Summary of the final charged particles")
        print("\t\t particles : ", particle_vec)
@@ -158,13 +178,18 @@ for L_i in L: # loop on the free parameter values
                 energy_vec[i] = 0
                 for j in e_discrete:
                     energy_vec[i] += delta_e/(1+kB*1e3*tl.stoppingpower(j*1e3)) # stoppingpower :input in (eV) / output (keV)
-    
+                
        print("\t\t quenched energy : ", energy_vec, "keV")
 
        ## Calculation of the TDCR ratio 
        ## We fill our 3 results vectors
-       p_single = 1-np.exp(-L_i*sum(energy_vec)/3)
-       efficiency_T.append((p_single)**3)
+       #energy_vec=[3,3,3,90,90,90,90,90,90,90]  # test against Broda ARI 58 (2003) 585-594
+       #energy_vec=[90,90,90,3,3,3,3,3,3,3]  # test against Broda ARI 58 (2003) 585-594
+       #energy_vec=[25,25,25,3,3,3,3,3,3,3]  # test against Broda ARI 58 (2003) 585-594
+       #energy_vec=[3,3,3,3,3,3,3,3,3,3]  # test against Broda ARI 58 (2003) 585-594
+       p_nosingle = np.exp(-L_i*np.asarray(energy_vec)/3)
+       p_single = 1-p_nosingle
+       efficiency_T.append(p_single**3)
        efficiency_D.append(3*(p_single)**2-2*efficiency_T[-1])
 
 
