@@ -11,7 +11,7 @@ end_E = 10000                               # end for the deposited energy / keV
 delta_E= 10                             # the step the distribution / keV
 #npas = int((end_E - start_E)/delta_E)
 energy_i = np.linspace(2000, 10000, 801)        # emitted energy / keV
-NPS = 1e6                                # number of source particlules for the MC calculation
+NPS = 1e5                                # number of source particlules for the MC calculation
 
 
 for i in energy_i:
@@ -27,7 +27,7 @@ for i in energy_i:
         file.write("E18:P,E "+str(start_E*1e-3)+" "+str(int(end_E/delta_E))+"i "+str((end_E+1)*1e-3)+"       $ binning of energy\n") # line 49
         file.write("NPS "+str(int(NPS))+"          $ number of source particles") # line 50
     
-#f = open("output1/output_"+"keV.txt",'w')
+#f = open("output/output_"+"keV.txt",'w')
     
 
 with open("script3.bat", "w") as file2:
