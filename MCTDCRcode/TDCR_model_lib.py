@@ -507,14 +507,8 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,ed=Matrice_e)
             for j in range(taille_x):
                 matrice[i][j] = float(data[i][j])
     '''
-<<<<<<< HEAD
     inde = sampling(matrice[1:,index])
     result = e[inde]*1e3
-=======
-    inde = sampling(matrice[3:,index])
-    if inde == 0:    result = 0
-    else:   result = e[inde+2]
->>>>>>> 2873d218b7f6c46aaeac570ff0171a66e8af0b21
     return result
 
 #'''

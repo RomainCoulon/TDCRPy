@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1             # number of simulated decay (MC trials)
-Rad=["Co-60"]       # list of radionuclides
+Rad=["Cs-137"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 L=[1e-1]
