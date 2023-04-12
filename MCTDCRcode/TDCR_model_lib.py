@@ -463,7 +463,7 @@ for i in range(1002):
         #matrice3[i][l] = float(data3[i][l])
 #'''
 
-def energie_dep_gamma(e_inci,matrice1):
+def energie_dep_gamma(e_inci,*,matrice1=matrice1):
     if e_inci <= 200:
         index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche 
         #doc = 'MCNP-MATRIX/matrice/matrice_p_1_200k.txt'
@@ -499,7 +499,7 @@ def energie_dep_gamma(e_inci,matrice1):
 #'''
 r = []   
 for i in range(100):
-    r.append(energie_dep_gamma(61,matrice1))
+    r.append(energie_dep_gamma(61,matrice1=matrice1))
 print(r)
 #'''
 
