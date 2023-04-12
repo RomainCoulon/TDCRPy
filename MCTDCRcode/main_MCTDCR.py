@@ -17,13 +17,13 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1              # number of simulated decay (MC trials)
-Rad=["H-3"]       # list of radionuclides
+Rad=["Am-241"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 L=[1e-1]
 #L = np.logspace(-4,-2,10) # Free paramete in keV-1 (for Co-60)
 #L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
-L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
+# L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
 # L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
@@ -102,22 +102,22 @@ for L_i in L: # loop on the free parameter values
          else:                                          # if not, it is a internal conversion, so an electron
            particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
            if transitionType[i_level+1][index_t] == "EK":
-              particle_vec.append("Atom_K")
+              particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
               energy_vec.append(0)
            if transitionType[i_level+1][index_t] == "EL1":
-              particle_vec.append("Atom_L1")
+              particle_vec.append("Atom_L1") # record that an electron is missing on the L1 shell of the dughter nucleus
               energy_vec.append(0)
            if transitionType[i_level+1][index_t] == "EL2":
-              particle_vec.append("Atom_L2")
+              particle_vec.append("Atom_L2") # record that an electron is missing on the L2 shell of the dughter nucleus
               energy_vec.append(0)
            if transitionType[i_level+1][index_t] == "EL3":
-              particle_vec.append("Atom_L3")
+              particle_vec.append("Atom_L3") # record that an electron is missing on the L3 shell of the dughter nucleus
               energy_vec.append(0)
            if transitionType[i_level+1][index_t] == "EM":
-              particle_vec.append("Atom_M")
+              particle_vec.append("Atom_M") # record that an electron is missing on the M shell of the dughter nucleus
               energy_vec.append(0)
            if transitionType[i_level+1][index_t] == "EN":
-              particle_vec.append("Atom_N")
+              particle_vec.append("Atom_N") # record that an electron is missing on the N shell of the dughter nucleus
               energy_vec.append(0)
          energy_vec.append(e_trans[i_level+1][index_t])    # Update the energy vector
          e_sum += e_trans[i_level+1][index_t]              # Energy summary
@@ -138,6 +138,9 @@ for L_i in L: # loop on the free parameter values
        ## Look at the EADL https://www.nndc.bnl.gov/nndc/proceedings/2010csewgusndp/Tuesday/USNDP/eadl.pdf
        ## Also BrIccEmisDB ...
 
+
+
+
        ## Calculation of deposited energy in the liquid source in the vial
        # For alpha particle - do nothing / we consider that all the energy is release in the solution
        # For electrons (Auger and internal conversion) - do nothing / we consider that all the energy is release in the solution
@@ -156,6 +159,8 @@ for L_i in L: # loop on the free parameter values
              particle_vec[i] = "electron"
              energy_vec[i] = e_beta[index_beta_energy]
          if p == "gamma" or p == "x":
+             index_recoil_electron_energy = tl.energie_dep_gamma(energy_vec[i])
+             print("index", index_recoil_electron_energy)
              particle_vec[i] = "electron" # false Compton scattering... to develop...!!!!!!!!!!!!!!
          if p[:4] == "Atom": # Electron capture
              energy_vec[i] = 0
