@@ -36,5 +36,21 @@ plt.title('spectre gamma at E=100keV')
 plt.savefig('proba = f(E)_test.png')
 '''
 
-f  =open('matrice/matrice_0_20k.txt')
-data = f.readlines()
+#f  =open('matrice/matrice_0_20k.txt')
+#data = f.readlines()
+
+me = np.zeros((1002,3))
+x = [4,204,2000]
+for i in range(3):
+    E = x[i]
+    e,p = readMCNP(E,1000)
+    me[:,i] = e
+#print(me[0:5,:])
+
+with open("matrice/E_depose.txt","w") as file:
+    for i in range(1002):
+        for j in range(3):
+            file.write("%e"%me[i][j])
+            file.write('         ')
+        file.write('\n')
+    file.write('\n')
