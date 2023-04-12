@@ -16,15 +16,15 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=5             # number of simulated decay (MC trials)
-Rad=["H-3"]       # list of radionuclides
+N=1             # number of simulated decay (MC trials)
+Rad=["Co-60"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 L=[1e-1]
 #L = np.logspace(-4,-2,10) # Free paramete in keV-1 (for Co-60)
 #L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
 # L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
-L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
+# L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 RHO = 0.96         #density of absorber (Toluene) g/cm3
@@ -159,7 +159,7 @@ for L_i in L: # loop on the free parameter values
              particle_vec[i] = "electron"
              energy_vec[i] = e_beta[index_beta_energy]
          if p == "gamma" or p == "x":
-             #index_recoil_electron_energy = tl.energie_dep_gamma(energy_vec[i])
+             energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])
              particle_vec[i] = "electron" # false Compton scattering... to develop...!!!!!!!!!!!!!!
          if p[:4] == "Atom": # Electron capture
              energy_vec[i] = 0
