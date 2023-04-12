@@ -36,10 +36,6 @@ def sampling(p_x):
     cf = np.cumsum(p_x) # Cummulative Density (or mass) Function (CDF or CMF)
     trial = float(np.random.rand(1)) # trial ~ U(0,1)
     
-    while trial>cf[-1]:
-        trial = float(np.random.rand(1))
-    
-    
     for i, p in enumerate(cf):
         if p> trial: break
     return i
@@ -510,8 +506,8 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,ed=Matrice_e)
             for j in range(taille_x):
                 matrice[i][j] = float(data[i][j])
     '''
-    inde = sampling(matrice[3:,index])
-    result = e[inde+2]
+    inde = sampling(matrice[1:,index])
+    result = e[inde]
     return result
 
 #'''
