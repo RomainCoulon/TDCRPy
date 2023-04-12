@@ -16,7 +16,7 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=10              # number of simulated decay (MC trials)
+N=5             # number of simulated decay (MC trials)
 Rad=["H-3"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
@@ -234,8 +234,8 @@ for L_i in L: # loop on the free parameter values
 
 plt.figure("Efficiency curve I")
 plt.title(''.join(Rad))
-plt.plot(L,mean_efficiency_D,".k",label = "D")
-plt.plot(L,mean_efficiency_T,".r", label = "T")
+plt.errorbar(L, mean_efficiency_D, yerr = std_efficiency_D, fmt=".k", label = "D")
+plt.errorbar(L, mean_efficiency_T, yerr = std_efficiency_T, fmt=".r", label = "T")
 plt.xscale("log")
 #plt.plot(np.mean(TDCR_calcul_vec)*np.ones(N),efficiency_T,".b")[0]
 #plt.plot([TDCR_measure, TDCR_measure], [min(mean_efficiency_D), max(mean_efficiency_D)], '-r', label="Measurement")
@@ -245,10 +245,15 @@ plt.legend(fontsize = 12)
 plt.savefig("EfficiencyCurves/fom_"+''.join(Rad)+".png")
 plt.close()
 
+Eff_D_reg = tl.regress(TDCR_calcul, mean_efficiency_D)
+Eff_T_reg = tl.regress(TDCR_calcul, mean_efficiency_T)
+
 plt.figure("Efficiency curve II")
 plt.title(''.join(Rad))
 plt.errorbar(TDCR_calcul, mean_efficiency_D, yerr=std_efficiency_D, fmt=".k", label = "D")
 plt.errorbar(TDCR_calcul, mean_efficiency_T, yerr=std_efficiency_T, fmt=".r", label = "T")
+plt.plot(TDCR_calcul, Eff_D_reg,'-k')
+plt.plot(TDCR_calcul, Eff_T_reg,'-r')
 plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
 plt.ylabel(r"$\epsilon_D$", fontsize = 14)
 plt.legend(fontsize = 12)
