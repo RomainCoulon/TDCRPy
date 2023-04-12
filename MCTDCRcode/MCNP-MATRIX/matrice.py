@@ -28,17 +28,30 @@ else:                       # 2M - 10M
      #npas = 1000           # nombre de pas de l'énergie déposée 
      #delta_E = 10          # keV --- delta_E de l'energie deposee
 '''
-npas = 1000                 # nombre de pas de l'énergie déposée
+#npas = 1000                 # nombre de pas de l'énergie déposée
 
 #========================================================================================
 
 #===================== fonction pour lire output du MCNP ================================
 
 # attention:éviter 0keV pour la fonction readMCNP
-def readMCNP(energy,npas,mode='N'):
+def readMCNP(energy,niveau,par,npas=1000,mode='N'):
+    if par == 'p':
+        name1 = 'p/'
+    else:
+        name1 = 'b/'
+
+    if niveau == 0:
+       output = 'output1'
+    elif niveau == 1:
+       output = 'output2'
+    else:
+        output = 'output3'
+
+    name_doc = output + name1 + 'output_' + str(int(energy))+'keV.o'
     e = []
     p = []
-    f = open('output/output_'+str(int(energy))+'keV.o')
+    f = open(name_doc)
     data = f.readlines()
     f.close()
 
@@ -60,9 +73,11 @@ def readMCNP(energy,npas,mode='N'):
 
 # ---------------------- créer la matrice de pdf et cdf -----------------------
 
-def creat_matrice(niveau,mode='pdf',npas=1000):
-    # niveau : 1 -- énergie basse (0-200k); 2 -- énergie moyenne (200k-2M); 3 -- haute énergie (2M-10M)
+def creat_matrice(niveau,par,mode='pdf',npas=1000):
+    # niveau : 0 -- énergie basse (0-200k); 1 -- énergie moyenne (200k-2M); 2 -- haute énergie (2M-10M)
     # mode : pdf -- probabilité ; cdf -- cumsum
+    PAR = par
+    NIVEAU = niveau
     if niveau == 0:
         end_energy = 200
         start_energy = 1
@@ -71,7 +86,7 @@ def creat_matrice(niveau,mode='pdf',npas=1000):
     elif niveau == 1:
         end_energy = 2000
         start_energy = 200
-        taille_x = 901     # 200k-2000k où delta=1k
+        taille_x = 901     # 200k-2000k où delta=2k
 
     else:
         end_energy = 1e4
@@ -85,7 +100,7 @@ def creat_matrice(niveau,mode='pdf',npas=1000):
 
     for i in range(taille_x):
         energy = energy_inci[i]
-        e,p = readMCNP(energy,npas)
+        e,p = readMCNP(energy,niveau=NIVEAU,par=PAR)
         if mode == "cdf":
             p = np.cumsum(p)
         matrice_p[0][i] = energy
@@ -168,7 +183,12 @@ def matrice_fig(matrice_p,start,end,e):
 
 
 
-def ecrit_matrice(matrice,niveau):
+def ecrit_matrice(matrice,niveau,par):
+    if par == 'p':
+        name1 = 'p_'
+    else:
+        name1 = 'b_'
+
     if niveau == 0:
         end_energy = 200
         start_energy = 1
@@ -185,7 +205,7 @@ def ecrit_matrice(matrice,niveau):
         taille_x = 801      #2M-10M où delta = 0.1M
 
     taille_y = 1002
-    name = 'matrice/matrice_p_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
+    name = 'matrice/matrice_' + name1 + str(start_energy) + '_' + str(end_energy) + 'k.txt'
     with open(name,'w') as file:
     #file.write('# matrice energy\n')
         for i in range(taille_y):
@@ -204,12 +224,12 @@ def ecrit_matrice(matrice,niveau):
             file.write('\n')
         '''
 
-e,matrice_p = creat_matrice(0)
+e,matrice_p = creat_matrice(1,par='p')
 #print(np.size(matrice_p))
-ecri = ecrit_matrice(matrice_p,0) 
+ecri = ecrit_matrice(matrice_p,1,par='p') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-fig2 = matrice_fig(matrice_p,180,200,e)
-print(fig2)
+#fig2 = matrice_fig(matrice_p,180,200,e)
+#print(fig2)
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
 with open(name,'w') as file:
