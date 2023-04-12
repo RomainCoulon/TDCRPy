@@ -13,7 +13,7 @@ import urllib.request as rq
 import numpy as np
 from numpy.core.multiarray import where
 import zipfile as zf
-
+import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
 def sampling(p_x):
@@ -518,3 +518,13 @@ print(r)
 #'''
 #print(Matrice_e[0:5,:])
 
+
+
+
+
+
+## Non parametric regression
+
+def regress(x,y):
+    z = sm.nonparametric.lowess(y, x, return_sorted = False)
+    return z
