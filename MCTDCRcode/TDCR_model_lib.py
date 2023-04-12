@@ -35,6 +35,11 @@ def sampling(p_x):
 
     cf = np.cumsum(p_x) # Cummulative Density (or mass) Function (CDF or CMF)
     trial = float(np.random.rand(1)) # trial ~ U(0,1)
+    
+    while trial>cf[-1]:
+        trial = float(np.random.rand(1))
+    
+    
     for i, p in enumerate(cf):
         if p> trial: break
     return i
@@ -481,14 +486,14 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,ed=Matrice_e)
         e = ed[:,0]
     
     elif e_inci <= 2000:
-        index = int(e_inci)-200
+        index = int((e_inci-200)/2)
         #doc = 'MCNP-MATRIX/matrice/matrice_p_200_2000k.txt'
         matrice = matrice2
         taille_x = 901
         e = ed[:,1]
 
     else:
-        index = (int(e_inci)-2000)%10
+        index = (int(e_inci)-2000)//10
         #doc = 'MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt'
         #matrice = matrice3
         taille_x = 801
@@ -505,14 +510,14 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,ed=Matrice_e)
             for j in range(taille_x):
                 matrice[i][j] = float(data[i][j])
     '''
-    inde = sampling(matrice[1:,index])
-    result = e[inde]
+    inde = sampling(matrice[3:,index])
+    result = e[inde+2]
     return result
 
 #'''
 r = []   
 for i in range(100):
-    r.append(energie_dep_gamma(61))
+    r.append(energie_dep_gamma(1987.5))
 print(r)
 #'''
 #print(Matrice_e[0:5,:])

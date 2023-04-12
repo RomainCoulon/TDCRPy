@@ -39,6 +39,14 @@ plt.savefig('proba = f(E)_test.png')
 #f  =open('matrice/matrice_0_20k.txt')
 #data = f.readlines()
 
+e,p = readMCNP(1986,1000)
+pc = np.cumsum(p[2:])
+for j in range(100):
+    trial = float(np.random.rand(1))
+    for i, p in enumerate(pc):
+        if p> trial: break
+    print(trial,i,e[i+2])
+'''
 me = np.zeros((1002,3))
 x = [4,204,2000]
 for i in range(3):
@@ -54,3 +62,4 @@ with open("matrice/E_depose.txt","w") as file:
             file.write('         ')
         file.write('\n')
     file.write('\n')
+'''
