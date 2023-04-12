@@ -474,6 +474,7 @@ for i in range(1002):
 #'''
 
 def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,ed=Matrice_e):
+    ## sort keV / entrée : MeV
     if e_inci <= 200:
         index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche 
         #doc = 'MCNP-MATRIX/matrice/matrice_p_1_200k.txt'
@@ -507,7 +508,7 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,ed=Matrice_e)
                 matrice[i][j] = float(data[i][j])
     '''
     inde = sampling(matrice[1:,index])
-    result = e[inde]
+    result = e[inde]*1e3
     return result
 
 #'''
