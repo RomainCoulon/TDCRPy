@@ -16,15 +16,15 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=1              # number of simulated decay (MC trials)
-Rad=["Am-241"]       # list of radionuclides
+N=10              # number of simulated decay (MC trials)
+Rad=["H-3"]       # list of radionuclides
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 L=[1e-1]
 #L = np.logspace(-4,-2,10) # Free paramete in keV-1 (for Co-60)
 #L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
 # L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
-# L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
+L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 RHO = 0.96         #density of absorber (Toluene) g/cm3
@@ -159,8 +159,7 @@ for L_i in L: # loop on the free parameter values
              particle_vec[i] = "electron"
              energy_vec[i] = e_beta[index_beta_energy]
          if p == "gamma" or p == "x":
-             index_recoil_electron_energy = tl.energie_dep_gamma(energy_vec[i])
-             print("index", index_recoil_electron_energy)
+             #index_recoil_electron_energy = tl.energie_dep_gamma(energy_vec[i])
              particle_vec[i] = "electron" # false Compton scattering... to develop...!!!!!!!!!!!!!!
          if p[:4] == "Atom": # Electron capture
              energy_vec[i] = 0
@@ -192,7 +191,7 @@ for L_i in L: # loop on the free parameter values
        #energy_vec=[90,90,90,3,3,3,3,3,3,3]  # test against Broda ARI 58 (2003) 585-594
        #energy_vec=[25,25,25,3,3,3,3,3,3,3]  # test against Broda ARI 58 (2003) 585-594
        #energy_vec=[3,3,3,3,3,3,3,3,3,3]  # test against Broda ARI 58 (2003) 585-594
-       p_nosingle = np.exp(-L_i*np.asarray(energy_vec)/3)
+       p_nosingle = np.exp(-L_i*np.sum(np.asarray(energy_vec))/3)
        p_single = 1-p_nosingle
        efficiency_T.append(p_single**3)
        efficiency_D.append(3*(p_single)**2-2*efficiency_T[-1])
@@ -200,9 +199,9 @@ for L_i in L: # loop on the free parameter values
 
     # We calculate the final estimator
     mean_efficiency_T.append(np.mean(efficiency_T)) # average
-    std_efficiency_T.append(np.std(efficiency_T))   # standard deviation
+    std_efficiency_T.append(np.std(efficiency_T)/np.sqrt(N))   # standard deviation
     mean_efficiency_D.append(np.mean(efficiency_D))
-    std_efficiency_D.append(np.std(efficiency_D))
+    std_efficiency_D.append(np.std(efficiency_D)/np.sqrt(N))
     TDCR_calcul.append(mean_efficiency_T[-1]/mean_efficiency_D[-1])
     
     print("\t TDCR calculation")
@@ -235,8 +234,8 @@ for L_i in L: # loop on the free parameter values
 
 plt.figure("Efficiency curve I")
 plt.title(''.join(Rad))
-plt.plot(L,mean_efficiency_D,".k",label = "D")[0]
-plt.plot(L,mean_efficiency_T,".r", label = "T")[0]
+plt.plot(L,mean_efficiency_D,".k",label = "D")
+plt.plot(L,mean_efficiency_T,".r", label = "T")
 plt.xscale("log")
 #plt.plot(np.mean(TDCR_calcul_vec)*np.ones(N),efficiency_T,".b")[0]
 #plt.plot([TDCR_measure, TDCR_measure], [min(mean_efficiency_D), max(mean_efficiency_D)], '-r', label="Measurement")
@@ -248,8 +247,8 @@ plt.close()
 
 plt.figure("Efficiency curve II")
 plt.title(''.join(Rad))
-plt.plot(TDCR_calcul,mean_efficiency_D,".k", label = "D")[0]
-plt.plot(TDCR_calcul,mean_efficiency_T,".r",label = "T")[0]
+plt.errorbar(TDCR_calcul, mean_efficiency_D, yerr=std_efficiency_D, fmt=".k", label = "D")
+plt.errorbar(TDCR_calcul, mean_efficiency_T, yerr=std_efficiency_T, fmt=".r", label = "T")
 plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
 plt.ylabel(r"$\epsilon_D$", fontsize = 14)
 plt.legend(fontsize = 12)
