@@ -159,18 +159,23 @@ def matrice_fig(matrice_p,start,end,e):
         xx[:,i] = i * delta_Ei + start
         yy[:,i] = e[0:d_end]
     
-    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot,vmin=0,vmax=0.001)
+    if end>20:
+        zz = zz[2:,:]
+        xx = xx[2:,:]
+        yy = yy[2:,:]
+
+    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot,vmin=0.)
     cb = plt.colorbar(h)
     cb.set_label("probabilité")
     #plt.xticks(xs,s)
     #plt.yticks(np.linspace(0,end,10))
-    x_maj = MultipleLocator(1)
-    ax = plt.gca()
-    ax.xaxis.set_major_locator(x_maj)
+    #x_maj = MultipleLocator(1)
+    #ax = plt.gca()
+    #ax.xaxis.set_major_locator(x_maj)
     #ax.yaxis.set_major_locator(LogLocator(base=10))
     #plt.yscale('log')
     #plt.ylim(0,e[d_end])
-    plt.xlim(start,end)
+    #plt.xlim(start,end)
     plt.xlabel("énergie incidente/keV")
     plt.ylabel("énergie déposée/MeV")
     title = "probabilité d'énergie déposée par des électrons de " + str(start) + "-" + str(end) + "k"
@@ -226,9 +231,9 @@ def ecrit_matrice(matrice,niveau,par):
 
 e,matrice_p = creat_matrice(1,par='p')
 #print(np.size(matrice_p))
-ecri = ecrit_matrice(matrice_p,1,par='p') 
+#ecri = ecrit_matrice(matrice_p,1,par='p') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-#fig2 = matrice_fig(matrice_p,180,200,e)
+fig2 = matrice_fig(matrice_p,200,250,e)
 #print(fig2)
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
