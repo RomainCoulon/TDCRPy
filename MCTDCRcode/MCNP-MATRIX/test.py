@@ -23,4 +23,6 @@ with open("input/input_1MeV.mcn",mode='w') as file:
 #with open("script.bat", "w") as file2:
     #file2.write("mcnp6 i=input/input_"+str(int(1))+"MeV.mcn r=run/run_"+str(int(1))+"MeV.r o=output/output_"+str(int(1))+"MeV.o\n")
 
-f = open("output/output_"+"keV.txt",'w')
+f = open("scriptbp.bat",'w')
+f.write("test")
+f.close()

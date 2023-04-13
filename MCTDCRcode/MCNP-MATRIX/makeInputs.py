@@ -36,7 +36,7 @@ with open("script3.bat", "w") as file2:
 '''
 
 def make_input(niveau,NPS,par):
-    ## par (string) : 'p' (photon) ou 'b' (beta-)
+    ## par (string) : 'p' (photon) ou 'b' (beta-) ou 'bp' (beta+)
     start_E = 0
 
     if niveau == 0:
@@ -64,8 +64,10 @@ def make_input(niveau,NPS,par):
 
     if par == 'p':
         doc = 'template.txt'
-    else:
+    elif par == 'b':
         doc = 'template_b.txt'
+    elif par == 'bp':
+        doc = 'template_bp.txt'
     
     name_bat = "script" + input_n + par +".bat"
 
@@ -90,4 +92,5 @@ def make_input(niveau,NPS,par):
             file2.write(contenu)
     return 1
 
-write = make_input(2,1e6,'b')    
+write = make_input(2,1e6,'bp')   
+ 
