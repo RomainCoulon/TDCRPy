@@ -1,4 +1,4 @@
-MatrixGamma
+MatrixBeta
 1 1 -0.001205 -1 #2 #3 #4 #5 #6 #7 imp:p=1 imp:e=1 $ Air g cm-3
 2 2 -2.23     -2 3  imp:p=1 imp:e=1                $ Glass of the vial
 3 2 -2.23     -4 5  imp:p=1 imp:e=1                $ Glass top of the vial

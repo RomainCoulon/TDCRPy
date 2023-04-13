@@ -90,4 +90,4 @@ def make_input(niveau,NPS,par):
             file2.write(contenu)
     return 1
 
-write = make_input(0,1e6,'b')    
+write = make_input(2,1e6,'b')    
