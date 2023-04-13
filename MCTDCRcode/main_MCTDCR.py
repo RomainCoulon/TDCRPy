@@ -53,6 +53,12 @@ for L_i in L: # loop on the free parameter values
        rad_i = Rad[index_rad]
        print("\n Sampled radionuclide = ", rad_i)
     
+
+
+       """
+       I. DESINTEGRATION NUCLEAIRE
+       """
+
        # Read PenNuc File
        out_PenNuc = tl.readPenNuc(rad_i)
        particle = out_PenNuc[0]          # Particle(s) from the Mother 
@@ -66,7 +72,7 @@ for L_i in L: # loop on the free parameter values
        e_trans = out_PenNuc[8]           # Energy of the transition
        next_level = out_PenNuc[9]        # Next level on the daughter nucleus
        Q_value = out_PenNuc[10]          # Energy of the reaction
-    
+       
      ## sampling of the decay branch
        multiplicity_branch = sum(np.asarray(p_branch))
        print(out_PenNuc)
@@ -130,26 +136,19 @@ for L_i in L: # loop on the free parameter values
        print("\t\t energy : ", energy_vec, "keV")
        print("\t\t remaing energy (atomic transitions) : ", Q_value-e_sum, " keV")
 
-       ## But we have not finish with the daughter atom
-       ## !!!!!!!!!! We need to develop the atomic transitions...
-       ## to produce x-rays and Auger electrons
-       ## Probably in link with the internal conversion EK, EL, EM (voir variable transitionType)
-       ## You can try to see how we can use data from file".lara.txt"  (L icon on LNHB web site)
+
+       """
+       II. LA RELAXATION ATOMIQUE
+       """
+
        ## Look at the EADL https://www.nndc.bnl.gov/nndc/proceedings/2010csewgusndp/Tuesday/USNDP/eadl.pdf
        ## Also BrIccEmisDB ...
 
 
+       """
+       III. INTERACTION RAYONNEMENT/MATIERE + SPECTRES D'EMISSION
+       """
 
-
-       ## Calculation of deposited energy in the liquid source in the vial
-       # For alpha particle - do nothing / we consider that all the energy is release in the solution
-       # For electrons (Auger and internal conversion) - do nothing / we consider that all the energy is release in the solution
-       # !!!!!! For beta - sampling into the spectrum / use the BetaShape sprectrum on the LNHB web site
-       # make a new funtion to replace the readBetaSpectrum() in order to directly get the spectrum from the web
-       # be careful with the energy unit
-       # !!!!!! For gamma and x - Develop a model in MCNP6 (LANL)
-       # make a Python code to produce the source code de MCNP6 and to read the output to contruct the Matrix (incident energy, deposited energy)
-       # Once we have the matrix, build a function to sample in the matrix given E + interpolation feature
        for i, p in enumerate(particle_vec):
          if p == "beta":
              # e_beta, p_beta, n_bin = tl.readBetaSpectrum(rad_i) # deprecated
@@ -177,6 +176,11 @@ for L_i in L: # loop on the free parameter values
        print("\t\t particles : ", particle_vec)
        print("\t\t energy : ", energy_vec, "keV")
 
+
+
+       """
+       IV. LA SCINTILLATION
+       """
        ## Now we have the (particle, energy) vectors that we would like
 
        ## Calculation of the scintillation quenching with the Birks Model
@@ -193,6 +197,12 @@ for L_i in L: # loop on the free parameter values
                     energy_vec[i] += delta_e/(1+kB*1e3*tl.stoppingpower(j*1e3)) # stoppingpower :input in (eV) / output (keV)
                 
        print("\t\t quenched energy : ", energy_vec, "keV")
+
+
+
+       """
+       V. LE MESURE TDCR
+       """
 
        ## Calculation of the TDCR ratio 
        ## We fill our 3 results vectors
