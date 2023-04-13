@@ -16,13 +16,14 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=1             # number of simulated decay (MC trials)
+N=25             # number of simulated decay (MC trials)
 Rad=["Cs-137"]       # list of radionuclides (Na-24)
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
-L=[1e-1]
-#L = np.logspace(-4,-2,10) # Free paramete in keV-1 (for Co-60)
-#L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
+#L=[1e-1]
+L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Co-60)
+# L = np.logspace(-4,-2,10) # Free paramete in keV-1 (for Co-60)
+# L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
 # L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
 # L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
@@ -75,7 +76,6 @@ for L_i in L: # loop on the free parameter values
        
      ## sampling of the decay branch
        multiplicity_branch = sum(np.asarray(p_branch))
-       print(out_PenNuc)
        index_branch = tl.sampling(p_branch)
        particle_branch = particle[index_branch]            # sampled particle emitted by the mother
        energy_branch =  e_branch[index_branch]             # energy of the particle emitted by the mother
@@ -96,7 +96,6 @@ for L_i in L: # loop on the free parameter values
          i_level = levelNumber.index(levelOftheDaughter)   # Find the position in the daughter level vector 
          ## sampling of the transition in energy levels of the daughter nucleus
          index_t = tl.sampling(prob[i_level+1])            # sampling of the transition
-         print("\t\t ***")
          print("\t\t Energy of the level = ", levelEnergy[i_level], " keV")
          print("\t\t Transition type = ", transitionType[i_level+1][index_t])
          print("\t\t Energy of the transition = ", e_trans[i_level+1][index_t], "keV")
@@ -251,11 +250,15 @@ for L_i in L: # loop on the free parameter values
 
 # TDCR_calcul_vec = np.asarray(efficiency_T)/np.asarray(efficiency_D)
 
+Eff0_D_reg = tl.regress(L, mean_efficiency_D)
+Eff0_T_reg = tl.regress(L, mean_efficiency_T)
 
 plt.figure("Efficiency curve I")
 plt.title(''.join(Rad))
 plt.errorbar(L, mean_efficiency_D, yerr = std_efficiency_D, fmt=".k", label = "D")
 plt.errorbar(L, mean_efficiency_T, yerr = std_efficiency_T, fmt=".r", label = "T")
+plt.plot(Eff0_D_reg[:,0],Eff0_D_reg[:,1],'-k')
+plt.plot(Eff0_T_reg[:,0],Eff0_T_reg[:,1],'-r')
 plt.xscale("log")
 #plt.plot(np.mean(TDCR_calcul_vec)*np.ones(N),efficiency_T,".b")[0]
 #plt.plot([TDCR_measure, TDCR_measure], [min(mean_efficiency_D), max(mean_efficiency_D)], '-r', label="Measurement")
@@ -272,8 +275,8 @@ plt.figure("Efficiency curve II")
 plt.title(''.join(Rad))
 plt.errorbar(TDCR_calcul, mean_efficiency_D, yerr=std_efficiency_D, fmt=".k", label = "D")
 plt.errorbar(TDCR_calcul, mean_efficiency_T, yerr=std_efficiency_T, fmt=".r", label = "T")
-plt.plot(TDCR_calcul, Eff_D_reg,'-k')
-plt.plot(TDCR_calcul, Eff_T_reg,'-r')
+plt.plot(Eff_D_reg[:,0],Eff_D_reg[:,1],'-k')
+plt.plot(Eff_T_reg[:,0], Eff_T_reg[:,1],'-r')
 plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
 plt.ylabel(r"$\epsilon_D$", fontsize = 14)
 plt.legend(fontsize = 12)
