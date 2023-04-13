@@ -132,21 +132,21 @@ def matrice_fig(matrice_p,start,end,e):
 
     if end <= 200:      # delta_Ei = 1
         delta_Ei = 1
-        d_end = int(end/201*1000)
+        #d_end = int(end/201*1000)
         i_st = int(start-1)
         i_end = int(end-1)
         #x = i_end - i_st +1
 
     elif end <= 2000:    # delta_Ei = 1
         delta_Ei = 2
-        d_end = int(end/2001*1000)
+        #d_end = int(end/2001*1000)
         i_st = int((start-200)/delta_Ei)
         i_end = int((end-200)/delta_Ei)
         #x = i_end - i_st + 1
 
     else:               # 
         delta_Ei = 10
-        d_end = int(end/(1e4+1)*1000)
+        #d_end = int(end/(1e4+1)*1000)
         i_st = int((start-2000)/10)
         i_end = int((end-2000)/10)
         #x = i_end - i_st +1
@@ -210,11 +210,11 @@ def ecrit_matrice(matrice,niveau,par):
         taille_x = 901     # 200k-2000k où delta=1k
 
     else:
-        end_energy = 1e4
-        start_energy = 2e3
+        end_energy = 10000
+        start_energy = 2000
         taille_x = 801      #2M-10M où delta = 0.1M
 
-    taille_y = 1002
+    taille_y = 1003
     name = 'matrice/matrice_' + name1 + str(start_energy) + '_' + str(end_energy) + 'k.txt'
     with open(name,'w') as file:
     #file.write('# matrice energy\n')
@@ -223,7 +223,7 @@ def ecrit_matrice(matrice,niveau,par):
                 file.write("%e"%matrice[i][j])
                 file.write('         ')
             file.write('\n')
-        file.write('\n')
+        #file.write('\n')
     
         '''
         file.write('\n')
@@ -234,7 +234,7 @@ def ecrit_matrice(matrice,niveau,par):
             file.write('\n')
         '''
 
-e,matrice_p = creat_matrice(1,par='p')
+e,matrice_p = creat_matrice(2,par='p')
 print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,2,par='p') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
