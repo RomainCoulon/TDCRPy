@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1             # number of simulated decay (MC trials)
-Rad=["Fe-55"]       # list of radionuclides (Na-24)
+Rad=["Cs-137"]       # list of radionuclides (Na-24)
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 L=[1e-1]
@@ -105,8 +105,10 @@ for L_i in L: # loop on the free parameter values
          # Scoring
          if transitionType[i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
            particle_vec.append("gamma")               # Update of the particle vector
+           energy_vec.append(e_trans[i_level+1][index_t])    # Update the energy vector
          else:                                          # if not, it is a internal conversion, so an electron
            particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
+           energy_vec.append(e_trans[i_level+1][index_t])    # Update the energy vector
            if transitionType[i_level+1][index_t] == "EK":
               particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
               energy_vec.append(0)
@@ -125,7 +127,6 @@ for L_i in L: # loop on the free parameter values
            if transitionType[i_level+1][index_t] == "EN":
               particle_vec.append("Atom_N") # record that an electron is missing on the N shell of the dughter nucleus
               energy_vec.append(0)
-         energy_vec.append(e_trans[i_level+1][index_t])    # Update the energy vector
          e_sum += e_trans[i_level+1][index_t]              # Energy summary
 
          levelOftheDaughter = next_level[i_level+1][index_t]   # set the next level
