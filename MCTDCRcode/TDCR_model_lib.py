@@ -63,6 +63,7 @@ def readPenNuc(rad):
       if "CM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CM ", "CM; ") # type of the disintegration = Electron Capture M shell
       if "CN " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CN ", "CN; ") # type of the disintegration = Electron Capture N shell
       if "BEM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEM ", "BEM; ") # type disintegration-beta- :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
+      if "BEP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEP ", "BEP; ") # type disintegration-beta+ :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
       if "LED " in decayData[-1]:    decayData[-1] = decayData[-1].replace("LED ", "LED; ") # level description:energy of level,uncertainty, number of transitions that depopulate this level,level time,uncertainty,level number
       if "GA " in decayData[-1]:     decayData[-1] = decayData[-1].replace("GA ", "GA; ")   # type transition: gamma
       if "EK " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EK ", "EK; ")   # type transition: internal conversion -- electron K
@@ -90,8 +91,9 @@ def readPenNuc(rad):
       LOOP IN NBRANCH (Branches of each daughter)
       """
     
-      if d[0] == "ALP" or d[0] == "BEM" or d[0] == "CK" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
+      if d[0] == "ALP" or d[0] == "BEM" or d[0] == "BEP" or d[0] == "CK" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
         if d[0] == "ALP": particle.append("alpha")
+        if d[0] == "BEP": particle.append("beta+")
         if d[0] == "BEM": particle.append("beta")
         if d[0] == "CK": particle.append("Atom_K")
         if d[0] == "CL1": particle.append("Atom_L1")

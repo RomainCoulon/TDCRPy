@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1             # number of simulated decay (MC trials)
-Rad=["Cs-137"]       # list of radionuclides (Na-24)
+Rad=["Na-22"]       # list of radionuclides (Na-24)
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
 L=[1e-1]
@@ -154,13 +154,22 @@ for L_i in L: # loop on the free parameter values
          if p == "beta":
              # e_beta, p_beta, n_bin = tl.readBetaSpectrum(rad_i) # deprecated
              e_beta, p_beta = tl.readBetaShape(rad_i, "beta-", "tot")
-             # We will have to do the same as for gamma rays (a matrix) to account wall effects at high energy
              index_beta_energy = tl.sampling(p_beta)
              particle_vec[i] = "electron"
              energy_vec[i] = e_beta[index_beta_energy]
+             # Sampling Matrice comme gamma
+         
+         if p == "beta+":
+             e_beta, p_beta = tl.readBetaShape(rad_i, "beta+", "tot")
+             index_beta_energy = tl.sampling(p_beta)
+             particle_vec[i] = "positron"
+             energy_vec[i] = e_beta[index_beta_energy]
+             # Sampling Matrice comme gamma
+
          if p == "gamma" or p == "x":
              energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])
              particle_vec[i] = "electron" # false Compton scattering... to develop...!!!!!!!!!!!!!!
+         
          if p[:4] == "Atom": # Electron capture
              energy_vec[i] = 0
 
