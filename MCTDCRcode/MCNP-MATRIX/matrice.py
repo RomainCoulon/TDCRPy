@@ -168,7 +168,7 @@ def matrice_fig(matrice_p,start,end,e):
         zz = zz[2:,:]
         xx = xx[2:,:]
         yy = yy[2:,:]
-
+    print(xx.shape,yy.shape,zz.shape)
     h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot,vmin=0.)
     cb = plt.colorbar(h)
     cb.set_label("probabilité")
@@ -187,7 +187,7 @@ def matrice_fig(matrice_p,start,end,e):
     plt.title(title)
     name = "matrice/matricep_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
-    return xx[0,:]
+    return 0
 #'''
 
 
@@ -238,7 +238,7 @@ e,matrice_p = creat_matrice(2,par='p')
 print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,2,par='p') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-#fig2 = matrice_fig(matrice_p,200,1000,e)
+fig2 = matrice_fig(matrice_p,2000,5000,e)
 #print(fig2)
 
 '''
