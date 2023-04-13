@@ -93,7 +93,7 @@ def creat_matrice(niveau,par,mode='pdf',npas=1000):
         start_energy = 2e3
         taille_x = 801      #2M-10M où delta = 0.1M
 
-    taille_y = npas+2
+    taille_y = npas+3
     energy_inci = np.linspace(start_energy,end_energy,taille_x)
     matrice_p = np.zeros((taille_y,taille_x))
     #matrice_cdf = np.zeros((taille_y,taille_x))
@@ -135,36 +135,41 @@ def matrice_fig(matrice_p,start,end,e):
         d_end = int(end/201*1000)
         i_st = int(start-1)
         i_end = int(end-1)
-        x = i_end - i_st +1
+        #x = i_end - i_st +1
 
     elif end <= 2000:    # delta_Ei = 1
-        delta_Ei = 1
+        delta_Ei = 2
         d_end = int(end/2001*1000)
-        i_st = int(start-200)
-        i_end = int(end-200)
-        x = i_end - i_st + 1
+        i_st = int((start-200)/delta_Ei)
+        i_end = int((end-200)/delta_Ei)
+        #x = i_end - i_st + 1
 
     else:               # 
         delta_Ei = 10
         d_end = int(end/(1e4+1)*1000)
         i_st = int((start-2000)/10)
         i_end = int((end-2000)/10)
-        x = i_end - i_st +1
+        #x = i_end - i_st +1
 
-    zz = matrice_p[1:d_end+1,i_st:i_end+1]  # matrice 
-    xx = np.ones((d_end,x))
-    yy = np.ones((d_end,x))
-    
+    #zz = matrice_p[1:d_end+1,i_st:i_end+1]  # matrice 
+    zz = matrice_p[1:,i_st:i_end+1]
+    n = int((end-start)/delta_Ei)
+    x = np.linspace(start,end,n+1)
+    y = e
+    xx,yy = np.meshgrid(x,y)
+
+    '''
     for i in range(x):
         xx[:,i] = i * delta_Ei + start
         yy[:,i] = e[0:d_end]
-    
+    '''
+     
     if end>20:
         zz = zz[2:,:]
         xx = xx[2:,:]
         yy = yy[2:,:]
 
-    h = plt.pcolor(xx,yy,zz,cmap = plt.cm.hot,vmin=0.)
+    h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot,vmin=0.)
     cb = plt.colorbar(h)
     cb.set_label("probabilité")
     #plt.xticks(xs,s)
@@ -229,11 +234,11 @@ def ecrit_matrice(matrice,niveau,par):
             file.write('\n')
         '''
 
-e,matrice_p = creat_matrice(2,par='p')
-#print(np.size(matrice_p))
-ecri = ecrit_matrice(matrice_p,2,par='p') 
+e,matrice_p = creat_matrice(1,par='p')
+print(e[-1],matrice_p.shape,np.size(e))
+#ecri = ecrit_matrice(matrice_p,2,par='p') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-#fig2 = matrice_fig(matrice_p,200,250,e)
+#fig2 = matrice_fig(matrice_p,200,1000,e)
 #print(fig2)
 
 '''
