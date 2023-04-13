@@ -238,7 +238,7 @@ e,matrice_p = creat_matrice(2,par='p')
 print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,2,par='p') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-fig2 = matrice_fig(matrice_p,2000,5000,e)
+fig2 = matrice_fig(matrice_p,5000,10000,e)
 #print(fig2)
 
 '''
