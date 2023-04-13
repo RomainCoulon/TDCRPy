@@ -42,9 +42,9 @@ def readMCNP(energy,niveau,par,npas=1000,mode='N'):
         name1 = 'b/'
 
     if niveau == 0:
-       output = 'output1'
+        output = 'output1'
     elif niveau == 1:
-       output = 'output2'
+        output = 'output2'
     else:
         output = 'output3'
 
@@ -101,9 +101,9 @@ def creat_matrice(niveau,par,mode='pdf',npas=1000):
     for i in range(taille_x):
         energy = energy_inci[i]
         e,p = readMCNP(energy,niveau=NIVEAU,par=PAR)
-        if mode == "cdf":
-            p = np.cumsum(p)
-        matrice_p[0][i] = energy
+        #if mode == "cdf":
+         #   p = np.cumsum(p)
+        matrice_p[0][i] = energy       # entete de matrice
         #matrice_cdf[0][i] = energy
         for j in range(1,taille_y):
             matrice_p[j][i] = p[j-1]
@@ -234,11 +234,11 @@ def ecrit_matrice(matrice,niveau,par):
             file.write('\n')
         '''
 
-e,matrice_p = creat_matrice(2,par='p')
+e,matrice_p = creat_matrice(0,par='b')
 print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,2,par='p') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-fig2 = matrice_fig(matrice_p,5000,10000,e)
+#fig2 = matrice_fig(matrice_p,5000,10000,e)
 #print(fig2)
 
 '''
