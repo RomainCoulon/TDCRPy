@@ -534,3 +534,9 @@ print(r)
 def regress(x,y):
     z = sm.nonparametric.lowess(y, x, return_sorted = True)
     return z
+
+def writeEffcurves(x,rad,p,kB):
+    file = open("EfficiencyCurves/Eff_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
+    for i in x:
+        file.write(str(i)+"\n")
+    file.close()

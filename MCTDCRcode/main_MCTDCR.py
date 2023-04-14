@@ -16,24 +16,27 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=25             # number of simulated decay (MC trials)
-Rad=["Cs-137"]       # list of radionuclides (Na-24)
+N=50             # number of simulated decay (MC trials)
+Rad=["Co-60"]       # list of radionuclides (Na-24)
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1e-5         # Birks constant in cm/keV
-#L=[1e-1]
-L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Co-60)
-# L = np.logspace(-4,-2,10) # Free paramete in keV-1 (for Co-60)
+# L=[1e-1]
+#L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
+L = np.logspace(-3,0,50) # Free paramete in keV-1 (for Co-60)
 # L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
 # L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
 # L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
+Record = True                  # to record the efficiency curves
 RHO = 0.96         #density of absorber (Toluene) g/cm3
 
 if np.size(pmf_1) > 1:
     if sum(pmf_1) !=1: print("warning p not equal to 1")
 elif pmf_1[0] != 1: print("warning")
 
+mean_efficiency_S = []  # efficiency of single counte rate
+std_efficiency_S = []   # std
 mean_efficiency_T = []  # efficiency of triple coincidence counte rate
 std_efficiency_T = []   # std
 mean_efficiency_D = []  # efficiency of double coincidence counte rate
@@ -42,6 +45,7 @@ TDCR_calcul = []
 for L_i in L: # loop on the free parameter values
 
     ## RUN THE MC CALCULATION
+    efficiency_S = []        # results calculated efficiency for single events
     efficiency_D = []        # results calculated efficiency for double coincidence
     efficiency_T = []        # results calculated efficiency for triple coincidence
 
@@ -210,8 +214,9 @@ for L_i in L: # loop on the free parameter values
        #energy_vec=[90,90,90,3,3,3,3,3,3,3]  # test against Broda ARI 58 (2003) 585-594
        #energy_vec=[25,25,25,3,3,3,3,3,3,3]  # test against Broda ARI 58 (2003) 585-594
        #energy_vec=[3,3,3,3,3,3,3,3,3,3]  # test against Broda ARI 58 (2003) 585-594
-       p_nosingle = np.exp(-L_i*np.sum(np.asarray(energy_vec))/3)
-       p_single = 1-p_nosingle
+       p_nosingle = np.exp(-L_i*np.sum(np.asarray(energy_vec))/3) # probability to have 0 electrons in a PMT
+       p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
+       efficiency_S.append(p_single)
        efficiency_T.append(p_single**3)
        efficiency_D.append(3*(p_single)**2-2*efficiency_T[-1])
 
@@ -221,13 +226,15 @@ for L_i in L: # loop on the free parameter values
     std_efficiency_T.append(np.std(efficiency_T)/np.sqrt(N))   # standard deviation
     mean_efficiency_D.append(np.mean(efficiency_D))
     std_efficiency_D.append(np.std(efficiency_D)/np.sqrt(N))
+    mean_efficiency_S.append(np.mean(efficiency_S))
+    std_efficiency_S.append(np.std(efficiency_S)/np.sqrt(N))
     TDCR_calcul.append(mean_efficiency_T[-1]/mean_efficiency_D[-1])
     
     print("\t TDCR calculation")
     print("\t\t Free parameter : ", L_i, " keV-1")
     print("\t\t Efficiency of Triple coincident events : ", round(100*mean_efficiency_T[-1],3), "+/-", round(100*std_efficiency_T[-1],3), " %")
     print("\t\t Efficiency of Double coincident events : ", round(100*mean_efficiency_D[-1],3), "+/-", round(100*std_efficiency_D[-1],3), " %")
-
+    print("\t\t Efficiency of Single events : ", round(100*mean_efficiency_S[-1],3), "+/-", round(100*std_efficiency_S[-1],3), " %")
 #    x = np.arange(np.mean(efficiency_T),1.001,0.001)
 #    plt.figure("efficiency distribution")
 #    plt.clf()
@@ -250,13 +257,16 @@ for L_i in L: # loop on the free parameter values
 
 # TDCR_calcul_vec = np.asarray(efficiency_T)/np.asarray(efficiency_D)
 
+Eff0_S_reg = tl.regress(L, mean_efficiency_S)
 Eff0_D_reg = tl.regress(L, mean_efficiency_D)
 Eff0_T_reg = tl.regress(L, mean_efficiency_T)
 
 plt.figure("Efficiency curve I")
 plt.title(''.join(Rad))
+plt.errorbar(L, mean_efficiency_S, yerr = std_efficiency_D, fmt=".b", label = "S")
 plt.errorbar(L, mean_efficiency_D, yerr = std_efficiency_D, fmt=".k", label = "D")
 plt.errorbar(L, mean_efficiency_T, yerr = std_efficiency_T, fmt=".r", label = "T")
+plt.plot(Eff0_S_reg[:,0],Eff0_S_reg[:,1],'-b')
 plt.plot(Eff0_D_reg[:,0],Eff0_D_reg[:,1],'-k')
 plt.plot(Eff0_T_reg[:,0],Eff0_T_reg[:,1],'-r')
 plt.xscale("log")
@@ -265,20 +275,25 @@ plt.xscale("log")
 plt.xlabel(r"$L$ /keV$^{-1}$", fontsize = 14)
 plt.ylabel(r"$\epsilon$", fontsize = 14)
 plt.legend(fontsize = 12)
-plt.savefig("EfficiencyCurves/fom_"+''.join(Rad)+".png")
+if Record: plt.savefig("EfficiencyCurves/fom_"+''.join(Rad)+".png")
 plt.close()
 
+Eff_S_reg = tl.regress(TDCR_calcul, mean_efficiency_S)
 Eff_D_reg = tl.regress(TDCR_calcul, mean_efficiency_D)
 Eff_T_reg = tl.regress(TDCR_calcul, mean_efficiency_T)
 
 plt.figure("Efficiency curve II")
 plt.title(''.join(Rad))
+plt.errorbar(TDCR_calcul, mean_efficiency_S, yerr=std_efficiency_S, fmt=".b", label = "S")
 plt.errorbar(TDCR_calcul, mean_efficiency_D, yerr=std_efficiency_D, fmt=".k", label = "D")
 plt.errorbar(TDCR_calcul, mean_efficiency_T, yerr=std_efficiency_T, fmt=".r", label = "T")
+plt.plot(Eff_S_reg[:,0],Eff_S_reg[:,1],'-b')
 plt.plot(Eff_D_reg[:,0],Eff_D_reg[:,1],'-k')
 plt.plot(Eff_T_reg[:,0], Eff_T_reg[:,1],'-r')
 plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
 plt.ylabel(r"$\epsilon_D$", fontsize = 14)
 plt.legend(fontsize = 12)
-plt.savefig("EfficiencyCurves/tdcr_"+''.join(Rad)+".png")
+if Record: plt.savefig("EfficiencyCurves/tdcr_"+''.join(Rad)+".png")
 plt.close()
+
+if Record: tl.writeEffcurves(Eff_S_reg, Rad, pmf_1, kB)
