@@ -19,7 +19,7 @@ import scipy.stats as st
 N=1000             # number of simulated decay (MC trials)
 Rad=["Co-60"]       # list of radionuclides (Na-24)
 pmf_1=[1]       # relative abondance (pmf)
-kB = 1e-5         # Birks constant in cm/keV
+kB = 1.1e-5         # Birks constant in cm/keV
 # L=[1e-1]
 #L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
 L = np.logspace(-3,0,200) # Free paramete in keV-1 (for Co-60)
@@ -29,7 +29,8 @@ L = np.logspace(-3,0,200) # Free paramete in keV-1 (for Co-60)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 Record = True                  # to record the efficiency curves
-RHO = 0.96         #density of absorber (Toluene) g/cm3
+# RHO = 0.96         #density of absorber (Toluene) g/cm3
+RHO = 0.98           #density of absorber (UG + H20) g/cm3
 
 if np.size(pmf_1) > 1:
     if sum(pmf_1) !=1: print("warning p not equal to 1")
