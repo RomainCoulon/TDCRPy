@@ -11,8 +11,8 @@ import scipy.signal as sg
 
 Rad = "Co-60"
 
-kB = 1E-5
-
+kB10 = 1E-5
+kB11 = 1.1E-5
 AB = 0
 BC = 0
 AC = 0
@@ -31,15 +31,19 @@ def readEff(Rad, kB):
     return L, pS, upS
     
 
-L, pS, upS = readEff(Rad, kB)
+L10, pS10, upS10 = readEff(Rad, kB10)
+L11, pS11, upS11 = readEff(Rad, kB11)
 
-pS_smo = sg.savgol_filter(pS, 53, 3) # window size used for filtering, order of fitted polynomial
-    
+pS10_smo = sg.savgol_filter(pS10, 53, 3) # window size used for filtering, order of fitted polynomial
+pS11_smo = sg.savgol_filter(pS11, 53, 3) # window size used for filtering, order of fitted polynomial    
+
 plt.figure("Efficiency curve")
 plt.clf()
 plt.title('  ')
-plt.errorbar(L, pS, yerr = upS, fmt=".b", label = "S")
-plt.plot(L,pS_smo,'-r', label = "Savitzky-Golay Filter")
+plt.errorbar(L10, pS10, yerr = upS10, fmt=".b", label = "kB = 0.010 cm/MeV")
+plt.plot(L10,pS10_smo,'-b', label = "Savitzky-Golay Filter")
+plt.errorbar(L11, pS11, yerr = upS11, fmt=".r", label = "kB = 0.011 cm/MeV")
+plt.plot(L11,pS11_smo,'-r', label = "Savitzky-Golay Filter")
 # plt.xscale("log")
 plt.xlabel(r"$L$ /keV$^{-1}$", fontsize = 14)
 plt.ylabel(r"$\epsilon$", fontsize = 14)
