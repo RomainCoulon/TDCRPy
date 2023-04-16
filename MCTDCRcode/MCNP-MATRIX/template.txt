@@ -3,7 +3,7 @@ MatrixGamma
 2 2 -2.23     -2 3  imp:p=1 imp:e=1                $ Glass of the vial
 3 2 -2.23     -4 5  imp:p=1 imp:e=1                $ Glass top of the vial
 4 3 -0.92     -6 4  imp:p=1 imp:e=1                $ C2H4 caps
-5 4 -0.98        -7    imp:p=1 imp:e=1                $ LS
+5 4 -1        -7    imp:p=1 imp:e=1                $ LS
 6 5 -2.20     -9 8  imp:p=1 imp:e=1                $ C2F4 reflector
 7 6 -11.35    -10 9 imp:p=1 imp:e=0                $ Pb shield
 99 0           1    imp:p=0 imp:e=0                $ Out
