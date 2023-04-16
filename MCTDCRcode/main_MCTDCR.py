@@ -19,7 +19,7 @@ import scipy.stats as st
 N=1000             # number of simulated decay (MC trials)
 Rad=["Co-60"]       # list of radionuclides (Na-24)
 pmf_1=[1]       # relative abondance (pmf)
-kB = 1.2e-5         # Birks constant in cm/keV
+kB = 0.9e-5         # Birks constant in cm/keV
 # L=[1e-1]
 #L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
 L = np.logspace(-3,0,200) # Free paramete in keV-1 (for Co-60)
