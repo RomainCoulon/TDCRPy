@@ -48,7 +48,7 @@ def res(L, TAB, TBC, TAC, Lv, pSv):
 
 def readProfil(Rad,kB):
     Lv, pSv, upSv = readEff(Rad, kB)
-    #pSv = sg.savgol_filter(pSv, 21, 3)
+    pSv = sg.savgol_filter(pSv, 21, 3)
     return Lv, np.asarray(pSv), upSv
 
 def effTDCR(TD, TAB, TBC, TAC, Rad, kB):

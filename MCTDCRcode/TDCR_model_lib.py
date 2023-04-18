@@ -537,8 +537,15 @@ print(r)
 
     
 
-def writeEffcurves(x,y,uy,rad,p,kB):
-    file = open("EfficiencyCurves/"+''.join(rad)+"/Eff_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
+def writeEffcurves(x,y,uy,rad,p,kB,SDT):
+    if SDT == "S":
+        file = open("EfficiencyCurves/"+''.join(rad)+"/EffS_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
+    elif SDT == "D":
+        file = open("EfficiencyCurves/"+''.join(rad)+"/EffD_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
+    elif SDT == "T":
+        file = open("EfficiencyCurves/"+''.join(rad)+"/EffT_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
+    else:
+        print("Warning: unknown profil type")
     for i, xi in enumerate(x):
         file.write(str(xi)+" "+str(y[i])+" "+str(uy[i])+"\n")
     file.close()

@@ -299,4 +299,8 @@ plt.legend(fontsize = 12)
 if Record: plt.savefig("EfficiencyCurves/"+''.join(Rad)+"/tdcr_"+''.join(Rad)+"_"+str(kB)+".png")
 plt.close()
 
-if Record: tl.writeEffcurves(L, mean_efficiency_S, std_efficiency_S, Rad, pmf_1, kB)
+if Record:
+    tl.writeEffcurves(L, mean_efficiency_S, std_efficiency_S, Rad, pmf_1, kB, "S")
+    tl.writeEffcurves(L, mean_efficiency_S, std_efficiency_S, Rad, pmf_1, kB, "D")
+    tl.writeEffcurves(L, mean_efficiency_S, std_efficiency_S, Rad, pmf_1, kB, "T")
+    
