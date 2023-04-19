@@ -77,17 +77,27 @@ def effTDCR(TD, Rad, kB):
     return L, effD, effT
 
 def plotEffProfil(Rad,kB):
-    LS, effS, _ = readProfil(Rad,kB,"S")
-    LT, effT, _ = readProfil(Rad,kB,"T")
-    LD, effD, _ = readProfil(Rad,kB,"D")
-    tdcr = effT/effD
+    kBv = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]
+    Lv0 = readProfil(Rad,0.8e-5,"D")[0]
+    pDv=[]; pTv=[]; pSv=[]
+    for i in kBv:
+        pDv.append(readProfil(Rad,i,"D")[1])
+        pTv.append(readProfil(Rad,i,"T")[1])
+        pSv.append(readProfil(Rad,i,"S")[1])
+    effS=[]; effD=[]; effT=[]
+    print("S",np.asarray(pSv)[:,0])
+    for i in range(len(Lv0)):
+        effS.append(np.interp(kB, kBv, np.asarray(pSv)[:,i]))
+        effD.append(np.interp(kB, kBv, np.asarray(pDv)[:,i]))
+        effT.append(np.interp(kB, kBv, np.asarray(pTv)[:,i]))
+    tdcr = np.asarray(effT)/np.asarray(effD)
     
     plt.figure("Efficiency curve eff = f(L)")
     plt.clf()
     plt.title('  ')
-    plt.plot(LS, effS,'-b', label = r"$\epsilon_S$, $kB$ = "+str(kB)+" cm/keV")
-    plt.plot(LT, effD,'-k', label = r"$\epsilon_D$, $kB$ = "+str(kB)+" cm/keV")
-    plt.plot(LD, effT,'-r', label = r"$\epsilon_T$, $kB$ = "+str(kB)+" cm/keV")
+    plt.plot(Lv0, effS,'-b', label = r"$\epsilon_S$, $kB$ = "+str(kB)+" cm/keV")
+    plt.plot(Lv0, effD,'-k', label = r"$\epsilon_D$, $kB$ = "+str(kB)+" cm/keV")
+    plt.plot(Lv0, effT,'-r', label = r"$\epsilon_T$, $kB$ = "+str(kB)+" cm/keV")
     plt.xscale("log")
     plt.xlabel(r"$L$ /keV$^{-1}$", fontsize = 14)
     plt.ylabel(r"$\epsilon$", fontsize = 14)
@@ -112,7 +122,7 @@ AC = 693.579
 T = 448.868
 D = AB+BC+AC-2*T
 out = effTDCR(T/D, "H-3", 1.05E-5) # H-3
-plotEffProfil("H-3", 1.00E-5)
+plotEffProfil("H-3", 1.05E-5)
 # out = effTDCR(657.296, 695.919, 693.579, 448.868) # Co-60
 
 digRound = 2
