@@ -113,6 +113,7 @@ def plotEffProfil(Rad,kB):
     # plt.xscale("log")
     plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
     plt.ylabel(r"$\epsilon$", fontsize = 14)
+    # bbox_inches = "tight", format = "png", dpi = 500
     plt.legend(fontsize = 12)
     # plt.close()
 
