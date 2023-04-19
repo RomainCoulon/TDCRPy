@@ -2,7 +2,7 @@
 """
 Created on Mon Jan 23 16:01:49 2023
 
-Surogate Monte-Carlo code to calculate efficiency in TDCR measurements
+A Monte-Carlo code to calculate detection efficiency in TDCR measurements
 
 @author: Romain Coulon, Jialin Hu
 Bureau International des Poids et Mesures
@@ -19,7 +19,7 @@ import scipy.stats as st
 N=1000             # number of simulated decay (MC trials)
 Rad=["H-3"]       # list of radionuclides (Na-24)
 pmf_1=[1]       # relative abondance (pmf)
-kB = 0.8e-5         # Birks constant in cm/keV
+kB = 1.1e-5         # Birks constant in cm/keV
 # L=[1e-1]
 # L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
 # L = np.logspace(-3,0,200) # Free paramete in keV-1 (for Co-60)
@@ -301,6 +301,6 @@ plt.close()
 
 if Record:
     tl.writeEffcurves(L, mean_efficiency_S, std_efficiency_S, Rad, pmf_1, kB, "S")
-    tl.writeEffcurves(L, mean_efficiency_S, std_efficiency_S, Rad, pmf_1, kB, "D")
-    tl.writeEffcurves(L, mean_efficiency_S, std_efficiency_S, Rad, pmf_1, kB, "T")
+    tl.writeEffcurves(L, mean_efficiency_D, std_efficiency_D, Rad, pmf_1, kB, "D")
+    tl.writeEffcurves(L, mean_efficiency_T, std_efficiency_T, Rad, pmf_1, kB, "T")
     
