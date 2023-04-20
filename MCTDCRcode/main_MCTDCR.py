@@ -16,20 +16,20 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=10             # number of simulated decay (MC trials)
+N=1000             # number of simulated decay (MC trials)
 Rad=["Co-60"]       # list of radionuclides (Na-24)
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1.0e-5         # Birks constant in cm/keV
-L=[1e-1]
+# L=[1e-1]
 # L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
-# L = np.logspace(-3,0,200) # Free paramete in keV-1 (for Co-60)
+L = np.logspace(-3,0,200) # Free paramete in keV-1 (for Co-60)
 # L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
 # L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
 # L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 Record = True                  # to record the efficiency curves
-Display = True                # to display calculation results on the console
+Display = False                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
 
@@ -74,15 +74,20 @@ Read BetaShape
 e_beta = []
 p_beta = []
 for i, rad_i in enumerate(Rad):
-    if particle[i][0] == "beta": 
-        e_beta.append(tl.readBetaShape(rad_i, "beta-", "tot")[0])
-        p_beta.append(tl.readBetaShape(rad_i, "beta-", "tot")[1])
-    elif particle[i][0] == "beta+":
-        e_beta.append(tl.readBetaShape(rad_i, "beta-", "tot")[0])
-        p_beta.append(tl.readBetaShape(rad_i, "beta-", "tot")[1])
-    else:
-        e_beta.append("")
-        p_beta.append("")        
+    e_beta_0 = []
+    p_beta_0 = []
+    for j in range(len(particle[i])):
+        if particle[i][j] == "beta":
+            e_beta_0.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(j))[0])
+            p_beta_0.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(j))[1])
+        elif particle[i][j] == "beta+":
+            e_beta_0.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(j))[0])
+            p_beta_0.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(j))[1])
+        else:
+            e_beta.append("")
+            p_beta.append("")   
+        e_beta.append(e_beta_0)
+        p_beta.append(p_beta_0)
 
 mean_efficiency_S = []  # efficiency of single counte rate
 std_efficiency_S = []   # std
@@ -99,6 +104,8 @@ for L_i in L: # loop on the free parameter values
     efficiency_T = []        # results calculated efficiency for triple coincidence
 
     for i in range(N): # Main Loop
+    
+       #tl.tic()
        particle_vec=[]
        energy_vec=[]
     
@@ -124,7 +131,7 @@ for L_i in L: # loop on the free parameter values
        # next_level = out_PenNuc[9]        # Next level on the daughter nucleus
        # Q_value = out_PenNuc[10]          # Energy of the reaction
        
-     ## sampling of the decay branch
+       ## sampling of the decay branch
        multiplicity_branch = sum(np.asarray(p_branch[index_rad]))
        index_branch = tl.sampling(p_branch[index_rad])
        particle_branch = particle[index_rad][index_branch]            # sampled particle emitted by the mother
@@ -135,7 +142,7 @@ for L_i in L: # loop on the free parameter values
        if Display: print("\t\t Particle = ", particle_branch)
        if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
        if Display: print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
-
+       
        # Scoring
        e_sum = energy_branch                               # Update the Energy summary
        particle_vec.append(particle_branch)                # Update of the particle vector
@@ -202,16 +209,16 @@ for L_i in L: # loop on the free parameter values
          if p == "beta":
              # e_beta, p_beta, n_bin = tl.readBetaSpectrum(rad_i) # deprecated
              # e_beta, p_beta = tl.readBetaShape(rad_i, "beta-", "tot")
-             index_beta_energy = tl.sampling(p_beta[index_rad])
+             index_beta_energy = tl.sampling(p_beta[index_rad][-(1+index_branch)])
              particle_vec[i] = "electron"
-             energy_vec[i] = e_beta[index_rad][index_beta_energy]
+             energy_vec[i] = e_beta[index_rad][-(1+index_branch)][index_beta_energy]
              # Sampling Matrice comme gamma
          
          if p == "beta+":
              # e_beta, p_beta = tl.readBetaShape(rad_i, "beta+", "tot")
-             index_beta_energy = tl.sampling(p_beta[index_rad])
+             index_beta_energy = tl.sampling(p_beta[index_rad][-(1+index_branch)])
              particle_vec[i] = "positron"
-             energy_vec[i] = e_beta[index_rad][index_beta_energy]
+             energy_vec[i] = e_beta[index_rad][-(1+index_branch)][index_beta_energy]
              # Sampling Matrice comme gamma
 
          if p == "gamma" or p == "x":
@@ -264,6 +271,9 @@ for L_i in L: # loop on the free parameter values
        efficiency_S.append(p_single)
        efficiency_T.append(p_single**3)
        efficiency_D.append(3*(p_single)**2-2*efficiency_T[-1])
+       
+       
+       #tl.toc()
 
 
     # We calculate the final estimator
@@ -276,7 +286,7 @@ for L_i in L: # loop on the free parameter values
     TDCR_calcul.append(mean_efficiency_T[-1]/mean_efficiency_D[-1])
     
     print("\t TDCR calculation")
-    if len(L) > 0: print("\t\t Progress = ", round(100*(L.index(L_i)+1)/len(L), 1), " %")
+    if len(L) > 0: print("\t\t Progress = ", round(100*(L.tolist().index(L_i)+1)/len(L), 1), " %")
     print("\t\t Free parameter : ", L_i, " keV-1")
     print("\t\t Efficiency of Triple coincident events : ", round(100*mean_efficiency_T[-1],3), "+/-", round(100*std_efficiency_T[-1],3), " %")
     print("\t\t Efficiency of Double coincident events : ", round(100*mean_efficiency_D[-1],3), "+/-", round(100*std_efficiency_D[-1],3), " %")
