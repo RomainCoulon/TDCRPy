@@ -15,6 +15,30 @@ from numpy.core.multiarray import where
 import zipfile as zf
 # import statsmodels.api as sm
 import matplotlib.pyplot as plt
+import time
+
+def TicTocGenerator():
+    # Generator that returns time differences
+    ti = 0           # initial time
+    tf = time.time() # final time
+    while True:
+        ti = tf
+        tf = time.time()
+        yield tf-ti # returns the time difference
+
+TicToc = TicTocGenerator() # create an instance of the TicTocGen generator
+
+# This will be the main function through which we define both tic() and toc()
+def toc(tempBool=True):
+    # Prints the time difference yielded by generator instance TicToc
+    tempTimeInterval = next(TicToc)
+    if tempBool:
+        print( "Elapsed time: %f seconds.\n" %tempTimeInterval )
+
+def tic():
+    # Records a time in TicToc, marks the beginning of a time interval
+    toc(False)
+
 
 def sampling(p_x):
     """
@@ -39,7 +63,6 @@ def sampling(p_x):
     for i, p in enumerate(cf):
         if p> trial: break
     return i
-
 
 def readPenNuc(rad):
     """
@@ -137,6 +160,9 @@ def readPenNuc(rad):
     transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
     return particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value
 
+# tic()
+# readPenNuc("Co-60")
+# toc() # 0.016 s
 
 #===============================================================================================================
 
@@ -156,8 +182,6 @@ for i in range(np.size(data_ASTAR)):
     energy_alph.append(data_ASTAR[i][0])
     dEdx_alph.append(data_ASTAR[i][1])
 
-
-
 def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     # rho: density of the absorber (g.cm-3)
     # e keV
@@ -168,7 +192,9 @@ def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
     return dEdx*rho                        #unit keV.cm-1
 
-
+# tic()
+# stoppingpowerA(5000,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph)
+# toc() # 0 s
 #===================================================================================================================
 
 
@@ -181,69 +207,69 @@ for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
 
-def stoppingpowerE(e,*,za=0.5459,rho=0.96,I=65,spmodel="Beth_Tan_Xia",emin=0,file=data_TanXia_f): # valid
-    c1=0.57
-    c2=1.16
-    Cte=0.307075*c1           # Relativist constant /(eV.cm^2) 
-    mec2=511000               # Mass energy of an electron /eV
-    dEdx=0                    # initial value of the stopping power
+# def stoppingpowerE(e,*,za=0.5459,rho=0.96,I=65,spmodel="Beth_Tan_Xia",emin=0,file=data_TanXia_f): # valid
+#     c1=0.57
+#     c2=1.16
+#     Cte=0.307075*c1           # Relativist constant /(eV.cm^2) 
+#     mec2=511000               # Mass energy of an electron /eV
+#     dEdx=0                    # initial value of the stopping power
    
-    if spmodel=="Beth":
-        beta=np.sqrt(c2*e/mec2)            # relative velocity
-        if e>54:
-            dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)    
-        else:
-            dEdx=0
+#     if spmodel=="Beth":
+#         beta=np.sqrt(c2*e/mec2)            # relative velocity
+#         if e>54:
+#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)    
+#         else:
+#             dEdx=0
     
-    if spmodel=="Beth_extr_1":
-        if e>400:
-            beta=np.sqrt(c2*e/mec2)            # relative velocity
-            if beta>=1:
-                beta
-            dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)    
-        else:
-            if e>emin:
-                beta=np.sqrt(c2*400/mec2)       # relative velocity
-                dEdx=20*Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)*e**-0.5
-            else:
-                dEdx=0
+#     if spmodel=="Beth_extr_1":
+#         if e>400:
+#             beta=np.sqrt(c2*e/mec2)            # relative velocity
+#             if beta>=1:
+#                 beta
+#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)    
+#         else:
+#             if e>emin:
+#                 beta=np.sqrt(c2*400/mec2)       # relative velocity
+#                 dEdx=20*Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)*e**-0.5
+#             else:
+#                 dEdx=0
 
-    if spmodel=="Beth_extr_2":
-        if e>100:
-            beta=np.sqrt(c2*e/mec2)            # relative velocity
-            dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)    
-        else:
-            if e>emin:
-                beta=np.sqrt(c2*100/mec2)       # relative velocity
-                dEdx=0.01*Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)*e
-            else:
-                dEdx=0
+#     if spmodel=="Beth_extr_2":
+#         if e>100:
+#             beta=np.sqrt(c2*e/mec2)            # relative velocity
+#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)    
+#         else:
+#             if e>emin:
+#                 beta=np.sqrt(c2*100/mec2)       # relative velocity
+#                 dEdx=0.01*Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)*e
+#             else:
+#                 dEdx=0
       
-    if spmodel=="Beth_extr_3":
-        if e>1000:
-            beta=np.sqrt(c2*e/mec2)            # relative velocity
-            dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)
-        else:
-            if e>emin:
-                beta=np.sqrt(c2*1000/mec2)     # relative velocity
-                dEdx=1/(1000**-1.1)*Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)*e**-1.1
-            else:
-                dEdx=0
+#     if spmodel=="Beth_extr_3":
+#         if e>1000:
+#             beta=np.sqrt(c2*e/mec2)            # relative velocity
+#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)
+#         else:
+#             if e>emin:
+#                 beta=np.sqrt(c2*1000/mec2)     # relative velocity
+#                 dEdx=1/(1000**-1.1)*Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)*e**-1.1
+#             else:
+#                 dEdx=0
     
-    if spmodel=="Beth_Tan_Xia":
-        if e>=20000:
-            beta=np.sqrt(c2*e/mec2)            # relative velocity
-            if beta>=1:
-                beta=0.97
-            dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)
-        else:
-            if e>emin:
-                dEdx=(float(file[int(e)]))*1e6
-            else:
-                dEdx=0
-    if dEdx<0:
-        dEdx=0
-    return dEdx
+#     if spmodel=="Beth_Tan_Xia":
+#         if e>=20000:
+#             beta=np.sqrt(c2*e/mec2)            # relative velocity
+#             if beta>=1:
+#                 beta=0.97
+#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)
+#         else:
+#             if e>emin:
+#                 dEdx=(float(file[int(e)]))*1e6
+#             else:
+#                 dEdx=0
+#     if dEdx<0:
+#         dEdx=0
+#     return dEdx
 
 
 
@@ -283,6 +309,10 @@ def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
     if dEdx<0:
         dEdx=0
     return dEdx    
+
+# tic()
+# stoppingpower(100,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f)
+# toc() # 0 s
 #===================================================================================================
 
 #===================================================================================================
@@ -319,20 +349,20 @@ plt.savefig('stoppingpowerE_A.png')
 #===================================================================================================
 
 
-def readBetaSpectrum(rad):
-    f=open("spectrum_"+rad+".txt", "r") # open the file 
-    ne = 1000   # number of energy bins
-    e=np.empty(ne) # declare an empty array to store the energy values
-    p=np.empty(ne) # declare an empty array to probability values
-    i=0
-    for line in f: # scan the line of the file
-        e[i]=float(line[:9]) # read the energy value and convert in float 
-        p[i]=float(line[9:]) # read the probability value and convert in float
-        i+=1
-    sumP=sum(p) # sum of probabilities
-    p=p/sumP # re-normilize to make the sum of probabilities equal to 1
-    f.close() #close the file
-    return e, p, ne
+# def readBetaSpectrum(rad):
+#     f=open("spectrum_"+rad+".txt", "r") # open the file 
+#     ne = 1000   # number of energy bins
+#     e=np.empty(ne) # declare an empty array to store the energy values
+#     p=np.empty(ne) # declare an empty array to probability values
+#     i=0
+#     for line in f: # scan the line of the file
+#         e[i]=float(line[:9]) # read the energy value and convert in float 
+#         p[i]=float(line[9:]) # read the probability value and convert in float
+#         i+=1
+#     sumP=sum(p) # sum of probabilities
+#     p=p/sumP # re-normilize to make the sum of probabilities equal to 1
+#     f.close() #close the file
+#     return e, p, ne
 
 
 #=============================================================================================
@@ -342,11 +372,9 @@ def readBetaSpectrum(rad):
 def readBetaShape(rad,mode,trans):
     # mode(str): 'beta-','beta+'
     # trans(str):'trans0','trans1' ....
-    
-    Rad = rad.replace('-','')
     file = "All-nuclides_BetaShape.zip"
     z = zf.ZipFile(file)
-   
+    Rad = rad.replace('-','')
     name_doc = Rad+'/'+mode+'_'+Rad+'_'+trans+'.bs'
     with z.open(name_doc) as file_trans:
         data = file_trans.readlines()
@@ -372,7 +400,13 @@ def readBetaShape(rad,mode,trans):
         e.append(float(data[j][0])) # convert to float
         dNdx.append(float(data[j][1])) # convert to float
     dNdx /= sum(np.asarray(dNdx)) # normalization
-    return e,dNdx
+    return e, dNdx
+
+# tic()
+# readBetaShape("Co-60", "beta-", "tot")
+# toc() # 0.016 s
+
+
 
 #=====================================================================================
 
@@ -520,12 +554,13 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
 r = []   
 for i in range(100):
     r.append(energie_dep_gamma(2568))
-print(r)
+# print(r)
 #'''
 #print(Matrice_e[0:5,:])
 
-
-
+# tic()
+# energie_dep_gamma(800)
+# toc()   # 0 s
 
 
 

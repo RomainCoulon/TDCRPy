@@ -16,25 +16,73 @@ import scipy.stats as st
 
 
 ## INPUT OF THE MODEL
-N=1000             # number of simulated decay (MC trials)
+N=10             # number of simulated decay (MC trials)
 Rad=["Co-60"]       # list of radionuclides (Na-24)
 pmf_1=[1]       # relative abondance (pmf)
 kB = 1.0e-5         # Birks constant in cm/keV
-# L=[1e-1]
+L=[1e-1]
 # L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
-L = np.logspace(-3,0,200) # Free paramete in keV-1 (for Co-60)
+# L = np.logspace(-3,0,200) # Free paramete in keV-1 (for Co-60)
 # L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
 # L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
 # L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 Record = True                  # to record the efficiency curves
+Display = True                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
 
 if np.size(pmf_1) > 1:
     if sum(pmf_1) !=1: print("warning p not equal to 1")
 elif pmf_1[0] != 1: print("warning")
+
+
+"""
+Read PenNuc File
+"""
+out_PenNuc = []
+particle = []
+p_branch = []
+e_branch = []
+LevelDaughter = []
+levelNumber = []
+prob = []
+levelEnergy = []
+transitionType = []
+e_trans = []
+next_level = []
+Q_value = []
+for rad_i in Rad:
+    out_PenNuc = tl.readPenNuc(rad_i)
+    particle.append(out_PenNuc[0])          # Particle(s) from the Mother
+    p_branch.append(out_PenNuc[1])          # Probablity of the branch
+    e_branch.append(out_PenNuc[2])          # Energy of the branch
+    LevelDaughter.append(out_PenNuc[3])     # Level of the Daughter nucleus just after the particle emission
+    levelNumber.append(out_PenNuc[4])       # The vector of level of the daughter to get information of all possible isomeric transitions
+    prob.append(out_PenNuc[5])              # Probibility density for each of the daughter level
+    levelEnergy.append(out_PenNuc[6])       # Energy of each level
+    transitionType.append(out_PenNuc[7])    # type of each possible transitions (internal transitions or gamma emission)
+    e_trans.append(out_PenNuc[8])           # Energy of the transition
+    next_level.append(out_PenNuc[9])        # Next level on the daughter nucleus
+    Q_value.append(out_PenNuc[10])          # Energy of the reaction
+
+
+"""
+Read BetaShape
+"""
+e_beta = []
+p_beta = []
+for i, rad_i in enumerate(Rad):
+    if particle[i][0] == "beta": 
+        e_beta.append(tl.readBetaShape(rad_i, "beta-", "tot")[0])
+        p_beta.append(tl.readBetaShape(rad_i, "beta-", "tot")[1])
+    elif particle[i][0] == "beta+":
+        e_beta.append(tl.readBetaShape(rad_i, "beta-", "tot")[0])
+        p_beta.append(tl.readBetaShape(rad_i, "beta-", "tot")[1])
+    else:
+        e_beta.append("")
+        p_beta.append("")        
 
 mean_efficiency_S = []  # efficiency of single counte rate
 std_efficiency_S = []   # std
@@ -57,89 +105,86 @@ for L_i in L: # loop on the free parameter values
        ## Sampling of the radionuclide
        index_rad = tl.sampling(pmf_1)
        rad_i = Rad[index_rad]
-       print("\n Sampled radionuclide = ", rad_i)
+       if Display: print("\n Sampled radionuclide = ", rad_i, "- L = ", L_i, ' keV-1 - kB = ', kB, ' cm/keV')
     
-
-
        """
        I. DESINTEGRATION NUCLEAIRE
        """
-
-       # Read PenNuc File
-       out_PenNuc = tl.readPenNuc(rad_i)
-       particle = out_PenNuc[0]          # Particle(s) from the Mother 
-       p_branch = out_PenNuc[1]          # Probablity of the branch
-       e_branch = out_PenNuc[2]          # Energy of the branch
-       LevelDaughter = out_PenNuc[3]     # Level of the Daughter nucleus just after the particle emission
-       levelNumber = out_PenNuc[4]       # The vector of level of the daughter to get information of all possible isomeric transitions
-       prob = out_PenNuc[5]              # Probibility density for each of the daughter level
-       levelEnergy = out_PenNuc[6]       # Energy of each level
-       transitionType = out_PenNuc[7]    # type of each possible transitions (internal transitions or gamma emission)
-       e_trans = out_PenNuc[8]           # Energy of the transition
-       next_level = out_PenNuc[9]        # Next level on the daughter nucleus
-       Q_value = out_PenNuc[10]          # Energy of the reaction
+       
+       # out_PenNuc = tl.readPenNuc(rad_i)
+       # particle = out_PenNuc[0]          # Particle(s) from the Mother 
+       # p_branch = out_PenNuc[1]          # Probablity of the branch
+       # e_branch = out_PenNuc[2]          # Energy of the branch
+       # LevelDaughter = out_PenNuc[3]     # Level of the Daughter nucleus just after the particle emission
+       # levelNumber = out_PenNuc[4]       # The vector of level of the daughter to get information of all possible isomeric transitions
+       # prob = out_PenNuc[5]              # Probibility density for each of the daughter level
+       # levelEnergy = out_PenNuc[6]       # Energy of each level
+       # transitionType = out_PenNuc[7]    # type of each possible transitions (internal transitions or gamma emission)
+       # e_trans = out_PenNuc[8]           # Energy of the transition
+       # next_level = out_PenNuc[9]        # Next level on the daughter nucleus
+       # Q_value = out_PenNuc[10]          # Energy of the reaction
        
      ## sampling of the decay branch
-       multiplicity_branch = sum(np.asarray(p_branch))
-       index_branch = tl.sampling(p_branch)
-       particle_branch = particle[index_branch]            # sampled particle emitted by the mother
-       energy_branch =  e_branch[index_branch]             # energy of the particle emitted by the mother
-       probability_branch = p_branch[index_branch]         # probability of the sampled branch
-       levelOftheDaughter = LevelDaughter[index_branch]    # Level of the daughter just after the particle emission from the mother
-       print("\t Sampled decay branch:")
-       print("\t\t Particle = ", particle_branch)
-       print("\t\t Energy of the particle = ", energy_branch, " keV")
-       print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
+       multiplicity_branch = sum(np.asarray(p_branch[index_rad]))
+       index_branch = tl.sampling(p_branch[index_rad])
+       particle_branch = particle[index_rad][index_branch]            # sampled particle emitted by the mother
+       energy_branch =  e_branch[index_rad][index_branch]             # energy of the particle emitted by the mother
+       probability_branch = p_branch[index_rad][index_branch]         # probability of the sampled branch
+       levelOftheDaughter = LevelDaughter[index_rad][index_branch]    # Level of the daughter just after the particle emission from the mother
+       if Display: print("\t Sampled decay branch:")
+       if Display: print("\t\t Particle = ", particle_branch)
+       if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
+       if Display: print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
 
        # Scoring
        e_sum = energy_branch                               # Update the Energy summary
        particle_vec.append(particle_branch)                # Update of the particle vector
        energy_vec.append(energy_branch)                    # Update of the energy of the particle
 
-       print("\t Subsequent isomeric transition")          # finish with the mother / now with the daughter
+       if Display: print("\t Subsequent isomeric transition")          # finish with the mother / now with the daughter
        while levelOftheDaughter > 0:                       # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
-         i_level = levelNumber.index(levelOftheDaughter)   # Find the position in the daughter level vector 
+         i_level = levelNumber[index_rad].index(levelOftheDaughter)   # Find the position in the daughter level vector 
          ## sampling of the transition in energy levels of the daughter nucleus
-         index_t = tl.sampling(prob[i_level+1])            # sampling of the transition
-         print("\t\t Energy of the level = ", levelEnergy[i_level], " keV")
-         print("\t\t Transition type = ", transitionType[i_level+1][index_t])
-         print("\t\t Energy of the transition = ", e_trans[i_level+1][index_t], "keV")
-         print("\t\t next level = ", next_level[i_level+1][index_t])
+         index_t = tl.sampling(prob[index_rad][i_level+1])            # sampling of the transition
+         if Display: print("\t\t Energy of the level = ", levelEnergy[index_rad][i_level], " keV")
+         if Display: print("\t\t Transition type = ", transitionType[index_rad][i_level+1][index_t])
+         if Display: print("\t\t Energy of the transition = ", e_trans[index_rad][i_level+1][index_t], "keV")
+         if Display: print("\t\t next level = ", next_level[index_rad][i_level+1][index_t])
             
          # Scoring
-         if transitionType[i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
+         if transitionType[index_rad][i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
            particle_vec.append("gamma")               # Update of the particle vector
-           energy_vec.append(e_trans[i_level+1][index_t])    # Update the energy vector
+           energy_vec.append(e_trans[index_rad][i_level+1][index_t])    # Update the energy vector
          else:                                          # if not, it is a internal conversion, so an electron
            particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
-           energy_vec.append(e_trans[i_level+1][index_t])    # Update the energy vector
-           if transitionType[i_level+1][index_t] == "EK":
+           energy_vec.append(e_trans[index_rad][i_level+1][index_t])    # Update the energy vector
+           if transitionType[index_rad][i_level+1][index_t] == "EK":
               particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
               energy_vec.append(0)
-           if transitionType[i_level+1][index_t] == "EL1":
+           if transitionType[index_rad][i_level+1][index_t] == "EL1":
               particle_vec.append("Atom_L1") # record that an electron is missing on the L1 shell of the dughter nucleus
               energy_vec.append(0)
-           if transitionType[i_level+1][index_t] == "EL2":
+           if transitionType[index_rad][i_level+1][index_t] == "EL2":
               particle_vec.append("Atom_L2") # record that an electron is missing on the L2 shell of the dughter nucleus
               energy_vec.append(0)
-           if transitionType[i_level+1][index_t] == "EL3":
+           if transitionType[index_rad][i_level+1][index_t] == "EL3":
               particle_vec.append("Atom_L3") # record that an electron is missing on the L3 shell of the dughter nucleus
               energy_vec.append(0)
-           if transitionType[i_level+1][index_t] == "EM":
+           if transitionType[index_rad][i_level+1][index_t] == "EM":
               particle_vec.append("Atom_M") # record that an electron is missing on the M shell of the dughter nucleus
               energy_vec.append(0)
-           if transitionType[i_level+1][index_t] == "EN":
+           if transitionType[index_rad][i_level+1][index_t] == "EN":
               particle_vec.append("Atom_N") # record that an electron is missing on the N shell of the dughter nucleus
               energy_vec.append(0)
-         e_sum += e_trans[i_level+1][index_t]              # Energy summary
+         e_sum += e_trans[index_rad][i_level+1][index_t]              # Energy summary
 
-         levelOftheDaughter = next_level[i_level+1][index_t]   # set the next level
+         levelOftheDaughter = next_level[index_rad][i_level+1][index_t]   # set the next level
     
        # Finish with the daughter Nucleus
-       print("\t Summary of the nuclear decay")
-       print("\t\t particles : ", particle_vec)
-       print("\t\t energy : ", energy_vec, "keV")
-       print("\t\t remaing energy (atomic transitions) : ", Q_value-e_sum, " keV")
+       if Display: print("\t Summary of the nuclear decay")
+       if Display: print("\t\t particles : ", particle_vec)
+       if Display: print("\t\t energy : ", energy_vec, "keV")
+       if Display: print("\t\t remaing energy (atomic transitions) : ", Q_value[index_rad]-e_sum, " keV")
 
 
        """
@@ -153,21 +198,20 @@ for L_i in L: # loop on the free parameter values
        """
        III. INTERACTION RAYONNEMENT/MATIERE + SPECTRES D'EMISSION
        """
-
        for i, p in enumerate(particle_vec):
          if p == "beta":
              # e_beta, p_beta, n_bin = tl.readBetaSpectrum(rad_i) # deprecated
-             e_beta, p_beta = tl.readBetaShape(rad_i, "beta-", "tot")
-             index_beta_energy = tl.sampling(p_beta)
+             # e_beta, p_beta = tl.readBetaShape(rad_i, "beta-", "tot")
+             index_beta_energy = tl.sampling(p_beta[index_rad])
              particle_vec[i] = "electron"
-             energy_vec[i] = e_beta[index_beta_energy]
+             energy_vec[i] = e_beta[index_rad][index_beta_energy]
              # Sampling Matrice comme gamma
          
          if p == "beta+":
-             e_beta, p_beta = tl.readBetaShape(rad_i, "beta+", "tot")
-             index_beta_energy = tl.sampling(p_beta)
+             # e_beta, p_beta = tl.readBetaShape(rad_i, "beta+", "tot")
+             index_beta_energy = tl.sampling(p_beta[index_rad])
              particle_vec[i] = "positron"
-             energy_vec[i] = e_beta[index_beta_energy]
+             energy_vec[i] = e_beta[index_rad][index_beta_energy]
              # Sampling Matrice comme gamma
 
          if p == "gamma" or p == "x":
@@ -177,9 +221,9 @@ for L_i in L: # loop on the free parameter values
          if p[:4] == "Atom": # Electron capture
              energy_vec[i] = 0
 
-       print("\t Summary of the final charged particles")
-       print("\t\t particles : ", particle_vec)
-       print("\t\t energy : ", energy_vec, "keV")
+       if Display: print("\t Summary of the final charged particles")
+       if Display: print("\t\t particles : ", particle_vec)
+       if Display: print("\t\t energy : ", energy_vec, "keV")
 
 
 
@@ -201,7 +245,7 @@ for L_i in L: # loop on the free parameter values
                 for j in e_discrete:
                     energy_vec[i] += delta_e/(1+kB*1e3*tl.stoppingpower(j*1e3)) # stoppingpower :input in (eV) / output (keV)
                 
-       print("\t\t quenched energy : ", energy_vec, "keV")
+       if Display: print("\t\t quenched energy : ", energy_vec, "keV")
 
 
 
@@ -232,6 +276,7 @@ for L_i in L: # loop on the free parameter values
     TDCR_calcul.append(mean_efficiency_T[-1]/mean_efficiency_D[-1])
     
     print("\t TDCR calculation")
+    if len(L) > 0: print("\t\t Progress = ", round(100*(L.index(L_i)+1)/len(L), 1), " %")
     print("\t\t Free parameter : ", L_i, " keV-1")
     print("\t\t Efficiency of Triple coincident events : ", round(100*mean_efficiency_T[-1],3), "+/-", round(100*std_efficiency_T[-1],3), " %")
     print("\t\t Efficiency of Double coincident events : ", round(100*mean_efficiency_D[-1],3), "+/-", round(100*std_efficiency_D[-1],3), " %")

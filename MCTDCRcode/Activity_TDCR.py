@@ -10,6 +10,9 @@ import numpy as np
 import scipy.signal as sg
 import scipy.optimize as opt
 
+
+
+
 def readEff(Rad, kB, SDT):
     file = open("EfficiencyCurves/"+''.join(Rad)+"/Eff"+SDT+"_"+''.join(Rad)+'_[1]_'+str(kB)+".txt","r")
     L=[]
@@ -30,7 +33,7 @@ def readProfil(Rad,kB,SDT):
 def res(L, TD, Lv, pDv, pTv):
     return (np.interp(L, Lv, pTv)/np.interp(L, Lv, pDv)-T/D)**2
 
-def effTDCR(TD, Rad, kB):    
+def effTDCR(TD, Rad, kB):
     kBv = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]
     Lv0 = readProfil(Rad,0.8e-5,"D")[0]
     pDv=[]; pTv=[]; Lv1=[]; effD1=[]; effT1=[]
