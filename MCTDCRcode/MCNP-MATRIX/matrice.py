@@ -89,8 +89,8 @@ def creat_matrice(niveau,par,mode='pdf',npas=1000):
         taille_x = 901     # 200k-2000k où delta=2k
 
     else:
-        end_energy = 1e4
-        start_energy = 2e3
+        end_energy = 10000
+        start_energy = 2000
         taille_x = 801      #2M-10M où delta = 0.1M
 
     taille_y = npas+3
@@ -125,10 +125,17 @@ if energy_inci[0] == 0.:
 #print(x,y)
 
 #'''
-def matrice_fig(matrice_p,start,end,e): 
+def matrice_fig(matrice_p,start,end,e,par): 
     # matrice_p : la matrice complète de chaque gamme
     # vecteur de l'énergie déposée pour chaque gamme
     # start et end en keV
+    if par == 'p':
+        particle = 'photon gamma'
+    elif par == 'b':
+        particle = 'beta-'
+    elif par == 'bp':
+        particle = 'beta+'
+
 
     if end <= 200:      # delta_Ei = 1
         delta_Ei = 1
@@ -136,6 +143,7 @@ def matrice_fig(matrice_p,start,end,e):
         i_st = int(start-1)
         i_end = int(end-1)
         #x = i_end - i_st +1
+        end_point = 2 + 5*(end+1)
 
     elif end <= 2000:    # delta_Ei = 1
         delta_Ei = 2
@@ -143,20 +151,26 @@ def matrice_fig(matrice_p,start,end,e):
         i_st = int((start-200)/delta_Ei)
         i_end = int((end-200)/delta_Ei)
         #x = i_end - i_st + 1
+        end_point = int(end/2+1)
 
-    else:               # 
+    else:
         delta_Ei = 10
         #d_end = int(end/(1e4+1)*1000)
         i_st = int((start-2000)/10)
         i_end = int((end-2000)/10)
         #x = i_end - i_st +1
+        end_point = int(end/10+1)
 
     #zz = matrice_p[1:d_end+1,i_st:i_end+1]  # matrice 
     zz = matrice_p[1:,i_st:i_end+1]
+    #zz = matrice_p[1:end_point,i_st:i_end+1]
     n = int((end-start)/delta_Ei)
     x = np.linspace(start,end,n+1)
     y = e
+    #y = e[0:end_point-1]
     xx,yy = np.meshgrid(x,y)
+    #x_size = np.size(x)
+    #y_size = np.size(y)
 
     '''
     for i in range(x):
@@ -168,7 +182,8 @@ def matrice_fig(matrice_p,start,end,e):
         zz = zz[2:,:]
         xx = xx[2:,:]
         yy = yy[2:,:]
-    print(xx.shape,yy.shape,zz.shape)
+    #print(xx.shape,yy.shape,zz.shape)
+    #print(zz[0,0],yy[0,0])
     h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot,vmin=0.)
     cb = plt.colorbar(h)
     cb.set_label("probabilité")
@@ -179,13 +194,13 @@ def matrice_fig(matrice_p,start,end,e):
     #ax.xaxis.set_major_locator(x_maj)
     #ax.yaxis.set_major_locator(LogLocator(base=10))
     #plt.yscale('log')
-    #plt.ylim(0,e[d_end])
+    #plt.ylim(0,y[end_point])
     #plt.xlim(start,end)
     plt.xlabel("énergie incidente/keV")
     plt.ylabel("énergie déposée/MeV")
-    title = "probabilité d'énergie déposée par des électrons de " + str(start) + "-" + str(end) + "k"
+    title = "probabilité d'énergie déposée par " + particle + " de " + str(start) + "-" + str(end) + "k"
     plt.title(title)
-    name = "matrice/matricep_" + str(start) + "_" + str(end) + "k.png"
+    name = "matrice/matrice_fig" + particle +"_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
     return 0
 #'''
@@ -195,9 +210,11 @@ def matrice_fig(matrice_p,start,end,e):
 
 def ecrit_matrice(matrice,niveau,par):
     if par == 'p':
-        name1 = 'p_'
-    else:
-        name1 = 'b_'
+        name1 = 'photon gamma_'
+    elif par == 'b':
+        name1 = 'beta-_'
+    elif par == 'bp':
+        name1 = 'beta+_'
 
     if niveau == 0:
         end_energy = 200
@@ -234,12 +251,12 @@ def ecrit_matrice(matrice,niveau,par):
             file.write('\n')
         '''
 
-e,matrice_p = creat_matrice(0,par='b')
+e,matrice_p = creat_matrice(2,par='p')
 print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,2,par='p') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-#fig2 = matrice_fig(matrice_p,5000,10000,e)
-#print(fig2)
+fig2 = matrice_fig(matrice_p,5000,10000,e,'p')
+print(fig2)
 
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
