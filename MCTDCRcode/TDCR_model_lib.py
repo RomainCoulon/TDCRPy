@@ -17,6 +17,9 @@ import zipfile as zf
 import matplotlib.pyplot as plt
 import time
 
+absolutePath = True
+
+
 def TicTocGenerator():
     # Generator that returns time differences
     ti = 0           # initial time
@@ -170,7 +173,8 @@ def readPenNuc(rad):
 
 #================================== StoppingPower for alpha particle ===========================================
 
-f_alpha = open('alpha_toulene.txt')
+if absolutePath: f_alpha = open('G:\Python_modules\Jialin\MCTDCRcode\\alpha_toulene.txt')
+else: f_alpha = open('alpha_toulene.txt')
 data_ASTAR = f_alpha.readlines()
 f_alpha.close()
 energy_alph = []
@@ -201,7 +205,9 @@ def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 #===================================================================================================================
 
 
-file_TanXia=open('TandataUG.txt', "r"); data_TanXia=file_TanXia.read(); file_TanXia.close()
+if absolutePath: file_TanXia=open('G:\Python_modules\Jialin\MCTDCRcode\\TandataUG.txt', "r")
+else: file_TanXia=open('TandataUG.txt', "r")
+data_TanXia=file_TanXia.read(); file_TanXia.close()
 data_TanXia=data_TanXia.split("\n"); data_TanXia_f = np.empty(len(data_TanXia))
 for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
@@ -479,10 +485,16 @@ plt.savefig("quenching E_test 10-10k.png")
 
 #========================= énergie gamma ===================================================
 #'''
-f1 = open('MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
-f2 = open('MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
-f3 = open('MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
-fe = open("MCNP-MATRIX/matrice/E_depose.txt")
+if absolutePath: 
+    f1 = open('G:\Python_modules\Jialin\MCTDCRcode\\MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
+    f2 = open('G:\Python_modules\Jialin\MCTDCRcode\\MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
+    f3 = open('G:\Python_modules\Jialin\MCTDCRcode\\MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
+    fe = open("G:\Python_modules\Jialin\MCTDCRcode\\MCNP-MATRIX/matrice/E_depose.txt")   
+else:
+    f1 = open('MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
+    f2 = open('MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
+    f3 = open('MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
+    fe = open("MCNP-MATRIX/matrice/E_depose.txt")
 
 data1 = f1.readlines()
 data2 = f2.readlines()
