@@ -131,14 +131,18 @@ uDT = 0.000711023 # Co-60 NIST
 D = 84679.21179
 nMc = 1e3
 eff_v = []
+kB1 = 0.8e-5
+kB2 = 1.2e-5
 for i in range(int(nMc)):
     dti = np.random.normal(DT,uDT)
-    eff_v.append(effTDCR(dti, "Co-60", 1.00E-5)[1]) # Co-60 NIST
-eff = np.mean(eff_v)
+    kBi = np.random.uniform(kB1,kB2)
+    eff_v.append(effTDCR(dti, "Co-60", kBi)[1]) # Co-60 NIST
+eff = np.median(eff_v)
 u_eff = np.std(eff_v)
 A = D/eff
 uA = D*u_eff/eff**2
-# result 86935      46             (err = 0.0002)
+# result 87099      67             (err = 0.0002) kB = 0.01
+# result 87299      236
 # I2 86640.31523	14.64334414
 # A_NIST = 86920    200
 
