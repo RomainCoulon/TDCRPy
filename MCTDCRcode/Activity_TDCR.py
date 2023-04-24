@@ -11,7 +11,7 @@ import scipy.signal as sg
 import scipy.optimize as opt
 
 def readEff(Rad, kB, SDT):
-    file = open("EfficiencyCurves/"+''.join(Rad)+"/Eff"+SDT+"_"+''.join(Rad)+'_[1]_'+str(kB)+".txt","r")
+    file = open("G:\Python_modules\Jialin\MCTDCRcode\\EfficiencyCurves/"+''.join(Rad)+"/Eff"+SDT+"_"+''.join(Rad)+'_[1]_'+str(kB)+".txt","r")
     L=[]
     p=[]
     up=[]
@@ -28,9 +28,9 @@ def readProfil(Rad,kB,SDT):
     return Lv, np.asarray(pSv), upSv
 
 def res(L, TD, Lv, pDv, pTv):
-    return (np.interp(L, Lv, pTv)/np.interp(L, Lv, pDv)-T/D)**2
+    return (np.interp(L, Lv, pTv)/np.interp(L, Lv, pDv)-TD)**2
 
-def effTDCR(TD, Rad, kB):    
+def effTDCR(TD, Rad, kB):
     kBv = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]
     Lv0 = readProfil(Rad,0.8e-5,"D")[0]
     pDv=[]; pTv=[]; Lv1=[]; effD1=[]; effT1=[]
@@ -44,35 +44,35 @@ def effTDCR(TD, Rad, kB):
     effD = np.interp(kB, kBv, effD1)
     effT = np.interp(kB, kBv, effT1)
      
-    plt.figure("eff_D = f(kB)")
-    plt.clf()
-    plt.title('  ')
-    plt.plot(kBv, effD1,'-b')
-    plt.plot(kB, effD, 'or')
-    plt.xlabel(r"$kB$ /(cm keV$^{-1}$)", fontsize = 14)
-    plt.ylabel(r"$\epsilon_D$", fontsize = 14)
-    plt.legend(fontsize = 12)
-    # plt.close()
+    # plt.figure("eff_D = f(kB)")
+    # plt.clf()
+    # plt.title('  ')
+    # plt.plot(kBv, effD1,'-b')
+    # plt.plot(kB, effD, 'or')
+    # plt.xlabel(r"$kB$ /(cm keV$^{-1}$)", fontsize = 14)
+    # plt.ylabel(r"$\epsilon_D$", fontsize = 14)
+    # plt.legend(fontsize = 12)
+    # # plt.close()
     
-    plt.figure("eff_T = f(kB)")
-    plt.clf()
-    plt.title('  ')
-    plt.plot(kBv, effT1,'-b')
-    plt.plot(kB, effT, 'or')
-    plt.xlabel(r"$kB$ /(cm keV$^{-1}$)", fontsize = 14)
-    plt.ylabel(r"$\epsilon_T$", fontsize = 14)
-    plt.legend(fontsize = 12)
-    # plt.close()
+    # plt.figure("eff_T = f(kB)")
+    # plt.clf()
+    # plt.title('  ')
+    # plt.plot(kBv, effT1,'-b')
+    # plt.plot(kB, effT, 'or')
+    # plt.xlabel(r"$kB$ /(cm keV$^{-1}$)", fontsize = 14)
+    # plt.ylabel(r"$\epsilon_T$", fontsize = 14)
+    # plt.legend(fontsize = 12)
+    # # plt.close()
     
-    plt.figure("L = f(kB)")
-    plt.clf()
-    plt.title('  ')
-    plt.plot(kBv, Lv1,'-b')
-    plt.plot(kB, L, 'or')
-    plt.xlabel(r"$kB$ /(cm keV$^{-1}$)", fontsize = 14)
-    plt.ylabel(r"$L$ /keV$^{-1}$", fontsize = 14)
-    plt.legend(fontsize = 12)
-    # plt.close()
+    # plt.figure("L = f(kB)")
+    # plt.clf()
+    # plt.title('  ')
+    # plt.plot(kBv, Lv1,'-b')
+    # plt.plot(kB, L, 'or')
+    # plt.xlabel(r"$kB$ /(cm keV$^{-1}$)", fontsize = 14)
+    # plt.ylabel(r"$L$ /keV$^{-1}$", fontsize = 14)
+    # plt.legend(fontsize = 12)
+    # # plt.close()
     
     return L, effD, effT
 
@@ -95,9 +95,9 @@ def plotEffProfil(Rad,kB):
     plt.figure("Efficiency curve eff = f(L)")
     plt.clf()
     plt.title('  ')
-    plt.plot(Lv0, effS,'-b', label = r"$\epsilon_S$, $kB$ = "+str(kB)+" cm/keV")
-    plt.plot(Lv0, effD,'-k', label = r"$\epsilon_D$, $kB$ = "+str(kB)+" cm/keV")
-    plt.plot(Lv0, effT,'-r', label = r"$\epsilon_T$, $kB$ = "+str(kB)+" cm/keV")
+    plt.plot(Lv0, effS,'-b', label = r"$\epsilon_{S}$, $kB$ = "+str(kB)+" cm/keV")
+    plt.plot(Lv0, effD,'-k', label = r"$\epsilon_{D}$, $kB$ = "+str(kB)+" cm/keV")
+    plt.plot(Lv0, effT,'-r', label = r"$\epsilon_{T}$, $kB$ = "+str(kB)+" cm/keV")
     plt.xscale("log")
     plt.xlabel(r"$L$ /keV$^{-1}$", fontsize = 14)
     plt.ylabel(r"$\epsilon$", fontsize = 14)
@@ -107,9 +107,9 @@ def plotEffProfil(Rad,kB):
     plt.figure("Efficiency curve eff = f(TDCR)")
     plt.clf()
     plt.title('  ')
-    plt.plot(tdcr, effS,'-b', label = r"$\epsilon_S$, $kB$ = "+str(kB)+" cm/keV")
-    plt.plot(tdcr, effD,'-k', label = r"$\epsilon_D$, $kB$ = "+str(kB)+" cm/keV")
-    plt.plot(tdcr, effT,'-r', label = r"$\epsilon_T$, $kB$ = "+str(kB)+" cm/keV")
+    plt.plot(tdcr, effS,'-b', label = r"$\epsilon_{S}$, $kB$ = "+str(kB)+" cm/keV")
+    plt.plot(tdcr, effD,'-k', label = r"$\epsilon_{D}$, $kB$ = "+str(kB)+" cm/keV")
+    plt.plot(tdcr, effT,'-r', label = r"$\epsilon_{T}$, $kB$ = "+str(kB)+" cm/keV")
     # plt.xscale("log")
     plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
     plt.ylabel(r"$\epsilon$", fontsize = 14)
@@ -117,20 +117,41 @@ def plotEffProfil(Rad,kB):
     plt.legend(fontsize = 12)
     # plt.close()
 
-AB = 657.296
-BC = 695.919
-AC = 693.579
-T = 448.868
-D = AB+BC+AC-2*T
-out = effTDCR(T/D, "H-3", 1.05E-5) # H-3
-plotEffProfil("H-3", 1.05E-5)
-# out = effTDCR(657.296, 695.919, 693.579, 448.868) # Co-60
+# AB = 657.296
+# BC = 695.919
+# AC = 693.579
+# T = 448.868
+# D = AB+BC+AC-2*T
+# out = effTDCR(T/D, "H-3", 1.05E-5) # H-3
+# plotEffProfil("H-3", 1.05E-5)
 
+
+DT = 0.977784348 # Co-60 NIST
+uDT = 0.000711023 # Co-60 NIST
+D = 84679.21179
+nMc = 1e3
+eff_v = []
+kB1 = 0.8e-5
+kB2 = 1.2e-5
+for i in range(int(nMc)):
+    dti = np.random.normal(DT,uDT)
+    kBi = np.random.uniform(kB1,kB2)
+    eff_v.append(effTDCR(dti, "Co-60", kBi)[1]) # Co-60 NIST
+eff = np.median(eff_v)
+u_eff = np.std(eff_v)
+A = D/eff
+uA = D*u_eff/eff**2
+# result 87099      67             (err = 0.0002) kB = 0.01
+# result 87299      236
+# I2 86640.31523	14.64334414
+# A_NIST = 86920    200
+
+# out = effTDCR(657.296, 695.919, 693.579, 448.868) # Co-60
 digRound = 2
-print("Efficiency of double coincidences = ", round(100*out[1], digRound),"%")
-print("Efficiency of triple coincidences = ", round(100*out[2], digRound),"%")
-print("Activity from double coincidences = ", round(D/out[1], digRound), "Bq")
-print("Activity of triple coincidences = ", round(T/out[2], digRound), "Bq")
+print("Efficiency of double coincidences = ", round(100*eff, digRound),"+/-", round(100*u_eff, digRound),"%")
+# print("Efficiency of triple coincidences = ", round(100*out[2], digRound),"%")
+print("Activity from double coincidences = ", round(A, digRound), "+/-", round(uA, digRound) ,"Bq")
+# print("Activity of triple coincidences = ", round(T/out[2], digRound), "Bq")
 # print("Efficiency of double coincidences (asym) = ", round(100*out[3], digRound),"%")
 # print("Efficiency of triple coincidences (asym) = ", round(100*out[5], digRound),"%")
 # print("Activity from double coincidences (asym) = ", round(D/out[3], digRound), "Bq")
