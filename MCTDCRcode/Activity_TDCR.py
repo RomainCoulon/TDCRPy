@@ -142,7 +142,7 @@ u_eff = np.std(eff_v)
 A = D/eff
 uA = D*u_eff/eff**2
 # result 87099      67             (err = 0.0002) kB = 0.01
-# result 87299      236
+# result 87045      88             kB = [0.008 - 0.012]
 # I2 86640.31523	14.64334414
 # A_NIST = 86920    200
 
