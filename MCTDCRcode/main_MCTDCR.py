@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=10000                   # number of simulated decay (MC trials)
-Rad=["H-3"]            # list of radionuclides (Na-24)
+Rad=["C-14"]            # list of radionuclides (Na-24)
 pmf_1=[1]                # relative abondance (pmf)
 kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
 # L=[1e-1]
