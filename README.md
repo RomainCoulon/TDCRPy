@@ -6,4 +6,4 @@ The calculation is based on the photo-physical model called of the Triple-to-Dou
 The code directly reads decay data from the Decay Data Evaluation Project (DDEP) web interface [[2]](#2). 
 
 <a id="1">[1]</a> https://doi.org/10.1016/0883-2889(88)90161-X
-<a id="2">[2]</a> http://www.lnhb.fr/ddep_wg/
+<b id="2">[2]</b> http://www.lnhb.fr/ddep_wg/
