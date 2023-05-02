@@ -130,7 +130,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     # vecteur de l'énergie déposée pour chaque gamme
     # start et end en keV
     if par == 'p':
-        particle = 'photon gamma'
+        particle = 'gamma'
     elif par == 'b':
         particle = 'beta-'
     elif par == 'bp':
@@ -200,7 +200,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     plt.ylabel("énergie déposée/MeV")
     title = "probabilité d'énergie déposée par " + particle + " de " + str(start) + "-" + str(end) + "k"
     plt.title(title)
-    name = "matrice/matrice_fig" + particle +"_" + str(start) + "_" + str(end) + "k.png"
+    name = "matrice/matrice_fig_" + particle +"_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
     return 0
 #'''
@@ -210,7 +210,7 @@ def matrice_fig(matrice_p,start,end,e,par):
 
 def ecrit_matrice(matrice,niveau,par):
     if par == 'p':
-        name1 = 'photon gamma_'
+        name1 = 'gamma_'
     elif par == 'b':
         name1 = 'beta-_'
     elif par == 'bp':
@@ -251,12 +251,12 @@ def ecrit_matrice(matrice,niveau,par):
             file.write('\n')
         '''
 
-e,matrice_p = creat_matrice(2,par='p')
+e,matrice_p = creat_matrice(1,par='b')
 print(e[-1],matrice_p.shape,np.size(e))
-#ecri = ecrit_matrice(matrice_p,2,par='p') 
+#ecri = ecrit_matrice(matrice_p,1,par='b') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-fig2 = matrice_fig(matrice_p,5000,10000,e,'p')
-print(fig2)
+fig2 = matrice_fig(matrice_p,1000,2000,e,'b')
+#print(fig2)
 
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
