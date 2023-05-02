@@ -167,8 +167,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     n = int((end-start)/delta_Ei)
     x = np.linspace(start,end,n+1)
     y = e
-    #y = e[0:end_point-1]
-    xx,yy = np.meshgrid(x,y)
+    #y = e[0:end_point-1]  
     #x_size = np.size(x)
     #y_size = np.size(y)
 
@@ -177,14 +176,22 @@ def matrice_fig(matrice_p,start,end,e,par):
         xx[:,i] = i * delta_Ei + start
         yy[:,i] = e[0:d_end]
     '''
-     
+    '''
     if end>20:
         zz = zz[2:,:]
         xx = xx[2:,:]
         yy = yy[2:,:]
+    
+    ''' 
+    if end > 20:
+        zz = zz[2:,:]
+        y = y[2:]
+    
     #print(xx.shape,yy.shape,zz.shape)
     #print(zz[0,0],yy[0,0])
-    h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot,vmin=0.)
+    xx,yy = np.meshgrid(x,y)
+    print(xx[0,0],yy.shape,zz[0,0])
+    h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot)
     cb = plt.colorbar(h)
     cb.set_label("probabilité")
     #plt.xticks(xs,s)
@@ -194,7 +201,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     #ax.xaxis.set_major_locator(x_maj)
     #ax.yaxis.set_major_locator(LogLocator(base=10))
     #plt.yscale('log')
-    #plt.ylim(0,y[end_point])
+    plt.ylim(y[0],y[end_point])
     #plt.xlim(start,end)
     plt.xlabel("énergie incidente/keV")
     plt.ylabel("énergie déposée/MeV")
@@ -251,11 +258,11 @@ def ecrit_matrice(matrice,niveau,par):
             file.write('\n')
         '''
 
-e,matrice_p = creat_matrice(1,par='b')
+e,matrice_p = creat_matrice(1,par='p')
 print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,1,par='b') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-fig2 = matrice_fig(matrice_p,1000,2000,e,'b')
+fig2 = matrice_fig(matrice_p,200,250,e,'p')
 #print(fig2)
 
 '''
