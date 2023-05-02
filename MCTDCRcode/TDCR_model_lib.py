@@ -562,12 +562,12 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
     else: result = e[inde]*1e3*e_inci/matrice[0][index]
     return result
 
-#'''
+'''
 r = []   
 for i in range(100):
     r.append(energie_dep_gamma(2568))
 # print(r)
-#'''
+'''
 #print(Matrice_e[0:5,:])
 
 # tic()
