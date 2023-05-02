@@ -258,11 +258,11 @@ def ecrit_matrice(matrice,niveau,par):
             file.write('\n')
         '''
 
-e,matrice_p = creat_matrice(1,par='p')
+e,matrice_p = creat_matrice(1,par='b')
 print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,1,par='b') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-fig2 = matrice_fig(matrice_p,200,250,e,'p')
+fig2 = matrice_fig(matrice_p,200,250,e,'b')
 #print(fig2)
 
 '''

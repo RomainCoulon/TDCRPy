@@ -173,8 +173,9 @@ def readPenNuc(rad):
 
 #================================== StoppingPower for alpha particle ===========================================
 
-if absolutePath: f_alpha = open('G:\Python_modules\Jialin\MCTDCRcode\\alpha_toulene.txt')
-else: f_alpha = open('alpha_toulene.txt')
+#if absolutePath: f_alpha = open('G:\Python_modules\Jialin\MCTDCRcode\\alpha_toulene.txt')
+#else: f_alpha = open('alpha_toulene.txt')
+f_alpha = open('alpha_toulene.txt')
 data_ASTAR = f_alpha.readlines()
 f_alpha.close()
 energy_alph = []
@@ -596,3 +597,19 @@ def writeEffcurves(x,y,uy,rad,p,kB,SDT):
     for i, xi in enumerate(x):
         file.write(str(xi)+" "+str(y[i])+" "+str(uy[i])+"\n")
     file.close()
+
+#======================== read ENSDF ============================================
+def readEShape(rad):
+    file = 'All-nuclides_ENSDF.zip'
+    z = zipfile.ZipFile(file)
+    name = rad + '.txt'
+    with z.open(name) as f:
+        data = f.readlines()
+
+        for i in range(np.size(data)):
+            data[i] = str(data[i])
+            data[i] = data[i].replace("b",'')
+    return data
+
+donne = readEShape('Ac-225')
+print(donne)
