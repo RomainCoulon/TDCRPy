@@ -17,7 +17,7 @@ import zipfile as zf
 import matplotlib.pyplot as plt
 import time
 
-absolutePath = True
+absolutePath = False
 
 
 def TicTocGenerator():
@@ -173,9 +173,8 @@ def readPenNuc(rad):
 
 #================================== StoppingPower for alpha particle ===========================================
 
-#if absolutePath: f_alpha = open('G:\Python_modules\Jialin\MCTDCRcode\\alpha_toulene.txt')
-#else: f_alpha = open('alpha_toulene.txt')
-f_alpha = open('alpha_toulene.txt')
+if absolutePath: f_alpha = open('G:\Python_modules\Jialin\MCTDCRcode\\alpha_toulene.txt')
+else: f_alpha = open('alpha_toulene.txt')
 data_ASTAR = f_alpha.readlines()
 f_alpha.close()
 energy_alph = []
@@ -600,8 +599,8 @@ def writeEffcurves(x,y,uy,rad,p,kB,SDT):
 
 #======================== read ENSDF ============================================
 def readEShape(rad):
-    file = 'All-nuclides_ENSDF.zip'
-    z = zipfile.ZipFile(file)
+    file = 'All-nuclides_Ensdf.zip'
+    z = zf.ZipFile(file)
     name = rad + '.txt'
     with z.open(name) as f:
         data = f.readlines()
@@ -609,7 +608,56 @@ def readEShape(rad):
         for i in range(np.size(data)):
             data[i] = str(data[i])
             data[i] = data[i].replace("b",'')
-    return data
+            data[i] = data[i].replace("\\r\\n",'')
+            data[i] = data[i].replace("'",'')
+        
+        for i in range(np.size(data)):
+            data[i] = data[i].split()
+        
+        '''
+        index_decay = []
+        index_auger = []
+        index_end = []
 
-donne = readEShape('Ac-225')
+        for i,p in enumerate(data):
+            if 'DECAY' in p:
+                i_decay = i
+                index_decay.append(i_decay)
+        
+            if 'Auger' in p:
+                i_auger = i
+                index_auger.append(i_auger)
+                p = data.index('P',i_auger,i_decay)
+                index_end.append(p)
+            else:
+                print('no auger electrons')
+                break
+
+        '''
+    index_decay = []
+    index_auger = []
+    index_end = []
+    for i,p in enumerate(data):
+        if 'DECAY' in p:
+            index_decay.append(i)
+        if 'Auger' in p:
+            #i_auger = i
+            index_auger.append(i)
+        if 'P' in p:
+            i_p = i
+            index_end.append(i_p)
+    proba = []
+    Type = []
+    for i in range(len(index_auger)):
+        start = index_auger[i]
+        end = index_end[i]
+        print(i,start,end)
+        for j in range(start+3,end-1):
+            print(data[j][2])
+            print(data[j][-1])
+        
+
+    return start,end
+
+donne = readEShape('Ag-108')
 print(donne)

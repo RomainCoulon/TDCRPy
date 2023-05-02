@@ -183,7 +183,7 @@ def matrice_fig(matrice_p,start,end,e,par):
         yy = yy[2:,:]
     
     ''' 
-    if end > 20:
+    if end > 20 and par=='p':
         zz = zz[2:,:]
         y = y[2:]
     
@@ -193,7 +193,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     print(xx[0,0],yy.shape,zz[0,0])
     h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot)
     cb = plt.colorbar(h)
-    cb.set_label("probabilité")
+    cb.set_label("probabilité en log")
     #plt.xticks(xs,s)
     #plt.yticks(np.linspace(0,end,10))
     #x_maj = MultipleLocator(1)
@@ -205,9 +205,9 @@ def matrice_fig(matrice_p,start,end,e,par):
     #plt.xlim(start,end)
     plt.xlabel("énergie incidente/keV")
     plt.ylabel("énergie déposée/MeV")
-    title = "probabilité d'énergie déposée par " + particle + " de " + str(start) + "-" + str(end) + "k"
+    title = "probabilité d'énergie déposée par " + particle + " de " + str(start) + "-" + str(end) + "keV"
     plt.title(title)
-    name = "matrice/matrice_fig_" + particle +"_" + str(start) + "_" + str(end) + "k.png"
+    name = "matrice/matrice_fig_log-5" + particle +"_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
     return 0
 #'''
@@ -262,7 +262,10 @@ e,matrice_p = creat_matrice(1,par='b')
 print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,1,par='b') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-fig2 = matrice_fig(matrice_p,200,250,e,'b')
+for i in range(1003):
+    for j in range(901):
+        matrice_p[i][j] = np.log(matrice_p[i][j]+1e-5)
+fig2 = matrice_fig(matrice_p,200,900,e,'b')
 #print(fig2)
 
 '''
