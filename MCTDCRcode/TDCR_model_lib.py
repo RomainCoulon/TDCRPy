@@ -648,16 +648,23 @@ def readEShape(rad):
             index_end.append(i_p)
     proba = []
     Type = []
+    #print(index_decay,index_auger,index_end)
+    #'''
     for i in range(len(index_auger)):
         start = index_auger[i]
         end = index_end[i]
-        print(i,start,end)
         for j in range(start+3,end-1):
-            print(data[j][2])
-            print(data[j][-1])
-        
-
-    return start,end
+            if len(data[j]) <=2:continue
+            if 'AUGER' in data[j]:
+                if len(data[j][2])>6:
+                    d = data[j][2].split('-')
+                    data[j][2] = round((float(d[1])+float(d[0]))/2,3)
+                print(data[j][2],data[j][-2])
+            else:
+                print(data[j][2],data[j][-1])
+    #'''
+    
+    return 0
 
 donne = readEShape('Ag-108')
-print(donne)
+#print(donne)
