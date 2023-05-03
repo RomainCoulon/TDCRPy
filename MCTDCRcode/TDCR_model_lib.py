@@ -638,6 +638,8 @@ def readEShape(rad):
     index_auger = []
     index_end = []
     for i,p in enumerate(data):
+        if 'IT' in p:
+            print('isomeric transition')
         if 'DECAY' in p:
             index_decay.append(i)
         if 'Auger' in p:
@@ -653,18 +655,25 @@ def readEShape(rad):
     for i in range(len(index_auger)):
         start = index_auger[i]
         end = index_end[i]
+        pb = []
+        ty = []
         for j in range(start+3,end-1):
             if len(data[j]) <=2:continue
             if 'AUGER' in data[j]:
                 if len(data[j][2])>6:
                     d = data[j][2].split('-')
                     data[j][2] = round((float(d[1])+float(d[0]))/2,3)
-                print(data[j][2],data[j][-2])
+                pb.append(data[j][2])
+                ty.append(data[j][-2])
             else:
-                print(data[j][2],data[j][-1])
+                pb.append(data[j][2])
+                ty.append(data[j][-1])
+                #print(data[j][2],data[j][-1])
+        proba.append(pb)
+        Type.append(ty)    
     #'''
     
-    return 0
+    return proba,Type
 
-donne = readEShape('Ag-108')
-#print(donne)
+pr,typ = readEShape('Ag-108m')
+print(pr,typ)
