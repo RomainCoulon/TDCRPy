@@ -118,7 +118,7 @@ if energy_inci[0] == 0.:
     taille_x = taille_x - 1
 '''
 
-    #print(energy)
+#print(energy)
 #print(matrice_p[0][:])
 #x = matrice_p.shape[1]
 #y = matrice_p.shape[0]
@@ -207,7 +207,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     plt.ylabel("énergie déposée/MeV")
     title = "probabilité d'énergie déposée par " + particle + " de " + str(start) + "-" + str(end) + "keV"
     plt.title(title)
-    name = "matrice/matrice_fig_log-5" + particle +"_" + str(start) + "_" + str(end) + "k.png"
+    name = "matrice/matrice_fig_log6-6" + particle +"_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
     return 0
 #'''
@@ -264,7 +264,7 @@ print(e[-1],matrice_p.shape,np.size(e))
 #fig1 = matrice_fig(matrice_p,41,80,e)
 for i in range(1003):
     for j in range(901):
-        matrice_p[i][j] = np.log(matrice_p[i][j]+1e-5)
+        matrice_p[i][j] = np.log(matrice_p[i][j]+6e-6)
 fig2 = matrice_fig(matrice_p,200,900,e,'b')
 #print(fig2)
 
