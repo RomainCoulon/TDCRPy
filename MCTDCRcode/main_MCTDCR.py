@@ -17,9 +17,9 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1                   # number of simulated decay (MC trials)
-Rad=["Ag-108m","H-3"]            # list of radionuclides (Na-24)
+Rad=["Ag-108m"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
-pmf_1=[0.5,0.5]                # relative abondance (pmf)
+pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
 #kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
 L=[1e-1]
@@ -153,59 +153,106 @@ for kB_i in kB:
            
            ## sampling of the decay branch
            multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))
-           index_branch = tl.sampling(p_branch[index_rad][iDaughter])
-           particle_branch = particle[index_rad][iDaughter][index_branch]            # sampled particle emitted by the mother
-           energy_branch =  e_branch[index_rad][iDaughter][index_branch]             # energy of the particle emitted by the mother
-           probability_branch = p_branch[index_rad][iDaughter][index_branch]         # probability of the sampled branch
-           levelOftheDaughter = LevelDaughter[index_rad][iDaughter][index_branch]    # Level of the daughter just after the particle emission from the mother
-           if Display: print("\t Sampled decay branch:")
-           if Display: print("\t\t Particle = ", particle_branch)
-           if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
-           if Display: print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
+           if p_branch[index_rad][iDaughter] != []:
+               index_branch = tl.sampling(p_branch[index_rad][iDaughter])
+               particle_branch = particle[index_rad][iDaughter][index_branch]            # sampled particle emitted by the mother
+               energy_branch =  e_branch[index_rad][iDaughter][index_branch]             # energy of the particle emitted by the mother
+               probability_branch = p_branch[index_rad][iDaughter][index_branch]         # probability of the sampled branch
+               levelOftheDaughter = LevelDaughter[index_rad][iDaughter][index_branch]    # Level of the daughter just after the particle emission from the mother
+               if Display: print("\t Sampled decay branch:")
+               if Display: print("\t\t Particle = ", particle_branch)
+               if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
+               if Display: print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
            
-           # Scoring
-           e_sum = energy_branch                               # Update the Energy summary
-           particle_vec.append(particle_branch)                # Update of the particle vector
-           energy_vec.append(energy_branch)                    # Update of the energy of the particle
+               # Scoring
+               e_sum = energy_branch                               # Update the Energy summary
+               particle_vec.append(particle_branch)                # Update of the particle vector
+               energy_vec.append(energy_branch)                    # Update of the energy of the particle
+           else:
+               if Display: print("\t Sampled decay branch:")
+               if Display: print("\t\t Particle = isomeric transition, no particle")
+               if Display: print("\t\t Level number =", levelNumber[index_rad][iDaughter][0])
+               levelOftheDaughter = Q_value[index_rad][iDaughter]
+               e_sum = 0
+               
+               
     
            if Display: print("\t Subsequent isomeric transition")          # finish with the mother / now with the daughter
            while levelOftheDaughter > 0:                       # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
-             i_level = levelNumber[index_rad][iDaughter].index(levelOftheDaughter)   # Find the position in the daughter level vector 
-             ## sampling of the transition in energy levels of the daughter nucleus
-             index_t = tl.sampling(prob[index_rad][iDaughter][i_level+1])            # sampling of the transition
-             if Display: print("\t\t Energy of the level = ", levelEnergy[index_rad][iDaughter][i_level], " keV")
-             if Display: print("\t\t Transition type = ", transitionType[index_rad][iDaughter][i_level+1][index_t])
-             if Display: print("\t\t Energy of the transition = ", e_trans[index_rad][iDaughter][i_level+1][index_t], "keV")
-             if Display: print("\t\t next level = ", next_level[index_rad][iDaughter][i_level+1][index_t])
+             if p_branch[index_rad][iDaughter] != []:
+                 i_level = levelNumber[index_rad][iDaughter].index(levelOftheDaughter)   # Find the position in the daughter level vector
+                 ## sampling of the transition in energy levels of the daughter nucleus
+                 index_t = tl.sampling(prob[index_rad][iDaughter][i_level+1])  
+                 if Display: print("\t\t Energy of the level = ", levelEnergy[index_rad][iDaughter][i_level], " keV")
+                 if Display: print("\t\t Transition type = ", transitionType[index_rad][iDaughter][i_level+1][index_t])
+                 if Display: print("\t\t Energy of the transition = ", e_trans[index_rad][iDaughter][i_level+1][index_t], "keV")
+                 if Display: print("\t\t next level = ", next_level[index_rad][iDaughter][i_level+1][index_t])
+                 
+                 # Scoring
+                 if transitionType[index_rad][iDaughter][i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
+                   particle_vec.append("gamma")               # Update of the particle vector
+                   energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
+                 else:                                          # if not, it is a internal conversion, so an electron
+                   particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
+                   energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
+                   if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EK":
+                      particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EL1":
+                      particle_vec.append("Atom_L1") # record that an electron is missing on the L1 shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EL2":
+                      particle_vec.append("Atom_L2") # record that an electron is missing on the L2 shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EL3":
+                      particle_vec.append("Atom_L3") # record that an electron is missing on the L3 shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EM":
+                      particle_vec.append("Atom_M") # record that an electron is missing on the M shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EN":
+                      particle_vec.append("Atom_N") # record that an electron is missing on the N shell of the dughter nucleus
+                      energy_vec.append(0)
+                 e_sum += e_trans[index_rad][iDaughter][i_level+1][index_t]              # Energy summary
+        
+                 levelOftheDaughter = next_level[index_rad][iDaughter][i_level+1][index_t]   # set the next level
+                 
+             else:
+                 i_level = levelNumber[index_rad][iDaughter][0]
+                 index_t = tl.sampling(prob[index_rad][iDaughter][i_level]) 
+                 # index_t = 0            # sampling of the transition
+                 
+                 # Scoring
+                 if transitionType[index_rad][iDaughter][i_level][index_t] == "GA": # if it is a gamma that has been emitted
+                   particle_vec.append("gamma")               # Update of the particle vector
+                   energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])    # Update the energy vector
+                 else:                                          # if not, it is a internal conversion, so an electron
+                   particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
+                   energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])    # Update the energy vector
+                   if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":
+                      particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level][index_t] == "EL1":
+                      particle_vec.append("Atom_L1") # record that an electron is missing on the L1 shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level][index_t] == "EL2":
+                      particle_vec.append("Atom_L2") # record that an electron is missing on the L2 shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level][index_t] == "EL3":
+                      particle_vec.append("Atom_L3") # record that an electron is missing on the L3 shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level][index_t] == "EM":
+                      particle_vec.append("Atom_M") # record that an electron is missing on the M shell of the dughter nucleus
+                      energy_vec.append(0)
+                   if transitionType[index_rad][iDaughter][i_level][index_t] == "EN":
+                      particle_vec.append("Atom_N") # record that an electron is missing on the N shell of the dughter nucleus
+                      energy_vec.append(0)
+                 e_sum += e_trans[index_rad][iDaughter][i_level][index_t]              # Energy summary
+        
+                 levelOftheDaughter = next_level[index_rad][iDaughter][i_level][index_t]-1   # set the next level
+
                 
-             # Scoring
-             if transitionType[index_rad][iDaughter][i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
-               particle_vec.append("gamma")               # Update of the particle vector
-               energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
-             else:                                          # if not, it is a internal conversion, so an electron
-               particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
-               energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
-               if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EK":
-                  particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
-                  energy_vec.append(0)
-               if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EL1":
-                  particle_vec.append("Atom_L1") # record that an electron is missing on the L1 shell of the dughter nucleus
-                  energy_vec.append(0)
-               if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EL2":
-                  particle_vec.append("Atom_L2") # record that an electron is missing on the L2 shell of the dughter nucleus
-                  energy_vec.append(0)
-               if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EL3":
-                  particle_vec.append("Atom_L3") # record that an electron is missing on the L3 shell of the dughter nucleus
-                  energy_vec.append(0)
-               if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EM":
-                  particle_vec.append("Atom_M") # record that an electron is missing on the M shell of the dughter nucleus
-                  energy_vec.append(0)
-               if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EN":
-                  particle_vec.append("Atom_N") # record that an electron is missing on the N shell of the dughter nucleus
-                  energy_vec.append(0)
-             e_sum += e_trans[index_rad][iDaughter][i_level+1][index_t]              # Energy summary
-    
-             levelOftheDaughter = next_level[index_rad][iDaughter][i_level+1][index_t]   # set the next level
+             
         
            # Finish with the daughter Nucleus
            if Display: print("\t Summary of the nuclear decay")
