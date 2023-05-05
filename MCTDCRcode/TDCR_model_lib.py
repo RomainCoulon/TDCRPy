@@ -80,6 +80,7 @@ def readPenNuc(rad):
     for line in file:
       decayData.append(line.decode("utf-8"))
       if "NDA " in decayData[-1]:    decayData[-1] = decayData[-1].replace("NDA ", "NDA; ") # number of daughter
+      if "DAU " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DAU ", "DAU; ") # daughter
       if "DDE " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DDE ", "DDE; ") # daughter description : probability of disintegration to NDA, uncertainty, number of excited levels of NDA; number of branche to NDA
       if "Q " in decayData[-1]:      decayData[-1] = decayData[-1].replace("Q ", "Q; ")     # total energy of the branch, uncertainty 
       if "ALP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("ALP ", "ALP; ") # type of the disintegration = alpha
@@ -101,67 +102,95 @@ def readPenNuc(rad):
       decayData[-1]=decayData[-1].split(";")
       if "\r\n" in decayData[-1][-1]:  decayData[-1][-1] = decayData[-1][-1].replace("\r\n", " ")
     
-    # Probablity vector of the decay branch
-    particle=[]; LevelDaughter = []; p_branch = []; u_p_branch = []; e_branch = []; u_e_branch = []
+   
+      
+    """
+    LOOP IN NDAUGH (Daughters)
+    """
+    Daughter_vec = []; Pdaughter_vec = []; Q_value_vec = []
     for d in decayData:
-      
-      """
-      LOOP IN NDAUGH (Daughters)
-      """
-      
       if d[0] == "NDA": Ndaughter = int(d[1])   # Read the number of daughter
-      if d[0] == "DDE": Pdaughter = float(d[1]) # Read the probability of disintegration to daughter
-      if d[0] == "Q":   Q_value = float(d[1])   # Read the Q-value
+      if d[0] == "DAU" : Daughter_vec.append(d[1])        # Read the daughter
+      if d[0] == "DDE": Pdaughter_vec.append(float(d[1])) # Read the probability of disintegration to daughter
+      if d[0] == "Q":   Q_value_vec.append(float(d[1]))   # Read the Q-value
     
-      """
-      LOOP IN NBRANCH (Branches of each daughter)
-      """
-    
-      if d[0] == "ALP" or d[0] == "BEM" or d[0] == "BEP" or d[0] == "CK" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
-        if d[0] == "ALP": particle.append("alpha")
-        if d[0] == "BEP": particle.append("beta+")
-        if d[0] == "BEM": particle.append("beta")
-        if d[0] == "CK": particle.append("Atom_K")
-        if d[0] == "CL1": particle.append("Atom_L1")
-        if d[0] == "CL2": particle.append("Atom_L2")
-        if d[0] == "CM": particle.append("Atom_M")
-        if d[0] == "CN": particle.append("Atom_N")
-        if d[2] == "  ": d[2]=0
-
-        p_branch.append(float(d[1])); u_p_branch.append(float(d[2])); # Branching ratio of the decay branch
-        e_branch.append(float(d[4])); u_e_branch.append(float(d[5])); # Energy of the decay branch (kinetic energy of the particle)
-        LevelDaughter.append(int(d[3]))                               # Level fed in daughter
-    
-    """
-    LOOP IN NLEVEL (Levels for each daughter, starting in NLEVEL, ending in 1)
-    """
-    levelEnergy = []; fromBranch = []; lineL=[]; listTran = []; levelNumber = []
-    transitionType = []; prob = []; u_prob = []; e_trans = []; u_e_trans = []; next_level = []
-    transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []
-    for d in decayData:
-      if d[0] == "LED":
-        # record transition details of the previous level
-        transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
-    #    if int(d[6]) in LevelDaughter :  # Read the information on the possible energy levels after the emission of the alpha particle 
-        levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
-        listTran.append(int(d[3]))           # Number of transitions that depopulate this level
-        levelNumber.append(int(d[6]))        # Level number
+    out = []
+    for dd in range(Ndaughter):
+        
+        # index_Daughter = sampling(np.asarray(Pdaughter_vec)/sum(np.asarray(Pdaughter_vec)))
+        # Daughter = Daughter_vec[index_Daughter]
+        # Pdaughter =  Pdaughter_vec[index_Daughter]
+        # Q_value = Q_value_vec[index_Daughter]    
+         
+        
+        """
+        LOOP IN NBRANCH (Branches of each daughter)
+        """
+        # Probablity vector of the decay branch
+        particle=[]; LevelDaughter = []; p_branch = []; u_p_branch = []; e_branch = []; u_e_branch = []
+        daughterFlag = True
+        for d in decayData:
+            if d[0] == "DAU" and d[1] == Daughter_vec[dd]:
+                daughterFlag = True
+            if d[0] == "DAU" and d[1] != Daughter_vec[dd]:
+                daughterFlag = False
+            
+            if daughterFlag:
+                
+                if d[0] == "ALP" or d[0] == "BEM" or d[0] == "BEP" or d[0] == "CK" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
+                    if d[0] == "ALP": particle.append("alpha")
+                    if d[0] == "BEP": particle.append("beta+")
+                    if d[0] == "BEM": particle.append("beta")
+                    if d[0] == "CK": particle.append("Atom_K")
+                    if d[0] == "CL1": particle.append("Atom_L1")
+                    if d[0] == "CL2": particle.append("Atom_L2")
+                    if d[0] == "CM": particle.append("Atom_M")
+                    if d[0] == "CN": particle.append("Atom_N")
+                    if d[2] == "  ": d[2]=0
+            
+                    p_branch.append(float(d[1])); u_p_branch.append(float(d[2])); # Branching ratio of the decay branch
+                    e_branch.append(float(d[4])); u_e_branch.append(float(d[5])); # Energy of the decay branch (kinetic energy of the particle)
+                    LevelDaughter.append(int(d[3]))                               # Level fed in daughter
+                    
+                
+        
+        """
+        LOOP IN NLEVEL (Levels for each daughter, starting in NLEVEL, ending in 1)
+        """
+        levelEnergy = []; fromBranch = []; lineL=[]; listTran = []; levelNumber = []
+        transitionType = []; prob = []; u_prob = []; e_trans = []; u_e_trans = []; next_level = []
         transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []
-          
-      """
-      LOOP IN NTRANS (Transitions depopulating this level)
-      """
-      if d[0] == "GA" or d[0] == "EK" or d[0] == "EL1" or d[0] == "EL2" or d[0] == "EL3" or d[0] == "EM" or d[0] == "EN":
-          if d[1] == '  ' or d[1] == '   ': d[1] = 0
-          if d[2] == '  ': d[2] = 0
-          if d[4] == '  ': d[4] = 0
-          transitionType_i.append(d[0])                                          # Read the type of transtion
-          prob_i.append(float(d[1])); u_prob_i.append(float(d[2]))                 # Read the emission probability of the transition
-          e_trans_i.append(float(d[3])); u_e_trans_i.append(float(d[4]))           # Read the energy of the transition
-          next_level_i.append(int(d[5]))                                         # Read the level fed by this transition
+        for d in decayData:
+          if d[0] == "DAU" and d[1] == Daughter_vec[dd]:
+                daughterFlag = True
+          if d[0] == "DAU" and d[1] != Daughter_vec[dd]:
+                daughterFlag = False
+          if daughterFlag:
+              if d[0] == "LED":
+                # record transition details of the previous level
+                transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
+            #    if int(d[6]) in LevelDaughter :  # Read the information on the possible energy levels after the emission of the alpha particle 
+                levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
+                listTran.append(int(d[3]))           # Number of transitions that depopulate this level
+                levelNumber.append(int(d[6]))        # Level number
+                transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []
+                  
+              """
+              LOOP IN NTRANS (Transitions depopulating this level)
+              """
+              if d[0] == "GA" or d[0] == "EK" or d[0] == "EL1" or d[0] == "EL2" or d[0] == "EL3" or d[0] == "EM" or d[0] == "EN":
+                  if d[1] == '  ' or d[1] == '   ': d[1] = 0
+                  if d[2] == '  ': d[2] = 0
+                  if d[4] == '  ': d[4] = 0
+                  transitionType_i.append(d[0])                                          # Read the type of transtion
+                  prob_i.append(float(d[1])); u_prob_i.append(float(d[2]))                 # Read the emission probability of the transition
+                  e_trans_i.append(float(d[3])); u_e_trans_i.append(float(d[4]))           # Read the energy of the transition
+                  next_level_i.append(int(d[5]))                                         # Read the level fed by this transition
+                
+        transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
     
-    transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
-    return particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value
+        out.append([particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value_vec[dd], Daughter_vec[dd], Pdaughter_vec[dd]])
+    return out
 
 # tic()
 # readPenNuc("Co-60")
@@ -376,6 +405,26 @@ plt.savefig('stoppingpowerE_A.png')
 #====================  Fonction pour lire BetaShape   ========================================
 
 def readBetaShape(rad,mode,trans):
+    """
+    
+
+    Parameters
+    ----------
+    rad : TYPE
+        DESCRIPTION.
+    mode : TYPE
+        DESCRIPTION.
+    trans : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    e : TYPE
+        DESCRIPTION.
+    dNdx : TYPE
+        DESCRIPTION.
+
+    """
     # mode(str): 'beta-','beta+'
     # trans(str):'trans0','trans1' ....
     file = "All-nuclides_BetaShape.zip"
@@ -675,5 +724,5 @@ def readEShape(rad):
     
     return proba,Type
 
-pr,typ = readEShape('Ag-108m')
-print(pr,typ)
+# pr,typ = readEShape('Ag-108m')
+# print(pr,typ)
