@@ -258,8 +258,37 @@ def ecrit_matrice(matrice,niveau,par):
             file.write('\n')
         '''
 
-e,matrice_p = creat_matrice(1,par='b')
-print(e[-1],matrice_p.shape,np.size(e))
+
+def find_info(energy,niveau,par,npas=1000,mode='N'):
+    if par == 'p':
+        name1 = 'p/'
+    else:
+        name1 = 'b/'
+
+    if niveau == 0:
+        output = 'output1'
+    elif niveau == 1:
+        output = 'output2'
+    else:
+        output = 'output3'
+
+    name_doc = output + name1 + 'output_' + str(int(energy))+'keV.o'
+    e = []
+    p = []
+    f = open(name_doc)
+    data = f.readlines()
+    f.close()
+
+    for i in range(len(data)):
+        m = i
+        if data[i].find('bremsstrahlung') == 1: break 
+    return m
+
+position = find_info(206,1,'b')
+
+#================ tracer la matrice ========================================
+#e,matrice_p = creat_matrice(1,par='b')
+#print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,1,par='b') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
 #for i in range(1003):
@@ -268,6 +297,8 @@ print(e[-1],matrice_p.shape,np.size(e))
 #fig2 = matrice_fig(matrice_p,200,900,e,'b')
 #print(fig2)
 
+#============= tracer la proba à Ei=Ed ====================================== 
+'''
 max_valeur = []
 for i in range(901):
     a = matrice_p[1:,i]
@@ -281,6 +312,20 @@ plt.xlabel('énergie incidente/keV')
 plt.ylabel('probabilité')
 plt.title("probabilté d'énergie déposée de particule béta à Ei=E_déposée")
 plt.savefig('beta.png')
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
 with open(name,'w') as file:
