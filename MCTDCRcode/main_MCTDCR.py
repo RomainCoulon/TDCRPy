@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1                   # number of simulated decay (MC trials)
-Rad=["Co-60"]            # list of radionuclides (Na-24)
+Rad=["Na-24"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -103,14 +103,14 @@ for i, rad_i in enumerate(Rad):
     e_beta_0 = []
     p_beta_0 = []
     out_PenNuc = tl.readPenNuc(rad_i)
-    for u in enumerate(range(len(out_PenNuc))):
+    for u in range(len(out_PenNuc)):
         e_beta_1 = []
         p_beta_1 = []        
-        for j in range(len(particle[i])):
-         if particle[i][j] == "beta":
+        for j in range(len(particle[i][u])):
+         if particle[i][u][j] == "beta":
              e_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(j))[0])
              p_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(j))[1])
-         elif particle[i][j] == "beta+":
+         elif particle[i][u][j] == "beta+":
              e_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(j))[0])
              p_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(j))[1])
          else:
@@ -282,8 +282,9 @@ for kB_i in kB:
              if p == "beta":
                  # e_beta, p_beta, n_bin = tl.readBetaSpectrum(rad_i) # deprecated
                  # e_beta, p_beta = tl.readBetaShape(rad_i, "beta-", "tot")
+                 n_branch = len(e_branch[index_rad][iDaughter])
                  index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
-                 print("BETA", e_beta[index_rad][iDaughter][-(1+index_branch)][-1], Q_value)
+                 print("\nBETA", e_beta[index_rad][iDaughter][-(1+index_branch)][-1], energy_branch, index_branch,"\n")
                  particle_vec[i] = "electron"
                  energy_vec[i] = e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
                  # Sampling Matrice comme gamma
