@@ -207,7 +207,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     plt.ylabel("énergie déposée/MeV")
     title = "probabilité d'énergie déposée par " + particle + " de " + str(start) + "-" + str(end) + "keV"
     plt.title(title)
-    name = "matrice/matrice_fig_log6-6" + particle +"_" + str(start) + "_" + str(end) + "k.png"
+    name = "matrice/matrice_fig_" + particle +"_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
     return 0
 #'''
@@ -273,22 +273,36 @@ def find_info(energy,niveau,par,npas=1000,mode='N'):
         output = 'output3'
 
     name_doc = output + name1 + 'output_' + str(int(energy))+'keV.o'
-    e = []
-    p = []
     f = open(name_doc)
     data = f.readlines()
     f.close()
 
     for i in range(len(data)):
         m = i
-        if data[i].find('bremsstrahlung') == 1: break 
-    return m
+        if data[i].find('bremsstrahlung') == 1: break
 
-position = find_info(206,1,'b')
+    lis = data[m].split() 
+    return float(lis[1])
+
+#================== tracer nb breamsstrahlung en fct de Ei ========================
+#nb_brem = []
+#for i in np.linspace(200,2000,901):
+    #nb_brem.append(find_info(i,1,'b')/1e6)
+#print(nb_brem[0:10])
+#print(nb_brem[525:550])
+#plt.plot(np.linspace(200,2000,901),nb_brem)
+#plt.yticks(np.arange(12710,238780,20000))
+#plt.xticks(np.arange(200,2002,200))
+#plt.xlabel('énergie incidente/keV')
+#plt.ylabel('nombre de photon produits par Bremsstrahlung')
+#plt.title('nombre de photons produits par Bremsstrahlung en fonction de Ei')
+#plt.savefig('evolution nb brem.png')
+#print(value)
+
 
 #================ tracer la matrice ========================================
 #e,matrice_p = creat_matrice(1,par='b')
-#print(e[-1],matrice_p.shape,np.size(e))
+#print(matrice_p.shape,matrice_p[0,541:543])
 #ecri = ecrit_matrice(matrice_p,1,par='b') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
 #for i in range(1003):
@@ -311,7 +325,7 @@ plt.yticks(np.arange(0.4,1.05,0.05))
 plt.xlabel('énergie incidente/keV')
 plt.ylabel('probabilité')
 plt.title("probabilté d'énergie déposée de particule béta à Ei=E_déposée")
-plt.savefig('beta.png')
+plt.savefig('beta1.png')
 '''
 
 
