@@ -262,12 +262,25 @@ e,matrice_p = creat_matrice(1,par='b')
 print(e[-1],matrice_p.shape,np.size(e))
 #ecri = ecrit_matrice(matrice_p,1,par='b') 
 #fig1 = matrice_fig(matrice_p,41,80,e)
-for i in range(1003):
-    for j in range(901):
-        matrice_p[i][j] = np.log(matrice_p[i][j]+6e-6)
-fig2 = matrice_fig(matrice_p,200,900,e,'b')
+#for i in range(1003):
+    #for j in range(901):
+        #matrice_p[i][j] = np.log(matrice_p[i][j]+6e-6)
+#fig2 = matrice_fig(matrice_p,200,900,e,'b')
 #print(fig2)
 
+max_valeur = []
+for i in range(901):
+    a = matrice_p[1:,i]
+    max_valeur.append(max(a))
+e_inci = matrice_p[0,:]
+#print(e_inci[0:10],max_valeur[0:10])
+plt.plot(e_inci,max_valeur)
+plt.xticks(np.arange(200,2002,200))
+plt.yticks(np.arange(0.4,1.05,0.05))
+plt.xlabel('énergie incidente/keV')
+plt.ylabel('probabilité')
+plt.title("probabilté d'énergie déposée de particule béta à Ei=E_déposée")
+plt.savefig('beta.png')
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
 with open(name,'w') as file:
