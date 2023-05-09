@@ -14,15 +14,15 @@ The stopping power of $\alpha$ particles of energy comprises between 1 keV and 8
 
 <b id="2">[2]</b> http://www.lnhb.fr/ddep_wg/
 
-<c id="3">[3]</c> https://doi.org/10.1016/j.cpc.2019.08.002
+<c id="3">[3]</c> E. García-Toraño, V. Peyres, F. Salvat, PenNuc: Monte Carlo simulation of the decay of radionuclides, *Computer Physics Communications* **245**, 2019, 106849 https://doi.org/10.1016/j.cpc.2019.08.002
 
-<c id="4">[4]</c> https://doi.org/10.1103/PhysRevC.92.059902
+<c id="4">[4]</c> X. Mougeot, Erratum: Reliability of usual assumptions in the calculation of $\beta$ and $\bar{\mu}$ spectra, *Physical Review C* **91**, 2015, 055504, https://doi.org/10.1103/PhysRevC.92.059902
 
-<c id="5">[5]</c> https://doi.org/10.1016/j.apradiso.2019.108884
+<c id="5">[5]</c> X. Mougeot, Towards high-precision calculation of electron capture decays, *Applied Radiation and Isotopes* **154**, 2019, 108884,  https://doi.org/10.1016/j.apradiso.2019.108884
 
-<c id="6">[6]</c> https://doi.org/10.1016/j.apradiso.2020.109478
+<c id="6">[6]</c> K. Kossert, X. Mougeot, Improved activity standardization of <sup>90</sup>Sr/<sup>90</sup>Y by means of liquid scintillation counting, *Applied Radiation and Isotopes* **168**, 2021, 109478, https://doi.org/10.1016/j.apradiso.2020.109478
 
-<c id="7">[7]</c> https://dx.doi.org/10.18434/T4NC7P
+<c id="7">[7]</c> M.J. Berger, J.S. Coursey, M.A. Zucker and J. Chang,Stopping-Power & Range Tables for Electrons, Protons, and Helium Ions, *NIST Standard Reference Database 124*, 2017, https://dx.doi.org/10.18434/T4NC7P
 
 <c id="8">[8]</c> ICRU Report 37, Stopping Powers for Electrons and Positrons
 
