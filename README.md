@@ -24,8 +24,8 @@ The stopping power of $\alpha$ particles of energy comprises between 1 keV and 8
 
 <c id="7">[7]</c> M.J. Berger, J.S. Coursey, M.A. Zucker and J. Chang,Stopping-Power & Range Tables for Electrons, Protons, and Helium Ions, *NIST Standard Reference Database 124*, 2017, https://dx.doi.org/10.18434/T4NC7P
 
-<c id="8">[8]</c> ICRU Report 37, Stopping Powers for Electrons and Positrons
+<c id="8">[8]</c> ICRU Report 37, *Stopping Powers for Electrons and Positrons*
 
-<c id="9">[9]</c> https://doi.org/10.1016/j.apradiso.2011.08.012
+<c id="9">[9]</c> Z. Tan, Y. Xia, Stopping power and mean free path for low-energy electrons in ten scintillators over energy range of 20–20,000 eV, *Applied Radiation and Isotopes* **70**, 2012, 296-300, https://doi.org/10.1016/j.apradiso.2011.08.012
 
-<c id="10">[10]</c> https://www.icru.org/report/stopping-power-and-ranges-for-protons-and-alpha-particles-report-49/
+<c id="10">[10]</c> ICRU Report 49, *Stopping Power and Ranges for Protons and Alpha Particles*, https://www.icru.org/report/stopping-power-and-ranges-for-protons-and-alpha-particles-report-49/
