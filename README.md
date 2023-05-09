@@ -9,6 +9,10 @@ The stopping power of electrons between 20 keV and 1000 keV is a mixture of a ra
 
 The stopping power of $\alpha$ particles of energy comprises between 1 keV and 8 MeV comes from the NIST code ASTAR [[9]](#9) recommanded in the ICRU Report 49 [[12]](#12). For energy below 1 keV, an extrapolation is made.
 
+The atomic relaxation from missing electrons in the inner-shell following electron capture and internal conversion is sumated by... 
+
+The interaction of $\gamma$ rays, electrons and positrons are simulated using response kernels calculated by the Monte-Carlo code MCNP6 developped by Los Alamos [[13]](#13).
+
 ## References
 
 <a id="1">[1]</a> Ryszard Broda, Krzysztof Pochwalski, Tomasz Radoszewski, Calculation of liquid-scintillation detector efficiency, *Applied Radiation and Isotopes* **39**:2, 1988, 159-164, https://doi.org/10.1016/0883-2889(88)90161-X
@@ -34,3 +38,5 @@ The stopping power of $\alpha$ particles of energy comprises between 1 keV and 8
 <c id="11">[11]</c> Z. Tan, Y. Xia, Stopping power and mean free path for low-energy electrons in ten scintillators over energy range of 20–20,000 eV, *Applied Radiation and Isotopes* **70**, 2012, 296-300, https://doi.org/10.1016/j.apradiso.2011.08.012
 
 <c id="12">[12]</c> ICRU Report 49, *Stopping Power and Ranges for Protons and Alpha Particles*, https://www.icru.org/report/stopping-power-and-ranges-for-protons-and-alpha-particles-report-49/
+
+<c id="13">[13]</c> https://mcnp.lanl.gov/
