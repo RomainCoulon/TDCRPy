@@ -10,7 +10,7 @@ The stopping power of electrons between 20 keV and 1000 keV is a mixture of a ra
 The stopping power of $\alpha$ particles of energy comprises between 1 keV and 8 MeV comes from the NIST code ASTAR [[7]](#7) recommanded in the ICRU Report 49 [[10]](#10). For energy below 1 keV, an extrapolation is made.
 
 
-<a id="1">[1]</a> Ryszard Broda, Krzysztof Pochwalski, Tomasz Radoszewski, Calculation of liquid-scintillation detector efficiency, *Applied Radiation and Isotopes* **39**:2, 1988, 159, https://doi.org/10.1016/0883-2889(88)90161-X
+<a id="1">[1]</a> Ryszard Broda, Krzysztof Pochwalski, Tomasz Radoszewski, Calculation of liquid-scintillation detector efficiency, *Applied Radiation and Isotopes* **39**:2, 1988, 159-164, https://doi.org/10.1016/0883-2889(88)90161-X
 
 <b id="2">[2]</b> http://www.lnhb.fr/ddep_wg/
 
