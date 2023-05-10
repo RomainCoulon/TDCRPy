@@ -3,7 +3,7 @@
 TDCRPy is a Python code to calculate detection efficiency of a liquide scintillation counter using 3-photomultiplier tubes.
 The calculation is based on the photo-physical model called of the Triple-to-Double-Coincidence-Ratio method (TDCR) [[1]](#1) and a Monte-Carlo sampling allowing to adress complexe decay schemes and radionuclide mixtures.
 
-![image info](./FlowChart2.png)
+![image info](./FlowChart.jpg)
 
 The code directly reads decay data from the Decay Data Evaluation Project (DDEP) web interface [[2]](#2) that is recommanded to be used by the radionuclide metrology community. The PenNuc format [[3]](#3) is used to simulate decays and the $\beta$ spectra from the BetaShape code [[4]](#4) are used. The BetaShape code estimates accurate $\beta$ spectra by taking the atomic exchange effect and also simulate accurately electron capture decay [[5]](#5). It has been demonstrated to offer significant improvement in the context of liquid scintillation counting [[6]](#6).
 
