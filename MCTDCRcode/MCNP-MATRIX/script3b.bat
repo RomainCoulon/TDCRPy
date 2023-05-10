@@ -1,3 +1,4 @@
+mcnp6 i=input3b/input_3910keV.mcn r=run/run_3910keV.r o=output3b/output_3910keV.o
 mcnp6 i=input3b/input_3920keV.mcn r=run/run_3920keV.r o=output3b/output_3920keV.o
 mcnp6 i=input3b/input_3930keV.mcn r=run/run_3930keV.r o=output3b/output_3930keV.o
 mcnp6 i=input3b/input_3940keV.mcn r=run/run_3940keV.r o=output3b/output_3940keV.o
