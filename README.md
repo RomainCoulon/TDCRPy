@@ -9,9 +9,9 @@ The stopping power of electrons between 20 keV and 1000 keV is a mixture of a ra
 
 The stopping power of $\alpha$ particles of energy comprises between 1 keV and 8 MeV comes from the NIST code ASTAR [[9]](#9) recommanded in the ICRU Report 49 [[12]](#12). For energy below 1 keV, an extrapolation is made.
 
-The atomic relaxation from missing electrons in the inner-shell following electron capture and internal conversion is sumated by... 
+The atomic relaxation from missing electrons in the inner-shell following electron capture and internal conversion is simulated by... 
 
-The interaction of $\gamma$ rays, electrons and positrons are simulated using response kernels calculated by the Monte-Carlo code MCNP6 developped by Los Alamos [[13]](#13).
+The interaction of $\gamma$ rays, electrons and positrons are simulated using response kernels calculated by the Monte-Carlo code MCNP6 developped by Los Alamos [[13]](#13). 
 
 ## References
 
