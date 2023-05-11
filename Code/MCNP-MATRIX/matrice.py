@@ -302,11 +302,12 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
         for i, p in enumerate(data):
             if info in p:
                 m=i
+                nombre.append(float(data[m][1]))
                 break
-        if data[m+7][0] == '2':
-            nombre.append(float(data[m+7][2]))
-        else:
-            print('bad position')
+        #if data[m+7][0] == '2':
+        #    nombre.append(float(data[m+7][2]))
+        #else:
+            #print('bad position')
     return nombre
 
 #================== tracer nb breamsstrahlung en fct de Ei ========================
@@ -335,6 +336,20 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 #plt.ylabel("fraction d'electrons sort le flacon")
 #plt.title("fraction d'electrons sort le flacon")
 #plt.savefig('beta_sort_flacon.png')
+
+#===================================
+#a = np.array(find_info(1,'b','bremsstrahlung'))
+#print(a[899:901])
+#plt.plot(np.linspace(200,2000,901),a/1e6)
+#plt.xticks(np.arange(200,2002,200))
+#plt.yticks(np.linspace(0,0.25,11))
+#plt.xlim(200,2000)
+#plt.xlabel('énergie incidente/keV')
+#plt.ylabel("fraction d'photon Bremsstralung")
+#plt.title("fraction d'photon Bremsstralung en fonction Ei")
+#plt.savefig('nombre photon brem.png')
+
+
 
 
 #================ tracer la matrice ========================================
