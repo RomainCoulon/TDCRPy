@@ -259,7 +259,7 @@ def ecrit_matrice(matrice,niveau,par):
         '''
 
 
-def find_info(energy,niveau,par,npas=1000,mode='N'):
+def find_info(niveau,par,info,npas=1000,mode='N'):
     if par == 'p':
         name1 = 'p/'
     else:
@@ -267,22 +267,47 @@ def find_info(energy,niveau,par,npas=1000,mode='N'):
 
     if niveau == 0:
         output = 'output1'
+        energy_start = 1
+        energy_end = 200
+        nb = 200
+
     elif niveau == 1:
         output = 'output2'
+        energy_start = 200
+        energy_end = 2000
+        nb = 901
     else:
         output = 'output3'
+        energy_start = 2000
+        energy_end = 10000
+        nb = 801
+    
+    energy = np.linspace(energy_start,energy_end,nb)
+    nombre = []
+    for i in energy:
+        name_doc = output + name1 + 'output_' + str(int(i))+'keV.o'
+        f = open(name_doc)
+        data = f.readlines()
+        f.close()
+        #m = data[info].split()
+        #      for i in range(len(data)):
+        #       m = i
+        #      if data[i].find(info) == 1: break
 
-    name_doc = output + name1 + 'output_' + str(int(energy))+'keV.o'
-    f = open(name_doc)
-    data = f.readlines()
-    f.close()
+        # lis = data[m].split() 
 
-    for i in range(len(data)):
-        m = i
-        if data[i].find('bremsstrahlung') == 1: break
-
-    lis = data[m].split() 
-    return float(lis[1])
+        #m = []
+        for i in range(len(data)):
+            data[i] = data[i].split()
+        for i, p in enumerate(data):
+            if info in p:
+                m=i
+                break
+        if data[m+7][0] == '2':
+            nombre.append(float(data[m+7][2]))
+        else:
+            print('bad position')
+    return nombre
 
 #================== tracer nb breamsstrahlung en fct de Ei ========================
 #nb_brem = []
@@ -298,6 +323,18 @@ def find_info(energy,niveau,par,npas=1000,mode='N'):
 #plt.title('nombre de photons produits par Bremsstrahlung en fonction de Ei')
 #plt.savefig('evolution nb brem.png')
 #print(value)
+
+#=================tracer le nb electron qui sortent ========================
+#a = np.array(find_info(1,'b','1electron'))
+#print(a[899:901])
+#plt.plot(np.linspace(200,2000,901),a/1e6)
+#plt.xticks(np.arange(200,2002,200))
+#plt.yticks(np.linspace(0,0.6,13))
+#plt.xlim(200,2000)
+#plt.xlabel('énergie incidente/keV')
+#plt.ylabel("fraction d'electrons sort le flacon")
+#plt.title("fraction d'electrons sort le flacon")
+#plt.savefig('beta_sort_flacon.png')
 
 
 #================ tracer la matrice ========================================
@@ -329,17 +366,7 @@ plt.savefig('beta1.png')
 '''
 
 
-
-
-
-
-
-
-
-
-
-
-
+#===============================ecrire un fichier===================================
 '''
 name = 'matrice/matrice_' + str(start_energy) + '_' + str(end_energy) + 'k.txt'
 with open(name,'w') as file:
