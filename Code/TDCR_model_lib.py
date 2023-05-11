@@ -16,7 +16,7 @@ import zipfile as zf
 # import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import time
-
+import re
 absolutePath = False
 
 
@@ -649,6 +649,15 @@ def writeEffcurves(x,y,uy,rad,p,kB,SDT):
     file.close()
 
 #======================== read ENSDF ============================================
+def transf_name(rad):
+    name_lis = re.split('(\d+)',rad)
+    a = name_lis[2][0] + name_lis[2][1].lower()
+    name_lis[2] = a
+    RAD = name_lis[2]+'-'+name_lis[1]
+    return RAD
+
+#print(transf_name('108AG'))
+
 def readEShape(rad):
     file = 'All-nuclides_Ensdf.zip'
     z = zf.ZipFile(file)
@@ -688,47 +697,49 @@ def readEShape(rad):
     index_decay = []
     index_auger = []
     index_end = []
+    daug_name = []
     for i,p in enumerate(data):
         if 'IT' in p:
             print('isomeric transition')
         if 'DECAY' in p:
             index_decay.append(i)
+            daug_name.append(transf_name(p[0]))
         if 'Auger' in p:
             #i_auger = i
             index_auger.append(i)
         if 'P' in p:
             i_p = i
             index_end.append(i_p)
-    proba = []
+    Energy = []
     Type = []
     #print(index_decay,index_auger,index_end)
     #'''
     for i in range(len(index_auger)):
         start = index_auger[i]
         end = index_end[i]
-        pb = []
+        en = []
         ty = []
-        for j in range(start+3,end-1):
+        for j in range(start+3,end):
             if len(data[j]) <=2:continue
             if 'AUGER' in data[j]:
                 if len(data[j][2])>6:
                     d = data[j][2].split('-')
                     data[j][2] = round((float(d[1])+float(d[0]))/2,3)
-                pb.append(data[j][2])
+                en.append(data[j][2])
                 ty.append(data[j][-2])
             else:
-                pb.append(data[j][2])
+                en.append(data[j][2])
                 ty.append(data[j][-1])
                 #print(data[j][2],data[j][-1])
-        proba.append(pb)
+        Energy.append(en)
         Type.append(ty)    
     #'''
     
-    return proba,Type
+    return daug_name,Energy,Type
 
 # Nom de la fille
 # Ajouter le vecteur proba
 # Mettre les valeurs numériques prob et energy en flotant
 
-#pr,typ = readEShape('Ag-108m')
-#print(pr,typ)
+dn,en,typ = readEShape('Ag-108m')
+print(dn,en,typ)
