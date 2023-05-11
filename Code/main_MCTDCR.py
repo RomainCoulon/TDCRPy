@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1                   # number of simulated decay (MC trials)
-Rad=["Fe-55"]            # list of radionuclides (Na-24)
+Rad=["Cd-109"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -165,6 +165,9 @@ for kB_i in kB:
                energy_branch =  e_branch[index_rad][iDaughter][index_branch]             # energy of the particle emitted by the mother
                probability_branch = p_branch[index_rad][iDaughter][index_branch]         # probability of the sampled branch
                levelOftheDaughter = LevelDaughter[index_rad][iDaughter][index_branch]    # Level of the daughter just after the particle emission from the mother
+               if particle_branch[:4] == "Atom":
+                  particle_branch = [particle_branch]
+                  particle_branch.append(DaughterVec[index_rad][iDaughter])
                if Display: print("\t Sampled decay branch:")
                if Display: print("\t\t Particle = ", particle_branch)
                if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
@@ -202,22 +205,22 @@ for kB_i in kB:
                    particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
                    energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
                    if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EK":
-                      particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
+                      particle_vec.append(["Atom_K",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the K shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EL1":
-                      particle_vec.append("Atom_L1") # record that an electron is missing on the L1 shell of the dughter nucleus
+                      particle_vec.append(["Atom_L1",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L1 shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EL2":
-                      particle_vec.append("Atom_L2") # record that an electron is missing on the L2 shell of the dughter nucleus
+                      particle_vec.append(["Atom_L2",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L2 shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EL3":
-                      particle_vec.append("Atom_L3") # record that an electron is missing on the L3 shell of the dughter nucleus
+                      particle_vec.append(["Atom_L3",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L3 shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EM":
-                      particle_vec.append("Atom_M") # record that an electron is missing on the M shell of the dughter nucleus
+                      particle_vec.append(["Atom_M",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the M shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EN":
-                      particle_vec.append("Atom_N") # record that an electron is missing on the N shell of the dughter nucleus
+                      particle_vec.append(["Atom_N",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the N shell of the dughter nucleus
                       energy_vec.append(0)
                  e_sum += e_trans[index_rad][iDaughter][i_level+1][index_t]              # Energy summary
         
@@ -236,22 +239,22 @@ for kB_i in kB:
                    particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
                    energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])    # Update the energy vector
                    if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":
-                      particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
+                      particle_vec.append(["Atom_K",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the K shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level][index_t] == "EL1":
-                      particle_vec.append("Atom_L1") # record that an electron is missing on the L1 shell of the dughter nucleus
+                      particle_vec.append(["Atom_L1",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L1 shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level][index_t] == "EL2":
-                      particle_vec.append("Atom_L2") # record that an electron is missing on the L2 shell of the dughter nucleus
+                      particle_vec.append(["Atom_L2",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L2 shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level][index_t] == "EL3":
-                      particle_vec.append("Atom_L3") # record that an electron is missing on the L3 shell of the dughter nucleus
+                      particle_vec.append(["Atom_L3",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L3 shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level][index_t] == "EM":
-                      particle_vec.append("Atom_M") # record that an electron is missing on the M shell of the dughter nucleus
+                      particle_vec.append(["Atom_M",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the M shell of the dughter nucleus
                       energy_vec.append(0)
                    if transitionType[index_rad][iDaughter][i_level][index_t] == "EN":
-                      particle_vec.append("Atom_N") # record that an electron is missing on the N shell of the dughter nucleus
+                      particle_vec.append(["Atom_N",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the N shell of the dughter nucleus
                       energy_vec.append(0)
                  e_sum += e_trans[index_rad][iDaughter][i_level][index_t]              # Energy summary
         
