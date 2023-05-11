@@ -724,5 +724,5 @@ def readEShape(rad):
     
     return proba,Type
 
-# pr,typ = readEShape('Ag-108m')
-# print(pr,typ)
+pr,typ = readEShape('Ag-108m')
+print(pr,typ)
