@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1                   # number of simulated decay (MC trials)
-Rad=["Na-24"]            # list of radionuclides (Na-24)
+Rad=["Fe-55"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -271,9 +271,15 @@ for kB_i in kB:
            II. LA RELAXATION ATOMIQUE
            """
     
-           ## Look at the EADL https://www.nndc.bnl.gov/nndc/proceedings/2010csewgusndp/Tuesday/USNDP/eadl.pdf
-           ## Also BrIccEmisDB ...
-    
+#            ### Used of ENSDF file in DDEP 
+
+#            while "Atome_*" in particle_vec:
+#                for ip, p in enumerate(particle_vec):
+#                  if ("Atom_K" in p) or ("Atom_L" in p) or ("Atom_M" in p):
+#                     # appelle fonction() => Electron ou photon # energy
+#                     # particle_vec[ip] = "electron"
+#                     # energy_vec[ip] = Eout
+#                     #
     
            """
            III. INTERACTION RAYONNEMENT/MATIERE + SPECTRES D'EMISSION

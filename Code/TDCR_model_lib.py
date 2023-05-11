@@ -724,5 +724,9 @@ def readEShape(rad):
     
     return proba,Type
 
+# Nom de la fille
+# Ajouter le vecteur proba
+# Mettre les valeurs numériques prob et energy en flotant
+
 pr,typ = readEShape('Ag-108m')
 print(pr,typ)
