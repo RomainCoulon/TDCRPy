@@ -110,7 +110,9 @@ def readPenNuc(rad):
     Daughter_vec = []; Pdaughter_vec = []; Q_value_vec = []
     for d in decayData:
       if d[0] == "NDA": Ndaughter = int(d[1])   # Read the number of daughter
-      if d[0] == "DAU" : Daughter_vec.append(d[1])        # Read the daughter
+      if d[0] == "DAU" :
+          d[1] = d[1].replace(" ","")
+          Daughter_vec.append(d[1])        # Read the daughter
       if d[0] == "DDE": Pdaughter_vec.append(float(d[1])) # Read the probability of disintegration to daughter
       if d[0] == "Q":   Q_value_vec.append(float(d[1]))   # Read the Q-value
     
@@ -724,5 +726,9 @@ def readEShape(rad):
     
     return proba,Type
 
-# pr,typ = readEShape('Ag-108m')
-# print(pr,typ)
+# Nom de la fille
+# Ajouter le vecteur proba
+# Mettre les valeurs numériques prob et energy en flotant
+
+#pr,typ = readEShape('Ag-108m')
+#print(pr,typ)

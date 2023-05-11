@@ -3,20 +3,29 @@
 TDCRPy is a Python code to calculate detection efficiency of a liquide scintillation counter using 3-photomultiplier tubes.
 The calculation is based on the photo-physical model called of the Triple-to-Double-Coincidence-Ratio method (TDCR) [[1]](#1) and a Monte-Carlo sampling allowing to adress complexe decay schemes and radionuclide mixtures.
 
-![image info](./FlowChart2.png)
+<img src="./FlowChart.jpg" alt="drawing" width="300"/>
+
+## Nuclear decay 
 
 The code directly reads decay data from the Decay Data Evaluation Project (DDEP) web interface [[2]](#2) that is recommanded to be used by the radionuclide metrology community. The PenNuc format [[3]](#3) is used to simulate decays and the $\beta$ spectra from the BetaShape code [[4]](#4) are used. The BetaShape code estimates accurate $\beta$ spectra by taking the atomic exchange effect and also simulate accurately electron capture decay [[5]](#5). It has been demonstrated to offer significant improvement in the context of liquid scintillation counting [[6]](#6).
 
+## Atomic relaxation
+
 The atomic relaxation from missing electrons in the inner-shell following electron capture and internal conversion is simulated by... 
 
+## Interaction
+
 The interaction of $\gamma$ rays, electrons and positrons are simulated using response kernels calculated by the Monte-Carlo code MCNP6 developped by Los Alamos [[13]](#13). 
+
+## Scintillation
 
 The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [[7]](#7) and a collision model [[8]](#8) that has been validated agaisnt the NIST model ESTAR [[9]](#9) recommanded by the ICRU Report 37 [[10]](#10). At low energy - between 10 eV and 20 keV - the model from Tan and Xia [[11]](#11) is implemented.
 
 The stopping power of $\alpha$ particles of energy comprises between 1 keV and 8 MeV comes from the NIST code ASTAR [[9]](#9) recommanded in the ICRU Report 49 [[12]](#12). For energy below 1 keV, an extrapolation is made.
 
+## Statistical model
 
-
+...
 
 ## References
 
