@@ -738,6 +738,7 @@ def readEShape(rad):
                 if len(p1)>6:
                     Proba.append(float(p1[2]))
                 e.append(float(p1[2]))
+    
     '''
     for i in range(len(index_auger)):
         position = []
@@ -828,7 +829,7 @@ def readEShape(rad):
         Energy.append(en)
         Proba.append(proba)   
     '''
-    
+
     return  Po           # proba,Energy,Type #daug_name,Energy,Type
 
 # Nom de la fille
