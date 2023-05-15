@@ -204,8 +204,8 @@ def readPenNuc(rad):
 
 #================================== StoppingPower for alpha particle ===========================================
 
-if absolutePath: f_alpha = open('G:\Python_modules\Jialin\MCTDCRcode\\alpha_toulene.txt')
-else: f_alpha = open('alpha_toulene.txt')
+if absolutePath: f_alpha = open('G:\Python_modules\Jialin\Code\Quenching\\alpha_toulene.txt')
+else: f_alpha = open('Quenching\\alpha_toulene.txt')
 data_ASTAR = f_alpha.readlines()
 f_alpha.close()
 energy_alph = []
@@ -236,8 +236,8 @@ def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 #===================================================================================================================
 
 
-if absolutePath: file_TanXia=open('G:\Python_modules\Jialin\MCTDCRcode\\TandataUG.txt', "r")
-else: file_TanXia=open('TandataUG.txt', "r")
+if absolutePath: file_TanXia=open('G:\Python_modules\Jialin\Code\Quenching\\TandataUG.txt', "r")
+else: file_TanXia=open('Quenching\\TandataUG.txt', "r")
 data_TanXia=file_TanXia.read(); file_TanXia.close()
 data_TanXia=data_TanXia.split("\n"); data_TanXia_f = np.empty(len(data_TanXia))
 for i, x in enumerate(data_TanXia):
@@ -379,7 +379,7 @@ plt.title("pouvoir d'arrête d'electron et alpha")
 plt.ylabel("pouvoir d'arrête/MeV.cm-1")
 plt.xlabel('énergie cinétique/eV')
 plt.legend(fontsize=10,loc='best')
-plt.savefig('stoppingpowerE_A.png')
+plt.savefig('Quenching/stoppingpowerE_A.png')
 
 '''
 
@@ -429,7 +429,11 @@ def readBetaShape(rad,mode,trans):
     """
     # mode(str): 'beta-','beta+'
     # trans(str):'trans0','trans1' ....
-    file = "All-nuclides_BetaShape.zip"
+    
+    url = "http://www.lnhb.fr/nuclides/"+rad+".PenNuc.txt"
+    file = rq.urlopen(url)
+    
+    file = "decayData//All-nuclides_BetaShape.zip"
     z = zf.ZipFile(file)
     Rad = rad.replace('-','')
     name_doc = Rad+'/'+mode+'_'+Rad+'_'+trans+'.bs'
@@ -528,7 +532,7 @@ plt.plot(x,s3,label='E_quenched/E_0.014')
 plt.legend(fontsize=12,loc='best')
 plt.xlabel('E_emitted/eV')
 plt.ylabel('quenching energy/E_emitted /keV')
-plt.savefig("quenching E_test 10-10k.png")
+plt.savefig("Quenching/quenching E_test 10-10k.png")
 '''
 #============================================================================================
 
@@ -537,10 +541,10 @@ plt.savefig("quenching E_test 10-10k.png")
 #========================= énergie gamma ===================================================
 #'''
 if absolutePath: 
-    f1 = open('G:\Python_modules\Jialin\MCTDCRcode\\MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
-    f2 = open('G:\Python_modules\Jialin\MCTDCRcode\\MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
-    f3 = open('G:\Python_modules\Jialin\MCTDCRcode\\MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
-    fe = open("G:\Python_modules\Jialin\MCTDCRcode\\MCNP-MATRIX/matrice/E_depose.txt")   
+    f1 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
+    f2 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
+    f3 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
+    fe = open("G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/E_depose.txt")   
 else:
     f1 = open('MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
     f2 = open('MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
@@ -659,7 +663,8 @@ def transf_name(rad):
 #print(transf_name('108AG'))
 
 def readEShape(rad):
-    file = 'All-nuclides_Ensdf.zip'
+        
+    file = 'decayData//All-nuclides_Ensdf.zip'
     z = zf.ZipFile(file)
     name = rad + '.txt'
     with z.open(name) as f:

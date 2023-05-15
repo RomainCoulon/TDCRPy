@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1                   # number of simulated decay (MC trials)
-Rad=["Cd-109"]            # list of radionuclides (Na-24)
+Rad=["Co-60"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -293,7 +293,6 @@ for kB_i in kB:
                  # e_beta, p_beta = tl.readBetaShape(rad_i, "beta-", "tot")
                  n_branch = len(e_branch[index_rad][iDaughter])
                  index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
-                 print("\nBETA", e_beta[index_rad][iDaughter][-(1+index_branch)][-1], energy_branch, index_branch,"\n")
                  particle_vec[i] = "electron"
                  energy_vec[i] = e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
                  # Sampling Matrice comme gamma

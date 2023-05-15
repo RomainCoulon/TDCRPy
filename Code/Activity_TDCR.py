@@ -11,7 +11,7 @@ import scipy.signal as sg
 import scipy.optimize as opt
 
 def readEff(Rad, kB, SDT):
-    file = open("G:\Python_modules\Jialin\MCTDCRcode\\EfficiencyCurves/"+''.join(Rad)+"/Eff"+SDT+"_"+''.join(Rad)+'_[1]_'+str(kB)+".txt","r")
+    file = open("G:\Python_modules\Jialin\Code\\EfficiencyCurves/"+''.join(Rad)+"/Eff"+SDT+"_"+''.join(Rad)+'_[1]_'+str(kB)+".txt","r")
     L=[]
     p=[]
     up=[]

@@ -1,9 +1,9 @@
 # TDCRPy
 
 TDCRPy is a Python code to calculate detection efficiency of a liquide scintillation counter using 3-photomultiplier tubes.
-The calculation is based on the photo-physical model called of the Triple-to-Double-Coincidence-Ratio method (TDCR) [[1]](#1) and a Monte-Carlo sampling allowing to adress complexe decay schemes and radionuclide mixtures.
+The calculation is based on the photo-physical model called of the Triple-to-Double-Coincidence-Ratio method (TDCR) [[1]](#1) and a Monte-Carlo sampling allowing to adress complexe decay schemes and radionuclide mixtures. The process is summarized in the figure below.
 
-<img src="./FlowChart.jpg" alt="drawing" width="300"/>
+<img src="./FlowChart.jpg" alt="drawing" width="500"/>
 
 ## Nuclear decay 
 
@@ -11,7 +11,7 @@ The code directly reads decay data from the Decay Data Evaluation Project (DDEP)
 
 ## Atomic relaxation
 
-The atomic relaxation from missing electrons in the inner-shell following electron capture and internal conversion is simulated by... 
+The atomic relaxation from missing electrons in the inner-shell following electron capture and internal conversion is simulated by ENSDF data on the DDEP web interface. 
 
 ## Interaction
 
