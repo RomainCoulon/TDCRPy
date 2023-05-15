@@ -430,8 +430,6 @@ def readBetaShape(rad,mode,trans):
     # mode(str): 'beta-','beta+'
     # trans(str):'trans0','trans1' ....
     
-    url = "http://www.lnhb.fr/nuclides/"+rad+".PenNuc.txt"
-    file = rq.urlopen(url)
     
     file = "decayData//All-nuclides_BetaShape.zip"
     z = zf.ZipFile(file)
