@@ -697,52 +697,145 @@ def readEShape(rad):
                 break
 
         '''
-    index_decay = []
+    #index_decay = []
     index_auger = []
     index_end = []
     daug_name = []
+    posi = []
     for i,p in enumerate(data):
-        if 'IT' in p:
-            print('isomeric transition')
+        #if 'IT' in p:
+           # print('isomeric transition')
         if 'DECAY' in p:
-            index_decay.append(i)
+          #  index_decay.append(i)
             daug_name.append(transf_name(p[0]))
         if 'Auger' in p:
             #i_auger = i
             index_auger.append(i)
+        if len(p)==2:
+            posi.append(i)
         if 'P' in p:
-            i_p = i
-            index_end.append(i_p)
+            index_end.append(i)
+            posi.append(i)
     Energy = []
-    Type = []
+    #Type = []
+    Proba = []
+    #Po = []
     #print(index_decay,index_auger,index_end)
-    #'''
+    for i in range(len(posi)-1):
+        start = posi[i]+1
+        end = posi[i+1]
+        d = data[start:end]
+        e = []
+        if start==end:
+            continue
+        if start-1 in index_end:
+            continue
+        for n,p1 in enumerate(d):
+            if '-' in p1[2]:
+                x = p1[2].split('-')
+                p1[2] = round((float(x[0])+float(x[1]))/2,3)
+            if '|]' in p1:
+                if len(p1)>6:
+                    Proba.append(float(p1[2]))
+                e.append(float(p1[2]))
+    '''
+    for i in range(len(index_auger)):
+        position = []
+        position.append(index_auger[i]+3)
+        for j in range(index_auger[i]+3,index_end[i]):
+            if len(data[j])==2:
+                position.append(j)
+        position.append(index_end[i])
+        Po.append(position)
+    
+    for i in range(len(Po)):
+        en=[]
+        pr=[]
+        ty=[]
+        for j in range(len(Po[i]-1)):
+            e = []
+            t = []
+            for k in range(Po[i][j],Po[i][j+1]):
+                if '(total)' in data[k]:
+                    pr.append(float(data[k][3]))
+                    if len(data[k][2])>6:
+                        d = data[k][2].split('-')
+                        data[k][2] = round((float(d[1])+float(d[2]))/2,3)
+                        e.append(data[k][2])
+                    continue
+                if "|]" in data[k]:
+                    if len(data[k]>5):
+                        pr.append(float(data[k][4]))
+                    if len(data[k][2])>6:
+                        d = data[k][2].split('-')
+                        data[k][2] = round((float(d[1])+float(d[2]))/2,3)
+                else:
+                    pr.append(data[k][3])
+                    
+                e.append(data[k][2])
+                if 'X' in data[k]:
+                    t.append(data[k][-1][0:3])
+                elif 'AUGER' in data[k]:
+                    if 'K' in data[k]:
+                        t.append('Auger K')
+                    elif data[k][-2]=='L':
+                        t.append('Auger L')
+            if len(e)>=2:
+                en.append(np.mean(e))    
+    
+    position_vide=[]
     for i in range(len(index_auger)):
         start = index_auger[i]
         end = index_end[i]
         en = []
         ty = []
         for j in range(start+3,end):
-            if len(data[j]) <=2:continue
+            if len(data[j]) <=2:
+                position_vide.append(j)
+                continue
             if 'AUGER' in data[j]:
-                if len(data[j][2])>6:
-                    d = data[j][2].split('-')
-                    data[j][2] = round((float(d[1])+float(d[0]))/2,3)
-                en.append(data[j][2])
+                #if len(data[j][2])>6:
+                    #d = data[j][2].split('-')
+                    #data[j][2] = round((float(d[1])+float(d[0]))/2,3)
+                #en.append(data[j][2])
                 ty.append(data[j][-2])
+                #print(data[j])
             else:
-                en.append(data[j][2])
+                #en.append(data[j][2])
                 ty.append(data[j][-1])
-                #print(data[j][2],data[j][-1])
+                #print(data[j])
+        position_vide.append(end)
+            
+        #Energy.append(en)
+        Type.append(ty)
+        
+        proba = []
+        en = []
+        for i in range(len(position_vide)-1):
+            for j in range(position_vide[i]+1,position_vide[i+1]):
+                e = []
+                if "|]" in data[j]:
+                    if len(data[j][2])>6:
+                        d = data[j][2].split('-')
+                        data[j][2] = round((float(d[1])+float(d[0]))/2,3)
+                    e.append(data[j][2])
+                    if len(data[j])>5:
+                        proba.append(data[j][4])
+                    en.append(np.sum(e))    
+                else:
+                    en.append(data[j][2])
+                    proba.append(data[j][4])
         Energy.append(en)
-        Type.append(ty)    
-    #'''
+        Proba.append(proba)   
+    '''
     
-    return daug_name,Energy,Type
+    return  Po           # proba,Energy,Type #daug_name,Energy,Type
 
 # Nom de la fille
 # Ajouter le vecteur proba
 # Mettre les valeurs numériques prob et energy en flotant
 
-dn,en,typ = readEShape('Ag-108m')
-print(dn,en,typ)
+#dn,en,typ = readEShape('Ag-108m')
+#print(dn,en,typ)
+po = readEShape('Ag-108m')
+print(po)
