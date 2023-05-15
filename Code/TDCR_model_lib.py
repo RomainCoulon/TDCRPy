@@ -703,6 +703,7 @@ def readEShape(rad):
     index_auger = []
     index_end = []
     daug_name = []
+    posi = []
     for i,p in enumerate(data):
         #if 'IT' in p:
            # print('isomeric transition')
@@ -712,15 +713,34 @@ def readEShape(rad):
         if 'Auger' in p:
             #i_auger = i
             index_auger.append(i)
+        if len(p)==2:
+            posi.append(i)
         if 'P' in p:
-            i_p = i
-            index_end.append(i_p)
+            index_end.append(i)
+            posi.append(i)
     Energy = []
-    Type = []
+    #Type = []
     Proba = []
-    Po = []
+    #Po = []
     #print(index_decay,index_auger,index_end)
-    
+    for i in range(len(posi)-1):
+        start = posi[i]+1
+        end = posi[i+1]
+        d = data[start:end]
+        e = []
+        if start==end:
+            continue
+        if start-1 in index_end:
+            continue
+        for n,p1 in enumerate(d):
+            if '-' in p1[2]:
+                x = p1[2].split('-')
+                p1[2] = round((float(x[0])+float(x[1]))/2,3)
+            if '|]' in p1:
+                if len(p1)>6:
+                    Proba.append(float(p1[2]))
+                e.append(float(p1[2]))
+    '''
     for i in range(len(index_auger)):
         position = []
         position.append(index_auger[i]+3)
@@ -764,8 +784,7 @@ def readEShape(rad):
                         t.append('Auger L')
             if len(e)>=2:
                 en.append(np.mean(e))    
-
-    '''
+    
     position_vide=[]
     for i in range(len(index_auger)):
         start = index_auger[i]
