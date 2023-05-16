@@ -2,7 +2,7 @@
 """
 Created on Mon Jan 23 16:04:46 2023
 
-Library of function for the TDCR model
+Library of function of the TDCRpy code
 
 @author: Romain Coulon, Jialin Hu
 Bureau International des Poids et Mesures
