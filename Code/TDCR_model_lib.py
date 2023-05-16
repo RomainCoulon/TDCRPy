@@ -205,7 +205,7 @@ def readPenNuc(rad):
 #================================== StoppingPower for alpha particle ===========================================
 
 if absolutePath: f_alpha = open('G:\Python_modules\Jialin\Code\Quenching\\alpha_toulene.txt')
-else: f_alpha = open('Quenching\\alpha_toulene.txt')
+else: f_alpha = open('Quenching/alpha_toulene.txt')
 data_ASTAR = f_alpha.readlines()
 f_alpha.close()
 energy_alph = []
@@ -237,7 +237,7 @@ def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 
 
 if absolutePath: file_TanXia=open('G:\Python_modules\Jialin\Code\Quenching\\TandataUG.txt', "r")
-else: file_TanXia=open('Quenching\\TandataUG.txt', "r")
+else: file_TanXia=open('Quenching/TandataUG.txt', "r")
 data_TanXia=file_TanXia.read(); file_TanXia.close()
 data_TanXia=data_TanXia.split("\n"); data_TanXia_f = np.empty(len(data_TanXia))
 for i, x in enumerate(data_TanXia):
@@ -669,37 +669,20 @@ def readEShape(rad):
     name = rad + '.txt'
     with z.open(name) as f:
         data = f.readlines()
-
-        for i in range(np.size(data)):
+        nl = np.size(data)
+        for i in range(nl):
             data[i] = str(data[i])
             data[i] = data[i].replace("b",'')
             data[i] = data[i].replace("\\r\\n",'')
             data[i] = data[i].replace("'",'')
         
-        for i in range(np.size(data)):
+        for i in range(nl):
             data[i] = data[i].split()
         
-        '''
-        index_decay = []
-        index_auger = []
-        index_end = []
+        for i in range(nl):
+            if i>0 and ('L' in data[i]) and ("AUGER" in data[i]) and ("|]" in data[i-1]):
+                data.insert(i,[data[i][0],'T'])
 
-        for i,p in enumerate(data):
-            if 'DECAY' in p:
-                i_decay = i
-                index_decay.append(i_decay)
-        
-            if 'Auger' in p:
-                i_auger = i
-                index_auger.append(i_auger)
-                p = data.index('P',i_auger,i_decay)
-                index_end.append(p)
-            else:
-                print('no auger electrons')
-                break
-
-        '''
-    #index_decay = []
     index_auger = []
     index_end = []
     daug_name = []
@@ -711,23 +694,27 @@ def readEShape(rad):
           #  index_decay.append(i)
             daug_name.append(transf_name(p[0]))
         if 'Auger' in p:
-            #i_auger = i
             index_auger.append(i)
         if len(p)==2:
             posi.append(i)
         if 'P' in p:
             index_end.append(i)
             posi.append(i)
+
     Energy = []
-    #Type = []
-    Proba = []
-    #Po = []
-    #print(index_decay,index_auger,index_end)
+    energy = []
+    Type = []
+    type_ = []
+    Prob = []
+    prob = []
+
     for i in range(len(posi)-1):
         start = posi[i]+1
         end = posi[i+1]
         d = data[start:end]
         e = []
+        prob_b = []
+        type_b = []
         if start==end:
             continue
         if start-1 in index_end:
@@ -738,100 +725,39 @@ def readEShape(rad):
                 p1[2] = round((float(x[0])+float(x[1]))/2,3)
             if '|]' in p1:
                 if len(p1)>6:
-                    Proba.append(float(p1[2]))
+                    prob_b.append(float(p1[4]))
                 e.append(float(p1[2]))
-    '''
-    for i in range(len(index_auger)):
-        position = []
-        position.append(index_auger[i]+3)
-        for j in range(index_auger[i]+3,index_end[i]):
-            if len(data[j])==2:
-                position.append(j)
-        position.append(index_end[i])
-        Po.append(position)
-    
-    for i in range(len(Po)):
-        en=[]
-        pr=[]
-        ty=[]
-        for j in range(len(Po[i]-1)):
-            e = []
-            t = []
-            for k in range(Po[i][j],Po[i][j+1]):
-                if '(total)' in data[k]:
-                    pr.append(float(data[k][3]))
-                    if len(data[k][2])>6:
-                        d = data[k][2].split('-')
-                        data[k][2] = round((float(d[1])+float(d[2]))/2,3)
-                        e.append(data[k][2])
-                    continue
-                if "|]" in data[k]:
-                    if len(data[k]>5):
-                        pr.append(float(data[k][4]))
-                    if len(data[k][2])>6:
-                        d = data[k][2].split('-')
-                        data[k][2] = round((float(d[1])+float(d[2]))/2,3)
-                else:
-                    pr.append(data[k][3])
-                    
-                e.append(data[k][2])
-                if 'X' in data[k]:
-                    t.append(data[k][-1][0:3])
-                elif 'AUGER' in data[k]:
-                    if 'K' in data[k]:
-                        t.append('Auger K')
-                    elif data[k][-2]=='L':
-                        t.append('Auger L')
-            if len(e)>=2:
-                en.append(np.mean(e))    
-    
-    position_vide=[]
-    for i in range(len(index_auger)):
-        start = index_auger[i]
-        end = index_end[i]
-        en = []
-        ty = []
-        for j in range(start+3,end):
-            if len(data[j]) <=2:
-                position_vide.append(j)
-                continue
-            if 'AUGER' in data[j]:
-                #if len(data[j][2])>6:
-                    #d = data[j][2].split('-')
-                    #data[j][2] = round((float(d[1])+float(d[0]))/2,3)
-                #en.append(data[j][2])
-                ty.append(data[j][-2])
-                #print(data[j])
+                if 'AUGER' in p1:
+                    if 'K' in p1[-2]:
+                        type_b.append('Auger K')
+                    else:
+                        print('erreur')
+                elif 'X' in p1[-1]:
+                    type_b.append(p1[-1][0:3])
             else:
-                #en.append(data[j][2])
-                ty.append(data[j][-1])
-                #print(data[j])
-        position_vide.append(end)
-            
-        #Energy.append(en)
-        Type.append(ty)
-        
-        proba = []
-        en = []
-        for i in range(len(position_vide)-1):
-            for j in range(position_vide[i]+1,position_vide[i+1]):
-                e = []
-                if "|]" in data[j]:
-                    if len(data[j][2])>6:
-                        d = data[j][2].split('-')
-                        data[j][2] = round((float(d[1])+float(d[0]))/2,3)
-                    e.append(data[j][2])
-                    if len(data[j])>5:
-                        proba.append(data[j][4])
-                    en.append(np.sum(e))    
+                e.append(float(p1[2]))
+                prob_b.append(float(p1[3]))
+                if 'L' in p1:
+                    type_b.append('Auger L')
                 else:
-                    en.append(data[j][2])
-                    proba.append(data[j][4])
-        Energy.append(en)
-        Proba.append(proba)   
-    '''
-    
-    return  Po           # proba,Energy,Type #daug_name,Energy,Type
+                    type_b.append(p1[-1][0:3])
+        if len(prob_b)==1 and len(e)>1:
+            energy.append(np.mean(e))
+            prob.append(prob_b[0])
+            type_.append(type_b[0])
+        elif len(e)==len(prob_b):
+            for i in range(len(e)):
+                energy.append(e[i])
+                prob.append(prob_b[i])
+                type_.append(type_b[i])
+        if end in index_end:
+            Energy.append(energy)
+            Prob.append(prob)
+            Type.append(type_)
+            energy = []
+            prob = []
+            type_ = []    
+    return  daug_name,Energy,Prob,Type           # proba,Energy,Type #daug_name,Energy,Type
 
 # Nom de la fille
 # Ajouter le vecteur proba
@@ -839,5 +765,5 @@ def readEShape(rad):
 
 #dn,en,typ = readEShape('Ag-108m')
 #print(dn,en,typ)
-po = readEShape('Ag-108m')
-print(po)
+d,e,p,t = readEShape('Ac-225')
+print(d,e,p,t)
