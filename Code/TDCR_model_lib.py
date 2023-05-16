@@ -717,11 +717,18 @@ def readEShape(rad):
             continue
         if start-1 in index_end:
             continue
+        print(d)
         for n,p1 in enumerate(d):
             if '-' in p1[2]:
                 x = p1[2].split('-')
                 p1[2] = round((float(x[0])+float(x[1]))/2,3)
-            if '|]' in p1:
+            if '(total)' in d[0]:
+                if '(total)' in p1:
+                    prob_b.append(float(p1[3]))
+                    e.append(p1[2])
+                    type_b.append(p1[-2])
+                continue 
+            elif '|]' in p1:
                 if len(p1)>6:
                     prob_b.append(float(p1[4]))
                 e.append(float(p1[2]))
@@ -763,5 +770,5 @@ def readEShape(rad):
 
 #dn,en,typ = readEShape('Ag-108m')
 #print(dn,en,typ)
-d,e,p,t = readEShape('Ac-225')
-print(d,e,p,t)
+d,e,p,t = readEShape('Ac-227')
+#print(d,e,p,t)
