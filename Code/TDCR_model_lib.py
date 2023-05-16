@@ -21,7 +21,9 @@ absolutePath = False
 
 
 def TicTocGenerator():
-    # Generator that returns time differences
+    """
+    Generator that returns time differences
+    """
     ti = 0           # initial time
     tf = time.time() # final time
     while True:
@@ -33,13 +35,18 @@ TicToc = TicTocGenerator() # create an instance of the TicTocGen generator
 
 # This will be the main function through which we define both tic() and toc()
 def toc(tempBool=True):
-    # Prints the time difference yielded by generator instance TicToc
+    """
+    Prints the time difference yielded by generator instance TicToc
+    """
+    
     tempTimeInterval = next(TicToc)
     if tempBool:
         print( "Elapsed time: %f seconds.\n" %tempTimeInterval )
 
 def tic():
-    # Records a time in TicToc, marks the beginning of a time interval
+    """
+    Records a time in TicToc, marks the beginning of a time interval
+    """
     toc(False)
 
 
@@ -51,8 +58,7 @@ def sampling(p_x):
     ----------
     p_x : float vector
         Probability Density (or mass) Function (PDF or PMF) of the random variable x.
-    x : vector of any kind (Optional)
-        values of the random varible X.
+
 
     Returns
     -------
@@ -69,7 +75,31 @@ def sampling(p_x):
 
 def readPenNuc(rad):
     """
-    This function reads the PenNuc file 
+    This function reads the PenNuc files published in the DDEP web page
+    http://www.lnhb.fr/donnees-nucleaires/donnees-nucleaires-tableau/
+    
+    Parameters
+    ----------
+    rad : string
+        Indentifier of the radionuclide (e.g. Na-22).
+
+    Returns
+    -------
+    out : list
+        list of elements in list describing the decay of the radionuclide with,
+        *particle* is the list of particle of the decay branches 
+        *p_branch* is the list of probabilty of the decay branches
+        *e_branch* is the list of energy of the decay branches
+        *LevelDaughter* is the list of energy levels of the daughter nucleus following the decay branch
+        *levelNumber* is the list of number of the energy level of the daughter nucleus following the decay branch
+        *prob* is the list of probabilty of isomeric transitions
+        *levelEnergy* is the energy levels of the isomeric transitions
+        *transitionType* is the type of isomeric transitions
+        *e_trans* is the energy of the isomeric transitions
+        *next_level* is the possible next energy level following a given isomeric transtion 
+        *Q_value_vec[dd]* is the Q-value of the decay when decaying to the daughter of index dd
+        *Daughter_vec[dd]* is the vecteur of daugher nuclei
+        *Pdaughter_vec[dd]* is the probability of daughter nuclei
     """
     
     url = "http://www.lnhb.fr/nuclides/"+rad+".PenNuc.txt"
@@ -218,10 +248,28 @@ for i in range(np.size(data_ASTAR)):
     dEdx_alph.append(data_ASTAR[i][1])
 
 def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
-    # rho: density of the absorber (g.cm-3)
-    # e keV
-    # energy keV
-    # dEdx: keV.cm2/g
+    """
+    Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code
+    ref: https://dx.doi.org/10.18434/T4NC7P
+    
+    Parameters
+    ----------
+    e : float
+        energy of the alpha particle in keV.
+    rho : float, optional
+        density of the source in g.cm-3. The default is 0.96.
+    energy_alpha : list, optional
+        the list of energy (in keV) for which the stopping power was calculated with ASTAR. The default is energy_alph.
+    dEdx_alpha : list, optional
+        the list of stopping powers (in keV.cm2/g) associated with the energy vector. The default is dEdx_alph.
+
+    Returns
+    -------
+    float
+        Interpolated ASTAR estimation of the stopping power.
+
+    """
+
     energy_alpha = np.array(energy_alpha)
     dEdx_alpha = np.array(dEdx_alpha)
     dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
@@ -230,10 +278,10 @@ def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 # tic()
 # stoppingpowerA(5000,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph)
 # toc() # 0 s
-#===================================================================================================================
 
+#===============================================================================================
 
-#===================================================================================================================
+#========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
 
 
 if absolutePath: file_TanXia=open('G:\Python_modules\Jialin\Code\Quenching\\TandataUG.txt', "r")
@@ -243,79 +291,38 @@ data_TanXia=data_TanXia.split("\n"); data_TanXia_f = np.empty(len(data_TanXia))
 for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
-
-# def stoppingpowerE(e,*,za=0.5459,rho=0.96,I=65,spmodel="Beth_Tan_Xia",emin=0,file=data_TanXia_f): # valid
-#     c1=0.57
-#     c2=1.16
-#     Cte=0.307075*c1           # Relativist constant /(eV.cm^2) 
-#     mec2=511000               # Mass energy of an electron /eV
-#     dEdx=0                    # initial value of the stopping power
-   
-#     if spmodel=="Beth":
-#         beta=np.sqrt(c2*e/mec2)            # relative velocity
-#         if e>54:
-#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)    
-#         else:
-#             dEdx=0
-    
-#     if spmodel=="Beth_extr_1":
-#         if e>400:
-#             beta=np.sqrt(c2*e/mec2)            # relative velocity
-#             if beta>=1:
-#                 beta
-#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)    
-#         else:
-#             if e>emin:
-#                 beta=np.sqrt(c2*400/mec2)       # relative velocity
-#                 dEdx=20*Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)*e**-0.5
-#             else:
-#                 dEdx=0
-
-#     if spmodel=="Beth_extr_2":
-#         if e>100:
-#             beta=np.sqrt(c2*e/mec2)            # relative velocity
-#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)    
-#         else:
-#             if e>emin:
-#                 beta=np.sqrt(c2*100/mec2)       # relative velocity
-#                 dEdx=0.01*Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)*e
-#             else:
-#                 dEdx=0
-      
-#     if spmodel=="Beth_extr_3":
-#         if e>1000:
-#             beta=np.sqrt(c2*e/mec2)            # relative velocity
-#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)
-#         else:
-#             if e>emin:
-#                 beta=np.sqrt(c2*1000/mec2)     # relative velocity
-#                 dEdx=1/(1000**-1.1)*Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)*e**-1.1
-#             else:
-#                 dEdx=0
-    
-#     if spmodel=="Beth_Tan_Xia":
-#         if e>=20000:
-#             beta=np.sqrt(c2*e/mec2)            # relative velocity
-#             if beta>=1:
-#                 beta=0.97
-#             dEdx=Cte*rho*za*(beta**-2)*(np.log(mec2*beta**2/(I*(1-beta**2)))-beta**2)
-#         else:
-#             if e>emin:
-#                 dEdx=(float(file[int(e)]))*1e6
-#             else:
-#                 dEdx=0
-#     if dEdx<0:
-#         dEdx=0
-#     return dEdx
-
-
-
-
-#===============================================================================================
-
-#========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
-
 def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
+    """
+    The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
+    At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
+    Refs:
+        [1] https://doi.org/10.1016/0020-708x(82)90244-7
+        [2] https://www.ijstr.org/final-print/jan2017/Calculations-Of-Stopping-Power-And-Range-Of-Electrons-Interaction-With-Different-Material-And-Human-Body-Parts.pdf
+        [3] https://dx.doi.org/10.18434/T4NC7P
+        [4] ICRU Report 37, Stopping Powers for Electrons and Positrons
+        [5] https://doi.org/10.1016/j.apradiso.2011.08.012
+        
+    Parameters
+    ----------
+    e : float
+        Energy of the electron in eV.
+    rho : float, optional
+        density of the source in g.cm-3. The default is 0.96.
+    Z : float, optional
+        mean charge number of the source. The default is 5.2.
+    A : float, optional
+        mean mass number of the source. The default is 11.04.
+    emin : float, optional
+        the minimal energy to consider. The default is 0.
+    file : list, optional
+        tabulated data form the Tan and Xia model. The default is data_TanXia_f.
+
+    Returns
+    -------
+    dEdx : float
+        Calculated stopping power in MeV.cm-1.
+
+    """
     # e:eV ;rho: g.cm-3
     mc_2 = 0.511 #MeV
     I = 65e-6 #MeV
@@ -383,54 +390,35 @@ plt.savefig('Quenching/stoppingpowerE_A.png')
 
 '''
 
-#===================================================================================================
-
-
-# def readBetaSpectrum(rad):
-#     f=open("spectrum_"+rad+".txt", "r") # open the file 
-#     ne = 1000   # number of energy bins
-#     e=np.empty(ne) # declare an empty array to store the energy values
-#     p=np.empty(ne) # declare an empty array to probability values
-#     i=0
-#     for line in f: # scan the line of the file
-#         e[i]=float(line[:9]) # read the energy value and convert in float 
-#         p[i]=float(line[9:]) # read the probability value and convert in float
-#         i+=1
-#     sumP=sum(p) # sum of probabilities
-#     p=p/sumP # re-normilize to make the sum of probabilities equal to 1
-#     f.close() #close the file
-#     return e, p, ne
-
-
 #=============================================================================================
 
 #====================  Fonction pour lire BetaShape   ========================================
 
 def readBetaShape(rad,mode,trans):
     """
-    
+    This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
+    refs:
+        https://doi.org/10.1103/PhysRevC.92.059902
+        http://www.lnhb.fr/ddep_wg/
 
     Parameters
     ----------
-    rad : TYPE
-        DESCRIPTION.
-    mode : TYPE
-        DESCRIPTION.
-    trans : TYPE
-        DESCRIPTION.
+    rad : string
+        identifier of the radionuclide. e.g. 'Na-22'
+    mode : string
+        identifier of the decay mode. 'beta-' or 'beta+'
+    trans : string
+        identifier of the transition. 'trans0','trans1' ....
 
     Returns
     -------
-    e : TYPE
-        DESCRIPTION.
-    dNdx : TYPE
-        DESCRIPTION.
+    e : list
+        the energy vector in keV.
+    dNdx : list
+        the probability density in keV-1.
 
     """
-    # mode(str): 'beta-','beta+'
-    # trans(str):'trans0','trans1' ....
-    
-    
+   
     file = "decayData//All-nuclides_BetaShape.zip"
     z = zf.ZipFile(file)
     Rad = rad.replace('-','')
@@ -465,8 +453,6 @@ def readBetaShape(rad,mode,trans):
 # readBetaShape("Co-60", "beta-", "tot")
 # toc() # 0.016 s
 
-
-
 #=====================================================================================
 
 ## Display beta spectra
@@ -480,26 +466,59 @@ def readBetaShape(rad,mode,trans):
 # plt.ylabel(r'd$N$/d$E$ /keV$^{-1}$',fontsize=12)
 # plt.savefig("BetaSpectrum.png")
 
-
 #=======================================================================================
 
 #============================  Fonction quenching  =====================================
 
-def E_quench_e(e,kB): # e : eV  kB:cm/MeV
+def E_quench_e(e,kB):
+    """
+    This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching
+
+    Parameters
+    ----------
+    e : float
+        energy of the electron in eV.
+    kB : float
+        Birks constant in cm/MeV.
+
+    Returns
+    -------
+    float
+        Quenched energy in eV.
+
+    """
+    
     e_dis = np.linspace(0,e,10000)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
         q += delta/(1+kB*stoppingpower(i))
-    return q #eV
+    return q
 
-def E_quench_a(e,kB): # e : keV   kB:cm/keV
+def E_quench_a(e,kB): 
+    """
+    This function calculate the quenched energy alpha particles according to  the Birks model of scintillation quenching
+
+    Parameters
+    ----------
+    e : float
+        energy of the alpha particle in keV.
+    kB : float
+        Birks constant in cm/keV.
+
+    Returns
+    -------
+    float
+        Quenched energy in keV.
+
+    """
+
     e_dis = np.linspace(1,e,10000)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
         q += delta/(1+kB*stoppingpowerA(i))
-    return q #keV
+    return q
 
 #=========================================================================================
 
@@ -577,6 +596,30 @@ for i in range(1003):
 #'''
 
 def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matrice3,ed=Matrice_e):
+    """
+    
+
+    Parameters
+    ----------
+    e_inci : TYPE
+        DESCRIPTION.
+    * : TYPE
+        DESCRIPTION.
+    matrice1 : TYPE, optional
+        DESCRIPTION. The default is Matrice1.
+    matrice2 : TYPE, optional
+        DESCRIPTION. The default is Matrice2.
+    matrice3 : TYPE, optional
+        DESCRIPTION. The default is Matrice3.
+    ed : TYPE, optional
+        DESCRIPTION. The default is Matrice_e.
+
+    Returns
+    -------
+    result : TYPE
+        DESCRIPTION.
+
+    """
     ## sort keV / entrée : MeV
     if e_inci <= 200:
         index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche 
