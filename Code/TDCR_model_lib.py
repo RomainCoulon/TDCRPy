@@ -725,7 +725,6 @@ def readEShape(rad):
                 if len(p1)>6:
                     prob_b.append(float(p1[4]))
                 e.append(float(p1[2]))
-<<<<<<< HEAD
                 if 'AUGER' in p1:
                     if 'K' in p1[-2]:
                         type_b.append('Auger K')
@@ -733,78 +732,12 @@ def readEShape(rad):
                         print('erreur')
                 elif 'X' in p1[-1]:
                     type_b.append(p1[-1][0:3])
-=======
-    
-    '''
-    for i in range(len(index_auger)):
-        position = []
-        position.append(index_auger[i]+3)
-        for j in range(index_auger[i]+3,index_end[i]):
-            if len(data[j])==2:
-                position.append(j)
-        position.append(index_end[i])
-        Po.append(position)
-    
-    for i in range(len(Po)):
-        en=[]
-        pr=[]
-        ty=[]
-        for j in range(len(Po[i]-1)):
-            e = []
-            t = []
-            for k in range(Po[i][j],Po[i][j+1]):
-                if '(total)' in data[k]:
-                    pr.append(float(data[k][3]))
-                    if len(data[k][2])>6:
-                        d = data[k][2].split('-')
-                        data[k][2] = round((float(d[1])+float(d[2]))/2,3)
-                        e.append(data[k][2])
-                    continue
-                if "|]" in data[k]:
-                    if len(data[k]>5):
-                        pr.append(float(data[k][4]))
-                    if len(data[k][2])>6:
-                        d = data[k][2].split('-')
-                        data[k][2] = round((float(d[1])+float(d[2]))/2,3)
-                else:
-                    pr.append(data[k][3])
-                    
-                e.append(data[k][2])
-                if 'X' in data[k]:
-                    t.append(data[k][-1][0:3])
-                elif 'AUGER' in data[k]:
-                    if 'K' in data[k]:
-                        t.append('Auger K')
-                    elif data[k][-2]=='L':
-                        t.append('Auger L')
-            if len(e)>=2:
-                en.append(np.mean(e))    
-    
-    position_vide=[]
-    for i in range(len(index_auger)):
-        start = index_auger[i]
-        end = index_end[i]
-        en = []
-        ty = []
-        for j in range(start+3,end):
-            if len(data[j]) <=2:
-                position_vide.append(j)
-                continue
-            if 'AUGER' in data[j]:
-                #if len(data[j][2])>6:
-                    #d = data[j][2].split('-')
-                    #data[j][2] = round((float(d[1])+float(d[0]))/2,3)
-                #en.append(data[j][2])
-                ty.append(data[j][-2])
-                #print(data[j])
->>>>>>> ccc64810d8ef4ef5881cceff6f4b0c15548cd685
             else:
                 e.append(float(p1[2]))
                 prob_b.append(float(p1[3]))
                 if 'L' in p1:
                     type_b.append('Auger L')
                 else:
-<<<<<<< HEAD
                     type_b.append(p1[-1][0:3])
         if len(prob_b)==1 and len(e)>1:
             energy.append(np.mean(e))
@@ -823,15 +756,6 @@ def readEShape(rad):
             prob = []
             type_ = []    
     return  daug_name,Energy,Prob,Type           # proba,Energy,Type #daug_name,Energy,Type
-=======
-                    en.append(data[j][2])
-                    proba.append(data[j][4])
-        Energy.append(en)
-        Proba.append(proba)   
-    '''
-
-    return  Po           # proba,Energy,Type #daug_name,Energy,Type
->>>>>>> ccc64810d8ef4ef5881cceff6f4b0c15548cd685
 
 # Nom de la fille
 # Ajouter le vecteur proba
