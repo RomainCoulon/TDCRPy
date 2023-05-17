@@ -694,7 +694,21 @@ def writeEffcurves(x,y,uy,rad,p,kB,SDT):
     file.close()
 
 #======================== read ENSDF ============================================
-def transf_name(rad):
+def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C-11'
+    """
+    ---------
+    PARAMETRE
+    ---------
+    rad -- type: str par exemple '108AG'
+    
+    ------
+    RETURN
+    ------
+    RAD -- type: str par exemple 'Ag-108'
+
+    """
+    # rad -- type : str par exemple '108AG'
+
     name_lis = re.split('(\d+)',rad)
     if len(name_lis[2])>1:
         a = name_lis[2][0] + name_lis[2][1].lower()
@@ -707,7 +721,25 @@ def transf_name(rad):
 #print(transf_name('11C'))
 
 def readEShape(rad):
-        
+    """
+    --------------------------------------------------
+    pour lire les fichiers dans All-nuclides_Ensdf.zip
+    --------------------------------------------------
+    ---------
+    PARAMETRE
+    ---------
+    rad -- type: str par exemple 'Ag-108'
+    
+    ------
+    RETURN
+    ------
+    daug_name -- type: list -- les filles de désintégration
+    Energy ----- type: list -- chaque élément comprend toutes les énergies de transition correspondantes à la fille de même indice
+    Prob ------- type: list -- chaque élément comprend toutes les proba de transition correspondantes à la fille de même indice
+    Type ------- type: list -- chaque élément comprend touts les types de transition correspondantes à la fille de même indice
+
+    """
+       
     file = 'decayData//All-nuclides_Ensdf.zip'
     z = zf.ZipFile(file)
     name = rad + '.txt'
@@ -814,10 +846,11 @@ def readEShape(rad):
             type_ = []    
     return  daug_name,Energy,Prob,Type        
 
-d,e,p,t = readEShape('Rn-217')
+#========  tester readEShape ==============
+#d,e,p,t = readEShape('Rn-217')
 #print(d,e,p,t)
-print('  ')
-for i in range(len(d)):
-    print(d[i],e[i],p[i],t[i])
-    print(' ')
+#print('  ')
+#for i in range(len(d)):
+ #   print(d[i],e[i],p[i],t[i])
+  #  print(' ')
     #print(len(e[i]),len(p[i]),len(t[i]))
