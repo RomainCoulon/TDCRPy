@@ -92,8 +92,8 @@ for rad_i in Rad:
     
     Q_value.append(Q_value_r)          # Energy of the reaction
     DaughterVec.append(DaughterVec_r)      # Daughters
-    Pdaughter.append(Pdaughter_r)        # Probabiblity related to daughters   
-
+    Pdaughter.append(Pdaughter_r)        # Probabiblity related to daughters
+               
 """
 Read BetaShape
 """

@@ -230,7 +230,7 @@ def readPenNuc(rad):
 
 #===============================================================================================================
 
-
+#print(readPenNuc('At-211'))
 
 #================================== StoppingPower for alpha particle ===========================================
 
@@ -694,7 +694,7 @@ def writeEffcurves(x,y,uy,rad,p,kB,SDT):
     file.close()
 
 #======================== read ENSDF ============================================
-def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C-11'
+def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C11'
     """
     ---------
     PARAMETRE
@@ -704,21 +704,16 @@ def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C-1
     ------
     RETURN
     ------
-    RAD -- type: str par exemple 'Ag-108'
+    RAD -- type: str par exemple 'AG108' qui correspond à la structure de fille de PenNuc
 
     """
     # rad -- type : str par exemple '108AG'
 
     name_lis = re.split('(\d+)',rad)
-    if len(name_lis[2])>1:
-        a = name_lis[2][0] + name_lis[2][1].lower()
-    else:
-        a = name_lis[2]
-    name_lis[2] = a
-    RAD = name_lis[2]+'-'+name_lis[1]
+    RAD = name_lis[2]+name_lis[1]
     return RAD
 
-#print(transf_name('11C'))
+#print(transf_name('108PD'))
 
 def readEShape(rad):
     """
@@ -734,9 +729,9 @@ def readEShape(rad):
     RETURN
     ------
     daug_name -- type: list -- les filles de désintégration
-    Energy ----- type: list -- chaque élément comprend toutes les énergies de transition correspondantes à la fille de même indice
-    Prob ------- type: list -- chaque élément comprend toutes les proba de transition correspondantes à la fille de même indice
-    Type ------- type: list -- chaque élément comprend touts les types de transition correspondantes à la fille de même indice
+    Energy ----- type: list -- chaque élément comprend toutes les énergies de transition de la fille de même indice
+    Prob ------- type: list -- chaque élément comprend toutes les proba de transition de la fille de même indice
+    Type ------- type: list -- chaque élément comprend touts les types de transition de la fille de même indice
 
     """
        
@@ -854,3 +849,22 @@ def readEShape(rad):
  #   print(d[i],e[i],p[i],t[i])
   #  print(' ')
     #print(len(e[i]),len(p[i]),len(t[i]))
+
+#============  traiter la relaxation ===============
+def relaxation_atom(daugther,rad):
+    """
+    ---------
+    PARAMETRE
+    ---------
+    daugther -- type: str -- la fille tirée dans cette itération
+    rad ------- type: str -- le radionucléide étudié
+
+
+    ------
+    RETURN
+    ------
+    Type ---- type de transition: Auger L ou K ou Rayon X
+    Energy -- énergie correspondante
+
+    """
+    
