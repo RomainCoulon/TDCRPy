@@ -729,10 +729,7 @@ def readEShape(rad):
     daug_name = []
     posi = []
     for i,p in enumerate(data):
-        #if 'IT' in p:
-           # print('isomeric transition')
         if 'DECAY' in p:
-          #  index_decay.append(i)
             daug_name.append(transf_name(p[0]))
         if 'Auger' in p:
             index_auger.append(i)
@@ -742,75 +739,77 @@ def readEShape(rad):
             index_end.append(i)
             posi.append(i)
 
-    Energy = []
-    energy = []
-    Type = []
-    type_ = []
-    Prob = []
-    prob = []
+    Energy = []           # enregistrer les résultats (énergie) complètes
+    energy = []           # enregistrer les résultats (énergie) d'une fille
+    Type = []             # enregistrer les résultats (type de transition) complètes
+    type_ = []            # enregistrer les résultats (type de transition) d'une fille
+    Prob = []             # enregistrer les résultats (proba de transition) complètes
+    prob = []             # enregistrer les résultats (proba de transition) d'une fille
 
     for i in range(len(posi)-1):
         start = posi[i]+1
         end = posi[i+1]
-        d = data[start:end]
-        e = []
-        prob_b = []
-        type_b = []
-        if start==end:
+        d = data[start:end]   # bloc
+        e = []                # enregistrer les résultats (énergie) d'un bloc
+        prob_b = []           # enregistrer les résultats (proba) d'un bloc
+        type_b = []           # enregistrer les résultats (type) d'un bloc
+        if start==end:        # sauter les lignes blaches et continues
             continue
-        if start-1 in index_end:
+        if start-1 in index_end:   # sauter le bloc entre deux filles
             continue
-        #print(d)
-        for n,p1 in enumerate(d):
-            if '-' in p1[2]:
-                x = p1[2].split('-')
+
+        for n,p1 in enumerate(d):   
+            if '-' in p1[2]:                # calculer et remplacer les intervalles
+                x = p1[2].split('-') 
                 p1[2] = round((float(x[0])+float(x[1]))/2,3)
-            if '(total)' in d[0]:
+
+            if '(total)' in d[0]:           # traiter le bloc qui comprend (total) dans la première ligne 
                 if '(total)' in p1:
                     prob_b.append(float(p1[3]))
                     e.append(p1[2])
                     type_b.append(p1[-2])
                 continue 
-            elif '|]' in p1:
-                if len(p1)>6:
+            elif '|]' in p1:                # traiter un bloc qui comprend |]
+                if len(p1)>6:               # repérer la ligne qui comprend la proba
                     prob_b.append(float(p1[4]))
-                e.append(float(p1[2]))
-                if 'AUGER' in p1:
-                    if 'K' in p1[-2]:
+                e.append(float(p1[2]))      # enregistrer les valeurs d'énergie
+                if 'AUGER' in p1:           # traiter le cas d'auger et |] 
+                    if 'K' in p1[-2]:       # Auger K
                         type_b.append('Auger K')
                     else:
                         print('erreur')
-                elif 'X' in p1[-1]:
+                elif 'X' in p1[-1]:         # Rayon X
                     type_b.append(p1[-1][0:3])
-            else:
-                if len(p1)==4 and 'X' in p1[-1]:
-                    continue
-                elif len(p1)==5 and 'L' in p1:
-                    continue
-                else:
-                    e.append(float(p1[2]))
-                    prob_b.append(float(p1[3]))
+            else:                           # traiter le cas sans |] ni (total)
+                if len(p1)==4 and 'X' in p1[-1]:   # le cas de rayon X sans |] ni (total) ni proba
+                    continue                       # sauter cette ligne
+                elif len(p1)==5 and 'L' in p1:     # le cas de Auger L sans |] ni (total) ni proba
+                    continue                       # sauter cette ligne
+                else:                       # traiter le cas sans |] ni (total) mais complet
+                    e.append(float(p1[2]))         # enregistrer énergie
+                    prob_b.append(float(p1[3]))    # enregistrer proba
                     if 'L' in p1:
-                        type_b.append('Auger L')
+                        type_b.append('Auger L')   # enregistrer type Auger L
                     else:
-                        type_b.append(p1[-1][0:3])
-        if len(prob_b)==1 and len(e)>1:
+                        type_b.append(p1[-1][0:3]) # enregistrer type Rayon X
+
+        if len(prob_b)==1 and len(e)>1:            # calculer la valeur moyenne et l'enregistrer au cas où |] compris et valeurs complètes
             energy.append(np.mean(e))
             prob.append(prob_b[0])
             type_.append(type_b[0])
-        elif len(e)==len(prob_b):
+        elif len(e)==len(prob_b) and len(e)>=1:    # enregistrer les valeurs au cas où sans |] et valeurs complètes
             for i in range(len(e)):
                 energy.append(e[i])
                 prob.append(prob_b[i])
                 type_.append(type_b[i])
-        if end in index_end:
+        if end in index_end or end+1 in index_end: # enregistrer les résultats à la fin d'une fille
             Energy.append(energy)
             Prob.append(prob)
             Type.append(type_)
             energy = []
             prob = []
             type_ = []    
-    return  daug_name,Energy,Prob,Type           # proba,Energy,Type #daug_name,Energy,Type
+    return  daug_name,Energy,Prob,Type        
 
 # Nom de la fille
 # Ajouter le vecteur proba
@@ -818,5 +817,9 @@ def readEShape(rad):
 
 #dn,en,typ = readEShape('Ag-108m')
 #print(dn,en,typ)
-d,e,p,t = readEShape('Ag-110')
-print(d,e,p,t)
+#d,e,p,t = readEShape('Ag-108')
+#print(d,e,p,t)
+
+file = 'decayData//All-nuclides_Ensdf.zip'
+z = zf.ZipFile(file)
+print(z.namelist())
