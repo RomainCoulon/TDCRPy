@@ -693,7 +693,7 @@ def readEShape(rad):
             daug_name.append(transf_name(p[0]))
         if 'Auger' in p:
             index_auger.append(i)
-        if len(p)==2:
+        if len(p)==2 and 'T' in p:
             posi.append(i)
         if 'P' in p:
             index_end.append(i)
@@ -717,7 +717,7 @@ def readEShape(rad):
             continue
         if start-1 in index_end:
             continue
-        print(d)
+        #print(d)
         for n,p1 in enumerate(d):
             if '-' in p1[2]:
                 x = p1[2].split('-')
@@ -740,12 +740,17 @@ def readEShape(rad):
                 elif 'X' in p1[-1]:
                     type_b.append(p1[-1][0:3])
             else:
-                e.append(float(p1[2]))
-                prob_b.append(float(p1[3]))
-                if 'L' in p1:
-                    type_b.append('Auger L')
+                if len(p1)==4 and 'X' in p1[-1]:
+                    continue
+                elif len(p1)==5 and 'L' in p1:
+                    continue
                 else:
-                    type_b.append(p1[-1][0:3])
+                    e.append(float(p1[2]))
+                    prob_b.append(float(p1[3]))
+                    if 'L' in p1:
+                        type_b.append('Auger L')
+                    else:
+                        type_b.append(p1[-1][0:3])
         if len(prob_b)==1 and len(e)>1:
             energy.append(np.mean(e))
             prob.append(prob_b[0])
@@ -770,5 +775,5 @@ def readEShape(rad):
 
 #dn,en,typ = readEShape('Ag-108m')
 #print(dn,en,typ)
-d,e,p,t = readEShape('Ac-227')
-#print(d,e,p,t)
+d,e,p,t = readEShape('Ag-110')
+print(d,e,p,t)
