@@ -696,12 +696,15 @@ def writeEffcurves(x,y,uy,rad,p,kB,SDT):
 #======================== read ENSDF ============================================
 def transf_name(rad):
     name_lis = re.split('(\d+)',rad)
-    a = name_lis[2][0] + name_lis[2][1].lower()
+    if len(name_lis[2])>1:
+        a = name_lis[2][0] + name_lis[2][1].lower()
+    else:
+        a = name_lis[2]
     name_lis[2] = a
     RAD = name_lis[2]+'-'+name_lis[1]
     return RAD
 
-#print(transf_name('108AG'))
+#print(transf_name('11C'))
 
 def readEShape(rad):
         
@@ -811,15 +814,10 @@ def readEShape(rad):
             type_ = []    
     return  daug_name,Energy,Prob,Type        
 
-# Nom de la fille
-# Ajouter le vecteur proba
-# Mettre les valeurs numériques prob et energy en flotant
-
-#dn,en,typ = readEShape('Ag-108m')
-#print(dn,en,typ)
-#d,e,p,t = readEShape('Ag-108')
+d,e,p,t = readEShape('Rn-217')
 #print(d,e,p,t)
-
-file = 'decayData//All-nuclides_Ensdf.zip'
-z = zf.ZipFile(file)
-print(z.namelist())
+print('  ')
+for i in range(len(d)):
+    print(d[i],e[i],p[i],t[i])
+    print(' ')
+    #print(len(e[i]),len(p[i]),len(t[i]))
