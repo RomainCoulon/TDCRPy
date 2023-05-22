@@ -36,6 +36,39 @@ else:                       # 2M - 10M
 
 # attention:éviter 0keV pour la fonction readMCNP
 def readMCNP(energy,niveau,par,npas=1000,mode='N'):
+    '''
+    ******************************************
+    pour lire les fichiers de résultat de MCNP
+    ******************************************
+    ---------
+    PARAMETRE
+    ---------
+    energy ------- type: int ---- énergie incidente (keV) 
+
+    niveau ------- type: int ---- l'ordre de matrice 
+        0: 1ère matrice -- 1-200 keV   
+        1: 2ème matrice -- 200-2000 keV
+        2: 3ème matrice -- 2000-10000 keV
+
+    par ---------- type: str ---- type de particule
+        p: photon
+        b: béta- (électron)
+        bp: béta+ (positron)
+
+    npas --------- type: int ---- nombre de bins
+
+    mode --------- type: str ---- noraliser ou pas
+        N: non
+        Y: yes
+
+    ------
+    RETURN
+    ------
+    e --------- type: array ----- le vecteur d'énergie déposée
+    p --------- type: array ----- le vecteur de proba d'énergie déposée
+    
+    '''
+
     if par == 'p':
         name1 = 'p/'
     else:
@@ -74,8 +107,37 @@ def readMCNP(energy,niveau,par,npas=1000,mode='N'):
 # ---------------------- créer la matrice de pdf et cdf -----------------------
 
 def creat_matrice(niveau,par,mode='pdf',npas=1000):
-    # niveau : 0 -- énergie basse (0-200k); 1 -- énergie moyenne (200k-2M); 2 -- haute énergie (2M-10M)
-    # mode : pdf -- probabilité ; cdf -- cumsum
+    '''
+    **************************************************
+    pour former une matrice de proba d'énergie déposée
+    **************************************************
+    ---------
+    PARAMETRE
+    ---------
+    niveau ------- type: int ---- l'ordre de matrice 
+        0: 1ère matrice -- 1-200 keV   
+        1: 2ème matrice -- 200-2000 keV
+        2: 3ème matrice -- 2000-10000 keV
+    
+    par ---------- type: str ---- type de particule
+        p: photon
+        b: béta- (électron)
+        bp: béta+ (positron)
+
+    mode --------- type: str ---- type de distribution
+        pdf: distribution de probabilite
+        cdf: distribution de probabilité cumulée
+
+    npas --------- type: int ---- nombre de bins 
+
+    ------
+    RETURN
+    ------
+    e ---------- type: array ------ le vecteur d'énergie déposée
+    matrice_p -- type: array n*1000 dimension --- la matrice de probabilité dont l'entête est l'énergie incidente
+
+    '''
+
     PAR = par
     NIVEAU = niveau
     if niveau == 0:
@@ -124,8 +186,26 @@ if energy_inci[0] == 0.:
 #y = matrice_p.shape[0]
 #print(x,y)
 
-#'''
-def matrice_fig(matrice_p,start,end,e,par): 
+
+
+def matrice_fig(matrice_p,start,end,e,par):
+    '''
+    *************************************************
+    pour tracer la matrice de proba d'énergie déposée
+    *************************************************
+    ---------
+    PARAMETRE
+    ---------
+    matrice_p ---- type: array n*1000 dimension ---- la matrice de probabilité dont l'entête est l'énergie incidente
+    start -------- type: int ------ définir la gamme à tracer
+    end ---------- type: int ------ définir la gamme à tracer
+    e ------------ type: array 1*1000 dimension ------ le vecteur de chaque bin d'énergie
+    par ---------- type: str ------ type de particule
+        p: photon gamma
+        b: béta-
+        bp: béta+
+    
+    ''' 
     # matrice_p : la matrice complète de chaque gamme
     # vecteur de l'énergie déposée pour chaque gamme
     # start et end en keV
@@ -216,6 +296,23 @@ def matrice_fig(matrice_p,start,end,e,par):
 
 
 def ecrit_matrice(matrice,niveau,par):
+    '''
+    ***************************************************************************
+    pour écrire une matrice complète de proba d'énergie déposée dans un fichier
+    ***************************************************************************
+    ---------
+    PARAMETRE
+    ---------
+    matrice ----- type: array n*1000 dimension ---- matrice complète à écrire dans un fichier
+    niveau ------ type: int ---- l'ordre de matrice 
+        0: 1ère matrice -- 1-200 keV   
+        1: 2ème matrice -- 200-2000 keV
+        2: 3ème matrice -- 2000-10000 keV
+    par --------- type: str ---- type de particule
+        p: photon
+        b: béta- (électron)
+        bp: béta+ (positron)
+    '''
     if par == 'p':
         name1 = 'gamma_'
     elif par == 'b':
@@ -260,6 +357,33 @@ def ecrit_matrice(matrice,niveau,par):
 
 
 def find_info(niveau,par,info,npas=1000,mode='N'):
+    '''
+    ********************************************************
+    pour trouver les valeurs particulières que l'on s'intéresse dans un fichier de MCNP
+    ********************************************************
+    ---------
+    PARAMETRE
+    ---------
+    niveau ------- type: int ---- l'ordre de matrice 
+        0: 1ère matrice -- 1-200 keV   
+        1: 2ème matrice -- 200-2000 keV
+        2: 3ème matrice -- 2000-10000 keV
+    
+    par ---------- type: str ---- type de particule
+        p: photon
+        b: béta- (électron)
+        bp: béta+ (positron)
+
+    info -------- type: str ----- mot clé que l'on s'intéresse
+    npas -------- type: int ----- nombre de bins
+    mode
+
+    ------
+    RETURN
+    ------
+    nombre ------ type: list ----- l'ensemble de valeurs intéressantes
+    
+    '''
     if par == 'p':
         name1 = 'p/'
     else:
