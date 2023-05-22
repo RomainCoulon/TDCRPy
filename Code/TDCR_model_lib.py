@@ -853,14 +853,14 @@ def readEShape(rad):
    # print(len(e[i]),len(p[i]),len(t[i]))
 
 #============  traiter la relaxation ===============
-def relaxation_atom(daugther,rad,lacune):
+def relaxation_atom(daugther,rad,lacune='defaut'):
     """
     ---------
     PARAMETRE
     ---------
     daugther -- type: str -- la fille tirée dans cette itération (par exemple NB95,PD110 etc.)
     rad ------- type: str -- le radionucléide étudié (par exemple Am-241, C-11 etc.) 
-    lacuen ---- type: str -- la lacune atomique
+    lacuen ---- type: str -- la lacune atomique (par exemple 'Atom-K','Atom-L' etc.)
 
     ------
     RETURN
@@ -871,45 +871,63 @@ def relaxation_atom(daugther,rad,lacune):
     """
     daug_name,Energy,Prob,Type = readEShape(rad)  # tirer les vecteurs de rad d'Ensdf 
 
-    index_daug = daug_name.index(daugther)        # repérer l'indice correspondante
+    index_daug = daug_name.index(daugther)        # repérer l'indice de fille correspondante
     
     Energie = Energy[index_daug]                  # tirer le vecteur d'énergie
     probability = Prob[index_daug]                # tirer le vecteur de proba
     type_transi = Type[index_daug]                # tirer le vecteur de type
-    prob_somme = np.sum(probability)              # calculer la somme de proba
-    probability /= prob_somme                     # normaliser la proba
-    #print(type_transi)
-    posi_L = []
-    posi_K = []
-    for i, p in enumerate(type_transi):           # repérer les indices de transition L ou K
-        if 'L' in p:
-            posi_L.append(i)
-        elif 'K' in p:
-            posi_K.append(i)
-    #print(posi_K)
-    if 'L' in lacune:
-        prob_2 = []
-        energy_2 = []
-        type_2 = []
-        for il, pl in enumerate(posi_L):
-           prob_2.append(probability[pl])
-           energy_2.append(Energie[pl])
-           type_2.append(type_transi[pl])
-    if 'K' in lacune:
-        prob_2 = []
-        energy_2 = []
-        type_2 = []
-        for ik, pk in enumerate(posi_K):
-            #print(pk)
-            prob_2.append(probability[pk])
-            energy_2.append(Energie[pk])
-            type_2.append(type_transi[pk])
-        
-    prob_2 = np.array(prob_2)
-    index_fin = sampling(prob_2)
-    type_fin = type_2[index_fin]
-    energie_fin = energy_2[index_fin]
 
+
+    if len(probability) > 0:                      # le cas où le vecteur de proba/energie/type n'est pas vide
+        if len(probability)>1:                    # le cas où la taille du vecteur de proba supérieur à 1
+            prob_somme = np.sum(probability)      # calculer la somme de proba
+            probability /= prob_somme             # normaliser la proba
+        '''
+        posi_L = []
+        posi_K = []
+        
+        for i, p in enumerate(type_transi):       # repérer les indices de transition L ou K
+            if 'L' in p:
+                posi_L.append(i)                  # enregistrer la posotion de transition L
+
+            elif 'K' in p:
+                posi_K.append(i)                  # enregistrer la posotion de transition L
+        '''
+        if 'L' in lacune:                         # traiter le transition de couche L
+            prob_2 = []
+            energy_2 = []
+            type_2 = []
+            for il, pl in enumerate(type_transi):
+                if 'L' in pl:
+                    prob_2.append(probability[il])    # enregistrer les proba de transition L
+                    energy_2.append(Energie[il])      # enregistrer les energies de transition L
+                    type_2.append(type_transi[il])    # enregistrer les types de transition L
+
+        elif 'K' in lacune:                           # traiter le transition de couche K
+            prob_2 = []
+            energy_2 = []
+            type_2 = []
+            for ik, pk in enumerate(type_transi):     
+                if 'K' in pk:
+                    prob_2.append(probability[ik])    # enregistrer les proba de transition K
+                    energy_2.append(Energie[ik])      # enregistrer les energie de transition K
+                    type_2.append(type_transi[ik])    # enregistrer les type de transition K
+
+        elif lacune=='defaut':                        # traiter le cas particulier qui ne précise pas la lacune
+            prob_2 = probability
+            energy_2 = Energie
+            type_2 = type_transi
+        
+     # sampling     
+        prob_2 = np.array(prob_2)
+        index_fin = sampling(prob_2)
+        type_fin = type_2[index_fin]
+        energie_fin = energy_2[index_fin]
+    
+    else:                                            # le cas où le vecteur de proba est vide 
+        print("pas de transition de rayon X ni d'électron Auger")
+        type_fin = 0
+        energie_fin = 0
     return type_fin,energie_fin
 
 tf,ef = relaxation_atom('NB95','Zr-95','L')
