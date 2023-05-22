@@ -729,8 +729,8 @@ def readEShape(rad):
     RETURN
     ------
     daug_name -- type: list -- les filles de désintégration
-    Energy ----- type: list -- chaque élément comprend toutes les énergies de transition de la fille de même indice
-    Prob ------- type: list -- chaque élément comprend toutes les proba de transition de la fille de même indice
+    Energy ----- type: array -- chaque élément comprend toutes les énergies de transition de la fille de même indice
+    Prob ------- type: array -- chaque élément comprend toutes les proba de transition de la fille de même indice
     Type ------- type: list -- chaque élément comprend touts les types de transition de la fille de même indice
 
     """
@@ -838,27 +838,29 @@ def readEShape(rad):
             Type.append(type_)
             energy = []
             prob = []
-            type_ = []    
+            type_ = []
+    Energy =  np.array(Energy)
+    Prob =  np.array(Prob)         
     return  daug_name,Energy,Prob,Type        
 
 #========  tester readEShape ==============
-#d,e,p,t = readEShape('Rn-217')
-#print(d,e,p,t)
+#d,e,p,t = readEShape('Ag-108')
+#print(d,e[0][1],p[1][2],t)
 #print('  ')
 #for i in range(len(d)):
  #   print(d[i],e[i],p[i],t[i])
   #  print(' ')
-    #print(len(e[i]),len(p[i]),len(t[i]))
+   # print(len(e[i]),len(p[i]),len(t[i]))
 
 #============  traiter la relaxation ===============
-def relaxation_atom(daugther,rad):
+def relaxation_atom(daugther,rad,lacune):
     """
     ---------
     PARAMETRE
     ---------
-    daugther -- type: str -- la fille tirée dans cette itération
-    rad ------- type: str -- le radionucléide étudié
-
+    daugther -- type: str -- la fille tirée dans cette itération (par exemple NB95,PD110 etc.)
+    rad ------- type: str -- le radionucléide étudié (par exemple Am-241, C-11 etc.) 
+    lacuen ---- type: str -- la lacune atomique
 
     ------
     RETURN
@@ -867,4 +869,48 @@ def relaxation_atom(daugther,rad):
     Energy -- énergie correspondante
 
     """
+    daug_name,Energy,Prob,Type = readEShape(rad)  # tirer les vecteurs de rad d'Ensdf 
+
+    index_daug = daug_name.index(daugther)        # repérer l'indice correspondante
     
+    Energie = Energy[index_daug]                  # tirer le vecteur d'énergie
+    probability = Prob[index_daug]                # tirer le vecteur de proba
+    type_transi = Type[index_daug]                # tirer le vecteur de type
+    prob_somme = np.sum(probability)              # calculer la somme de proba
+    probability /= prob_somme                     # normaliser la proba
+    #print(type_transi)
+    posi_L = []
+    posi_K = []
+    for i, p in enumerate(type_transi):           # repérer les indices de transition L ou K
+        if 'L' in p:
+            posi_L.append(i)
+        elif 'K' in p:
+            posi_K.append(i)
+    #print(posi_K)
+    if 'L' in lacune:
+        prob_2 = []
+        energy_2 = []
+        type_2 = []
+        for il, pl in enumerate(posi_L):
+           prob_2.append(probability[pl])
+           energy_2.append(Energie[pl])
+           type_2.append(type_transi[pl])
+    if 'K' in lacune:
+        prob_2 = []
+        energy_2 = []
+        type_2 = []
+        for ik, pk in enumerate(posi_K):
+            #print(pk)
+            prob_2.append(probability[pk])
+            energy_2.append(Energie[pk])
+            type_2.append(type_transi[pk])
+        
+    prob_2 = np.array(prob_2)
+    index_fin = sampling(prob_2)
+    type_fin = type_2[index_fin]
+    energie_fin = energy_2[index_fin]
+
+    return type_fin,energie_fin
+
+tf,ef = relaxation_atom('NB95','Zr-95','L')
+print(tf,ef)
