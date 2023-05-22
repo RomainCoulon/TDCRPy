@@ -729,8 +729,8 @@ def readEShape(rad):
     RETURN
     ------
     daug_name -- type: list -- les filles de désintégration
-    Energy ----- type: array -- chaque élément comprend toutes les énergies de transition de la fille de même indice
-    Prob ------- type: array -- chaque élément comprend toutes les proba de transition de la fille de même indice
+    Energy ----- type: list -- chaque élément comprend toutes les énergies de transition de la fille de même indice
+    Prob ------- type: list -- chaque élément comprend toutes les proba de transition de la fille de même indice
     Type ------- type: list -- chaque élément comprend touts les types de transition de la fille de même indice
 
     """
@@ -839,8 +839,8 @@ def readEShape(rad):
             energy = []
             prob = []
             type_ = []
-    Energy =  np.array(Energy)
-    Prob =  np.array(Prob)         
+    #Energy =  np.array(Energy)
+    #Prob =  np.array(Prob)         
     return  daug_name,Energy,Prob,Type        
 
 #========  tester readEShape ==============
@@ -873,8 +873,8 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
 
     index_daug = daug_name.index(daugther)        # repérer l'indice de fille correspondante
     
-    Energie = Energy[index_daug]                  # tirer le vecteur d'énergie
-    probability = Prob[index_daug]                # tirer le vecteur de proba
+    Energie = np.array(Energy[index_daug])                  # tirer le vecteur d'énergie
+    probability = np.array(Prob[index_daug])                # tirer le vecteur de proba
     type_transi = Type[index_daug]                # tirer le vecteur de type
 
 
@@ -930,5 +930,5 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
-tf,ef = relaxation_atom('NB95','Zr-95','L')
+tf,ef = relaxation_atom('BI213','At-217')
 print(tf,ef)
