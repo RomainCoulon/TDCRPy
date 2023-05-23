@@ -347,20 +347,19 @@ for kB_i in kB:
            """
            for i, p in enumerate(particle_vec):
              if p == "beta":
-                 # e_beta, p_beta, n_bin = tl.readBetaSpectrum(rad_i) # deprecated
-                 # e_beta, p_beta = tl.readBetaShape(rad_i, "beta-", "tot")
                  n_branch = len(e_branch[index_rad][iDaughter])
                  index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
                  particle_vec[i] = "electron"
                  energy_vec[i] = e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
-                 # Sampling Matrice comme gamma
              
              if p == "beta+":
-                 # e_beta, p_beta = tl.readBetaShape(rad_i, "beta+", "tot")
                  index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
                  particle_vec[i] = "positron"
                  energy_vec[i] = e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
-                 # Sampling Matrice comme gamma
+                 particle_vec.append("gamma")
+                 particle_vec.append("gamma")
+                 energy_vec.append(511)
+                 energy_vec.append(511)
     
              if p == "gamma" or p == "xKA" or p == "xKB" or p == "xL":
                  energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])
@@ -389,7 +388,7 @@ for kB_i in kB:
                     # energy_vec[i] = 0
                     # for j in e_discrete:
                     #     energy_vec[i] += delta_e/(1+kB_i*tl.stoppingpowerA(j)) # input (keV) / output (keV)
-                if p == "electron":
+                if p == "electron" or p == "positron":
                     # energy_vec = np.cumsum(delta_e/(1+kB_i*1e3*tl.stoppingpower(e_discrete*1e3)))
                     energy_vec[i] = 0
                     for j in e_discrete:
