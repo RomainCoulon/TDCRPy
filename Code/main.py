@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1                   # number of simulated decay (MC trials)
-Rad=["Co-60"]            # list of radionuclides (Na-24)
+Rad=["Fe-55"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -273,10 +273,47 @@ for kB_i in kB:
            """
            II. LA RELAXATION ATOMIQUE
            """
+
+
+           # tf,ef = relaxation_atom('PD108','Ag-108','Atom_K')
+
+
     
 #            ### Used of ENSDF file in DDEP 
+           
+           lenElement = []
+           for element in particle_vec:
+               lenElement.append(type(element))
+           while list in lenElement: # tant qu'il y a une lacune atomiqu
+               lenElement = []
+               for element in particle_vec:
+                   lenElement.append(type(element))
+               for i_part, part in enumerate(particle_vec):
+                   if type(part) == list:
+                       tf,ef = tl.relaxation_atom(part[1],Rad[index_rad],part[0])
+                       if tf == 'XKA' or tf == 'XKB':
+                           if tf == 'XKA':
+                               particle_vec.append(["Atom_L", part[1]])
+                               energy_vec.append(0)
+                           if tf == 'XKB':
+                               particle_vec.append(["Atom_M", part[1]])
+                               energy_vec.append(0)
+                           particle_vec[i_part]='x'
+                           energy_vec[i_part]=ef
+                       if tf == 'Auger L' or tf == 'Auger K':
+                           if tf == 'Auger K':
+                               particle_vec.append(["Atom_L", part[1]])
+                               particle_vec.append(["Atom_L", part[1]])
+                               energy_vec.append(0)
+                               energy_vec.append(0)
+                           particle_vec[i_part]='electron'
+                           energy_vec[i_part]=ef
 
-#            while "Atome_*" in particle_vec:
+                           
+               print(particle_vec)
+                           
+           # if me_M" in particle_vec): 
+           #    print("OK")
 #                for ip, p in enumerate(particle_vec):
 #                  if ("Atom_K" in p) or ("Atom_L" in p) or ("Atom_M" in p):
 #                     # appelle fonction() => Electron ou photon # energy
