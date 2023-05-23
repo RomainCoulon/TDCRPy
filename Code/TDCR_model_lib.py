@@ -530,27 +530,27 @@ def E_quench_a(e,kB):
 
 #========================= Tracer les courbes avec kB différents ======================
 
-'''
+#'''
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(10,1e4,1000) 
+x = np.linspace(1e6,1e8,1000) 
 
 for i in x:
-    s1.append(E_quench_e(i,kB=7e-3)*1e-3)
-    s2.append(E_quench_e(i,kB=1e-2)*1e-3)
-    s3.append(E_quench_e(i,kB=1.4e-2)*1e-3)
+    s1.append(E_quench_e(i,kB=7e-3)/i)
+    s2.append(E_quench_e(i,kB=1e-2)/i)
+    s3.append(E_quench_e(i,kB=1.4e-2)/i)
 
-plt.plot(x,s2,label='E_quenched/E_0.01',ls=':',color='red',lw=3)
-plt.plot(x,s1,label='E_quenched/E_0.007',color='green',lw=2)
-plt.plot(x,s3,label='E_quenched/E_0.014')
-#plt.xscale('log')
+plt.plot(x,s2,label='E_extinction/E_0.01',ls=':',color='red',lw=3)
+plt.plot(x,s1,label='E_extinction/E_0.007',color='green',lw=2)
+plt.plot(x,s3,label='E_extinction/E_0.014')
+plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
-plt.xlabel('E_emitted/eV')
-plt.ylabel('quenching energy/E_emitted /keV')
-plt.savefig("Quenching/quenching E_test 10-10k.png")
-'''
+plt.xlabel('E de particule/eV')
+plt.ylabel("énergie d'extinction/E")
+plt.savefig("Quenching/quenchingE_E beta 1M-10M log.png")
+#'''
 #============================================================================================
 
 #============================================================================================
@@ -930,5 +930,5 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
-tf,ef = relaxation_atom('BI213','At-217')
-print(tf,ef)
+#tf,ef = relaxation_atom('BI213','At-217')
+#print(tf,ef)
