@@ -534,7 +534,7 @@ def E_quench_a(e,kB):
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(1e6,1e8,1000) 
+x = np.linspace(1e2,1e5,1000) 
 
 for i in x:
     s1.append(E_quench_e(i,kB=7e-3)/i)
@@ -549,7 +549,7 @@ plt.xscale('log')
 plt.legend(fontsize=12,loc='best')
 plt.xlabel('E de particule/eV')
 plt.ylabel("énergie d'extinction/E")
-plt.savefig("Quenching/quenchingE_E beta 1M-10M log.png")
+plt.savefig("Quenching/quenchingE_E beta 100-10k log.png")
 #'''
 #============================================================================================
 
@@ -934,12 +934,5 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
-<<<<<<< HEAD
 #tf,ef = relaxation_atom('BI213','At-217')
 #print(tf,ef)
-=======
-# tic()
-# tf,ef = relaxation_atom('MN55', 'Fe-55', 'Atom_K')
-# toc()
-# print(tf,ef)
->>>>>>> 86d1dcf1ea34ec9be7c6c717d715756d9b45d39f
