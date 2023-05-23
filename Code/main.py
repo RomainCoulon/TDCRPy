@@ -17,7 +17,8 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1                   # number of simulated decay (MC trials)
-Rad=["Na-22"]            # list of radionuclides (Na-24)
+#N= 10000
+Rad=["Co-60"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -32,6 +33,7 @@ TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 Record = False                  # to record the efficiency curves
 Display = True                # to display calculation results on the console
+# Display = False                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
 nE = 1000            #number of bin to discretize the energy vector for scintillation quenching calculation
@@ -127,7 +129,7 @@ for i, rad_i in enumerate(Rad): # radionuclide loop
 
 
 
-for kB_i in kB:
+for kB_i in kB: # Loop on the kB
     mean_efficiency_S = []  # efficiency of single counte rate
     std_efficiency_S = []   # std
     mean_efficiency_T = []  # efficiency of triple coincidence counte rate
@@ -142,7 +144,7 @@ for kB_i in kB:
         efficiency_D = []        # results calculated efficiency for double coincidence
         efficiency_T = []        # results calculated efficiency for triple coincidence
     
-        for i in range(N): # Main Loop
+        for i in range(N): # Main Loop - Monte Carlo trials
         
            #tl.tic()
            particle_vec=[]
