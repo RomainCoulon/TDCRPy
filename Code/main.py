@@ -17,7 +17,7 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 N=1                   # number of simulated decay (MC trials)
-Rad=["Fe-55"]            # list of radionuclides (Na-24)
+Rad=["Na-22"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -99,20 +99,24 @@ Read BetaShape
 """
 e_beta = []
 p_beta = []
-for i, rad_i in enumerate(Rad):
+for i, rad_i in enumerate(Rad): # radionuclide loop
     e_beta_0 = []
     p_beta_0 = []
     out_PenNuc = tl.readPenNuc(rad_i)
-    for u in range(len(out_PenNuc)):
+    for u in range(len(out_PenNuc)): # daughter loop
         e_beta_1 = []
-        p_beta_1 = []        
-        for j in range(len(particle[i][u])):
+        p_beta_1 = []
+        betam = 0   # counter of beta- transition 
+        betap = 0   # counter of beta+ transition
+        for j in range(len(particle[i][u])): # transition loop
          if particle[i][u][j] == "beta":
-             e_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(j))[0])
-             p_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(j))[1])
+             e_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[0])
+             p_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[1])
+             betam += 1
          elif particle[i][u][j] == "beta+":
-             e_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(j))[0])
-             p_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(j))[1])
+             e_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[0])
+             p_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[1])
+             betap += 1
          else:
              e_beta_1.append("")
              p_beta_1.append("")   
@@ -267,50 +271,67 @@ for kB_i in kB:
            if Display: print("\t Summary of the nuclear decay")
            if Display: print("\t\t particles : ", particle_vec)
            if Display: print("\t\t energy : ", energy_vec, "keV")
-           if Display: print("\t\t remaing energy : ", round(Q_value[index_rad][iDaughter]-e_sum,3), " keV")
+           # if Display: print("\t\t remaing energy : ", round(Q_value[index_rad][iDaughter]-e_sum,3), " keV")
     
     
            """
            II. LA RELAXATION ATOMIQUE
            """
-
-
-           # tf,ef = relaxation_atom('PD108','Ag-108','Atom_K')
-
-
-    
-#            ### Used of ENSDF file in DDEP 
            
-           lenElement = []
+           if Display: print("\t Summary of the atomic relaxation")
+           
+           lenElement = [] # pour détecter la présence de lacunes atomiques
            for element in particle_vec:
                lenElement.append(type(element))
-           while list in lenElement: # tant qu'il y a une lacune atomiqu
-               lenElement = []
+           
+           while list in lenElement:  # tant qu'il y a une lacune atomique
+               lenElement = []         # pour détecter la présence de lacunes atomiques
                for element in particle_vec:
                    lenElement.append(type(element))
+                   
                for i_part, part in enumerate(particle_vec):
-                   if type(part) == list:
-                       tf,ef = tl.relaxation_atom(part[1],Rad[index_rad],part[0])
-                       if tf == 'XKA' or tf == 'XKB':
-                           if tf == 'XKA':
-                               particle_vec.append(["Atom_L", part[1]])
-                               energy_vec.append(0)
-                           if tf == 'XKB':
-                               particle_vec.append(["Atom_M", part[1]])
-                               energy_vec.append(0)
-                           particle_vec[i_part]='x'
-                           energy_vec[i_part]=ef
-                       if tf == 'Auger L' or tf == 'Auger K':
-                           if tf == 'Auger K':
-                               particle_vec.append(["Atom_L", part[1]])
-                               particle_vec.append(["Atom_L", part[1]])
-                               energy_vec.append(0)
-                               energy_vec.append(0)
-                           particle_vec[i_part]='electron'
-                           energy_vec[i_part]=ef
-
+                   if type(part) == list: # indice de la lacune dans le vecteur particle
+                       tf,ef = tl.relaxation_atom(part[1],Rad[index_rad],part[0])   # tirage de la transition atomique
+                       if tf[0] == 'X':                               # cas des rayons XK
+                           if tf == 'XKA':                                          # cas des rayons XK_alpha
+                               particle_vec.append(["Atom_L", part[1]])             # ajout d'un lacune dans la couche L
+                               energy_vec.append(0)                                 # initialisation du vecteur energie
+                               particle_vec[i_part]='xKA'                           # mise à jour du vecteur particle avec le rayon x
+                           elif tf == 'XKB':                                        # cas des rayons XK_beta
+                               particle_vec.append(["Atom_M", part[1]])             # ajout d'un lacune dans la couche M
+                               energy_vec.append(0)                                 # initialisation du vecteur energie
+                               particle_vec[i_part]='xKB'                           # mise à jour du vecteur particle avec le rayon x
+                           elif tf == 'XL':
+                               particle_vec[i_part]='xL'                           # mise à jour du vecteur particle avec le rayon x
+                               # particle_vec.append(["Atom_M", part[1]])             # ajout d'un lacune dans la couche M
+                               # energy_vec.append(0)                                 # initialisation du vecteur energie
+                           else:
+                               print("undetermined x rays type")
                            
-               print(particle_vec)
+                           energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie du rayon x
+                           e_sum += ef                                              # mise à jour du bilan energétique
+                       if tf[0] == 'A':
+                           if tf == 'Auger K':
+                               particle_vec.append(["Atom_L", part[1]])             # ajout de deux lacunes dans la couche L
+                               particle_vec.append(["Atom_L", part[1]])
+                               energy_vec.append(0)                                 # initialisation du vecteur energie
+                               energy_vec.append(0)
+                               particle_vec[i_part]='Auger K'                          # mise à jour du vecteur particle avec l'électron Auger'
+                           elif tf == 'Auger L':
+                               particle_vec[i_part]='Auger L'                          # mise à jour du vecteur particle avec l'électron Auger'
+                               # particle_vec.append(["Atom_M", part[1]])             # ajout de deux lacunes dans la couche M
+                               # particle_vec.append(["Atom_M", part[1]])
+                               # energy_vec.append(0)                                 # initialisation du vecteur energie
+                               # energy_vec.append(0)         
+                           else:
+                               print("undetermined Auger type")
+                           energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie de l'électron Auger
+                           e_sum += ef                                              # mise à jour du bilan energétique
+
+           if Display: print("\t\t particles : ", particle_vec)            
+           if Display: print("\t\t energy : ", energy_vec, "keV")
+           # if Display: print("\t\t remaing energy : ", round(Q_value[index_rad][iDaughter]-e_sum,3), " keV")
+               
                            
            # if me_M" in particle_vec): 
            #    print("OK")
@@ -341,12 +362,12 @@ for kB_i in kB:
                  energy_vec[i] = e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
                  # Sampling Matrice comme gamma
     
-             if p == "gamma" or p == "x":
+             if p == "gamma" or p == "xKA" or p == "xKB" or p == "xL":
                  energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])
-                 particle_vec[i] = "electron" # false Compton scattering... to develop...!!!!!!!!!!!!!!
+                 particle_vec[i] = "electron"
              
-             if p[:4] == "Atom": # Electron capture
-                 energy_vec[i] = 0
+             if p == "Auger K" or p == "Auger L":
+                 particle_vec[i] = "electron"
     
            if Display: print("\t Summary of the final charged particles")
            if Display: print("\t\t particles : ", particle_vec)

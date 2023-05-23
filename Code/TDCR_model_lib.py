@@ -931,5 +931,5 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
     return type_fin,energie_fin
 
 
-tf,ef = relaxation_atom('MN55', 'Fe-55', 'Atom_K')
-print(tf,ef)
+# tf,ef = relaxation_atom('MN55', 'Fe-55', 'Atom_K')
+# print(tf,ef)
