@@ -715,7 +715,10 @@ def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C11
 
 #print(transf_name('108PD'))
 
-def readEShape(rad):
+file = 'decayData//All-nuclides_Ensdf.zip'
+z = zf.ZipFile(file)
+
+def readEShape(rad, *, z=z):
     """
     --------------------------------------------------
     pour lire les fichiers dans All-nuclides_Ensdf.zip
@@ -724,6 +727,7 @@ def readEShape(rad):
     PARAMETRE
     ---------
     rad -- type: str par exemple 'Ag-108'
+    z -- ENSDF files
     
     ------
     RETURN
@@ -735,8 +739,6 @@ def readEShape(rad):
 
     """
        
-    file = 'decayData//All-nuclides_Ensdf.zip'
-    z = zf.ZipFile(file)
     name = rad + '.txt'
     with z.open(name) as f:
         data = f.readlines()
@@ -844,7 +846,9 @@ def readEShape(rad):
     return  daug_name,Energy,Prob,Type        
 
 #========  tester readEShape ==============
+# tic()
 # d,e,p,t = readEShape('Ag-108')
+# toc()
 # print(d,e[0][1],p[1][2],t)
 # print('  ')
 # for i in range(len(d)):
@@ -930,6 +934,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
-
+# tic()
 # tf,ef = relaxation_atom('MN55', 'Fe-55', 'Atom_K')
+# toc()
 # print(tf,ef)
