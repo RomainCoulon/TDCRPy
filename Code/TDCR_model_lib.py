@@ -715,7 +715,10 @@ def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C11
 
 #print(transf_name('108PD'))
 
-def readEShape(rad):
+file = 'decayData//All-nuclides_Ensdf.zip'
+z = zf.ZipFile(file)
+
+def readEShape(rad, *, z=z):
     """
     --------------------------------------------------
     pour lire les fichiers dans All-nuclides_Ensdf.zip
@@ -724,6 +727,7 @@ def readEShape(rad):
     PARAMETRE
     ---------
     rad -- type: str par exemple 'Ag-108'
+    z -- ENSDF files
     
     ------
     RETURN
@@ -735,8 +739,6 @@ def readEShape(rad):
 
     """
        
-    file = 'decayData//All-nuclides_Ensdf.zip'
-    z = zf.ZipFile(file)
     name = rad + '.txt'
     with z.open(name) as f:
         data = f.readlines()
@@ -844,13 +846,15 @@ def readEShape(rad):
     return  daug_name,Energy,Prob,Type        
 
 #========  tester readEShape ==============
-#d,e,p,t = readEShape('Ag-108')
-#print(d,e[0][1],p[1][2],t)
-#print('  ')
-#for i in range(len(d)):
- #   print(d[i],e[i],p[i],t[i])
-  #  print(' ')
-   # print(len(e[i]),len(p[i]),len(t[i]))
+# tic()
+# d,e,p,t = readEShape('Ag-108')
+# toc()
+# print(d,e[0][1],p[1][2],t)
+# print('  ')
+# for i in range(len(d)):
+#     print(d[i],e[i],p[i],t[i])
+#     print(' ')
+#     print(len(e[i]),len(p[i]),len(t[i]))
 
 #============  traiter la relaxation ===============
 def relaxation_atom(daugther,rad,lacune='defaut'):
@@ -879,9 +883,6 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
 
 
     if len(probability) > 0:                      # le cas où le vecteur de proba/energie/type n'est pas vide
-        if len(probability)>1:                    # le cas où la taille du vecteur de proba supérieur à 1
-            prob_somme = np.sum(probability)      # calculer la somme de proba
-            probability /= prob_somme             # normaliser la proba
         '''
         posi_L = []
         posi_K = []
@@ -918,7 +919,10 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
             energy_2 = Energie
             type_2 = type_transi
         
-     # sampling     
+     # sampling
+        if len(probability)>1:                    # le cas où la taille du vecteur de proba supérieur à 1
+            prob_somme = np.sum(prob_2)      # calculer la somme de proba
+            prob_2 /= prob_somme             # normaliser la proba
         prob_2 = np.array(prob_2)
         index_fin = sampling(prob_2)
         type_fin = type_2[index_fin]
@@ -930,5 +934,12 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
+<<<<<<< HEAD
 #tf,ef = relaxation_atom('BI213','At-217')
 #print(tf,ef)
+=======
+# tic()
+# tf,ef = relaxation_atom('MN55', 'Fe-55', 'Atom_K')
+# toc()
+# print(tf,ef)
+>>>>>>> 86d1dcf1ea34ec9be7c6c717d715756d9b45d39f
