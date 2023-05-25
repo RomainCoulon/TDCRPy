@@ -918,6 +918,12 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
             prob_2 = probability
             energy_2 = Energie
             type_2 = type_transi
+            
+        else: # try to debugg
+            # print("issue: ", lacune)
+            prob_2 = probability
+            energy_2 = Energie
+            type_2 = type_transi            
         
      # sampling
         if len(probability)>1:                    # le cas où la taille du vecteur de proba supérieur à 1
