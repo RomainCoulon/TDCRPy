@@ -11,7 +11,7 @@ import scipy.signal as sg
 import scipy.optimize as opt
 
 def readEff(Rad, kB, SDT):
-    file = open("G:\Python_modules\Jialin\Code\\EfficiencyCurves/"+''.join(Rad)+"/Eff"+SDT+"_"+''.join(Rad)+'_[1]_'+str(kB)+".txt","r")
+    file = open("G:\Python_modules\TDCRPy\TDCRPy\Code\\EfficiencyCurves/"+''.join(Rad)+"/Eff"+SDT+"_"+''.join(Rad)+'_[1]_'+str(kB)+".txt","r")
     L=[]
     p=[]
     up=[]
@@ -125,22 +125,39 @@ def plotEffProfil(Rad,kB):
 # out = effTDCR(T/D, "H-3", 1.05E-5) # H-3
 # plotEffProfil("H-3", 1.05E-5)
 
-
-DT = 0.977784348 # Co-60 NIST
-uDT = 0.000711023 # Co-60 NIST
-D = 84679.21179
-nMc = 1e3
-eff_v = []
-kB1 = 0.8e-5
-kB2 = 1.2e-5
-for i in range(int(nMc)):
-    dti = np.random.normal(DT,uDT)
-    kBi = np.random.uniform(kB1,kB2)
-    eff_v.append(effTDCR(dti, "Co-60", kBi)[1]) # Co-60 NIST
-eff = np.median(eff_v)
-u_eff = np.std(eff_v)
+# AB = 864.95
+# BC = 1006.58
+# AC = 968.45
+T = 700
+D = 1000
+XX = (D + 2*T)/3
+print(XX)
+# D = AB+BC+AC-2*T
+out = effTDCR(T/D, "Fe-55", 1.2E-5) # H-3
+eff = out[1]
+u_eff = 0
 A = D/eff
-uA = D*u_eff/eff**2
+uA = 0
+# plotEffProfil("Fe-55", 1.05E-5)
+
+
+
+
+# DT = 0.977784348 # Co-60 NIST
+# uDT = 0.000711023 # Co-60 NIST
+# D = 84679.21179
+# nMc = 1e3
+# eff_v = []
+# kB1 = 0.8e-5
+# kB2 = 1.2e-5
+# for i in range(int(nMc)):
+#     dti = np.random.normal(DT,uDT)
+#     kBi = np.random.uniform(kB1,kB2)
+#     eff_v.append(effTDCR(dti, "Co-60", kBi)[1]) # Co-60 NIST
+# eff = np.median(eff_v)
+# u_eff = np.std(eff_v)
+# A = D/eff
+# uA = D*u_eff/eff**2
 # result 87099      67             (err = 0.0002) kB = 0.01
 # result 87045      88             kB = [0.008 - 0.012]
 # I2 86640.31523	14.64334414
