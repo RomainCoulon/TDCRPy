@@ -534,22 +534,22 @@ def E_quench_a(e,kB):
 s1 = []
 s2 = []
 s3 = []
-x = np.linspace(1e2,1e5,1000) 
+x = np.linspace(1,8000,4001) 
 
 for i in x:
-    s1.append(E_quench_e(i,kB=7e-3)/i)
-    s2.append(E_quench_e(i,kB=1e-2)/i)
-    s3.append(E_quench_e(i,kB=1.4e-2)/i)
+    s1.append(E_quench_a(i,kB=7e-6)/i)
+    s2.append(E_quench_a(i,kB=1e-5)/i)
+    s3.append(E_quench_a(i,kB=1.4e-5)/i)
 
-plt.plot(x,s2,label='E_extinction/E_0.01',ls=':',color='red',lw=3)
-plt.plot(x,s1,label='E_extinction/E_0.007',color='green',lw=2)
-plt.plot(x,s3,label='E_extinction/E_0.014')
-plt.xscale('log')
+plt.plot(x,s2,label='kB=1e-5cm/keV',ls=':',color='red',lw=3)
+plt.plot(x,s1,label='kB=7e-6cm/keV',color='green',lw=2)
+plt.plot(x,s3,label='kB=1.4e-5cm/keV')
+#plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
-plt.xlabel('E de particule/eV')
+plt.xlabel('E de particule/keV')
 plt.ylabel("énergie d'extinction/E")
-plt.savefig("Quenching/quenchingE_E beta 100-10k log.png")
+plt.savefig("Quenching/quenchingE_E alpha 1-8000k.png")
 #'''
 #============================================================================================
 
