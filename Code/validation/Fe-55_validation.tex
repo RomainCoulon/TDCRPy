@@ -1,0 +1,114 @@
+\documentclass[12pt]{iopart}
+\bibliographystyle{unsrt}
+\usepackage{cite}
+\usepackage[colorlinks, citecolor = blue, urlcolor = blue]{hyperref}
+\usepackage{lineno}
+\usepackage{longtable}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage{enumitem}
+\usepackage{lscape}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{pdfpages}
+\usepackage{siunitx}
+
+
+
+
+\begin{document}
+
+\title[Draft - May 2023]{Validation of the code TDCRPy against the code Fe-55.exe}
+\author{Romain Coulon}
+\address{Bureau International des Poids et Mesures, Pavillon de Breteuil, F-92312 S\`{e}vres Cedex, France.}
+
+
+\section{Introduction}
+
+The code Fe-55.exe was developed in Fortran by Philippe Cassette at the LNE-LNHB to calculate the efficiency of a TDCR system when standard solutions of $^{55}$Fe are measured. It implement a K,L,M shells recombination model. It was used by the LNE-LNHB, the ENEA, the KRISS, the NIM, the POLATOM, the SMU and the BIPM during the comparison CCRI(II)-K2.Fe-55.2019. The BIPM developed the python code TDCRPy to estimating detection efficiency of TDCR measurement. The aim of this study is to test the BIPM code against the Fe-55.exe code.\\
+
+
+\section{Measurement data and results}
+\subsection{symmetric assumption}
+
+
+\begingroup
+\footnotesize
+\begin{longtable}[l]{| p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} |p{.15\textwidth} |p{.15\textwidth} |p{.10\textwidth} |} 
+\caption{Measurement data and results - $kB = 0.008$ cm $\cdot$ MeV$^{-1}$}
+\label{Table1} \\ 
+\hline
+\textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\ 
+\endfirsthead
+\multicolumn{6}{c}{... Continuation of Table 1.}\\ 
+\hline
+ \textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\   \hline 
+\endhead
+\hline
+ 1 & 800    & 800     & 800    & 1000    &  700   &  83.72 \% &  84.20 \% &  +0.48 \% \\
+ 2 & 733    & 733     & 733    & 1000    &  600   &  79.73 \% &  79.99 \% &  +0.26 \% \\
+ 3 & 666    & 666     & 666    & 1000    &  500   &  73.59 \% &  73.23 \% &  -0.36 \% \\
+ 4 & 600    & 600     & 600    & 1000    &  400   &  64.50 \% &  63.95 \% &  -0.55 \% \\
+ 5 & 533    & 533     & 533    & 1000    &  300   &  51.56 \% &  51.02 \% &  -0.54 \% \\
+ 6 & 467    & 467     & 467    & 1000    &  200   &  34.13 \% &  34.10 \% &  -0.03 \% \\
+ 7 & 400    & 400     & 400    & 1000    &  100   &  13.51 \% &  13.71 \% &  +0.20 \% \\
+\hline
+\end{longtable} 
+\endgroup
+
+\pagebreak
+
+\begingroup
+\footnotesize
+\begin{longtable}[l]{| p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} |p{.15\textwidth} |p{.15\textwidth} |p{.10\textwidth} |} 
+\caption{Measurement data and results - $kB = 0.01$ cm $\cdot$ MeV$^{-1}$}
+\label{Table1} \\ 
+\hline
+\textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\ 
+\endfirsthead
+\multicolumn{6}{c}{... Continuation of Table 1.}\\ 
+\hline
+ \textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\   \hline 
+\endhead
+\hline
+ 1 & 800    & 800     & 800    & 1000    &  700   & 83.67 \% & 84.32 \% & +1.00 \% \\
+ 2 & 733    & 733     & 733    & 1000    &  600   & 79.69 \% & 79.89 \% & +0.20 \% \\
+ 3 & 666    & 666     & 666    & 1000    &  500   & 73.54 \% & 73.47 \% & -0.07 \% \\
+ 4 & 600    & 600     & 600    & 1000    &  400   & 64.45 \% & 64.01 \% & -0.44 \% \\
+ 5 & 533    & 533     & 533    & 1000    &  300   & 51.51 \% & 51.07 \% & -0.44 \% \\
+ 6 & 467    & 467     & 467    & 1000    &  200   & 34.09 \% & 33.87 \% & -0.22 \% \\
+ 7 & 400    & 400     & 400    & 1000    &  100   & 13.49 \% & 13.81 \% & +0.32 \% \\
+\hline
+\end{longtable} 
+\endgroup
+
+\begingroup
+\footnotesize
+\begin{longtable}[l]{| p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} | p{.08\textwidth} |p{.15\textwidth} |p{.15\textwidth} |p{.10\textwidth} |} 
+\caption{Measurement data and results - $kB = 0.012$ cm $\cdot$ MeV$^{-1}$}
+\label{Table1} \\ 
+\hline
+\textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\ 
+\endfirsthead
+\multicolumn{6}{c}{... Continuation of Table 1.}\\ 
+\hline
+ \textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\   \hline 
+\endhead
+\hline
+ 1 & 800    & 800     & 800    & 1000    &  700   &  83.64 \% &  84.30\% & +0.66 \% \\
+ 2 & 733    & 733     & 733    & 1000    &  600   &  79.65 \% &  79.96 \% & +0.31 \% \\
+ 3 & 666    & 666     & 666    & 1000    &  500   &  73.50 \% &  73.28 \% & -0.22 \% \\
+ 4 & 600    & 600     & 600    & 1000    &  400   &  64.41 \% &  64.10 \% &  -0.31 \% \\
+ 5 & 533    & 533     & 533    & 1000    &  300   &  51.47 \% &  51.19 \% &  -0.28 \% \\
+ 6 & 467    & 467     & 467    & 1000    &  200   &  34.05 \% &  33.99 \% &  -0.06 \% \\
+ 7 & 400    & 400     & 400    & 1000    &  100   &  13.47 \% &  13.74 \% &  +0.27 \% \\
+\hline
+\end{longtable} 
+\endgroup
+
+The comparison CCRI(II)-K2.Fe-55.2019 shows that results from laboratories are spread by $\pm$ 1\% around the KCRV and that laboratories report relative standard uncertainties dominated by their efficiency model of values: $\{0.62, 0.70, 0.81, 0.92, 0.41, 0.59, 0.45, 0.63, 0.39, 0.50, 0.46, 1.57\}$\%.
+These fluctuations are in agreement with the deviations observed between TDCRPy and Fe-55.exe estimation that are comprises between -0.03\% to -0.55\% in the efficiency range $[30-60]$\% that can be encountered in TDCR systems.
+
+\end{document}
