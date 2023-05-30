@@ -531,25 +531,26 @@ def E_quench_a(e,kB):
 #========================= Tracer les courbes avec kB différents ======================
 
 #'''
-# s1 = []
-# s2 = []
-# s3 = []
-# x = np.linspace(1,8000,4001) 
+s1 = []
+s2 = []
+s3 = []
+x = np.linspace(1e2,1e4,1000) 
 
-# for i in x:
-#     s1.append(E_quench_a(i,kB=7e-6)/i)
-#     s2.append(E_quench_a(i,kB=1e-5)/i)
-#     s3.append(E_quench_a(i,kB=1.4e-5)/i)
+for i in x:
+    s1.append(E_quench_e(i,kB=7e-3)/i)
+    s2.append(E_quench_e(i,kB=1e-2)/i)
+    s3.append(E_quench_e(i,kB=1.4e-2)/i)
 
-# plt.plot(x,s2,label='kB=1e-5cm/keV',ls=':',color='red',lw=3)
-# plt.plot(x,s1,label='kB=7e-6cm/keV',color='green',lw=2)
-# plt.plot(x,s3,label='kB=1.4e-5cm/keV')
-# #plt.xscale('log')
-# #plt.yscale('log')
-# plt.legend(fontsize=12,loc='best')
-# plt.xlabel('E de particule/keV')
-# plt.ylabel("énergie d'extinction/E")
-# plt.savefig("Quenching/quenchingE_E alpha 1-8000k.png")
+plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
+plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
+plt.plot(x,s3,label='kB=0.014cm/MeV')
+plt.xscale('log')
+#plt.yscale('log')
+plt.legend(fontsize=12,loc='best')
+plt.xlabel('E de particule/keV')
+plt.ylabel("énergie d'extinction/E")
+plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
+
 #'''
 #============================================================================================
 
