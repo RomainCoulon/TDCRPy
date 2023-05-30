@@ -20,14 +20,14 @@
 
 \begin{document}
 
-\title[Draft - May 2023]{Validation of the code TDCRPy against the code Fe-55.exe}
+\title[Draft - May 2023]{Validation of the code TDCRPy against the code Fe-55fom}
 \author{Romain Coulon}
 \address{Bureau International des Poids et Mesures, Pavillon de Breteuil, F-92312 S\`{e}vres Cedex, France.}
 
 
 \section{Introduction}
 
-The code Fe-55.exe was developed in Fortran by Philippe Cassette at the LNE-LNHB to calculate the efficiency of a TDCR system when standard solutions of $^{55}$Fe are measured. It implement a K,L,M shells recombination model. It was used by the LNE-LNHB, the ENEA, the KRISS, the NIM, the POLATOM, the SMU and the BIPM during the comparison CCRI(II)-K2.Fe-55.2019. The BIPM developed the python code TDCRPy to estimating detection efficiency of TDCR measurement. The aim of this study is to test the BIPM code against the Fe-55.exe code.\\
+The code Fe-55fom was developed in Fortran by Philippe Cassette at the LNE-LNHB to calculate the efficiency of a TDCR system when standard solutions of $^{55}$Fe are measured. It implement a K,L,M shells recombination model. It was used by the LNE-LNHB, the ENEA, the KRISS, the NIM, the POLATOM, the SMU and the BIPM during the comparison CCRI(II)-K2.Fe-55.2019. The BIPM developed the python code TDCRPy to estimating detection efficiency of TDCR measurement. The aim of this study is to test the BIPM code against the Fe-55fom code.\\
 
 
 \section{Measurement data and results}
@@ -40,11 +40,11 @@ The code Fe-55.exe was developed in Fortran by Philippe Cassette at the LNE-LNHB
 \caption{Measurement data and results - $kB = 0.008$ cm $\cdot$ MeV$^{-1}$}
 \label{Table1} \\ 
 \hline
-\textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\ 
+\textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55fom} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\ 
 \endfirsthead
 \multicolumn{6}{c}{... Continuation of Table 1.}\\ 
 \hline
- \textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\   \hline 
+ \textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55fom} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\   \hline 
 \endhead
 \hline
  1 & 800    & 800     & 800    & 1000    &  700   &  83.72 \% &  84.20 \% &  +0.48 \% \\
@@ -66,11 +66,11 @@ The code Fe-55.exe was developed in Fortran by Philippe Cassette at the LNE-LNHB
 \caption{Measurement data and results - $kB = 0.01$ cm $\cdot$ MeV$^{-1}$}
 \label{Table1} \\ 
 \hline
-\textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\ 
+\textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55fom} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\ 
 \endfirsthead
 \multicolumn{6}{c}{... Continuation of Table 1.}\\ 
 \hline
- \textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\   \hline 
+ \textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55fom} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\   \hline 
 \endhead
 \hline
  1 & 800    & 800     & 800    & 1000    &  700   & 83.67 \% & 84.32 \% & +1.00 \% \\
@@ -90,11 +90,11 @@ The code Fe-55.exe was developed in Fortran by Philippe Cassette at the LNE-LNHB
 \caption{Measurement data and results - $kB = 0.012$ cm $\cdot$ MeV$^{-1}$}
 \label{Table1} \\ 
 \hline
-\textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\ 
+\textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55fom} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\ 
 \endfirsthead
 \multicolumn{6}{c}{... Continuation of Table 1.}\\ 
 \hline
- \textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55.exe} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\   \hline 
+ \textbf{Source} & \textbf{$R_{AB}$ /s} & \textbf{$R_{BC}$ /s} & \textbf{$R_{AC}$ /s} & \textbf{$R_{D}$ /s} & \textbf{$R_{T}$ /s} & \textbf{$\epsilon_{D}$ Fe-55fom} & \textbf{$\epsilon_{D}$ TDCRPy} & error \\   \hline 
 \endhead
 \hline
  1 & 800    & 800     & 800    & 1000    &  700   &  83.64 \% &  84.30\% & +0.66 \% \\
@@ -109,6 +109,6 @@ The code Fe-55.exe was developed in Fortran by Philippe Cassette at the LNE-LNHB
 \endgroup
 
 The comparison CCRI(II)-K2.Fe-55.2019 shows that results from laboratories are spread by $\pm$ 1\% around the KCRV and that laboratories report relative standard uncertainties dominated by their efficiency model of values: $\{0.62, 0.70, 0.81, 0.92, 0.41, 0.59, 0.45, 0.63, 0.39, 0.50, 0.46, 1.57\}$\%.
-These fluctuations are in agreement with the deviations observed between TDCRPy and Fe-55.exe estimation that are comprises between -0.03\% to -0.55\% in the efficiency range $[30-60]$\% that can be encountered in TDCR systems.
+These fluctuations are in agreement with the deviations observed between TDCRPy and Fe-55fom estimations that are comprises between -0.03\% to -0.55\% in the efficiency range $[30-60]$\% that can be encountered in TDCR systems.
 
 \end{document}
