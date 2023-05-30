@@ -18,17 +18,17 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10000
-Rad=["Fe-55"]            # list of radionuclides (Na-24)
+Rad=["H-3"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 # kB =[1.0e-5]
 kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
 # L=[1e-1]
 # L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
-# L = np.logspace(-3,1,200) # Free paramete in keV-1 (for Co-60)
-# L = np.logspace(-3,-1,10) # Free paramete in keV-1 (for Am-241)
-# L = np.logspace(-3,1,30) # Free paramete in keV-1 (for Sr-90)
-L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3, Fe-55)
+L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Co-60)
+# L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Am-241)
+# L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Sr-90)
+# L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3, Fe-55)
 
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
@@ -430,13 +430,14 @@ for kB_i in kB: # Loop on the kB
         std_efficiency_S.append(np.std(efficiency_S)/np.sqrt(N))
         TDCR_calcul.append(mean_efficiency_T[-1]/mean_efficiency_D[-1])
         
-        print("\t TDCR calculation")
+        print("\t TDCR calculation _ kB = ", kB_i, "cm/keV")
         if len(L) > 1: print("\t\t Progress = ", round(100*(L.tolist().index(L_i)+1)/len(L), 1), " %")
+        print("radionuclide(s): ", Rad)
         # tl.toc()
-        print("\t\t Free parameter : ", L_i, " keV-1")
-        print("\t\t Efficiency of Triple coincident events : ", round(100*mean_efficiency_T[-1],3), "+/-", round(100*std_efficiency_T[-1],3), " %")
-        print("\t\t Efficiency of Double coincident events : ", round(100*mean_efficiency_D[-1],3), "+/-", round(100*std_efficiency_D[-1],3), " %")
-        print("\t\t Efficiency of Single events : ", round(100*mean_efficiency_S[-1],3), "+/-", round(100*std_efficiency_S[-1],3), " %")
+        print("\t\t Free parameter = ", L_i, " keV-1")
+        print("\t\t Efficiency of Triple coincident events = ", round(100*mean_efficiency_T[-1],3), "+/-", round(100*std_efficiency_T[-1],3), " %")
+        print("\t\t Efficiency of Double coincident events = ", round(100*mean_efficiency_D[-1],3), "+/-", round(100*std_efficiency_D[-1],3), " %")
+        print("\t\t Efficiency of Single events = ", round(100*mean_efficiency_S[-1],3), "+/-", round(100*std_efficiency_S[-1],3), " %")
     #    x = np.arange(np.mean(efficiency_T),1.001,0.001)
     #    plt.figure("efficiency distribution")
     #    plt.clf()

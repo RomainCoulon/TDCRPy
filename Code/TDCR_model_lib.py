@@ -547,9 +547,16 @@ plt.plot(x,s3,label='kB=0.014cm/MeV')
 plt.xscale('log')
 #plt.yscale('log')
 plt.legend(fontsize=12,loc='best')
+<<<<<<< HEAD
 plt.xlabel('E déposée/keV')
 plt.ylabel("énergie d'extinction/E déposée")
 plt.savefig("Quenching/alpha 5k-8000k E_Q sur E.png")
+=======
+plt.xlabel('E de particule/keV')
+plt.ylabel("énergie d'extinction/E")
+plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
+
+>>>>>>> 0633af3c397ac3bb587ad558b9bf9731e687ee92
 #'''
 #============================================================================================
 

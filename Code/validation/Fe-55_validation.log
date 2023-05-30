@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7350 64-bit) (preloaded format=pdflatex 2020.6.25)  25 MAY 2023 17:19
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7350 64-bit) (preloaded format=pdflatex 2020.6.25)  26 MAY 2023 10:30
 entering extended mode
 **./Fe-55_validation.tex
 (Fe-55_validation.tex
@@ -557,7 +557,7 @@ Here is how much of TeX's memory you used:
  26206 multiletter control sequences out of 15000+200000
  543203 words of font info for 52 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 36i,8n,46p,565b,715s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 36i,8n,46p,563b,715s stack positions out of 5000i,500n,10000p,200000b,50000s
  <C:\Users\romain.coulon\AppData\Local\MiKTeX\2.9\fonts/pk/ljfour/jknappen/ec/dpi600\ecbx1000.pk> <C:\Users\romain.cou
 lon\AppData\Local\MiKTeX\2.9\fonts/pk/ljfour/jknappen/ec/dpi600\ecti1200.pk> <C:\Users\romain.coulon\AppData\Local\MiKTe
 X\2.9\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm1200.pk> <C:\Users\romain.coulon\AppData\Local\MiKTeX\2.9\fonts/pk/ljfour/j
@@ -569,9 +569,9 @@ lic/amsfonts/cm/cmr10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfon
  2.9/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Pr
 ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfont
 s/cm/cmsy7.pfb>
-Output written on Fe-55_validation.pdf (2 pages, 148631 bytes).
+Output written on Fe-55_validation.pdf (2 pages, 148036 bytes).
 PDF statistics:
- 277 PDF objects out of 1000 (max. 8388607)
+ 275 PDF objects out of 1000 (max. 8388607)
  9 named destinations out of 1000 (max. 500000)
  25 words of extra memory for PDF output out of 10000 (max. 10000000)
 
