@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10000
-Rad=["H-3"]            # list of radionuclides (Na-24)
+Rad=["S-35"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 # kB =[1.0e-5]
@@ -33,7 +33,7 @@ L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Co-60)
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 Record = True                  # to record the efficiency curves
-Display = False                # to display calculation results on the console
+Display = False               # to display calculation results on the console
 # Display = False                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3

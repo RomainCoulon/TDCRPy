@@ -449,6 +449,21 @@ def readBetaShape(rad,mode,trans):
     dNdx /= sum(np.asarray(dNdx)) # normalization
     return e, dNdx
 
+def readTDCR17spectra(rad):
+    file = open("decayData/spectra/spectrumTDCR17_"+rad+".dat")
+    data = file.read()
+    file.close()
+    data = data.split("\n")
+    e = []; r = []
+    for i in data:
+        if "keV" not in i:
+            a = i.split("  ")
+            if len(a)>1:
+                e.append(float(a[1])*1e-3)
+                r.append(float(a[2]))
+    return e, r
+
+
 # tic()
 # readBetaShape("Co-60", "beta-", "tot")
 # toc() # 0.016 s
@@ -456,15 +471,18 @@ def readBetaShape(rad,mode,trans):
 #=====================================================================================
 
 ## Display beta spectra
-# out = readBetaShape("H-3", "beta-", "tot")
-# print(sum(out[1]))
+# rplot = "S-35"
+# out = readBetaShape(rplot, "beta-", "tot"); print(sum(out[1]))
+# out_t = readTDCR17spectra(rplot); print(sum(out_t[1])) # TDCR17 spectra
 # plt.figure("beta spectrum")
-# plt.plot(out[0],out[1],label='Beta spectrum',ls='-',color='red',lw=3)
+# plt.clf()
+# plt.plot(out[0],out[1]/(out[0][1]-out[0][0]),label='Beta spectrum - BetaShape',ls='-',color='red',lw=3)
+# plt.plot(out_t[0],np.asarray(out_t[1])/(out_t[0][1]-out_t[0][0]),label='Beta spectrum - TDCR17',ls='-',color='blue',lw=3)
 # plt.xscale('linear')
 # plt.legend(fontsize=12,loc='best')
 # plt.xlabel(r'$E$ /keV', fontsize=12)
 # plt.ylabel(r'd$N$/d$E$ /keV$^{-1}$',fontsize=12)
-# plt.savefig("BetaSpectrum.png")
+# plt.savefig("decayData/spectra/BetaSpectrum_"+rplot+".png")
 
 #=======================================================================================
 
@@ -531,25 +549,25 @@ def E_quench_a(e,kB):
 #========================= Tracer les courbes avec kB différents ======================
 
 #'''
-s1 = []
-s2 = []
-s3 = []
-x = np.linspace(1e2,1e4,1000) 
+# s1 = []
+# s2 = []
+# s3 = []
+# x = np.linspace(1e2,1e4,1000) 
 
-for i in x:
-    s1.append(E_quench_e(i,kB=7e-3)/i)
-    s2.append(E_quench_e(i,kB=1e-2)/i)
-    s3.append(E_quench_e(i,kB=1.4e-2)/i)
+# for i in x:
+#     s1.append(E_quench_e(i,kB=7e-3)/i)
+#     s2.append(E_quench_e(i,kB=1e-2)/i)
+#     s3.append(E_quench_e(i,kB=1.4e-2)/i)
 
-plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
-plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
-plt.plot(x,s3,label='kB=0.014cm/MeV')
-plt.xscale('log')
-#plt.yscale('log')
-plt.legend(fontsize=12,loc='best')
-plt.xlabel('E de particule/keV')
-plt.ylabel("énergie d'extinction/E")
-plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
+# plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
+# plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
+# plt.plot(x,s3,label='kB=0.014cm/MeV')
+# plt.xscale('log')
+# #plt.yscale('log')
+# plt.legend(fontsize=12,loc='best')
+# plt.xlabel('E de particule/keV')
+# plt.ylabel("énergie d'extinction/E")
+# plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
 
 #'''
 #============================================================================================
