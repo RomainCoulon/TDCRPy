@@ -145,7 +145,7 @@ def plotEffProfilkB(Rad,SDT): # plot the fitted efficiecny curves for a range of
 
 
 ## PLOT EFFICIENCY CURVES FOR SEVERAL KB VALUES
-# plotEffProfilkB("H-3","D")
+# plotEffProfilkB("S-35","D")
 
 ## PLOT EFFICIENCY CURVE A GIVEN KB VALUE
 # plotEffProfil("Fe-55", 1.05E-5)
@@ -170,8 +170,9 @@ print(XX)
 print(T/D)
 # D = AB+BC+AC-2*T
 TDCR = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+TDCR.reverse()
 for t in TDCR:
-    out = effTDCR(t, "H-3", 1.2E-5) # H-3
+    out = effTDCR(t, "S-35", 1.2E-5) # H-3
     eff = out[1]
     u_eff = 0
     A = D/eff
