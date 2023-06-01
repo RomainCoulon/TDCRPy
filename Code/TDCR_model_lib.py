@@ -207,7 +207,7 @@ def readPenNuc(rad):
                  levelEnergy_i.append(float(d[1]))#levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
                  listTran.append(int(d[3]))           # Number of transitions that depopulate this level
                  levelNumber.append(int(d[6]))        # Level number
-                 transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []; levelEnergy_i = []
+                 transitionType_i = []; next_level_i = []; levelEnergy_i = [];#prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = [];
                   
               """
               LOOP IN NTRANS (Transitions depopulating this level)
