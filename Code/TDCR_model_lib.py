@@ -957,7 +957,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = energy_2[index_fin]
     
     else:                                            # le cas où le vecteur de proba est vide 
-        print("pas de transition de rayon X ni d'électron Auger")
+        #print("pas de transition de rayon X ni d'électron Auger")
         type_fin = 'NON'
         energie_fin = 0
     return type_fin,energie_fin
