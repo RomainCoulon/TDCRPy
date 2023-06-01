@@ -200,26 +200,35 @@ def readPenNuc(rad):
           if d[0] == "DAU" and d[1] != Daughter_vec[dd]:
                 daughterFlag = False
           if daughterFlag:
-              if d[0] == "LED":
+              #if d[0] == "LED":
+              if d[0] == "LED" or d[0] == "GA" or d[0] == "EK" or d[0] == "EL1" or d[0] == "EL2" or d[0] == "EL3" or d[0] == "EM" or d[0] == "EN":
+                 if d[1] == '  ' or d[1] == '   ': d[1] = 0
+                 if d[2] == '  ': d[2] = 0
+                 if d[4] == '  ': d[4] = 0
                 # record transition details of the previous level
                  transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i);levelEnergy.append(levelEnergy_i)
             #    if int(d[6]) in LevelDaughter :  # Read the information on the possible energy levels after the emission of the alpha particle 
                  levelEnergy_i.append(float(d[1]))#levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
                  listTran.append(int(d[3]))           # Number of transitions that depopulate this level
                  levelNumber.append(int(d[6]))        # Level number
+
+                 transitionType_i.append(d[0])                                          # Read the type of transtion
+                 prob_i.append(float(d[1])); u_prob_i.append(float(d[2]))                 # Read the emission probability of the transition
+                 e_trans_i.append(float(d[3])); u_e_trans_i.append(float(d[4]))           # Read the energy of the transition
+                 next_level_i.append(int(d[5]))                                         # Read the level fed by this transition
                  transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []; levelEnergy_i = []
                   
               """
               LOOP IN NTRANS (Transitions depopulating this level)
               """
-              if d[0] == "GA" or d[0] == "EK" or d[0] == "EL1" or d[0] == "EL2" or d[0] == "EL3" or d[0] == "EM" or d[0] == "EN":
-                  if d[1] == '  ' or d[1] == '   ': d[1] = 0
-                  if d[2] == '  ': d[2] = 0
-                  if d[4] == '  ': d[4] = 0
-                  transitionType_i.append(d[0])                                          # Read the type of transtion
-                  prob_i.append(float(d[1])); u_prob_i.append(float(d[2]))                 # Read the emission probability of the transition
-                  e_trans_i.append(float(d[3])); u_e_trans_i.append(float(d[4]))           # Read the energy of the transition
-                  next_level_i.append(int(d[5]))                                         # Read the level fed by this transition
+              #if d[0] == "GA" or d[0] == "EK" or d[0] == "EL1" or d[0] == "EL2" or d[0] == "EL3" or d[0] == "EM" or d[0] == "EN":
+                  #if d[1] == '  ' or d[1] == '   ': d[1] = 0
+                  #if d[2] == '  ': d[2] = 0
+                  #if d[4] == '  ': d[4] = 0
+                  #transitionType_i.append(d[0])                                          # Read the type of transtion
+                  #prob_i.append(float(d[1])); u_prob_i.append(float(d[2]))                 # Read the emission probability of the transition
+                  #e_trans_i.append(float(d[3])); u_e_trans_i.append(float(d[4]))           # Read the energy of the transition
+                  #next_level_i.append(int(d[5]))                                         # Read the level fed by this transition
             
         transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i);levelEnergy.append(levelEnergy_i)
     
