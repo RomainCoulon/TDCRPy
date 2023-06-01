@@ -193,7 +193,7 @@ def readPenNuc(rad):
         """
         levelEnergy = []; fromBranch = []; lineL=[]; listTran = []; levelNumber = []
         transitionType = []; prob = []; u_prob = []; e_trans = []; u_e_trans = []; next_level = []
-        transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []
+        transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []; levelEnergy_i = []
         for d in decayData:
           if d[0] == "DAU" and d[1] == Daughter_vec[dd]:
                 daughterFlag = True
@@ -202,12 +202,12 @@ def readPenNuc(rad):
           if daughterFlag:
               if d[0] == "LED":
                 # record transition details of the previous level
-                transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
+                transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i);
             #    if int(d[6]) in LevelDaughter :  # Read the information on the possible energy levels after the emission of the alpha particle 
-                levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
+                levelEnergy_i.append(float(d[1]))#levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
                 listTran.append(int(d[3]))           # Number of transitions that depopulate this level
                 levelNumber.append(int(d[6]))        # Level number
-                transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []
+                transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []; levelEnergy_i = []
                   
               """
               LOOP IN NTRANS (Transitions depopulating this level)
@@ -221,7 +221,7 @@ def readPenNuc(rad):
                   e_trans_i.append(float(d[3])); u_e_trans_i.append(float(d[4]))           # Read the energy of the transition
                   next_level_i.append(int(d[5]))                                         # Read the level fed by this transition
                 
-        transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i)
+        transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i);levelEnergy.append(levelEnergy_i)
     
         out.append([particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value_vec[dd], Daughter_vec[dd], Pdaughter_vec[dd]])
     return out
@@ -230,6 +230,14 @@ print(len(out),out)
 # tic()
 # readPenNuc("Co-60")
 # toc() # 0.016 s
+
+
+
+
+
+
+
+
 
 #===============================================================================================================
 
