@@ -18,17 +18,31 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10000
+<<<<<<< HEAD
 Rad=["C-11"]            # list of radionuclides (Na-24)
+=======
+<<<<<<< HEAD
+Rad=["Sr-89"]            # list of radionuclides (Na-24)
+=======
+Rad=["Be-7"]            # list of radionuclides (Na-24)
+>>>>>>> 419e1c69cfbda298e7934bae07a846069d4dcfaf
+>>>>>>> 21eae492aa01ec945a869888f3780c379b2e768c
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 # kB =[1.0e-5]
 kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
+<<<<<<< HEAD
+# L=[1e-1]
+L = np.logspace(-3,1,50) # Free paramete in keV-1
+
+=======
 L=[1e-1]
 # L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
 #L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Co-60)
 # L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Am-241)
 # L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Sr-90)
 # L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3, Fe-55)
+>>>>>>> 419e1c69cfbda298e7934bae07a846069d4dcfaf
 
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
@@ -301,42 +315,45 @@ for kB_i in kB: # Loop on the kB
                for i_part, part in enumerate(particle_vec):
                    if type(part) == list: # indice de la lacune dans le vecteur particle
                        tf,ef = tl.relaxation_atom(part[1],Rad[index_rad],part[0])   # tirage de la transition atomique
-                       if tf[0] == 'X':                               # cas des rayons XK
-                           if tf == 'XKA':                                          # cas des rayons XK_alpha
-                               particle_vec.append(["Atom_L", part[1]])             # ajout d'un lacune dans la couche L
-                               energy_vec.append(0)                                 # initialisation du vecteur energie
-                               particle_vec[i_part]='xKA'                           # mise à jour du vecteur particle avec le rayon x
-                           elif tf == 'XKB':                                        # cas des rayons XK_beta
-                               particle_vec.append(["Atom_M", part[1]])             # ajout d'un lacune dans la couche M
-                               energy_vec.append(0)                                 # initialisation du vecteur energie
-                               particle_vec[i_part]='xKB'                           # mise à jour du vecteur particle avec le rayon x
-                           elif tf == 'XL':
-                               particle_vec[i_part]='xL'                           # mise à jour du vecteur particle avec le rayon x
-                               # particle_vec.append(["Atom_M", part[1]])             # ajout d'un lacune dans la couche M
-                               # energy_vec.append(0)                                 # initialisation du vecteur energie
-                           else:
-                               print("undetermined x rays type")
-                           
-                           energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie du rayon x
-                           e_sum += ef                                              # mise à jour du bilan energétique
-                       if tf[0] == 'A':
-                           if tf == 'Auger K':
-                               particle_vec.append(["Atom_L", part[1]])             # ajout de deux lacunes dans la couche L
-                               particle_vec.append(["Atom_L", part[1]])
-                               energy_vec.append(0)                                 # initialisation du vecteur energie
-                               energy_vec.append(0)
-                               particle_vec[i_part]='Auger K'                          # mise à jour du vecteur particle avec l'électron Auger'
-                           elif tf == 'Auger L':
-                               particle_vec[i_part]='Auger L'                          # mise à jour du vecteur particle avec l'électron Auger'
-                               # particle_vec.append(["Atom_M", part[1]])             # ajout de deux lacunes dans la couche M
-                               # particle_vec.append(["Atom_M", part[1]])
-                               # energy_vec.append(0)                                 # initialisation du vecteur energie
-                               # energy_vec.append(0)         
-                           else:
-                               print("undetermined Auger type")
-                           energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie de l'électron Auger
-                           e_sum += ef                                              # mise à jour du bilan energétique
-
+                       if type(tf) != int:
+                           if tf[0] == 'X':                               # cas des rayons XK
+                               if tf == 'XKA':                                          # cas des rayons XK_alpha
+                                   particle_vec.append(["Atom_L", part[1]])             # ajout d'un lacune dans la couche L
+                                   energy_vec.append(0)                                 # initialisation du vecteur energie
+                                   particle_vec[i_part]='xKA'                           # mise à jour du vecteur particle avec le rayon x
+                               elif tf == 'XKB':                                        # cas des rayons XK_beta
+                                   particle_vec.append(["Atom_M", part[1]])             # ajout d'un lacune dans la couche M
+                                   energy_vec.append(0)                                 # initialisation du vecteur energie
+                                   particle_vec[i_part]='xKB'                           # mise à jour du vecteur particle avec le rayon x
+                               elif tf == 'XL':
+                                   particle_vec[i_part]='xL'                           # mise à jour du vecteur particle avec le rayon x
+                                   # particle_vec.append(["Atom_M", part[1]])             # ajout d'un lacune dans la couche M
+                                   # energy_vec.append(0)                                 # initialisation du vecteur energie
+                               else:
+                                   print("undetermined x rays type")
+                               
+                               energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie du rayon x
+                               e_sum += ef                                              # mise à jour du bilan energétique
+                           if tf[0] == 'A':
+                               if tf == 'Auger K':
+                                   particle_vec.append(["Atom_L", part[1]])             # ajout de deux lacunes dans la couche L
+                                   particle_vec.append(["Atom_L", part[1]])
+                                   energy_vec.append(0)                                 # initialisation du vecteur energie
+                                   energy_vec.append(0)
+                                   particle_vec[i_part]='Auger K'                          # mise à jour du vecteur particle avec l'électron Auger'
+                               elif tf == 'Auger L':
+                                   particle_vec[i_part]='Auger L'                          # mise à jour du vecteur particle avec l'électron Auger'
+                                   # particle_vec.append(["Atom_M", part[1]])             # ajout de deux lacunes dans la couche M
+                                   # particle_vec.append(["Atom_M", part[1]])
+                                   # energy_vec.append(0)                                 # initialisation du vecteur energie
+                                   # energy_vec.append(0)         
+                               else:
+                                   print("undetermined Auger type")
+                               energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie de l'électron Auger
+                               e_sum += ef                                              # mise à jour du bilan energétique
+                       else:
+                           particle_vec[i_part]="void"
+    
            if Display: print("\t\t particles : ", particle_vec)            
            if Display: print("\t\t energy : ", energy_vec, "keV")
            # if Display: print("\t\t remaing energy : ", round(Q_value[index_rad][iDaughter]-e_sum,3), " keV")

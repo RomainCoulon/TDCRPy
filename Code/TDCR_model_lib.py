@@ -557,16 +557,29 @@ def E_quench_a(e,kB):
 
 '''
 
-s1 = []
-s2 = []
-s3 = []
-x = np.linspace(5,8000,4000) 
+# s1 = []
+# s2 = []
+# s3 = []
+# x = np.linspace(5,8000,4000) 
 
-for i in x:
-    s1.append(E_quench_a(i,kB=7e-6)/i)
-    s2.append(E_quench_a(i,kB=1e-5)/i)
-    s3.append(E_quench_a(i,kB=1.4e-5)/i)
+# for i in x:
+#     s1.append(E_quench_a(i,kB=7e-6)/i)
+#     s2.append(E_quench_a(i,kB=1e-5)/i)
+#     s3.append(E_quench_a(i,kB=1.4e-5)/i)
 
+<<<<<<< HEAD
+# plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
+# plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
+# plt.plot(x,s3,label='kB=0.014cm/MeV')
+# plt.xscale('log')
+# #plt.yscale('log')
+# plt.legend(fontsize=12,loc='best')
+# plt.xlabel('E de particule/keV')
+# plt.ylabel("énergie d'extinction/E")
+# plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
+
+#'''
+=======
 #plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
 #plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
 #plt.plot(x,s3,label='kB=0.014cm/MeV')
@@ -580,6 +593,7 @@ plt.xlabel("E déposée/keV")
 plt.ylabel("E'/E déposée")
 plt.savefig("Quenching/log alpha 1k-8M E' sur E.png")
 '''
+>>>>>>> 419e1c69cfbda298e7934bae07a846069d4dcfaf
 #============================================================================================
 
 #============================================================================================
@@ -958,10 +972,16 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         if len(probability)>1:                    # le cas où la taille du vecteur de proba supérieur à 1
             prob_somme = np.sum(prob_2)      # calculer la somme de proba
             prob_2 /= prob_somme             # normaliser la proba
-        prob_2 = np.array(prob_2)
-        index_fin = sampling(prob_2)
-        type_fin = type_2[index_fin]
-        energie_fin = energy_2[index_fin]
+        
+        if prob_2 != []:
+            prob_2 = np.array(prob_2)   # convert to array
+            index_fin = sampling(prob_2)        # sample in probability of transition
+            type_fin = type_2[index_fin]        # type of transition     
+            energie_fin = energy_2[index_fin]   # energy of the transition
+        else:
+            # print("pas de transition de rayon X ni d'électron Auger")
+            type_fin = 0
+            energie_fin = 'NON'            
     
     else:                                            # le cas où le vecteur de proba est vide 
         #print("pas de transition de rayon X ni d'électron Auger")
@@ -969,5 +989,5 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
-#tf,ef = relaxation_atom('BI213','At-217')
-#print(tf,ef)
+# tf,ef = relaxation_atom('Y89', 'Sr-89', 'Atom_L')
+# print(tf,ef)
