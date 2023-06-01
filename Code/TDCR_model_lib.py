@@ -175,6 +175,7 @@ def readPenNuc(rad):
                     if d[0] == "BEP": particle.append("beta+")
                     if d[0] == "BEM": particle.append("beta")
                     if d[0] == "CK": particle.append("Atom_K")
+                    if d[0] == "CL": particle.append("Atom_L")
                     if d[0] == "CL1": particle.append("Atom_L1")
                     if d[0] == "CL2": particle.append("Atom_L2")
                     if d[0] == "CM": particle.append("Atom_M")
@@ -224,8 +225,8 @@ def readPenNuc(rad):
     
         out.append([particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value_vec[dd], Daughter_vec[dd], Pdaughter_vec[dd]])
     return out
-#out = readPenNuc('Am-242')
-#print(len(out),out)
+out = readPenNuc('Am-242')
+print(len(out),out)
 # tic()
 # readPenNuc("Co-60")
 # toc() # 0.016 s
@@ -567,7 +568,6 @@ def E_quench_a(e,kB):
 #     s2.append(E_quench_a(i,kB=1e-5)/i)
 #     s3.append(E_quench_a(i,kB=1.4e-5)/i)
 
-<<<<<<< HEAD
 # plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
 # plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
 # plt.plot(x,s3,label='kB=0.014cm/MeV')
@@ -579,21 +579,6 @@ def E_quench_a(e,kB):
 # plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
 
 #'''
-=======
-#plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
-#plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
-#plt.plot(x,s3,label='kB=0.014cm/MeV')
-plt.plot(x,s1,label='kB=7e-6cm/keV',color='green',lw=2)
-plt.plot(x,s2,label='kB=1e-5cm/keV',ls=':',color='red',lw=3)
-plt.plot(x,s3,label='kB=1.4e-5cm/keV')
-plt.xscale('log')
-#plt.yscale('log')
-plt.legend(fontsize=12,loc='best')
-plt.xlabel("E déposée/keV")
-plt.ylabel("E'/E déposée")
-plt.savefig("Quenching/log alpha 1k-8M E' sur E.png")
-'''
->>>>>>> 419e1c69cfbda298e7934bae07a846069d4dcfaf
 #============================================================================================
 
 #============================================================================================
