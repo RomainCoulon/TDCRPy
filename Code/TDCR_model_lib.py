@@ -115,6 +115,7 @@ def readPenNuc(rad):
       if "Q " in decayData[-1]:      decayData[-1] = decayData[-1].replace("Q ", "Q; ")     # total energy of the branch, uncertainty 
       if "ALP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("ALP ", "ALP; ") # type of the disintegration = alpha
       if "CK " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CK ", "CK; ") # type of the disintegration = Electron Capture K shell
+      if "CL " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL ", "CL; ") # type of the disintegration = Electron Capture L shell 1
       if "CL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL1 ", "CL1; ") # type of the disintegration = Electron Capture L shell 1
       if "CL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL2 ", "CL2; ") # type of the disintegration = Electron Capture L shell 2
       if "CM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CM ", "CM; ") # type of the disintegration = Electron Capture M shell
@@ -223,7 +224,8 @@ def readPenNuc(rad):
     
         out.append([particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value_vec[dd], Daughter_vec[dd], Pdaughter_vec[dd]])
     return out
-
+#out = readPenNuc('Am-242')
+#print(len(out),out)
 # tic()
 # readPenNuc("Co-60")
 # toc() # 0.016 s
@@ -447,7 +449,12 @@ def readBetaShape(rad,mode,trans):
         e.append(float(data[j][0])) # convert to float
         dNdx.append(float(data[j][1])) # convert to float
     dNdx /= sum(np.asarray(dNdx)) # normalization
+    dNdx = list(dNdx)
     return e, dNdx
+
+#print(readBetaShape('C-11','beta+','trans0'))
+
+
 
 def readTDCR17spectra(rad):
     file = open("decayData/spectra/spectrumTDCR17_"+rad+".dat")

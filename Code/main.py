@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10000
-Rad=["Be-7"]            # list of radionuclides (Na-24)
+Rad=["C-11"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 # kB =[1.0e-5]
@@ -32,9 +32,9 @@ L=[1e-1]
 
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
-Record = True                  # to record the efficiency curves
+Record = False                  # to record the efficiency curves
 Display = False               # to display calculation results on the console
-# Display = False                # to display calculation results on the console
+#Display = True                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
 nE = 10            #number of bin to discretize the energy vector for scintillation quenching calculation
@@ -100,6 +100,7 @@ for rad_i in Rad:
 """
 Read BetaShape
 """
+#print('103',particle)
 e_beta = []
 p_beta = []
 for i, rad_i in enumerate(Rad): # radionuclide loop
@@ -123,8 +124,10 @@ for i, rad_i in enumerate(Rad): # radionuclide loop
          else:
              e_beta_1.append("")
              p_beta_1.append("")   
+        #print('1:',p_beta_1)
         e_beta_0.append(e_beta_1)
         p_beta_0.append(p_beta_1)
+        #print('0:',e_beta_0,p_beta_0)
     e_beta.append(e_beta_0)
     p_beta.append(p_beta_0)
 
@@ -153,6 +156,7 @@ for kB_i in kB: # Loop on the kB
         
            ## Sampling of the radionuclide
            index_rad = tl.sampling(pmf_1)
+           #print(index_rad)
            rad_i = Rad[index_rad]
            if Display: print("\n Sampled radionuclide = ", rad_i, "- L = ", L_i, ' keV-1 - kB = ', kB_i, ' cm/keV')
         
@@ -161,6 +165,7 @@ for kB_i in kB: # Loop on the kB
            """
            ## sampling of the daughter
            iDaughter=tl.sampling(np.asarray(Pdaughter[index_rad])/sum(np.asarray(Pdaughter[index_rad])))
+           #print('168 iDaughter',iDaughter)
            if Display: print("\t Sampled daughter:")
            if Display: print("\t\t Daughter = ", DaughterVec[index_rad][iDaughter])           
            
@@ -168,6 +173,7 @@ for kB_i in kB: # Loop on the kB
            multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))
            if p_branch[index_rad][iDaughter] != []:
                index_branch = tl.sampling(p_branch[index_rad][iDaughter])
+               print('176 index_bran',index_branch)
                particle_branch = particle[index_rad][iDaughter][index_branch]            # sampled particle emitted by the mother
                energy_branch =  e_branch[index_rad][iDaughter][index_branch]             # energy of the particle emitted by the mother
                probability_branch = p_branch[index_rad][iDaughter][index_branch]         # probability of the sampled branch
@@ -344,10 +350,12 @@ for kB_i in kB: # Loop on the kB
 #                     # particle_vec[ip] = "electron"
 #                     # energy_vec[ip] = Eout
 #                     #
-    
+
            """
            III. INTERACTION RAYONNEMENT/MATIERE + SPECTRES D'EMISSION
            """
+           #print(p_beta[0][0][-2])
+           #print(1+index_branch,iDaughter)
            for i, p in enumerate(particle_vec):
              if p == "beta":
                  n_branch = len(e_branch[index_rad][iDaughter])
@@ -356,9 +364,9 @@ for kB_i in kB: # Loop on the kB
                  energy_vec[i] = e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
              
              if p == "beta+":
-                 index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
+                 index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][index_branch]) # tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
                  particle_vec[i] = "positron"
-                 energy_vec[i] = e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
+                 energy_vec[i] = e_beta[index_rad][iDaughter][index_branch][index_beta_energy] #e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
                  particle_vec.append("gamma")
                  particle_vec.append("gamma")
                  energy_vec.append(511)
