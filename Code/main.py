@@ -17,37 +17,20 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
-N= 10000
-<<<<<<< HEAD
-Rad=["C-11"]            # list of radionuclides (Na-24)
-=======
-<<<<<<< HEAD
-Rad=["Sr-89"]            # list of radionuclides (Na-24)
-=======
-Rad=["Be-7"]            # list of radionuclides (Na-24)
->>>>>>> 419e1c69cfbda298e7934bae07a846069d4dcfaf
->>>>>>> 21eae492aa01ec945a869888f3780c379b2e768c
+N= 1
+Rad=["Am-242"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
-# kB =[1.0e-5]
-kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
-<<<<<<< HEAD
-# L=[1e-1]
-L = np.logspace(-3,1,50) # Free paramete in keV-1
-
-=======
+kB =[1.0e-5]
+# kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
 L=[1e-1]
-# L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
-#L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Co-60)
-# L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Am-241)
-# L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Sr-90)
-# L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3, Fe-55)
->>>>>>> 419e1c69cfbda298e7934bae07a846069d4dcfaf
+# L = np.logspace(-3,1,50) # Free paramete in keV-1
+
 
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 Record = False                  # to record the efficiency curves
-Display = False               # to display calculation results on the console
+Display = True               # to display calculation results on the console
 #Display = True                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3

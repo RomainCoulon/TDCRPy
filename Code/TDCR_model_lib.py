@@ -130,6 +130,7 @@ def readPenNuc(rad):
       if "EL3 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL3 ", "EL3; ") # type transition: internal conversion -- electron L3
       if "EM " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EM ", "EM; ")   # type transition: internal conversion -- electron M
       if "EN " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EN ", "EN; ")   # type transition: internal conversion -- electron N
+      if "COM" in decayData[-1]:     decayData[-1] = decayData[-1].replace("COM ", "COM; ")   # commentaire
       decayData[-1]=decayData[-1].split(";")
       if "\r\n" in decayData[-1][-1]:  decayData[-1][-1] = decayData[-1][-1].replace("\r\n", " ")
     
@@ -162,6 +163,7 @@ def readPenNuc(rad):
         # Probablity vector of the decay branch
         particle=[]; LevelDaughter = []; p_branch = []; u_p_branch = []; e_branch = []; u_e_branch = []
         daughterFlag = True
+        countBranch = 0
         for d in decayData:
             if d[0] == "DAU" and d[1] == Daughter_vec[dd]:
                 daughterFlag = True
@@ -169,22 +171,39 @@ def readPenNuc(rad):
                 daughterFlag = False
             
             if daughterFlag:
+                # particle_i = []; p_branch_i=[]; u_p_branch_i=[];  e_branch_i=[];   u_e_branch_i=[];  LevelDaughter_i=[]
+                if d[0] =="COM":
+                    if "Branch" in d[1] or "Level" in d[1]:
+                        print(d[1])
+                        if countBranch % 2 == 1:
+                            p_branch.append(p_branch_i); u_p_branch.append(u_p_branch_i); # Branching ratio of the decay branch
+                            e_branch.append(e_branch_i); u_e_branch.append(u_e_branch_i); # Energy of the decay branch (kinetic energy of the particle)
+                            LevelDaughter.append(LevelDaughter_i); particle.append(particle_i)
+                            
+                            particle_i = []; p_branch_i=[]; u_p_branch_i=[];  e_branch_i=[];   u_e_branch_i=[];  LevelDaughter_i=[]
+                        else:
+                            particle_i = []; p_branch_i=[]; u_p_branch_i=[];  e_branch_i=[];   u_e_branch_i=[];  LevelDaughter_i=[]
+                    
+                    
+                        countBranch += 1    
+                    # p_branch=
+                
                 
                 if d[0] == "ALP" or d[0] == "BEM" or d[0] == "BEP" or d[0] == "CK" or d[0] == "CL" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
-                    if d[0] == "ALP": particle.append("alpha")
-                    if d[0] == "BEP": particle.append("beta+")
-                    if d[0] == "BEM": particle.append("beta")
-                    if d[0] == "CK": particle.append("Atom_K")
-                    if d[0] == "CL": particle.append("Atom_L")
-                    if d[0] == "CL1": particle.append("Atom_L1")
-                    if d[0] == "CL2": particle.append("Atom_L2")
-                    if d[0] == "CM": particle.append("Atom_M")
-                    if d[0] == "CN": particle.append("Atom_N")
+                    if d[0] == "ALP": particle_i.append("alpha")
+                    if d[0] == "BEP": particle_i.append("beta+")
+                    if d[0] == "BEM": particle_i.append("beta")
+                    if d[0] == "CK": particle_i.append("Atom_K")
+                    if d[0] == "CL": particle_i.append("Atom_L")
+                    if d[0] == "CL1": particle_i.append("Atom_L1")
+                    if d[0] == "CL2": particle_i.append("Atom_L2")
+                    if d[0] == "CM": particle_i.append("Atom_M")
+                    if d[0] == "CN": particle_i.append("Atom_N")
                     if d[2] == "  ": d[2]=0
             
-                    p_branch.append(float(d[1])); u_p_branch.append(float(d[2])); # Branching ratio of the decay branch
-                    e_branch.append(float(d[4])); u_e_branch.append(float(d[5])); # Energy of the decay branch (kinetic energy of the particle)
-                    LevelDaughter.append(int(d[3]))                               # Level fed in daughter
+                    p_branch_i.append(float(d[1])); u_p_branch_i.append(float(d[2])); # Branching ratio of the decay branch
+                    e_branch_i.append(float(d[4])); u_e_branch_i.append(float(d[5])); # Energy of the decay branch (kinetic energy of the particle)
+                    LevelDaughter_i.append(int(d[3]))                               # Level fed in daughter
                     
                 
         
@@ -204,7 +223,7 @@ def readPenNuc(rad):
                 # record transition details of the previous level
                  transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i);levelEnergy.append(levelEnergy_i)
             #    if int(d[6]) in LevelDaughter :  # Read the information on the possible energy levels after the emission of the alpha particle 
-                 levelEnergy_i.append(float(d[1]))#levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
+                 levelEnergy_i.append(float(d[1]))   #levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
                  listTran.append(int(d[3]))           # Number of transitions that depopulate this level
                  levelNumber.append(int(d[6]))        # Level number
                  transitionType_i = []; next_level_i = []; levelEnergy_i = [];prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = [];
@@ -227,6 +246,16 @@ def readPenNuc(rad):
     return out
 out = readPenNuc('Am-242')
 print(len(out),out)
+print("   ")
+print("part : ",out[0][0])
+print("p_branch : ",out[0][1])
+print("lev daughter : ",out[0][3])
+print("lev number : ",out[0][4])
+print("prob des transitions : ",out[0][5],"!")
+print("energy level : ",out[0][6])
+print("trans type : ",out[0][7], "!")
+print("e trans : ",out[0][8], "!")
+print("next level : ",out[0][9],"!")
 # tic()
 # readPenNuc("Co-60")
 # toc() # 0.016 s
