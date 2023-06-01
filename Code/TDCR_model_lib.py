@@ -216,7 +216,6 @@ def readPenNuc(rad):
                   if d[1] == '  ' or d[1] == '   ': d[1] = 0
                   if d[2] == '  ': d[2] = 0
                   if d[4] == '  ': d[4] = 0
-                  transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i);
                   transitionType_i.append(d[0])                                          # Read the type of transtion
                   prob_i.append(float(d[1])); u_prob_i.append(float(d[2]))                 # Read the emission probability of the transition
                   e_trans_i.append(float(d[3])); u_e_trans_i.append(float(d[4]))           # Read the energy of the transition
