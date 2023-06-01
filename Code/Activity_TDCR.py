@@ -8,7 +8,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.signal as sg
 import scipy.optimize as opt
-
+import sys
+sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
+import  TDCRcalculation as dtc  
+    
+    
 def readEff(Rad, kB, SDT):
     file = open("G:\Python_modules\TDCRPy\TDCRPy\Code\\EfficiencyCurves/"+''.join(Rad)+"/Eff"+SDT+"_"+''.join(Rad)+'_[1]_'+str(kB)+".txt","r")
     L=[]
@@ -23,7 +27,7 @@ def readEff(Rad, kB, SDT):
 
 def readProfil(Rad,kB,SDT):
     Lv, pSv, upSv = readEff(Rad, kB, SDT)
-    pSv = sg.savgol_filter(pSv, 11, 3)
+    pSv = sg.savgol_filter(pSv, 7, 2)
     return Lv, np.asarray(pSv), upSv
 
 def res(L, TD, Lv, pDv, pTv):
@@ -143,12 +147,48 @@ def plotEffProfilkB(Rad,SDT): # plot the fitted efficiecny curves for a range of
         plt.savefig("EfficiencyCurves/"+Rad+"/tdcr_"+Rad+".png")
         # plt.close()
 
+def plotSmoothing(Rad,SDT): # plot the fitted efficiecny curves for a range of kB 
+    kB = 1.0e-5
+    plt.figure(r"Fitting of calculated points - $kB$ = "+str(kB)+" cm/keV")
+    plt.clf()
+    plt.title('  ')
+    pDv = readProfil(Rad,kB,"D")[1]               # probability vector of events
+    pts_D = readEff(Rad, kB, "D")
+    pTv = readProfil(Rad,kB,"T")[1]               # probability vector of triple coincidence events
+    pts_T = readEff(Rad, kB, "T")
+    pSv = readProfil(Rad,kB,"S")[1]               # probability vector of single events
+    pts_S = readEff(Rad, kB, "S")
+    tdcr = np.asarray(pTv)/np.asarray(pDv)       # tdcr vector fit
+    tdcr_x = np.asarray(pts_T[1])/np.asarray(pts_D[1]) # calculated points
+    if SDT == "S":
+        plt.plot(tdcr_x, pts_S[1], "ok", label = r"calculated points")
+        plt.plot(tdcr, pSv, label = r"fitted function")
+        plt.ylabel(r"$\epsilon_S$", fontsize = 14)
+    if SDT == "D":
+        plt.plot(tdcr_x, pts_D[1], "ok", label = r"calculated points")
+        plt.plot(tdcr, pDv, label = r"fitted function")
+        plt.ylabel(r"$\epsilon_D$", fontsize = 14)
+    if SDT == "T":
+        plt.plot(tdcr_x, pts_T[1], "ok", label = r"calculated points")
+        plt.plot(tdcr, pDv, label = r"fitted function")
+        plt.ylabel(r"$\epsilon$", fontsize = 14)
+    # plt.xscale("log")
+    plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
+    # bbox_inches = "tight", format = "png", dpi = 500
+    plt.legend(fontsize = 12)
+    plt.savefig("EfficiencyCurves/"+Rad+"/tdcr_"+Rad+"_fit.png")
+    # plt.close()
+
+
 
 ## PLOT EFFICIENCY CURVES FOR SEVERAL KB VALUES
-# plotEffProfilkB("S-35","D")
+# plotEffProfilkB("C-14","D")
 
 ## PLOT EFFICIENCY CURVE A GIVEN KB VALUE
 # plotEffProfil("Fe-55", 1.05E-5)
+
+## PLOT THE FIT OF THE EFFICIENCY FUNCTION
+# plotSmoothing("C-14","D")
 
 ## CALCULATION OF THE EFFICIENCY
 
@@ -163,49 +203,53 @@ def plotEffProfilkB(Rad,SDT): # plot the fitted efficiecny curves for a range of
 # AB = 864.95
 # BC = 1006.58
 # AC = 968.45
-T = 700
-D = 1000
-XX = (D + 2*T)/3
-print(XX)
-print(T/D)
+# T = 700
+# D = 1000
+# XX = (D + 2*T)/3
+# print(XX)
+# print(T/D)
 # D = AB+BC+AC-2*T
+
 TDCR = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+kB = 0.8E-5
+rad = "C-14"
 TDCR.reverse()
 for t in TDCR:
-    out = effTDCR(t, "S-35", 1.2E-5) # H-3
-    eff = out[1]
-    u_eff = 0
-    A = D/eff
-    uA = 0
-    
-    # DT = 0.977784348 # Co-60 NIST
-    # uDT = 0.000711023 # Co-60 NIST
-    # D = 84679.21179
-    # nMc = 1e3
-    # eff_v = []
-    # kB1 = 0.8e-5
-    # kB2 = 1.2e-5
-    # for i in range(int(nMc)):
-    #     dti = np.random.normal(DT,uDT)
-    #     kBi = np.random.uniform(kB1,kB2)
-    #     eff_v.append(effTDCR(dti, "Co-60", kBi)[1]) # Co-60 NIST
-    # eff = np.median(eff_v)
-    # u_eff = np.std(eff_v)
-    # A = D/eff
-    # uA = D*u_eff/eff**2
-    # result 87099      67             (err = 0.0002) kB = 0.01
-    # result 87045      88             kB = [0.008 - 0.012]
-    # I2 86640.31523	14.64334414
-    # A_NIST = 86920    200
-    
-    # out = effTDCR(657.296, 695.919, 693.579, 448.868) # Co-60
+    eff = effTDCR(t, rad, kB)[1] # H-3
+    eff2 = dtc.I2calc(t, 0, 0, 0, rad, kB*1e3)[2]
     digRound = 2
-    print("Efficiency of double coincidences = ", round(100*eff, digRound),"+/-", round(100*u_eff, digRound),"%")
-    # print("Efficiency of triple coincidences = ", round(100*out[2], digRound),"%")
-    # print("Activity from double coincidences = ", round(A, digRound), "+/-", round(uA, digRound) ,"Bq")
-    # print("Activity of triple coincidences = ", round(T/out[2], digRound), "Bq")
-    # print("Efficiency of double coincidences (asym) = ", round(100*out[3], digRound),"%")
-    # print("Efficiency of triple coincidences (asym) = ", round(100*out[5], digRound),"%")
-    # print("Activity from double coincidences (asym) = ", round(D/out[3], digRound), "Bq")
-    # print("Activity of triple coincidences (asym) = ", round(T/out[5], digRound), "Bq")
+    print("Efficiency of double coincidences = ", round(100*eff2, digRound),"% - ", round(100*eff, digRound),"%")
+
     
+
+
+
+# DT = 0.977784348 # Co-60 NIST
+# uDT = 0.000711023 # Co-60 NIST
+# D = 84679.21179
+# nMc = 1e3
+# eff_v = []
+# kB1 = 0.8e-5
+# kB2 = 1.2e-5
+# for i in range(int(nMc)):
+#     dti = np.random.normal(DT,uDT)
+#     kBi = np.random.uniform(kB1,kB2)
+#     eff_v.append(effTDCR(dti, "Co-60", kBi)[1]) # Co-60 NIST
+# eff = np.median(eff_v)
+# u_eff = np.std(eff_v)
+# A = D/eff
+# uA = D*u_eff/eff**2
+# result 87099      67             (err = 0.0002) kB = 0.01
+# result 87045      88             kB = [0.008 - 0.012]
+# I2 86640.31523	14.64334414
+# A_NIST = 86920    200
+
+# out = effTDCR(657.296, 695.919, 693.579, 448.868) # Co-60
+# print("Efficiency of double coincidences = ", round(100*eff, digRound),"+/-", round(100*u_eff, digRound),"%")
+# print("Efficiency of triple coincidences = ", round(100*out[2], digRound),"%")
+# print("Activity from double coincidences = ", round(A, digRound), "+/-", round(uA, digRound) ,"Bq")
+# print("Activity of triple coincidences = ", round(T/out[2], digRound), "Bq")
+# print("Efficiency of double coincidences (asym) = ", round(100*out[3], digRound),"%")
+# print("Efficiency of triple coincidences (asym) = ", round(100*out[5], digRound),"%")
+# print("Activity from double coincidences (asym) = ", round(D/out[3], digRound), "Bq")
+# print("Activity of triple coincidences (asym) = ", round(T/out[5], digRound), "Bq")
