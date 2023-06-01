@@ -211,11 +211,6 @@ def readPenNuc(rad):
                  levelEnergy_i.append(float(d[1]))#levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
                  listTran.append(int(d[3]))           # Number of transitions that depopulate this level
                  levelNumber.append(int(d[6]))        # Level number
-
-                 transitionType_i.append(d[0])                                          # Read the type of transtion
-                 prob_i.append(float(d[1])); u_prob_i.append(float(d[2]))                 # Read the emission probability of the transition
-                 e_trans_i.append(float(d[3])); u_e_trans_i.append(float(d[4]))           # Read the energy of the transition
-                 next_level_i.append(int(d[5]))                                         # Read the level fed by this transition
                  transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []; levelEnergy_i = []
                   
               """
