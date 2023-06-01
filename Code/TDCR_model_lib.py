@@ -170,7 +170,7 @@ def readPenNuc(rad):
             
             if daughterFlag:
                 
-                if d[0] == "ALP" or d[0] == "BEM" or d[0] == "BEP" or d[0] == "CK" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
+                if d[0] == "ALP" or d[0] == "BEM" or d[0] == "BEP" or d[0] == "CK" or d[0] == "CL" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
                     if d[0] == "ALP": particle.append("alpha")
                     if d[0] == "BEP": particle.append("beta+")
                     if d[0] == "BEM": particle.append("beta")
