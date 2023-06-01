@@ -18,14 +18,14 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10000
-Rad=["S-35"]            # list of radionuclides (Na-24)
+Rad=["Be-7"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 # kB =[1.0e-5]
 kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
-# L=[1e-1]
+L=[1e-1]
 # L = np.logspace(-3, 0, 25) # Free paramete in keV-1 (for Cs-137)
-L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Co-60)
+#L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Co-60)
 # L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Am-241)
 # L = np.logspace(-3,1,50) # Free paramete in keV-1 (for Sr-90)
 # L = np.logspace(-2,1,50) # Free paramete in keV-1 (for H-3, Fe-55)
@@ -37,7 +37,7 @@ Display = False               # to display calculation results on the console
 # Display = False                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
-nE = 1000            #number of bin to discretize the energy vector for scintillation quenching calculation
+nE = 10            #number of bin to discretize the energy vector for scintillation quenching calculation
 
 if np.size(pmf_1) > 1:
     if sum(pmf_1) !=1: print("warning p not equal to 1")

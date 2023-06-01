@@ -548,7 +548,7 @@ def E_quench_a(e,kB):
 
 #========================= Tracer les courbes avec kB différents ======================
 
-#'''
+'''
 
 s1 = []
 s2 = []
@@ -572,7 +572,7 @@ plt.legend(fontsize=12,loc='best')
 plt.xlabel("E déposée/keV")
 plt.ylabel("E'/E déposée")
 plt.savefig("Quenching/log alpha 1k-8M E' sur E.png")
-#'''
+'''
 #============================================================================================
 
 #============================================================================================
@@ -958,7 +958,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
     
     else:                                            # le cas où le vecteur de proba est vide 
         print("pas de transition de rayon X ni d'électron Auger")
-        type_fin = 0
+        type_fin = 'NON'
         energie_fin = 0
     return type_fin,energie_fin
 
