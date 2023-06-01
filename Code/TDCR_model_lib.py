@@ -506,7 +506,7 @@ def E_quench_e(e,kB):
 
     """
     
-    e_dis = np.linspace(0,e,10000)
+    e_dis = np.linspace(0,e,1000)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
@@ -548,7 +548,7 @@ def E_quench_a(e,kB):
 
 #========================= Tracer les courbes avec kB différents ======================
 
-#'''
+'''
 
 # s1 = []
 # s2 = []
@@ -560,6 +560,7 @@ def E_quench_a(e,kB):
 #     s2.append(E_quench_a(i,kB=1e-5)/i)
 #     s3.append(E_quench_a(i,kB=1.4e-5)/i)
 
+<<<<<<< HEAD
 # plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
 # plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
 # plt.plot(x,s3,label='kB=0.014cm/MeV')
@@ -571,6 +572,21 @@ def E_quench_a(e,kB):
 # plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
 
 #'''
+=======
+#plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
+#plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
+#plt.plot(x,s3,label='kB=0.014cm/MeV')
+plt.plot(x,s1,label='kB=7e-6cm/keV',color='green',lw=2)
+plt.plot(x,s2,label='kB=1e-5cm/keV',ls=':',color='red',lw=3)
+plt.plot(x,s3,label='kB=1.4e-5cm/keV')
+plt.xscale('log')
+#plt.yscale('log')
+plt.legend(fontsize=12,loc='best')
+plt.xlabel("E déposée/keV")
+plt.ylabel("E'/E déposée")
+plt.savefig("Quenching/log alpha 1k-8M E' sur E.png")
+'''
+>>>>>>> 419e1c69cfbda298e7934bae07a846069d4dcfaf
 #============================================================================================
 
 #============================================================================================
@@ -958,11 +974,11 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         else:
             # print("pas de transition de rayon X ni d'électron Auger")
             type_fin = 0
-            energie_fin = 0            
+            energie_fin = 'NON'            
     
     else:                                            # le cas où le vecteur de proba est vide 
-        # print("pas de transition de rayon X ni d'électron Auger")
-        type_fin = 0
+        #print("pas de transition de rayon X ni d'électron Auger")
+        type_fin = 'NON'
         energie_fin = 0
     return type_fin,energie_fin
 
