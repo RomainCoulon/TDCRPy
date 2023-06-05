@@ -244,23 +244,8 @@ def readPenNuc(rad):
     
         out.append([particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value_vec[dd], Daughter_vec[dd], Pdaughter_vec[dd]])
     return out
-<<<<<<< HEAD
 #out = readPenNuc('Am-242')
 #print(len(out),out)
-=======
-out = readPenNuc('Am-242')
-print(len(out),out)
-print("   ")
-print("part : ",out[0][0])
-print("p_branch : ",out[0][1])
-print("lev daughter : ",out[0][3])
-print("lev number : ",out[0][4])
-print("prob des transitions : ",out[0][5],"!")
-print("energy level : ",out[0][6])
-print("trans type : ",out[0][7], "!")
-print("e trans : ",out[0][8], "!")
-print("next level : ",out[0][9],"!")
->>>>>>> 1e6d1f43ce999562383a68a9732c919a9768776e
 # tic()
 # readPenNuc("Co-60")
 # toc() # 0.016 s
@@ -314,22 +299,22 @@ def readPenNuc1(rad):
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des énergies de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
      
-     tran_prob_tot -- indice 9 -- probabilités de transitions
+     tran_prob_tot -- indice 10 -- probabilités de transitions
          len = n1
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des probabilités de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
      
-     tran_level_tot -- indice 10 -- niveaux de branch correspondants
+     tran_level_tot -- indice 11 -- niveaux de branch correspondants
          len = n1
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des niveaux de chaque branch avant des transitions -- len de sous-list de sous-list = 1
      
-     tran_level_end_tot -- indice 11 -- niveaux après des transitions
+     tran_level_end_tot -- indice 12 -- niveaux après des transitions
          len = n1
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des niveaux après des transitions de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
      
-     level_energy_tot -- indice 12 -- énergies de niveaux
+     level_energy_tot -- indice 13 -- énergies de niveaux
          len = n1
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des énergies de niveaux de chaque branch -- len de sous-list de sous-list = 1
@@ -552,7 +537,8 @@ def readPenNuc1(rad):
      out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
 #===============================================================================================================
-rad = "Am-241"
+#'''
+rad = "Fe-52"
 out1 = readPenNuc1(rad)
 print(rad)
 print("    ")
@@ -564,7 +550,7 @@ print("Q",out1[2])
 print("    ")
 print("desin_type",out1[3],len(out1[3]))
 print("    ")
-print("desin-energy",out1[4],len(out1[4]))
+print("desin-prob",out1[5],len(out1[5]))
 print("    ")
 print("desin-level",out1[6],len(out1[6]))
 print("    ")
@@ -584,6 +570,7 @@ for i in range(len(out1[8])):
     print("end_level")
     for i3,p3 in enumerate(out1[12][i]):
         print(p3,len(p3))
+#'''
 #print(readPenNuc('At-211'))
 
 #================================== StoppingPower for alpha particle ===========================================

@@ -44,20 +44,41 @@ elif pmf_1[0] != 1: print("warning")
 """
 Read PenNuc File
 """
-out_PenNuc = []
-particle = []
-p_branch = []
-e_branch = []
-LevelDaughter = []
-levelNumber = []
-prob = []
-levelEnergy = []
-transitionType = []
-e_trans = []
-next_level = []
-Q_value = []
-DaughterVec = []     # Daughters
-Pdaughter = []   # Probabiblity related to daughters
+out_PenNuc = []   
+particle = []          # Particle(s) from the Mother  --  indice 3
+p_branch = []          # Probablity of the different decay of branch -- indice 5
+e_branch = []          # Energy of the different decay of branch -- indice 4
+LevelDaughter = []     # Level of the Daughter nucleus just after the particle emission -- indice 6
+levelNumber = []       # The vector of level of the daughter to get information of all possible isomeric transitions -- indice 11
+prob = []              # Probibility density for each of the daughter level
+prob_trans = []        # Probability for each transition -- indice 10
+prob_branch = []       # Probability for each branch -- indice 7
+levelEnergy = []       # Energy of each level -- indice 13
+transitionType = []    # type of each possible transitions (internal transitions or gamma emission) -- indice 8
+e_trans = []           # Energy of the transition -- indice 9
+next_level = []        # Next level on the daughter nucleus -- indice 12
+Q_value = []           # Energy of the reaction -- indice 2
+DaughterVec = []       # Daughters -- indice 0
+Pdaughter = []         # Probabiblity related to daughters -- indice 1
+
+for rad_i in Rad:
+    out_PenNuc = tl.readPenNuc1(rad_i)
+    particle.append(out_PenNuc[3])  # Particle(s) from the Mother  --  indice 3
+    p_branch.append(out_PenNuc[5])
+    e_branch.append(out_PenNuc[4])
+    LevelDaughter.append(out_PenNuc[6])
+    levelNumber.append(out_PenNuc[11])
+    prob_trans.append(out_PenNuc[10])
+    prob_branch.append(out_PenNuc[7])
+    levelEnergy.append(out_PenNuc[13])
+    transitionType.append(out_PenNuc[8])
+    e_trans.append(out_PenNuc[9])
+    next_level.append(out_PenNuc[12])
+    Q_value.append(out_PenNuc[2])
+    DaughterVec.append(out_PenNuc[0])
+    Pdaughter.append(out_PenNuc[1])
+
+'''
 for rad_i in Rad: 
     out_PenNuc = tl.readPenNuc(rad_i)
     particle_r=[]; p_branch_r=[]; e_branch_r=[]; LevelDaughter_r=[]; levelNumber_r=[]
@@ -93,11 +114,13 @@ for rad_i in Rad:
     Q_value.append(Q_value_r)          # Energy of the reaction
     DaughterVec.append(DaughterVec_r)      # Daughters
     Pdaughter.append(Pdaughter_r)        # Probabiblity related to daughters
-               
+'''
+
 """
 Read BetaShape
 """
 #print('103',particle)
+'''
 e_beta = []
 p_beta = []
 for i, rad_i in enumerate(Rad): # radionuclide loop
@@ -121,6 +144,37 @@ for i, rad_i in enumerate(Rad): # radionuclide loop
          else:
              e_beta_1.append("")
              p_beta_1.append("")   
+        #print('1:',p_beta_1)
+        e_beta_0.append(e_beta_1)
+        p_beta_0.append(p_beta_1)
+        #print('0:',e_beta_0,p_beta_0)
+    e_beta.append(e_beta_0)
+    p_beta.append(p_beta_0)
+
+'''
+e_beta = []
+p_beta = []
+for i, rad_i in enumerate(Rad): # radionuclide loop
+    e_beta_0 = []
+    p_beta_0 = []
+    out_PenNuc = tl.readPenNuc1(rad_i)
+    for u in range(len(out_PenNuc[0])): # daughter loop
+        e_beta_1 = []
+        p_beta_1 = []
+        betam = 0   # counter of beta- transition 
+        betap = 0   # counter of beta+ transition
+        for j in range(len(particle[i][u])): # transition loop
+            if particle[i][u][j] == "beta":
+                e_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[0])
+                p_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[1])
+                betam += 1
+            elif particle[i][u][j] == "beta+":
+                e_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[0])
+                p_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[1])
+                betap += 1
+            else:
+                e_beta_1.append([])
+                p_beta_1.append([])   
         #print('1:',p_beta_1)
         e_beta_0.append(e_beta_1)
         p_beta_0.append(p_beta_1)
@@ -167,21 +221,22 @@ for kB_i in kB: # Loop on the kB
            if Display: print("\t\t Daughter = ", DaughterVec[index_rad][iDaughter])           
            
            ## sampling of the decay branch
-           multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))
+           multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))   # = prob_branch
            if p_branch[index_rad][iDaughter] != []:
-               index_branch = tl.sampling(p_branch[index_rad][iDaughter])
-               print('176 index_bran',index_branch)
-               particle_branch = particle[index_rad][iDaughter][index_branch]            # sampled particle emitted by the mother
-               energy_branch =  e_branch[index_rad][iDaughter][index_branch]             # energy of the particle emitted by the mother
-               probability_branch = p_branch[index_rad][iDaughter][index_branch]         # probability of the sampled branch
-               levelOftheDaughter = LevelDaughter[index_rad][iDaughter][index_branch]    # Level of the daughter just after the particle emission from the mother
-               if particle_branch[:4] == "Atom":
-                  particle_branch = [particle_branch]
-                  particle_branch.append(DaughterVec[index_rad][iDaughter])
-               if Display: print("\t Sampled decay branch:")
-               if Display: print("\t\t Particle = ", particle_branch)
-               if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
-               if Display: print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
+                index_branch = tl.sampling(prob_branch[index_rad][iDaughter])                                                                                                                                               [index_rad][iDaughter])
+                #index_branch = tl.sampling(p_branch[index_rad][iDaughter])
+                print('176 index_bran',index_branch)
+                particle_branch = particle[index_rad][iDaughter][index_branch]            # sampled particle emitted by the mother
+                energy_branch =  e_branch[index_rad][iDaughter][index_branch]             # energy of the particle emitted by the mother
+                probability_branch = p_branch[index_rad][iDaughter][index_branch]         # probability of the sampled branch
+                levelOftheDaughter = LevelDaughter[index_rad][iDaughter][index_branch]    # Level of the daughter just after the particle emission from the mother
+                if particle_branch[:4] == "Atom":
+                    particle_branch = [particle_branch]
+                    particle_branch.append(DaughterVec[index_rad][iDaughter])
+                if Display: print("\t Sampled decay branch:")
+                if Display: print("\t\t Particle = ", particle_branch)
+                if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
+                if Display: print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
            
                # Scoring
                e_sum = energy_branch                               # Update the Energy summary
