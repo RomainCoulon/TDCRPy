@@ -223,7 +223,7 @@ for kB_i in kB: # Loop on the kB
            ## sampling of the decay branch
            multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))   # = prob_branch
            if p_branch[index_rad][iDaughter] != []:
-                index_branch = tl.sampling(prob_branch[index_rad][iDaughter])                                                                                                                                               [index_rad][iDaughter])
+                index_branch = tl.sampling(prob_branch[index_rad][iDaughter])                
                 #index_branch = tl.sampling(p_branch[index_rad][iDaughter])
                 print('176 index_bran',index_branch)
                 particle_branch = particle[index_rad][iDaughter][index_branch]            # sampled particle emitted by the mother
@@ -239,9 +239,9 @@ for kB_i in kB: # Loop on the kB
                 if Display: print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
            
                # Scoring
-               e_sum = energy_branch                               # Update the Energy summary
-               particle_vec.append(particle_branch)                # Update of the particle vector
-               energy_vec.append(energy_branch)                    # Update of the energy of the particle
+                e_sum = energy_branch                               # Update the Energy summary
+                particle_vec.append(particle_branch)                # Update of the particle vector
+                energy_vec.append(energy_branch)                    # Update of the energy of the particle
            else:
                if Display: print("\t Sampled decay branch:")
                if Display: print("\t\t Particle = isomeric transition, no particle")
@@ -252,20 +252,25 @@ for kB_i in kB: # Loop on the kB
                
     
            if Display: print("\t Subsequent isomeric transition")          # finish with the mother / now with the daughter
-           while levelOftheDaughter > 0:                       # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
+           while levelOftheDaughter[0] > 0:
+           #while levelOftheDaughter > 0:                       # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
              if p_branch[index_rad][iDaughter] != []:
-                 i_level = levelNumber[index_rad][iDaughter].index(levelOftheDaughter)   # Find the position in the daughter level vector
+                 i_level = levelNumber[index_rad][iDaughter].index(levelOftheDaughter[0])
+                 #i_level = levelNumber[index_rad][iDaughter].index(levelOftheDaughter)   # Find the position in the daughter level vector
                  ## sampling of the transition in energy levels of the daughter nucleus
-                 index_t = tl.sampling(prob[index_rad][iDaughter][i_level+1])  
+                 index_t = tl.sampling(prob_trans[index_rad][iDaughter][i_level])
+                 #index_t = tl.sampling(prob[index_rad][iDaughter][i_level+1])  
                  if Display: print("\t\t Energy of the level = ", levelEnergy[index_rad][iDaughter][i_level], " keV")
                  if Display: print("\t\t Transition type = ", transitionType[index_rad][iDaughter][i_level+1][index_t])
                  if Display: print("\t\t Energy of the transition = ", e_trans[index_rad][iDaughter][i_level+1][index_t], "keV")
                  if Display: print("\t\t next level = ", next_level[index_rad][iDaughter][i_level+1][index_t])
                  
                  # Scoring
-                 if transitionType[index_rad][iDaughter][i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
+                 if transitionType[index_rad][iDaughter][i_level][index_t] == "GA":
+                 #if transitionType[index_rad][iDaughter][i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
                    particle_vec.append("gamma")               # Update of the particle vector
-                   energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
+                   energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
+                   #energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
                  else:                                          # if not, it is a internal conversion, so an electron
                    particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
                    energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
