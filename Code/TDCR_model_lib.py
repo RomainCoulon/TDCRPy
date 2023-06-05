@@ -261,61 +261,61 @@ def readPenNuc1(rad):
      ======
      RETURN
      ======
-     daughter -- indice 0 -- des noyaux fils -- len = n1
-     prob_daug -- indice 1 -- des probabilités de noyaux fils -- len = n1
-     energy_Q -- indice 2 -- des énergies de désintégrations -- len = n1
+     daughter -- indice 0 -- des noyaux fils -- len = nb de noyaux fils
+     prob_daug -- indice 1 -- des probabilités de noyaux fils -- len = nb de noyaux fils
+     energy_Q -- indice 2 -- des énergies de désintégrations -- len = nb de noyaux fils
 
      desin_type_tot -- indice 3 -- des types de désintégrations/particules émis
-         len = n1 
+         len = nb de noyaux fils 
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
 
      desin_energy_tot -- indice 4 -- des énergies de désintégrations/énergies de patricules émis
-         len = n1 
+         len = nb de noyaux fils 
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des énergies de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
 
      desin_prob_tot -- indice 5 -- des probabilités de désintégrations
-         len = n1
+         len = nb de noyaux fils
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des probabilités de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
      
      desin_level_tot -- indice 6 -- des niveaux atteints après des désintégrations
-         len = n1
+         len = nb de noyaux fils
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des niveaux après des désintégrations de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
      
      prob_branch_tot -- indice 7 -- probabilités de chaque branch
-         len = n1
+         len = nb de noyaux fils
          sous-list -- des probabilités de branchs de noyau fil -- len de sous-list = nb de branch de chaque fil
          
      tran_type_tot -- indice 8 -- transitions possibles 
-         len = n1
+         len = nb de noyaux fils
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
      
      tran_energy_tot -- indice 9 -- énergies de transitions
-         len = n1
+         len = nb de noyaux fils
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des énergies de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
      
      tran_prob_tot -- indice 10 -- probabilités de transitions
-         len = n1
+         len = nb de noyaux fils
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des probabilités de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
      
      tran_level_tot -- indice 11 -- niveaux de branch correspondants
-         len = n1
+         len = nb de noyaux fils
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des niveaux de chaque branch avant des transitions -- len de sous-list de sous-list = 1
      
      tran_level_end_tot -- indice 12 -- niveaux après des transitions
-         len = n1
+         len = nb de noyaux fils
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des niveaux après des transitions de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
      
      level_energy_tot -- indice 13 -- énergies de niveaux
-         len = n1
+         len = nb de noyaux fils
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des énergies de niveaux de chaque branch -- len de sous-list de sous-list = 1
      '''
