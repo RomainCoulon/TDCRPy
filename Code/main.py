@@ -268,10 +268,10 @@ for kB_i in kB: # Loop on the kB
                  # Scoring
                  if transitionType[index_rad][iDaughter][i_level][index_t] == "GA":
                  #if transitionType[index_rad][iDaughter][i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
-                   particle_vec.append("gamma")               # Update of the particle vector
+                   particle_vec.append("gamma")                  # Update of the particle vector
                    energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
                    #energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
-                 else:                                          # if not, it is a internal conversion, so an electron
+                 else:                                           # if not, it is a internal conversion, so an electron
                    particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
                    energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
                    if transitionType[index_rad][iDaughter][i_level+1][index_t] == "EK":
