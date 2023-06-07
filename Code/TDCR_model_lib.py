@@ -371,19 +371,6 @@ def readPenNuc1(rad):
      daughter = [];posi_daug = [];prob_daug=[];nb_branch=[];energy_Q=[];
      end = len(decayData)
      for indice,line in enumerate(decayData):
-<<<<<<< HEAD
-        if "NDA" == line[0]:
-            nb_daug = int(line[1])
-        if "DAU" == line[0]:
-            daughter.append(line[1])
-        if "COM" == line[0] and "Daughter" in line[1]:
-            posi_daug.append(indice)
-        if "Q" == line[0]:
-            energy_Q.append(float(line[1]))
-        if "DDE" == line[0]:
-            prob_daug.append(float(line[1]))
-            nb_branch.append(int(line[-2]))
-=======
          if "NDA" == line[0]:
              nb_daug = int(line[1])
          if "DAU" == line[0]:
@@ -395,7 +382,6 @@ def readPenNuc1(rad):
          if "DDE" == line[0]:
              prob_daug.append(float(line[1]))
              nb_branch.append(int(line[-2]))
->>>>>>> b285d78d5db8f18a276a056240f716b75336ced6
 
      '''
      ==========
