@@ -374,7 +374,7 @@ def readPenNuc1(rad):
          if "NDA" == line[0]:
              nb_daug = int(line[1])
          if "DAU" == line[0]:
-             daughter.append(line[1])
+             daughter.append(line[1].replace(" ",""))
          if "COM" == line[0] and "Daughter" in line[1]:
              posi_daug.append(indice)
          if "Q" == line[0]:
@@ -538,38 +538,38 @@ def readPenNuc1(rad):
      return out
 #===============================================================================================================
 #'''
-rad = "Fe-52"
-out1 = readPenNuc1(rad)
-print(rad)
-print("    ")
-print("DAU",out1[0])
-print("    ")
-print("prob_daug",out1[1])
-print("    ")
-print("Q",out1[2])
-print("    ")
-print("desin_type",out1[3],len(out1[3]))
-print("    ")
-print("desin-prob",out1[5],len(out1[5]))
-print("    ")
-print("desin-level",out1[6],len(out1[6]))
-print("    ")
-print("prob-branch",out1[7])
-print("    ")
-print("len-tran-type",len(out1[8]))
-for i in range(len(out1[8])):
-    print("fil",i)
-    for i1,p1 in enumerate(out1[8][i]):
-        print(p1,len(p1))
-    print("energy")
-    for i2,p2 in enumerate(out1[9][i]):
-        print(p2,len(p2))
-    print("tran-level")
-    for i4,p4 in enumerate(out1[11][i]):
-        print(p4)
-    print("end_level")
-    for i3,p3 in enumerate(out1[12][i]):
-        print(p3,len(p3))
+# rad = "Fe-52"
+# out1 = readPenNuc1(rad)
+# print(rad)
+# print("    ")
+# print("DAU",out1[0])
+# print("    ")
+# print("prob_daug",out1[1])
+# print("    ")
+# print("Q",out1[2])
+# print("    ")
+# print("desin_type",out1[3],len(out1[3]))
+# print("    ")
+# print("desin-prob",out1[5],len(out1[5]))
+# print("    ")
+# print("desin-level",out1[6],len(out1[6]))
+# print("    ")
+# print("prob-branch",out1[7])
+# print("    ")
+# print("len-tran-type",len(out1[8]))
+# for i in range(len(out1[8])):
+#     print("fil",i)
+#     for i1,p1 in enumerate(out1[8][i]):
+#         print(p1,len(p1))
+#     print("energy")
+#     for i2,p2 in enumerate(out1[9][i]):
+#         print(p2,len(p2))
+#     print("tran-level")
+#     for i4,p4 in enumerate(out1[11][i]):
+#         print(p4)
+#     print("end_level")
+#     for i3,p3 in enumerate(out1[12][i]):
+#         print(p3,len(p3))
 #'''
 #print(readPenNuc('At-211'))
 
