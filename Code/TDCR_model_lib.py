@@ -326,33 +326,33 @@ def readPenNuc1(rad):
      # Format the data 
      decayData = []
      for line in file:
-         decayData.append(line.decode("utf-8"))
-         if "NDA " in decayData[-1]:    decayData[-1] = decayData[-1].replace("NDA ", "NDA; ") # number of daughter
-         if "DAU " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DAU ", "DAU; ") # daughter
-         if "DDE " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DDE ", "DDE; ") # daughter description : probability of disintegration to NDA, uncertainty, number of excited levels of NDA; number of branche to NDA
-         if "Q " in decayData[-1]:      decayData[-1] = decayData[-1].replace("Q ", "Q; ")     # total energy of the branch, uncertainty 
-         if "ALP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("ALP ", "ALP; ") # type of the disintegration = alpha
-         if "CK " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CK ", "CK; ") # type of the disintegration = Electron Capture K shell
-         if "CL " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL ", "CL; ") # type of the disintegration = Electron Capture L shell
-         if "CL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL1 ", "CL1; ") # type of the disintegration = Electron Capture L shell 1
-         if "CL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL2 ", "CL2; ") # type of the disintegration = Electron Capture L shell 2
-         if "CL3 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL3 ", "CL3; ") # type of the disintegration = Electron Capture L shell 3
-         if "CM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CM ", "CM; ") # type of the disintegration = Electron Capture M shell
-         if "CN " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CN ", "CN; ") # type of the disintegration = Electron Capture N shell
-         if "BEM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEM ", "BEM; ") # type disintegration-beta- :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
-         if "BEP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEP ", "BEP; ") # type disintegration-beta+ :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
-         if "LED " in decayData[-1]:    decayData[-1] = decayData[-1].replace("LED ", "LED; ") # level description:energy of level,uncertainty, number of transitions that depopulate this level,level time,uncertainty,level number
-         if "GA " in decayData[-1]:     decayData[-1] = decayData[-1].replace("GA ", "GA; ")   # type transition: gamma
-         if "EK " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EK ", "EK; ")   # type transition: internal conversion -- electron K
-         if "EL " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL ", "EL; ") # type transition: internal conversion -- electron L
-         if "EL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL1 ", "EL1; ") # type transition: internal conversion -- electron L1
-         if "EL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL2 ", "EL2; ") # type transition: internal conversion -- electron L2
-         if "EL3 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL3 ", "EL3; ") # type transition: internal conversion -- electron L3
-         if "EM " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EM ", "EM; ")   # type transition: internal conversion -- electron M
-         if "EN " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EN ", "EN; ")   # type transition: internal conversion -- electron N
-         if "COM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("COM ", "COM; ") 
-         decayData[-1]=decayData[-1].split(";")
-         if "\r\n" in decayData[-1][-1]:  decayData[-1][-1] = decayData[-1][-1].replace("\r\n", " ")
+        decayData.append(line.decode("utf-8"))
+        if "NDA " in decayData[-1]:    decayData[-1] = decayData[-1].replace("NDA ", "NDA; ") # number of daughter
+        if "DAU " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DAU ", "DAU; ") # daughter
+        if "DDE " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DDE ", "DDE; ") # daughter description : probability of disintegration to NDA, uncertainty, number of excited levels of NDA; number of branche to NDA
+        if "Q " in decayData[-1]:      decayData[-1] = decayData[-1].replace("Q ", "Q; ")     # total energy of the branch, uncertainty 
+        if "ALP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("ALP ", "ALP; ") # type of the disintegration = alpha
+        if "CK " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CK ", "CK; ") # type of the disintegration = Electron Capture K shell
+        if "CL " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL ", "CL; ") # type of the disintegration = Electron Capture L shell
+        if "CL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL1 ", "CL1; ") # type of the disintegration = Electron Capture L shell 1
+        if "CL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL2 ", "CL2; ") # type of the disintegration = Electron Capture L shell 2
+        if "CL3 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL3 ", "CL3; ") # type of the disintegration = Electron Capture L shell 3
+        if "CM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CM ", "CM; ") # type of the disintegration = Electron Capture M shell
+        if "CN " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CN ", "CN; ") # type of the disintegration = Electron Capture N shell
+        if "BEM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEM ", "BEM; ") # type disintegration-beta- :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
+        if "BEP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEP ", "BEP; ") # type disintegration-beta+ :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
+        if "LED " in decayData[-1]:    decayData[-1] = decayData[-1].replace("LED ", "LED; ") # level description:energy of level,uncertainty, number of transitions that depopulate this level,level time,uncertainty,level number
+        if "GA " in decayData[-1]:     decayData[-1] = decayData[-1].replace("GA ", "GA; ")   # type transition: gamma
+        if "EK " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EK ", "EK; ")   # type transition: internal conversion -- electron K
+        if "EL " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL ", "EL; ") # type transition: internal conversion -- electron L
+        if "EL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL1 ", "EL1; ") # type transition: internal conversion -- electron L1
+        if "EL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL2 ", "EL2; ") # type transition: internal conversion -- electron L2
+        if "EL3 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL3 ", "EL3; ") # type transition: internal conversion -- electron L3
+        if "EM " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EM ", "EM; ")   # type transition: internal conversion -- electron M
+        if "EN " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EN ", "EN; ")   # type transition: internal conversion -- electron N
+        if "COM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("COM ", "COM; ") 
+        decayData[-1]=decayData[-1].split(";")
+        if "\r\n" in decayData[-1][-1]:  decayData[-1][-1] = decayData[-1][-1].replace("\r\n", " ")
 
      '''
      ========================
@@ -371,17 +371,17 @@ def readPenNuc1(rad):
      daughter = [];posi_daug = [];prob_daug=[];nb_branch=[];energy_Q=[];
      end = len(decayData)
      for indice,line in enumerate(decayData):
-         if "NDA" == line[0]:
-             nb_daug = int(line[1])
-         if "DAU" == line[0]:
-             daughter.append(line[1])
-         if "COM" == line[0] and "Daughter" in line[1]:
-             posi_daug.append(indice)
-         if "Q" == line[0]:
-             energy_Q.append(float(line[1]))
-         if "DDE" == line[0]:
-             prob_daug.append(float(line[1]))
-             nb_branch.append(int(line[-2]))
+        if "NDA" == line[0]:
+            nb_daug = int(line[1])
+        if "DAU" == line[0]:
+            daughter.append(line[1])
+        if "COM" == line[0] and "Daughter" in line[1]:
+            posi_daug.append(indice)
+        if "Q" == line[0]:
+            energy_Q.append(float(line[1]))
+        if "DDE" == line[0]:
+            prob_daug.append(float(line[1]))
+            nb_branch.append(int(line[-2]))
 
      '''
      ==========
@@ -401,140 +401,140 @@ def readPenNuc1(rad):
      =============
      '''
      for i1 in range(nb_daug):
-         start_p = posi_daug[i1]
-         if i1+1 == nb_daug:
-                end_p = end
-         else:
-                end_p = posi_daug[i1+1]
+        start_p = posi_daug[i1]
+        if i1+1 == nb_daug:
+            end_p = end
+        else:
+            end_p = posi_daug[i1+1]
 
-         posi_end_i = []
-         for i2 in range(start_p,end_p):
+        posi_end_i = []
+        for i2 in range(start_p,end_p):
             if "COM" == decayData[i2][0] and "Branch" in decayData[i2][1]:
                 posi_end_i.append(i2)
             if "COM" == decayData[i2][0] and "Level" in decayData[i2][1]:
                 posi_end_i.append(i2)
-         if end_p == end:
-             posi_end_i.append(end)
-         else:
-             posi_end_i.append(posi_daug[i1+1])
-         posi_end.append(posi_end_i)
+        if end_p == end:
+            posi_end_i.append(end)
+        else:
+            posi_end_i.append(posi_daug[i1+1])
+        posi_end.append(posi_end_i)
      
-         '''
-         ==========================
-         LOOP Branch and Transition
-         ==========================
-         '''
+        '''
+        ==========================
+        LOOP Branch and Transition
+        ==========================
+        '''
 
-         desin_type_daug=[];desin_energy_daug=[];desin_prob_daug=[];desin_level_daug=[];
-         tran_type_daug=[];tran_energy_daug=[];tran_prob_daug=[];tran_level_end_daug=[];
-         tran_level_daug=[];level_energy_daug=[]
-         prob_branch_daug=[]
+        desin_type_daug=[];desin_energy_daug=[];desin_prob_daug=[];desin_level_daug=[];
+        tran_type_daug=[];tran_energy_daug=[];tran_prob_daug=[];tran_level_end_daug=[];
+        tran_level_daug=[];level_energy_daug=[]
+        prob_branch_daug=[]
 
-         for i3 in range(len(posi_end_i)-1):
-             start_p1 = posi_end_i[i3]
-             end_p1 = posi_end_i[i3+1]
-             branch = False
-             transition = False
-             if "COM" == decayData[start_p1][0] and "Branch" in decayData[start_p1][1]:
-                 branch=True
-             if "COM" == decayData[start_p1][0] and "Level" in decayData[start_p1][1]:
-                 transition = True
+        for i3 in range(len(posi_end_i)-1):
+            start_p1 = posi_end_i[i3]
+            end_p1 = posi_end_i[i3+1]
+            branch = False
+            transition = False
+            if "COM" == decayData[start_p1][0] and "Branch" in decayData[start_p1][1]:
+                branch=True
+            if "COM" == decayData[start_p1][0] and "Level" in decayData[start_p1][1]:
+                transition = True
 
-             '''
-             ====================================
-             LOOP EACH BLOCK OF BRANCH/TRANSITION
-             ====================================
-             ''' 
-             tran_type_b=[];tran_prob_b=[];tran_energy_b=[]; tran_level_end_b=[];
-             tran_level_b=[];level_energy_b=[]
-             desin_type_b=[];desin_energy_b=[];desin_prob_b=[];desin_level_b=[];
+            '''
+            ====================================
+            LOOP EACH BLOCK OF BRANCH/TRANSITION
+            ====================================
+            ''' 
+            tran_type_b=[];tran_prob_b=[];tran_energy_b=[]; tran_level_end_b=[];
+            tran_level_b=[];level_energy_b=[]
+            desin_type_b=[];desin_energy_b=[];desin_prob_b=[];desin_level_b=[];
              
-             for i4 in decayData[start_p1+1:end_p1]:
-                 if start_p1+1 == end_p1:
-                     break
-                 if branch:
-                     if "ALP" == i4[0]:
-                         desin_type_b.append("alpha")
-                     if "BEP" == i4[0]:
-                         desin_type_b.append("beta+")
-                     if "BEM" == i4[0]:
-                         desin_type_b.append("beta")
-                     if "CK" == i4[0]:
-                         desin_type_b.append("Atom_K")
-                     if "CL" == i4[0]:
-                         desin_type_b.append("Atom_L")
-                     if "CL1" == i4[0]:
-                         desin_type_b.append("Atom_L1")
-                     if "CL2" == i4[0]:
-                         desin_type_b.append("Atom_L2")
-                     if "CL3" == i4[0]:
-                         desin_type_b.append("Atom_L3")
-                     if "CM" == i4[0]:
-                         desin_type_b.append("Atom_M")
-                     if "CN" == i4[0]:
-                         desin_type_b.append("Atom_N")
-                     desin_prob_b.append(float(i4[1]))
-                     desin_level_b.append(int(i4[3]))
-                     desin_energy_b.append(float(i4[4]))
+            for i4 in decayData[start_p1+1:end_p1]:
+                if start_p1+1 == end_p1:
+                    break
+                if branch:
+                    if "ALP" == i4[0]:
+                        desin_type_b.append("alpha")
+                    if "BEP" == i4[0]:
+                        desin_type_b.append("beta+")
+                    if "BEM" == i4[0]:
+                        desin_type_b.append("beta")
+                    if "CK" == i4[0]:
+                        desin_type_b.append("Atom_K")
+                    if "CL" == i4[0]:
+                        desin_type_b.append("Atom_L")
+                    if "CL1" == i4[0]:
+                        desin_type_b.append("Atom_L1")
+                    if "CL2" == i4[0]:
+                        desin_type_b.append("Atom_L2")
+                    if "CL3" == i4[0]:
+                        desin_type_b.append("Atom_L3")
+                    if "CM" == i4[0]:
+                        desin_type_b.append("Atom_M")
+                    if "CN" == i4[0]:
+                        desin_type_b.append("Atom_N")
+                    desin_prob_b.append(float(i4[1]))
+                    desin_level_b.append(int(i4[3]))
+                    desin_energy_b.append(float(i4[4]))
 
-                 if transition:
-                     if i4[1] == '  ' or i4[1] == '   ': i4[1] = 0
-                     if len(i4)>2 and i4[2] == '  ': i4[2] = 0
-                     if len(i4)>4 and i4[4] == '  ': i4[4] = 0
-                     if len(i4)>5 and i4[5] == '  ': i4[5] = 0
-                     if "LED" == i4[0]:
-                         tran_level_b.append(int(i4[-1]))
-                         level_energy_b.append(float(i4[1]))
-                     if i4[0] == "GA" or i4[0] == "EK" or i4[0] == "EL" or i4[0] == "EL1" or i4[0] == "EL2" or i4[0] == "EL3" or i4[0] == "EM" or i4[0] == "EN":
-                         tran_type_b.append(i4[0])
-                         tran_prob_b.append(float(i4[1]))
-                         tran_energy_b.append(float(i4[3]))
-                         tran_level_end_b.append(float(i4[5]))
+                if transition:
+                    if i4[1] == '  ' or i4[1] == '   ': i4[1] = 0
+                    if len(i4)>2 and i4[2] == '  ': i4[2] = 0
+                    if len(i4)>4 and i4[4] == '  ': i4[4] = 0
+                    if len(i4)>5 and i4[5] == '  ': i4[5] = 0
+                    if "LED" == i4[0]:
+                        tran_level_b.append(int(i4[-1]))
+                        level_energy_b.append(float(i4[1]))
+                    if i4[0] == "GA" or i4[0] == "EK" or i4[0] == "EL" or i4[0] == "EL1" or i4[0] == "EL2" or i4[0] == "EL3" or i4[0] == "EM" or i4[0] == "EN":
+                        tran_type_b.append(i4[0])
+                        tran_prob_b.append(float(i4[1]))
+                        tran_energy_b.append(float(i4[3]))
+                        tran_level_end_b.append(float(i4[5]))
 
-             if branch:
-                 desin_type_daug.append(desin_type_b)
-                 desin_energy_daug.append(desin_energy_b)
-                 desin_prob_daug.append(desin_prob_b)
-                 desin_level_daug.append(desin_level_b)
+            if branch:
+                desin_type_daug.append(desin_type_b)
+                desin_energy_daug.append(desin_energy_b)
+                desin_prob_daug.append(desin_prob_b)
+                desin_level_daug.append(desin_level_b)
              
-             if transition:
-                 tran_type_daug.append(tran_type_b)
-                 tran_energy_daug.append(tran_energy_b)
-                 tran_prob_daug.append(tran_prob_b)
-                 tran_level_end_daug.append(tran_level_end_b)
-                 tran_level_daug.append(tran_level_b)
-                 level_energy_daug.append(level_energy_b)
+            if transition:
+                tran_type_daug.append(tran_type_b)
+                tran_energy_daug.append(tran_energy_b)
+                tran_prob_daug.append(tran_prob_b)
+                tran_level_end_daug.append(tran_level_end_b)
+                tran_level_daug.append(tran_level_b)
+                level_energy_daug.append(level_energy_b)
 
-             if len(desin_prob_b)>0:
-                 desin_prob_array = np.array(desin_prob_b)
-                 prob_branch_i = np.sum(desin_prob_array)
-                 if prob_branch_i >= 1:
-                     prob_branch_i = 1
-                 prob_branch_daug.append(prob_branch_i)
-             elif branch and len(desin_prob_b)==0:
-                 prob_branch_daug.append(0)
+            if len(desin_prob_b)>0:
+                desin_prob_array = np.array(desin_prob_b)
+                prob_branch_i = np.sum(desin_prob_array)
+                if prob_branch_i >= 1:
+                    prob_branch_i = 1
+                prob_branch_daug.append(prob_branch_i)
+            elif branch and len(desin_prob_b)==0:
+                prob_branch_daug.append(0)
 
-         tran_type_daug.append([])
-         tran_prob_daug.append([])
-         tran_energy_daug.append([])
-         tran_level_end_daug.append([])
-         tran_level_daug.append([])
-         level_energy_daug.append([])
+        tran_type_daug.append([])
+        tran_prob_daug.append([])
+        tran_energy_daug.append([])
+        tran_level_end_daug.append([])
+        tran_level_daug.append([])
+        level_energy_daug.append([])
 
-         desin_type_tot.append(desin_type_daug)
-         desin_energy_tot.append(desin_energy_daug)
-         desin_prob_tot.append(desin_prob_daug)
-         desin_level_tot.append(desin_level_daug)
+        desin_type_tot.append(desin_type_daug)
+        desin_energy_tot.append(desin_energy_daug)
+        desin_prob_tot.append(desin_prob_daug)
+        desin_level_tot.append(desin_level_daug)
 
-         tran_type_tot.append(tran_type_daug)
-         tran_energy_tot.append(tran_energy_daug)
-         tran_prob_tot.append(tran_prob_daug)
-         tran_level_end_tot.append(tran_level_end_daug)
-         tran_level_tot.append(tran_level_daug)
-         level_energy_tot.append(level_energy_daug)
-         prob_branch_tot.append(prob_branch_daug)
+        tran_type_tot.append(tran_type_daug)
+        tran_energy_tot.append(tran_energy_daug)
+        tran_prob_tot.append(tran_prob_daug)
+        tran_level_end_tot.append(tran_level_end_daug)
+        tran_level_tot.append(tran_level_daug)
+        level_energy_tot.append(level_energy_daug)
+        prob_branch_tot.append(prob_branch_daug)
 
-     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
+    out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
 #===============================================================================================================
 #'''
