@@ -18,7 +18,11 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 1
+<<<<<<< HEAD
 Rad=["Cf-252"]            # list of radionuclides (Na-24)
+=======
+Rad=["Co-60"]            # list of radionuclides (Na-24)
+>>>>>>> f117661c2d48256f0eb2fba13426c0f616d8de71
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
