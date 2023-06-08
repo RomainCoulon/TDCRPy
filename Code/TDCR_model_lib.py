@@ -1213,7 +1213,8 @@ def readEShape(rad, *, z=z):
 
 #========  tester readEShape ==============
 # tic()
-# d,e,p,t = readEShape('Ag-108')
+#d,e,p,t = readEShape('Ag-108')
+#print(d,e,p,t)
 # toc()
 # print(d,e[0][1],p[1][2],t)
 # print('  ')
@@ -1280,37 +1281,46 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
                     energy_2.append(Energie[ik])      # enregistrer les energie de transition K
                     type_2.append(type_transi[ik])    # enregistrer les type de transition K
 
-        elif lacune=='defaut':                        # traiter le cas particulier qui ne précise pas la lacune
-            prob_2 = probability
-            energy_2 = Energie
-            type_2 = type_transi
+        #elif lacune=='defaut':                        # traiter le cas particulier qui ne précise pas la lacune
+            #prob_2 = probability
+            #energy_2 = Energie
+            #type_2 = type_transi
             
         else: # try to debugg
             # print("issue: ", lacune)
-            prob_2 = probability
-            energy_2 = Energie
-            type_2 = type_transi            
+            prob_2 = 0   #probability
+            energy_2 = 0  # Energie
+            if "M" in lacune:
+                type_2 = "Atom_M"  #type_transi
+            if "N" in lacune:
+                type_2 = "Atom_N"            
         
      # sampling
-        if len(probability)>1:                    # le cas où la taille du vecteur de proba supérieur à 1
-            prob_somme = np.sum(prob_2)      # calculer la somme de proba
-            prob_2 /= prob_somme             # normaliser la proba
-        
-        if prob_2 != []:
-            prob_2 = np.array(prob_2)   # convert to array
-            index_fin = sampling(prob_2)        # sample in probability of transition
-            type_fin = type_2[index_fin]        # type of transition     
-            energie_fin = energy_2[index_fin]   # energy of the transition
-        else:
+        #if len(probability)>1:               # le cas où la taille du vecteur de proba supérieur à 1
+
+            #prob_somme = np.sum(prob_2)      # calculer la somme de proba
+            #prob_2 /= prob_somme             # normaliser la proba
+        if type_2 != "Atom_M" and type_2 != "Atom_N":
+            if len(prob_2) != 0:
+                prob_2 = np.array(prob_2)           # convert to array
+                if len(probability)>1:
+                    prob_somme = np.sum(prob_2)      # calculer la somme de proba
+                    prob_2 /= prob_somme 
+                index_fin = sampling(prob_2)        # sample in probability of transition
+                type_fin = type_2[index_fin]        # type of transition     
+                energie_fin = energy_2[index_fin]   # energy of the transition
+            else:
             # print("pas de transition de rayon X ni d'électron Auger")
-            type_fin = 0
-            energie_fin = 'NON'            
-    
+                type_fin = 'NON'
+                energie_fin = 0            
+        else:
+            type_fin = 'NON'
+            energie_fin = 0 
     else:                                            # le cas où le vecteur de proba est vide 
         #print("pas de transition de rayon X ni d'électron Auger")
         type_fin = 'NON'
         energie_fin = 0
     return type_fin,energie_fin
 
-# tf,ef = relaxation_atom('Y89', 'Sr-89', 'Atom_L')
-# print(tf,ef)
+#tf,ef = relaxation_atom('PD106', 'Rh-106', 'Atom_N')
+#print(tf,ef)
