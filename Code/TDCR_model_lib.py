@@ -1039,9 +1039,9 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
 
 '''
 r = []   
-for i in range(100):
-    r.append(energie_dep_gamma(2568))
-# print(r)
+for i in range(10):
+    r.append(energie_dep_gamma(17.055))
+print(r)
 '''
 #print(Matrice_e[0:5,:])
 
@@ -1335,5 +1335,5 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
-#tf,ef = relaxation_atom('PD106', 'Rh-106', 'Atom_N')
+#tf,ef = relaxation_atom('PU240', 'Cm-244', 'Atom_L2')
 #print(tf,ef)

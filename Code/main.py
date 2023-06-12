@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10
-Rad=["Cf-252"]            # list of radionuclides (Na-24)
+Rad=["Cm-244"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -223,7 +223,7 @@ for kB_i in kB: # Loop on the kB
            ## sampling of the decay branch
            # multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))   # = prob_branch
             i_branch=tl.sampling(prob_branch[index_rad][iDaughter]) # indice de la branche globale
-           
+            print("226 branch:",i_branch)
             if p_branch[index_rad][iDaughter][i_branch] != []:
                 index_subBranch = tl.sampling(p_branch[index_rad][iDaughter][i_branch])                
                 #index_branch = tl.sampling(p_branch[index_rad][iDaughter])
@@ -264,6 +264,7 @@ for kB_i in kB: # Loop on the kB
                  #i_level = levelNumber[index_rad][iDaughter].index(levelOftheDaughter)   # Find the position in the daughter level vector
                  ## sampling of the transition in energy levels of the daughter nucleus
                     probability_tran = tl.normalise(prob_trans[index_rad][iDaughter][i_level])
+                    #print("prob",probability_tran)
                     index_t = tl.sampling(probability_tran)
                     print("268 index_transi",index_t)
                  #index_t = tl.sampling(prob[index_rad][iDaughter][i_level+1])  
@@ -382,7 +383,6 @@ for kB_i in kB: # Loop on the kB
             relaxation = False
             for particles in particle_vec:
                 if "Atom_" in particles:
-                    print("OK")
                     relaxation = True
                     break
             while relaxation:
@@ -390,7 +390,7 @@ for kB_i in kB: # Loop on the kB
                     #print(part)
                     if "Atom" in part:
                         tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],part)
-                        print(tf)
+                        print(tf,part)
                         if tf[0] == "X":
                             if tf == "XKA":
                                 particle_vec[i_part] = "Atom_L"
@@ -525,8 +525,10 @@ for kB_i in kB: # Loop on the kB
                     energy_vec.append(511)
     
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
+                    print("529 energy",energy_vec[i])
                     energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])
-                    particle_vec[i] = "electron"
+                    print("531 energy",energy_vec[i])
+                    particle_vec[i] = "photon"
              
                 if p == "Auger K" or p == "Auger L":
                     particle_vec[i] = "electron"
