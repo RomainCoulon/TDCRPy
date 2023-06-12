@@ -49,7 +49,17 @@ def tic():
     """
     toc(False)
 
+def normalise(p_x):
+    p_array = np.array(p_x)
+    if len(p_x)>1:
+        p_somme = sum(p_array)
+        p_array = p_array/p_somme
+    else:
+        p_array = p_array/p_x[0]
+    p = list(p_array)
+    return p
 
+    
 def sampling(p_x):
     """
     This function aims to sample in a pdf or a pmf
@@ -72,6 +82,8 @@ def sampling(p_x):
     for i, p in enumerate(cf):
         if p> trial: break
     return i
+
+
 
 def readPenNuc(rad):
     """
