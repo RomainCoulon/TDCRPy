@@ -1231,7 +1231,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
     ---------
     daugther -- type: str -- la fille tirée dans cette itération (par exemple NB95,PD110 etc.)
     rad ------- type: str -- le radionucléide étudié (par exemple Am-241, C-11 etc.) 
-    lacuen ---- type: str -- la lacune atomique (par exemple 'Atom-K','Atom-L' etc.)
+    lacuen ---- type: str -- la lacune atomique (par exemple 'Atom_K','Atom_L' etc.)
 
     ------
     RETURN
@@ -1290,17 +1290,17 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
             # print("issue: ", lacune)
             prob_2 = 0   #probability
             energy_2 = 0  # Energie
-            if "M" in lacune:
-                type_2 = "Atom_M"  #type_transi
-            if "N" in lacune:
-                type_2 = "Atom_N"            
+            #if "M" in lacune:
+                #type_2 = "Atom_M"  #type_transi
+            #if "N" in lacune:
+                #type_2 = "Atom_N"            
         
      # sampling
         #if len(probability)>1:               # le cas où la taille du vecteur de proba supérieur à 1
 
             #prob_somme = np.sum(prob_2)      # calculer la somme de proba
             #prob_2 /= prob_somme             # normaliser la proba
-        if type_2 != "Atom_M" and type_2 != "Atom_N":
+        if lacune != "Atom_M" and lacune != "Atom_N":
             if len(prob_2) != 0:
                 prob_2 = np.array(prob_2)           # convert to array
                 if len(probability)>1:
