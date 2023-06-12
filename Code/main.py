@@ -309,7 +309,7 @@ for kB_i in kB: # Loop on the kB
                             particle_vec.append("Atom_N")
                             #energy_vec.append(0)
                             energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                    e_sum += e_trans[index_rad][iDaughter][i_level][index_t]              # Energy summary
+                    e_sum += e_trans[index_rad][iDaughter][i_level][index_t]                  # Energy summary
         
                     levelOftheDaughter = next_level[index_rad][iDaughter][i_level][index_t]   # set the next level
                  
@@ -329,27 +329,33 @@ for kB_i in kB: # Loop on the kB
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":
                             #particle_vec.append(["Atom_K",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the K shell of the dughter nucleus
                             particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
-                            energy_vec.append(0)
+                            #energy_vec.append(0)
+                            energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EL1":
                             #particle_vec.append(["Atom_L1",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L1 shell of the dughter nucleus
                             particle_vec.append("Atom_L1")
-                            energy_vec.append(0)
+                            #energy_vec.append(0)
+                            energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EL2":
                             #particle_vec.append(["Atom_L2",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L2 shell of the dughter nucleus
                             particle_vec.append("Atom_L2")
-                            energy_vec.append(0)
+                            #energy_vec.append(0)
+                            energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EL3":
                             #particle_vec.append(["Atom_L3",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L3 shell of the dughter nucleus
                             particle_vec.append("Atom_L3")
-                            energy_vec.append(0)
+                            #energy_vec.append(0)
+                            energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EM":
                             #particle_vec.append(["Atom_M",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the M shell of the dughter nucleus
                             particle_vec.append("Atom_M")
-                            energy_vec.append(0)
+                            #energy_vec.append(0)
+                            energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EN":
                             #particle_vec.append(["Atom_N",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the N shell of the dughter nucleus
                             particle_vec.append("Atom_N")
-                            energy_vec.append(0)
+                            #energy_vec.append(0)
+                            energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
                     e_sum += e_trans[index_rad][iDaughter][i_level][index_t]              # Energy summary
         
                     levelOftheDaughter = next_level[index_rad][iDaughter][i_level][index_t]   # set the next level

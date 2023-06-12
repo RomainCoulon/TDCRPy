@@ -537,40 +537,40 @@ def readPenNuc1(rad):
      out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
 #===============================================================================================================
-#'''
-# rad = "Fe-52"
-# out1 = readPenNuc1(rad)
-# print(rad)
-# print("    ")
-# print("DAU",out1[0])
-# print("    ")
-# print("prob_daug",out1[1])
-# print("    ")
-# print("Q",out1[2])
-# print("    ")
-# print("desin_type",out1[3],len(out1[3]))
-# print("    ")
-# print("desin-prob",out1[5],len(out1[5]))
-# print("    ")
-# print("desin-level",out1[6],len(out1[6]))
-# print("    ")
-# print("prob-branch",out1[7])
-# print("    ")
-# print("len-tran-type",len(out1[8]))
-# for i in range(len(out1[8])):
-#     print("fil",i)
-#     for i1,p1 in enumerate(out1[8][i]):
-#         print(p1,len(p1))
-#     print("energy")
-#     for i2,p2 in enumerate(out1[9][i]):
-#         print(p2,len(p2))
-#     print("tran-level")
-#     for i4,p4 in enumerate(out1[11][i]):
-#         print(p4)
-#     print("end_level")
-#     for i3,p3 in enumerate(out1[12][i]):
-#         print(p3,len(p3))
-#'''
+'''
+rad = "Am-244m"
+out1 = readPenNuc1(rad)
+print(rad)
+print("    ")
+print("DAU",out1[0])
+print("    ")
+print("prob_daug",out1[1])
+print("    ")
+print("Q",out1[2])
+print("    ")
+print("desin_type",out1[3],len(out1[3]))
+print("    ")
+print("desin-prob",out1[5],len(out1[5]))
+print("    ")
+print("desin-level",out1[6],len(out1[6]))
+print("    ")
+print("prob-branch",out1[7])
+print("    ")
+print("len-tran-type",len(out1[8]))
+for i in range(len(out1[8])):
+    print("fil",i)
+    for i1,p1 in enumerate(out1[8][i]):
+        print(p1,len(p1))
+    print("energy")
+    for i2,p2 in enumerate(out1[9][i]):
+        print(p2,len(p2))
+    print("tran-prob")
+    for i4,p4 in enumerate(out1[10][i]):
+        print(p4)
+    print("end_level")
+    for i3,p3 in enumerate(out1[12][i]):
+        print(p3,len(p3))
+'''
 #print(readPenNuc('At-211'))
 
 #================================== StoppingPower for alpha particle ===========================================
