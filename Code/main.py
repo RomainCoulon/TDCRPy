@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 20
-Rad=["Cf-252"]            # list of radionuclides (Na-24)
+Rad=["Cm-245"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -444,12 +444,12 @@ for kB_i in kB: # Loop on the kB
                                 relaxation = False
                                 # energy_vec.append(0)         
                             else:
-                                print("\t\tundetermined Auger type")
+                                print("\t\tundetermined Auger type   part")
                                 relaxation = False
                                 #energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie de l'électron Auger
                             e_sum += ef
                         else:
-                            print("\t\tundertermined type")
+                            print("\t\tundertermined type   part")
                             relaxation = False
                             e_sum += ef               
             #lenElement = [] # pour détecter la présence de lacunes atomiques
@@ -567,7 +567,7 @@ for kB_i in kB: # Loop on the kB
                 e_discrete = np.linspace(0,energy_vec[i],nE) # vector for the quenched  energy calculation keV
                 delta_e = e_discrete[2]-e_discrete[1]  #keV
                 if p == "alpha":
-                    print("567 quenching",tl.E_quench_a(energy_vec[i],kB_i,nE))
+                    #print("567 quenching",tl.E_quench_a(energy_vec[i],kB_i,nE))
                     energy_vec[i] = np.cumsum(delta_e/(1+kB_i*tl.stoppingpowerA(e_discrete)))[-1]
                     e_quenching.append(energy_vec[i])
                     # energy_vec[i] = 0

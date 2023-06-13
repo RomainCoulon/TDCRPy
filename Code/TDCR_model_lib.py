@@ -1037,8 +1037,8 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
     else: result = e[inde]*1e3*e_inci/matrice[0][index]
     return result
 
-for i in range(50):
-    print(energie_dep_gamma(0.6589))
+#for i in range(50):
+    #print(energie_dep_gamma(0.6589))
 
 
 
