@@ -85,7 +85,6 @@ def sampling(p_x):
     return i
 
 
-
 def readPenNuc(rad):
     """
     This function reads the PenNuc files published in the DDEP web page
@@ -584,7 +583,7 @@ for i in range(len(out1[8])):
     for i3,p3 in enumerate(out1[12][i]):
         print(p3,len(p3))
 '''
-#print(readPenNuc('At-211'))
+#print(readPenNuc1('Ag-110m'))
 
 #================================== StoppingPower for alpha particle ===========================================
 
@@ -803,8 +802,8 @@ def readBetaShape(rad,mode,trans):
     dNdx /= sum(np.asarray(dNdx)) # normalization
     dNdx = list(dNdx)
     return e, dNdx
-
-#print(readBetaShape('C-11','beta+','trans0'))
+#e,p = readBetaShape('C-11','beta+','trans0')
+#print(p,type(p))
 
 
 
@@ -847,7 +846,7 @@ def readTDCR17spectra(rad):
 
 #============================  Fonction quenching  =====================================
 
-def E_quench_e(e,kB):
+def E_quench_e(e,kB,nE):
     """
     This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching
 
@@ -865,14 +864,14 @@ def E_quench_e(e,kB):
 
     """
     
-    e_dis = np.linspace(0,e,1000)
+    e_dis = np.linspace(0,e,nE)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
         q += delta/(1+kB*stoppingpower(i))
     return q
 
-def E_quench_a(e,kB): 
+def E_quench_a(e,kB,nE): 
     """
     This function calculate the quenched energy alpha particles according to  the Birks model of scintillation quenching
 
@@ -890,7 +889,7 @@ def E_quench_a(e,kB):
 
     """
 
-    e_dis = np.linspace(1,e,500)
+    e_dis = np.linspace(1,e,nE)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
@@ -901,7 +900,7 @@ def E_quench_a(e,kB):
 
 
 
-#print(E_quench_a(5.5e3,1e-5))
+#print(E_quench_e(3.996e5,1e-2,1000)*1e-3)
 
 #======================================================================================
 
@@ -999,7 +998,7 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
         DESCRIPTION.
 
     """
-    ## sort keV / entrée : MeV
+    ## sort keV / entrée : keV
     if e_inci <= 200:
         index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche 
         #doc = 'MCNP-MATRIX/matrice/matrice_p_1_200k.txt'
@@ -1034,8 +1033,14 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
     '''
     inde = sampling(matrice[1:,index])
     if inde == 1 : result = 0
+    elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
     else: result = e[inde]*1e3*e_inci/matrice[0][index]
     return result
+
+for i in range(50):
+    print(energie_dep_gamma(0.6589))
+
+
 
 '''
 r = []   
@@ -1323,7 +1328,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
                 type_fin = type_2[index_fin]        # type of transition     
                 energie_fin = energy_2[index_fin]   # energy of the transition
             else:
-            # print("pas de transition de rayon X ni d'électron Auger")
+                print("pas de transition de rayon X ni d'électron Auger")
                 type_fin = 'NON'
                 energie_fin = 0            
         else:
@@ -1335,5 +1340,5 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
-#tf,ef = relaxation_atom('PU240', 'Cm-244', 'Atom_L2')
+#tf,ef = relaxation_atom('LI7', 'Be-7', 'Atom_K')
 #print(tf,ef)

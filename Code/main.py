@@ -17,8 +17,8 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
-N= 1
-Rad=["H-3"]            # list of radionuclides (Na-24)
+N= 20
+Rad=["Cf-252"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -30,11 +30,11 @@ L=[1e-1]
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 Record = False                  # to record the efficiency curves
-Display = False               # to display calculation results on the console
+Display = True               # to display calculation results on the console
 #Display = True                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
-nE = 10            #number of bin to discretize the energy vector for scintillation quenching calculation
+nE = 1000            #number of bin to discretize the energy vector for scintillation quenching calculation
 
 if np.size(pmf_1) > 1:
     if sum(pmf_1) !=1: print("warning p not equal to 1")
@@ -50,7 +50,7 @@ p_branch = []          # Probablity of the different decay of branch -- indice 5
 e_branch = []          # Energy of the different decay of branch -- indice 4
 LevelDaughter = []     # Level of the Daughter nucleus just after the particle emission -- indice 6
 levelNumber = []       # The vector of level of the daughter to get information of all possible isomeric transitions -- indice 11
-prob = []              # Probibility density for each of the daughter level
+#prob = []              # Probibility density for each of the daughter level
 prob_trans = []        # Probability for each transition -- indice 10
 prob_branch = []       # Probability for each branch -- indice 7
 levelEnergy = []       # Energy of each level -- indice 13
@@ -159,40 +159,43 @@ for i, rad_i in enumerate(Rad): # radionuclide loop
     p_beta_r = []
     out_PenNuc = tl.readPenNuc1(rad_i)
     for u in range(len(out_PenNuc[0])): # daughter loop
-        print("162",len(out_PenNuc[0]),out_PenNuc[0])
+        #print("162",len(out_PenNuc[0]),out_PenNuc[0])
         e_beta_d = []
         p_beta_d = []
-        #betam = 0   # counter of beta- transition 
-        #betap = 0   # counter of beta+ transition
-        for j in range(len(particle[i][u])): # transition loop
+        betam = 0   # counter of beta- transition 
+        betap = 0   # counter of beta+ transition
+        for j in range(len(particle[i][u])): # branch loop
             #print("168",particle[i][u][j])
             e_beta_b = []
             p_beta_b = []
-            betam = 0   # counter of beta- transition 
-            betap = 0   # counter of beta+ transition
-            for k in range(len(particle[i][u][j])):
+            for k in range(len(particle[i][u][j])):  # particle loop
                 if particle[i][u][j][k] == 'beta':
-                    print('170',betam)
-                    e_beta_b.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[0])
-                    p_beta_b.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[1])
+                    e,p = tl.readBetaShape(rad_i, "beta-", "trans" + str(betam))
+                    e_beta_b.append(e)
+                    p_beta_b.append(p)
+                    #e_beta_b.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[0])
+                    #p_beta_b.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[1])
                     betam += 1
-                elif particle[i][u][j] == "beta+":
-                    e_beta_b.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[0])
-                    p_beta_b.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[1])
+                elif particle[i][u][j][k] == "beta+":
+                    e,p = tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))
+                    e_beta_b.append(e)
+                    p_beta_b.append(p)
+                    #e_beta_b.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[0])
+                    #p_beta_b.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[1])
                     betap += 1
                 else:
                     e_beta_b.append([])
                     p_beta_b.append([])   
-            print('180:',p_beta_b)
+            #print('180:',p_beta_b,len(p_beta_b))
             e_beta_d.append(e_beta_b)
             p_beta_d.append(p_beta_b)
-        e_beta_0.append(e_beta_1)
-        p_beta_0.append(p_beta_1)
+        e_beta_r.append(e_beta_d)
+        p_beta_r.append(p_beta_d)
         #print('0:',e_beta_0,p_beta_0)
-    e_beta.append(e_beta_0)
-    p_beta.append(p_beta_0)
+    e_beta.append(e_beta_r)
+    p_beta.append(p_beta_r)
 
-#print(p_beta)
+#print("beta+  198",p_beta)
 
 for kB_i in kB: # Loop on the kB
     mean_efficiency_S = []  # efficiency of single counte rate
@@ -233,17 +236,20 @@ for kB_i in kB: # Loop on the kB
            ## sampling of the decay branch
            # multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))   # = prob_branch
             i_branch=tl.sampling(prob_branch[index_rad][iDaughter]) # indice de la branche globale
-            if Display: print("226 branch:",i_branch)
+            #if Display: print("226 branch:",i_branch)
             if p_branch[index_rad][iDaughter][i_branch] != []:
-                index_subBranch = tl.sampling(p_branch[index_rad][iDaughter][i_branch])                
+                branch_proba = tl.normalise(p_branch[index_rad][iDaughter][i_branch])
+                index_subBranch = tl.sampling(branch_proba)
+                #print("242   ",branch_proba)
+                #print("242   index_subBranch",index_subBranch)                
                 #index_branch = tl.sampling(p_branch[index_rad][iDaughter])
                 particle_branch = particle[index_rad][iDaughter][i_branch][index_subBranch]            # sampled particle emitted by the mother
                 energy_branch =  e_branch[index_rad][iDaughter][i_branch][index_subBranch]             # energy of the particle emitted by the mother
                 probability_branch = p_branch[index_rad][iDaughter][i_branch][index_subBranch]         # probability of the sampled branch
                 levelOftheDaughter = LevelDaughter[index_rad][iDaughter][i_branch][index_subBranch]    # Level of the daughter just after the particle emission from the mother
-                if particle_branch[:4] == "Atom":
-                    particle_branch = [particle_branch]
-                    particle_branch.append(DaughterVec[index_rad][iDaughter])
+                #if particle_branch[:4] == "Atom":
+                    #particle_branch = [particle_branch]
+                    #particle_branch.append(DaughterVec[index_rad][iDaughter])
                 if Display: print("\t Sampled decay branch:")
                 if Display: print("\t\t Particle = ", particle_branch)
                 if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
@@ -276,7 +282,7 @@ for kB_i in kB: # Loop on the kB
                     probability_tran = tl.normalise(prob_trans[index_rad][iDaughter][i_level])
                     #print("prob",probability_tran)
                     index_t = tl.sampling(probability_tran)
-                    print("268 index_transi",index_t)
+                    #print("282 index_transi",index_t)
                  #index_t = tl.sampling(prob[index_rad][iDaughter][i_level+1])  
                     if Display: print("\t\t Energy of the level = ", levelEnergy[index_rad][iDaughter][i_level], " keV")
                     if Display: print("\t\t Transition type = ", transitionType[index_rad][iDaughter][i_level][index_t])
@@ -400,7 +406,7 @@ for kB_i in kB: # Loop on the kB
                     #print(part)
                     if "Atom" in part:
                         tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],part)
-                        print(tf,part)
+                        #print(tf,part)
                         if tf[0] == "X":
                             if tf == "XKA":
                                 particle_vec[i_part] = "Atom_L"
@@ -421,7 +427,7 @@ for kB_i in kB: # Loop on the kB
                                 energy_vec.append(ef)
                                 relaxation = False
                             else:
-                                print("undetermined x rays type")
+                                print("\t\tundetermined x rays type")
                                 relaxation = False
                             e_sum += ef
                         if tf[0] == "A":
@@ -438,12 +444,12 @@ for kB_i in kB: # Loop on the kB
                                 relaxation = False
                                 # energy_vec.append(0)         
                             else:
-                                print("undetermined Auger type")
+                                print("\t\tundetermined Auger type")
                                 relaxation = False
                                 #energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie de l'électron Auger
                             e_sum += ef
                         else:
-                            print("undertermined type")
+                            print("\t\tundertermined type")
                             relaxation = False
                             e_sum += ef               
             #lenElement = [] # pour détecter la présence de lacunes atomiques
@@ -516,29 +522,29 @@ for kB_i in kB: # Loop on the kB
             '''
             #print(p_beta[0][0][-2])
             #print(1+index_branch,iDaughter)
-            print("509",p_beta[index_rad][iDaughter][i_branch],i_branch)
+            #print("509",p_beta[index_rad][iDaughter][i_branch],i_branch)
             for i, p in enumerate(particle_vec):
                 if p == "beta":
-                    n_branch = len(e_branch[index_rad][iDaughter])
+                    #n_branch = len(e_branch[index_rad][iDaughter])
                     #index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][-(1+i_branch)])
-                    index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch])
+                    index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch][index_subBranch])
                     particle_vec[i] = "electron"
-                    energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_beta_energy]
+                    energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_subBranch][index_beta_energy]
                     #energy_vec[i] = e_beta[index_rad][iDaughter][-(1+i_branch)][index_beta_energy]
              
                 if p == "beta+":
-                    index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch]) # tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
+                    index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch][index_subBranch]) # tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
                     particle_vec[i] = "positron"
-                    energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_beta_energy] #e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
+                    energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_subBranch][index_beta_energy] #e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
                     particle_vec.append("gamma")
                     particle_vec.append("gamma")
                     energy_vec.append(511)
                     energy_vec.append(511)
     
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                    print("529 energy",energy_vec[i])
+                    #print("529 energy",energy_vec[i])
                     energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])
-                    print("531 energy",energy_vec[i])
+                    #print("531 energy",energy_vec[i])
                     particle_vec[i] = "photon"
              
                 if p == "Auger K" or p == "Auger L":
@@ -556,21 +562,30 @@ for kB_i in kB: # Loop on the kB
            ## Now we have the (particle, energy) vectors that we would like
     
            ## Calculation of the scintillation quenching with the Birks Model
+            e_quenching=[]
             for i, p in enumerate(particle_vec):
                 e_discrete = np.linspace(0,energy_vec[i],nE) # vector for the quenched  energy calculation keV
                 delta_e = e_discrete[2]-e_discrete[1]  #keV
                 if p == "alpha":
+                    print("567 quenching",tl.E_quench_a(energy_vec[i],kB_i,nE))
                     energy_vec[i] = np.cumsum(delta_e/(1+kB_i*tl.stoppingpowerA(e_discrete)))[-1]
+                    e_quenching.append(energy_vec[i])
                     # energy_vec[i] = 0
                     # for j in e_discrete:
                     #     energy_vec[i] += delta_e/(1+kB_i*tl.stoppingpowerA(j)) # input (keV) / output (keV)
-                if p == "electron" or p == "positron":
+                elif p == "electron" or p == "positron":
+                    energy_vec[i] = tl.E_quench_e(energy_vec[i]*1e3,kB_i*1e3,nE)*1e-3
+                    e_quenching.append(energy_vec[i])
+                    #print("quenching beta",tl.E_quench_e(energy_vec[i]*1e3,kB_i*1e3,nE)*1e-3)
                     # energy_vec = np.cumsum(delta_e/(1+kB_i*1e3*tl.stoppingpower(e_discrete*1e3)))
-                    energy_vec[i] = 0
-                    for j in e_discrete:
-                        energy_vec[i] += delta_e/(1+kB_i*1e3*tl.stoppingpower(j*1e3)) # stoppingpower :input in (eV) / output (MeV)
-                    
-            if Display: print("\t\t quenched energy : ", energy_vec, "keV")
+                    #energy_vec[i] = 0
+                    #for j in e_discrete:
+                        #energy_vec[i] += delta_e/(1+kB_i*1e3*tl.stoppingpower(j*1e3)) # stoppingpower :input in (eV) / output (MeV)
+                else:
+                    #print("\t\tnone particle quenched") 
+                    e_quenching.append(0)   
+            if Display: print("\t\t energy_vec : ", energy_vec, "keV")
+            if Display: print("\t\t quenched energy : ", e_quenching, "keV")
     
            # tl.toc()
     
