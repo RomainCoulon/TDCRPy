@@ -17,8 +17,8 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
-N= 10
-Rad=["Cm-244"]            # list of radionuclides (Na-24)
+N= 1
+Rad=["H-3"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -30,7 +30,7 @@ L=[1e-1]
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
 Record = False                  # to record the efficiency curves
-Display = True               # to display calculation results on the console
+Display = False               # to display calculation results on the console
 #Display = True                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
@@ -155,34 +155,44 @@ for i, rad_i in enumerate(Rad): # radionuclide loop
 e_beta = []
 p_beta = []
 for i, rad_i in enumerate(Rad): # radionuclide loop
-    e_beta_0 = []
-    p_beta_0 = []
+    e_beta_r = []
+    p_beta_r = []
     out_PenNuc = tl.readPenNuc1(rad_i)
     for u in range(len(out_PenNuc[0])): # daughter loop
-        e_beta_1 = []
-        p_beta_1 = []
-        betam = 0   # counter of beta- transition 
-        betap = 0   # counter of beta+ transition
+        print("162",len(out_PenNuc[0]),out_PenNuc[0])
+        e_beta_d = []
+        p_beta_d = []
+        #betam = 0   # counter of beta- transition 
+        #betap = 0   # counter of beta+ transition
         for j in range(len(particle[i][u])): # transition loop
-            if particle[i][u][j] == "beta":
-                e_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[0])
-                p_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[1])
-                betam += 1
-            elif particle[i][u][j] == "beta+":
-                e_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[0])
-                p_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[1])
-                betap += 1
-            else:
-                e_beta_1.append([])
-                p_beta_1.append([])   
-        #print('1:',p_beta_1)
+            #print("168",particle[i][u][j])
+            e_beta_b = []
+            p_beta_b = []
+            betam = 0   # counter of beta- transition 
+            betap = 0   # counter of beta+ transition
+            for k in range(len(particle[i][u][j])):
+                if particle[i][u][j][k] == 'beta':
+                    print('170',betam)
+                    e_beta_b.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[0])
+                    p_beta_b.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[1])
+                    betam += 1
+                elif particle[i][u][j] == "beta+":
+                    e_beta_b.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[0])
+                    p_beta_b.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[1])
+                    betap += 1
+                else:
+                    e_beta_b.append([])
+                    p_beta_b.append([])   
+            print('180:',p_beta_b)
+            e_beta_d.append(e_beta_p)
+            p_beta_d.append(p_beta_p)
         e_beta_0.append(e_beta_1)
         p_beta_0.append(p_beta_1)
         #print('0:',e_beta_0,p_beta_0)
     e_beta.append(e_beta_0)
     p_beta.append(p_beta_0)
 
-
+#print(p_beta)
 
 for kB_i in kB: # Loop on the kB
     mean_efficiency_S = []  # efficiency of single counte rate
@@ -223,7 +233,7 @@ for kB_i in kB: # Loop on the kB
            ## sampling of the decay branch
            # multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))   # = prob_branch
             i_branch=tl.sampling(prob_branch[index_rad][iDaughter]) # indice de la branche globale
-            print("226 branch:",i_branch)
+            if Display: print("226 branch:",i_branch)
             if p_branch[index_rad][iDaughter][i_branch] != []:
                 index_subBranch = tl.sampling(p_branch[index_rad][iDaughter][i_branch])                
                 #index_branch = tl.sampling(p_branch[index_rad][iDaughter])
@@ -506,6 +516,7 @@ for kB_i in kB: # Loop on the kB
             '''
             #print(p_beta[0][0][-2])
             #print(1+index_branch,iDaughter)
+            print("509",p_beta[index_rad][iDaughter][i_branch],i_branch)
             for i, p in enumerate(particle_vec):
                 if p == "beta":
                     n_branch = len(e_branch[index_rad][iDaughter])
