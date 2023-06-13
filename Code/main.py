@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 20
-Rad=["Cm-245"]            # list of radionuclides (Na-24)
+Rad=["Am-243"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -406,7 +406,6 @@ for kB_i in kB: # Loop on the kB
                     #print(part)
                     if "Atom" in part:
                         tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],part)
-                        #print(tf,part)
                         if tf[0] == "X":
                             if tf == "XKA":
                                 particle_vec[i_part] = "Atom_L"
@@ -430,7 +429,7 @@ for kB_i in kB: # Loop on the kB
                                 print("\t\tundetermined x rays type")
                                 relaxation = False
                             e_sum += ef
-                        if tf[0] == "A":
+                        elif tf[0] == "A":
                             if tf == 'Auger K':
                                 #energy_vec[i_part] = ef
                                 particle_vec[i_part]='Atom_L'                          # mise à jour du vecteur particle avec l'électron Auger'
@@ -444,12 +443,12 @@ for kB_i in kB: # Loop on the kB
                                 relaxation = False
                                 # energy_vec.append(0)         
                             else:
-                                print("\t\tundetermined Auger type   part")
+                                print("\t\tundetermined Auger type   ",part,tf,ef)
                                 relaxation = False
                                 #energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie de l'électron Auger
                             e_sum += ef
                         else:
-                            print("\t\tundertermined type   part")
+                            print("\t\tundertermined type   ",part,tf,ef)
                             relaxation = False
                             e_sum += ef               
             #lenElement = [] # pour détecter la présence de lacunes atomiques
