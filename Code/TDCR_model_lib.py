@@ -747,7 +747,7 @@ plt.savefig('Quenching/stoppingpowerE_A.png')
 
 #====================  Fonction pour lire BetaShape   ========================================
 
-def readBetaShape(rad,mode,trans):
+def readBetaShape(rad,mode,level):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
     refs:
@@ -760,9 +760,8 @@ def readBetaShape(rad,mode,trans):
         identifier of the radionuclide. e.g. 'Na-22'
     mode : string
         identifier of the decay mode. 'beta-' or 'beta+'
-    trans : string
-        identifier of the transition. 'trans0','trans1' ....
-
+    level : int
+        level of the daughter after decay.  0,1,2,3 ....
     Returns
     -------
     e : list
@@ -775,7 +774,7 @@ def readBetaShape(rad,mode,trans):
     file = "decayData//All-nuclides_BetaShape.zip"
     z = zf.ZipFile(file)
     Rad = rad.replace('-','')
-    name_doc = Rad+'/'+mode+'_'+Rad+'_'+trans+'.bs'
+    name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
     with z.open(name_doc) as file_trans:
         data = file_trans.readlines()
 
@@ -823,7 +822,8 @@ def readTDCR17spectra(rad):
 
 
 # tic()
-# readBetaShape("Co-60", "beta-", "tot")
+#e,r =  readBetaShape("Co-60", "beta-", 1)
+#print(e,r)
 # toc() # 0.016 s
 
 #=====================================================================================
