@@ -822,8 +822,8 @@ def readTDCR17spectra(rad):
 
 
 # tic()
-#e,r =  readBetaShape("Co-60", "beta-", 1)
-#print(e,r)
+#e,r =  readBetaShape("Nb-95m", "beta-", 1)
+#print(e[-1])
 # toc() # 0.016 s
 
 #=====================================================================================
@@ -1231,7 +1231,7 @@ def readEShape(rad, *, z=z):
 
 #========  tester readEShape ==============
 # tic()
-#d,e,p,t = readEShape('Ag-108')
+#d,e,p,t = readEShape('Na-22')
 #print(d,e,p,t)
 # toc()
 # print(d,e[0][1],p[1][2],t)
@@ -1328,7 +1328,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
                 type_fin = type_2[index_fin]        # type of transition     
                 energie_fin = energy_2[index_fin]   # energy of the transition
             else:
-                print("pas de transition de rayon X ni d'électron Auger")
+                print("pas de transition de rayon X ni d'électron Auger pour cette lacune: ",lacune)
                 type_fin = 'NON'
                 energie_fin = 0            
         else:
@@ -1340,5 +1340,5 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
-#tf,ef = relaxation_atom('LI7', 'Be-7', 'Atom_K')
+#tf,ef = relaxation_atom('NE22', 'Na-22', 'Atom_K')
 #print(tf,ef)

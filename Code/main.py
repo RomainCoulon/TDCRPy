@@ -17,10 +17,10 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
-N= 5
-Rad=["Na-22","Fe-55","Fe-59"]            # list of radionuclides (Na-24)
+N= 10
+Rad=["Na-22"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
-pmf_1=[0.3,0.4,0.3]                # relative abondance (pmf)
+pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
 # kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
 L=[1e-1]
@@ -152,6 +152,7 @@ for i, rad_i in enumerate(Rad): # radionuclide loop
     p_beta.append(p_beta_0)
 
 '''
+'''
 e_beta = []
 p_beta = []
 for i, rad_i in enumerate(Rad): # radionuclide loop
@@ -194,7 +195,7 @@ for i, rad_i in enumerate(Rad): # radionuclide loop
         #print('0:',e_beta_0,p_beta_0)
     e_beta.append(e_beta_r)
     p_beta.append(p_beta_r)
-
+'''
 #print("beta+  198",e_beta)
 
 for kB_i in kB: # Loop on the kB
@@ -247,6 +248,8 @@ for kB_i in kB: # Loop on the kB
                 energy_branch =  e_branch[index_rad][iDaughter][i_branch][index_subBranch]             # energy of the particle emitted by the mother
                 probability_branch = p_branch[index_rad][iDaughter][i_branch][index_subBranch]         # probability of the sampled branch
                 levelOftheDaughter = LevelDaughter[index_rad][iDaughter][i_branch][index_subBranch]    # Level of the daughter just after the particle emission from the mother
+                level_before_trans = LevelDaughter[index_rad][iDaughter][i_branch][index_subBranch]
+                print("252  ",level_before_trans)
                 #if particle_branch[:4] == "Atom":
                     #particle_branch = [particle_branch]
                     #particle_branch.append(DaughterVec[index_rad][iDaughter])
@@ -406,6 +409,7 @@ for kB_i in kB: # Loop on the kB
                     #print(part)
                     if "Atom" in part:
                         tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],part)
+                        #print(" 412 ",tf)
                         if tf[0] == "X":
                             if tf == "XKA":
                                 particle_vec[i_part] = "Atom_L"
@@ -524,17 +528,23 @@ for kB_i in kB: # Loop on the kB
             #print("509",p_beta[index_rad][iDaughter][i_branch],i_branch)
             for i, p in enumerate(particle_vec):
                 if p == "beta":
+                    e_b,p_b = tl.readBetaShape(rad_i,"beta-",level_before_trans)
                     #n_branch = len(e_branch[index_rad][iDaughter])
                     #index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][-(1+i_branch)])
-                    index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch][index_subBranch])
+                    #index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch][index_subBranch])
+                    index_beta_energy = tl.sampling(p_b)
                     particle_vec[i] = "electron"
-                    energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_subBranch][index_beta_energy]
+                    energy_vec[i] = e_b[index_beta_energy]
+                    #energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_subBranch][index_beta_energy]
                     #energy_vec[i] = e_beta[index_rad][iDaughter][-(1+i_branch)][index_beta_energy]
              
                 if p == "beta+":
-                    index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch][index_subBranch]) # tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
+                    e_b,p_b = tl.readBetaShape(rad_i,"beta+",level_before_trans)
+                    index_beta_energy = tl.sampling(p_b)
+                    #index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch][index_subBranch]) # tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
                     particle_vec[i] = "positron"
-                    energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_subBranch][index_beta_energy] #e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
+                    energy_vec[i] = e_b[index_beta_energy]
+                    #energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_subBranch][index_beta_energy] #e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
                     particle_vec.append("gamma")
                     particle_vec.append("gamma")
                     energy_vec.append(511)
