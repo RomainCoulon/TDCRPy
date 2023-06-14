@@ -1099,9 +1099,9 @@ def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C11
 
 #print(transf_name('108PD'))
 
-file = 'decayData//All-nuclides_Ensdf1.zip'
+file = 'decayData//All-nuclides_Ensdf.zip'
 z = zf.ZipFile(file)
-print(z.namelist())
+#print(z.namelist())
 def readEShape(rad, *, z=z):
     """
     --------------------------------------------------
@@ -1133,14 +1133,15 @@ def readEShape(rad, *, z=z):
             data[i] = data[i].replace("b",'')
             data[i] = data[i].replace("\\r\\n",'')
             data[i] = data[i].replace("'",'')
-            
+            if "\\n" in data[i]:data[i] = data[i].replace("\\n","")
+        #print(data)
         for i in range(nl):
             data[i] = data[i].split()
         
         for i in range(nl):
             if i>0 and ('L' in data[i]) and ("AUGER" in data[i]) and ("|]" in data[i-1]):
                 data.insert(i,[data[i][0],'T'])
-    print(data)
+    #print(data)
     index_auger = []
     index_end = []
     daug_name = []
@@ -1234,8 +1235,8 @@ def readEShape(rad, *, z=z):
 # tic()
 #d,e,p,t = readEShape('Cf-252')
 #print(d,e,p,t)
-#d1,e1,p1,t1 = readEShape('Mn-52')
-#print(d1,e1,p1,t1)
+d1,e1,p1,t1 = readEShape('At-218')
+print(d1,e1,p1,t1)
 # toc()
 # print(d,e[0][1],p[1][2],t)
 # print('  ')
