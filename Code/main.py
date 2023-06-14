@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10
-Rad=["Na-22"]            # list of radionuclides (Na-24)
+Rad=["Mn-52"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -249,7 +249,7 @@ for kB_i in kB: # Loop on the kB
                 probability_branch = p_branch[index_rad][iDaughter][i_branch][index_subBranch]         # probability of the sampled branch
                 levelOftheDaughter = LevelDaughter[index_rad][iDaughter][i_branch][index_subBranch]    # Level of the daughter just after the particle emission from the mother
                 level_before_trans = LevelDaughter[index_rad][iDaughter][i_branch][index_subBranch]
-                print("252  ",level_before_trans)
+                print("252 level daughter ",level_before_trans)
                 #if particle_branch[:4] == "Atom":
                     #particle_branch = [particle_branch]
                     #particle_branch.append(DaughterVec[index_rad][iDaughter])

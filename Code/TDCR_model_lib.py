@@ -1127,19 +1127,20 @@ def readEShape(rad, *, z=z):
     with z.open(name) as f:
         data = f.readlines()
         nl = np.size(data)
+        #print(data)
         for i in range(nl):
             data[i] = str(data[i])
             data[i] = data[i].replace("b",'')
             data[i] = data[i].replace("\\r\\n",'')
             data[i] = data[i].replace("'",'')
-        
+            
         for i in range(nl):
             data[i] = data[i].split()
         
         for i in range(nl):
             if i>0 and ('L' in data[i]) and ("AUGER" in data[i]) and ("|]" in data[i-1]):
                 data.insert(i,[data[i][0],'T'])
-
+    print(data)
     index_auger = []
     index_end = []
     daug_name = []
@@ -1231,8 +1232,10 @@ def readEShape(rad, *, z=z):
 
 #========  tester readEShape ==============
 # tic()
-#d,e,p,t = readEShape('Na-22')
+#d,e,p,t = readEShape('Cf-252')
 #print(d,e,p,t)
+d1,e1,p1,t1 = readEShape('Mn-52')
+print(d1,e1,p1,t1)
 # toc()
 # print(d,e[0][1],p[1][2],t)
 # print('  ')
@@ -1340,5 +1343,5 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         energie_fin = 0
     return type_fin,energie_fin
 
-#tf,ef = relaxation_atom('NE22', 'Na-22', 'Atom_K')
+#tf,ef = relaxation_atom('CR52', 'Mn-52', 'Atom_K')
 #print(tf,ef)
