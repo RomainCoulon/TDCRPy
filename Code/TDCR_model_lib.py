@@ -1099,9 +1099,9 @@ def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C11
 
 #print(transf_name('108PD'))
 
-file = 'decayData//All-nuclides_Ensdf.zip'
+file = 'decayData//All-nuclides_Ensdf1.zip'
 z = zf.ZipFile(file)
-
+print(z.namelist())
 def readEShape(rad, *, z=z):
     """
     --------------------------------------------------
@@ -1234,8 +1234,8 @@ def readEShape(rad, *, z=z):
 # tic()
 #d,e,p,t = readEShape('Cf-252')
 #print(d,e,p,t)
-d1,e1,p1,t1 = readEShape('Mn-52')
-print(d1,e1,p1,t1)
+#d1,e1,p1,t1 = readEShape('Mn-52')
+#print(d1,e1,p1,t1)
 # toc()
 # print(d,e[0][1],p[1][2],t)
 # print('  ')
