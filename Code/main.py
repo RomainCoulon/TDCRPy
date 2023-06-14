@@ -17,10 +17,10 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
-N= 20
-Rad=["Am-243"]            # list of radionuclides (Na-24)
+N= 5
+Rad=["Na-22","Fe-55","Fe-59"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
-pmf_1=[1]                # relative abondance (pmf)
+pmf_1=[0.3,0.4,0.3]                # relative abondance (pmf)
 kB =[1.0e-5]
 # kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
 L=[1e-1]
@@ -195,7 +195,7 @@ for i, rad_i in enumerate(Rad): # radionuclide loop
     e_beta.append(e_beta_r)
     p_beta.append(p_beta_r)
 
-#print("beta+  198",p_beta)
+#print("beta+  198",e_beta)
 
 for kB_i in kB: # Loop on the kB
     mean_efficiency_S = []  # efficiency of single counte rate
@@ -236,7 +236,7 @@ for kB_i in kB: # Loop on the kB
            ## sampling of the decay branch
            # multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))   # = prob_branch
             i_branch=tl.sampling(prob_branch[index_rad][iDaughter]) # indice de la branche globale
-            #if Display: print("226 branch:",i_branch)
+            #if Display: print("239 branch:",i_branch)
             if p_branch[index_rad][iDaughter][i_branch] != []:
                 branch_proba = tl.normalise(p_branch[index_rad][iDaughter][i_branch])
                 index_subBranch = tl.sampling(branch_proba)
@@ -539,7 +539,7 @@ for kB_i in kB: # Loop on the kB
                     particle_vec.append("gamma")
                     energy_vec.append(511)
                     energy_vec.append(511)
-    
+                    #print("542 ",e_beta[index_rad][iDaughter][i_branch])
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
                     #print("529 energy",energy_vec[i])
                     energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])

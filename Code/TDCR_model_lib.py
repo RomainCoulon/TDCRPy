@@ -583,7 +583,7 @@ for i in range(len(out1[8])):
     for i3,p3 in enumerate(out1[12][i]):
         print(p3,len(p3))
 '''
-#print(readPenNuc1('Ag-110m'))
+#print(readPenNuc1('Pr-144m'))
 
 #================================== StoppingPower for alpha particle ===========================================
 
