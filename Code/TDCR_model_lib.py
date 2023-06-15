@@ -583,8 +583,9 @@ for i in range(len(out1[8])):
     for i3,p3 in enumerate(out1[12][i]):
         print(p3,len(p3))
 '''
-#print(readPenNuc1('Pr-144m'))
-
+#print(readPenNuc1('Tc-99m'))
+#out = readPenNuc1('Tc-99m')
+#print(sampling(out[1]))
 #================================== StoppingPower for alpha particle ===========================================
 
 if absolutePath: f_alpha = open('G:\Python_modules\Jialin\Code\Quenching\\alpha_toulene.txt')

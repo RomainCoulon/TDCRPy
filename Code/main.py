@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10
-Rad=["Rb-82"]            # list of radionuclides (Na-24)
+Rad=["Rh-106"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -230,7 +230,7 @@ for kB_i in kB: # Loop on the kB
             """
            ## sampling of the daughter
             iDaughter=tl.sampling(np.asarray(Pdaughter[index_rad])/sum(np.asarray(Pdaughter[index_rad])))
-           #print('168 iDaughter',iDaughter)
+            #print("233 index daug   ",iDaughter)
             if Display: print("\t Sampled daughter:")
             if Display: print("\t\t Daughter = ", DaughterVec[index_rad][iDaughter])           
            
@@ -249,7 +249,7 @@ for kB_i in kB: # Loop on the kB
                 probability_branch = p_branch[index_rad][iDaughter][i_branch][index_subBranch]         # probability of the sampled branch
                 levelOftheDaughter = LevelDaughter[index_rad][iDaughter][i_branch][index_subBranch]    # Level of the daughter just after the particle emission from the mother
                 level_before_trans = LevelDaughter[index_rad][iDaughter][i_branch][index_subBranch]
-                print("252 level daughter ",level_before_trans)
+                #print("252 level daughter ",level_before_trans)
                 #if particle_branch[:4] == "Atom":
                     #particle_branch = [particle_branch]
                     #particle_branch.append(DaughterVec[index_rad][iDaughter])
@@ -265,39 +265,34 @@ for kB_i in kB: # Loop on the kB
             else:
                 if Display: print("\t Sampled decay branch:")
                 if Display: print("\t\t Particle = isomeric transition, no particle")
-                if Display: print("\t\t Level number =", levelNumber[index_rad][iDaughter][0])
-                levelOftheDaughter = Q_value[index_rad][iDaughter]
+                #if Display: print("\t\t Level number =", levelNumber[index_rad][iDaughter][0])
+                levelOftheDaughter = 0
                 e_sum = 0
-               
 
             '''
             I-1 Transition
             '''  
     
             if Display: print("\t Subsequent isomeric transition")          # finish with the mother / now with the daughter
-            while levelOftheDaughter > 0:
-           #while levelOftheDaughter > 0:                       # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
+            while levelOftheDaughter > 0:                                   # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
                 #if p_branch[index_rad][iDaughter][i_branch] != []:
                 if transitionType[index_rad][iDaughter][i_branch] != []:
-                    i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])
-                 #i_level = levelNumber[index_rad][iDaughter].index(levelOftheDaughter)   # Find the position in the daughter level vector
+                    i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])  # Find the position in the daughter level vector
+
                  ## sampling of the transition in energy levels of the daughter nucleus
                     probability_tran = tl.normalise(prob_trans[index_rad][iDaughter][i_level])
                     #print("prob",probability_tran)
                     index_t = tl.sampling(probability_tran)
                     #print("282 index_transi",index_t)
-                 #index_t = tl.sampling(prob[index_rad][iDaughter][i_level+1])  
                     if Display: print("\t\t Energy of the level = ", levelEnergy[index_rad][iDaughter][i_level], " keV")
                     if Display: print("\t\t Transition type =          ", transitionType[index_rad][iDaughter][i_level][index_t])
                     if Display: print("\t\t Energy of the transition = ", e_trans[index_rad][iDaughter][i_level][index_t], "keV")
                     if Display: print("\t\t next level =               ", next_level[index_rad][iDaughter][i_level][index_t])
                  
                  # Scoring
-                    if transitionType[index_rad][iDaughter][i_level][index_t] == "GA":
-                 #if transitionType[index_rad][iDaughter][i_level+1][index_t] == "GA": # if it is a gamma that has been emitted
-                        particle_vec.append("gamma")                  # Update of the particle vector
-                        energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                   #energy_vec.append(e_trans[index_rad][iDaughter][i_level+1][index_t])    # Update the energy vector
+                    if transitionType[index_rad][iDaughter][i_level][index_t] == "GA":    # if it is a gamma that has been emitted
+                        particle_vec.append("gamma")                                   # Update of the particle vector
+                        energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])  # Update the energy vector
                     else:                                           # if not, it is a internal conversion, so an electron
                         particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
                         energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])    # Update the energy vector
@@ -402,10 +397,7 @@ for kB_i in kB: # Loop on the kB
             for i_part in range(len(particle_vec)):
                 relaxation = False
                 if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part]:
-                    #tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec[i_part])
                     relaxation = True
-                    #X_Auger = []
-                    #X_Auger_e = []
                 while relaxation:
                     tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec[i_part])
                     if tf == "XKA":
@@ -437,8 +429,6 @@ for kB_i in kB: # Loop on the kB
                         print("untermined x or Auger")
                         relaxation = False
                     e_sum += ef
-                #particle_vec.append(X_Auger)
-                #energy_vec.append(X_Auger_e)
 
             '''   
             for particles in particle_vec:
@@ -565,9 +555,6 @@ for kB_i in kB: # Loop on the kB
             '''
             III. INTERACTION RAYONNEMENT/MATIERE + SPECTRES D'EMISSION
             '''
-            #print(p_beta[0][0][-2])
-            #print(1+index_branch,iDaughter)
-            #print("509",p_beta[index_rad][iDaughter][i_branch],i_branch)
             for i, p in enumerate(particle_vec):
                 if p == "beta":
                     e_b,p_b = tl.readBetaShape(rad_i,"beta-",level_before_trans)
@@ -593,22 +580,12 @@ for kB_i in kB: # Loop on the kB
                     energy_vec.append(511)
                     #print("542 ",e_beta[index_rad][iDaughter][i_branch])
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                    #if p == "gamma":
                     #print("529 energy",energy_vec[i])
                     energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])
-                    #print("531 energy",energy_vec[i])
                     particle_vec[i] = "photon"
                 if p == "Auger K" or p == "Auger L":
                     particle_vec[i] = "electron"
-                '''
-                elif type(p) == list:
-                    for i3 in range(len(p)):
-                        if p[i3] == "Auger K" or p[i3] == "Auger L":
-                            particle_vec[i][i3] = "electron"
-                        if p[i3] == "XKA" or p[i3] == "XKB" or p[i3] == "XL":
-                            particle_vec[i][i3] = "photon"
-                            energy_vec[i][i3] = tl.energie_dep_gamma(energy_vec[i][i3])
-                '''
+
             if Display: print("\t Summary of the final charged particles")
             if Display: print("\t\t particles : ", particle_vec)
             if Display: print("\t\t energy    : ", energy_vec, "keV")
