@@ -334,7 +334,7 @@ def readPenNuc1(rad):
 
      url = "http://www.lnhb.fr/nuclides/"+rad+".PenNuc.txt"
      file = rq.urlopen(url)
-    
+     
      # Format the data 
      decayData = []
      for line in file:
@@ -549,9 +549,9 @@ def readPenNuc1(rad):
      out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
 
-tic()
-readPenNuc1("Co-60")
-toc()
+#tic()
+#readPenNuc1("Co-60")
+#toc()
 #===============================================================================================================
 '''
 rad = "Am-244m"
@@ -751,10 +751,10 @@ plt.savefig('Quenching/stoppingpowerE_A.png')
 #=============================================================================================
 
 #====================  Fonction pour lire BetaShape   ========================================
-file = "decayData//All-nuclides_BetaShape.zip"
-z = zf.ZipFile(file)
+file_betashape = "decayData//All-nuclides_BetaShape.zip"
+z_betashape = zf.ZipFile(file_betashape)
 
-def readBetaShape(rad,mode,level,z=z):
+def readBetaShape(rad,mode,level,z=z_betashape):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
     refs:
@@ -777,7 +777,7 @@ def readBetaShape(rad,mode,level,z=z):
         the probability density in keV-1.
 
     """
-   
+
     Rad = rad.replace('-','')
     name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
     with z.open(name_doc) as file_trans:
@@ -1108,10 +1108,10 @@ def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C11
 
 #print(transf_name('108PD'))
 
-file = 'decayData//All-nuclides_Ensdf.zip'
-z = zf.ZipFile(file)
+file_ensdf = 'decayData//All-nuclides_Ensdf.zip'
+z_ensdf = zf.ZipFile(file_ensdf)
 #print(z.namelist())
-def readEShape(rad, *, z=z):
+def readEShape(rad, *, z=z_ensdf):
     """
     --------------------------------------------------
     pour lire les fichiers dans All-nuclides_Ensdf.zip
