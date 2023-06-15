@@ -276,7 +276,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
         decayData[i] = decayData[i].replace("b'","")
         decayData[i] = decayData[i].replace("\\r\\n","")
         decayData[i] = decayData[i].replace("'","") 
-    #print(decayData[0])
+
     for il in range(len(decayData)):
         if "NDA " in decayData[il]: decayData[il] = decayData[il].replace("NDA ","NDA; ") 
         if "DAU " in decayData[il]: decayData[il] = decayData[il].replace("DAU ","DAU; ") 
@@ -308,7 +308,6 @@ def readPenNuc2(rad,z1=z_PenNuc):
         for a2 in range(len(a1)):
             a1[a2] = a1[a2].strip()
 
-    #print(decayData)
     '''
      ========================
      Repérer chaque noyau fil
@@ -489,9 +488,9 @@ def readPenNuc2(rad,z1=z_PenNuc):
     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
     return out
 #tic()
-o = readPenNuc2("H-3")
+#o = readPenNuc2("H-3")
 #toc()
-print(o)
+#print(o)
 
 def readPenNuc1(rad):
      '''
