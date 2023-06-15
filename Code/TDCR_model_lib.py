@@ -548,6 +548,10 @@ def readPenNuc1(rad):
 
      out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
+
+tic()
+readPenNuc1("Co-60")
+toc()
 #===============================================================================================================
 '''
 rad = "Am-244m"
@@ -747,8 +751,10 @@ plt.savefig('Quenching/stoppingpowerE_A.png')
 #=============================================================================================
 
 #====================  Fonction pour lire BetaShape   ========================================
+file = "decayData//All-nuclides_BetaShape.zip"
+z = zf.ZipFile(file)
 
-def readBetaShape(rad,mode,level):
+def readBetaShape(rad,mode,level,z=z):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
     refs:
@@ -772,8 +778,6 @@ def readBetaShape(rad,mode,level):
 
     """
    
-    file = "decayData//All-nuclides_BetaShape.zip"
-    z = zf.ZipFile(file)
     Rad = rad.replace('-','')
     name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
     with z.open(name_doc) as file_trans:
@@ -802,7 +806,10 @@ def readBetaShape(rad,mode,level):
     dNdx /= sum(np.asarray(dNdx)) # normalization
     dNdx = list(dNdx)
     return e, dNdx
-#e,p = readBetaShape('C-11','beta+','trans0')
+
+#tic()
+#e,p = readBetaShape('C-11','beta+',0)
+#toc()
 #print(p,type(p))
 
 
