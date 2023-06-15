@@ -1039,7 +1039,7 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
     return result
 
 #for i in range(50):
-    #print(energie_dep_gamma(0.6589))
+    #print(energie_dep_gamma(511))
 
 
 
