@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10
-Rad=["Fe-59"]            # list of radionuclides (Na-24)
+Rad=["Co-57"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -254,7 +254,7 @@ for kB_i in kB: # Loop on the kB
                     #particle_branch = [particle_branch]
                     #particle_branch.append(DaughterVec[index_rad][iDaughter])
                 if Display: print("\t Sampled decay branch:")
-                if Display: print("\t\t Particle = ", particle_branch)
+                if Display: print("\t\t Particle =               ", particle_branch)
                 if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
                 if Display: print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
            
@@ -288,9 +288,9 @@ for kB_i in kB: # Loop on the kB
                     #print("282 index_transi",index_t)
                  #index_t = tl.sampling(prob[index_rad][iDaughter][i_level+1])  
                     if Display: print("\t\t Energy of the level = ", levelEnergy[index_rad][iDaughter][i_level], " keV")
-                    if Display: print("\t\t Transition type = ", transitionType[index_rad][iDaughter][i_level][index_t])
+                    if Display: print("\t\t Transition type =          ", transitionType[index_rad][iDaughter][i_level][index_t])
                     if Display: print("\t\t Energy of the transition = ", e_trans[index_rad][iDaughter][i_level][index_t], "keV")
-                    if Display: print("\t\t next level = ", next_level[index_rad][iDaughter][i_level][index_t])
+                    if Display: print("\t\t next level =               ", next_level[index_rad][iDaughter][i_level][index_t])
                  
                  # Scoring
                     if transitionType[index_rad][iDaughter][i_level][index_t] == "GA":
@@ -389,7 +389,7 @@ for kB_i in kB: # Loop on the kB
            # Finish with the daughter Nucleus
             if Display: print("\t Summary of the nuclear decay")
             if Display: print("\t\t particles : ", particle_vec)
-            if Display: print("\t\t energy : ", energy_vec, "keV")
+            if Display: print("\t\t energy    : ", energy_vec, "keV")
            # if Display: print("\t\t remaing energy : ", round(Q_value[index_rad][iDaughter]-e_sum,3), " keV")
     
     
@@ -399,7 +399,48 @@ for kB_i in kB: # Loop on the kB
            
             if Display: print("\t Summary of the atomic relaxation")
             daughter_relax = DaughterVec[index_rad][iDaughter]
-            relaxation = False
+            for i_part in range(len(particle_vec)):
+                relaxation = False
+                if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part]:
+                    #tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec[i_part])
+                    relaxation = True
+                    #X_Auger = []
+                    #X_Auger_e = []
+                while relaxation:
+                    tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec[i_part])
+                    if tf == "XKA":
+                        particle_vec[i_part] = "Atom_L"
+                        particle_vec.append(tf)
+                        energy_vec.append(ef)
+                        relaxation = True
+                    elif tf == "XKB":
+                        particle_vec[i_part] = "Atom_M"
+                        particle_vec.append(tf)
+                        energy_vec.append(ef)
+                        relaxation = False
+                    elif tf == "XL":
+                        particle_vec[i_part] = "Atom_M"
+                        particle_vec.append(tf)
+                        energy_vec.append(ef)
+                        relaxation = False
+                    elif tf == "Auger K":
+                        particle_vec[i_part] = "Atom_L"
+                        particle_vec.append(tf)
+                        energy_vec.append(ef)
+                        relaxation = True
+                    elif tf == "Auger L":
+                        particle_vec[i_part] = "Atom_M"
+                        particle_vec.append(tf)
+                        energy_vec.append(ef)
+                        relaxation = False
+                    else:
+                        print("untermined x or Auger")
+                        relaxation = False
+                    e_sum += ef
+                #particle_vec.append(X_Auger)
+                #energy_vec.append(X_Auger_e)
+
+            '''   
             for particles in particle_vec:
                 if "Atom_" in particles:
                     relaxation = True
@@ -454,7 +495,8 @@ for kB_i in kB: # Loop on the kB
                         else:
                             print("\t\tundertermined type   ",part,tf,ef)
                             relaxation = False
-                            e_sum += ef               
+                            e_sum += ef  
+            '''             
             #lenElement = [] # pour détecter la présence de lacunes atomiques
             #for element in particle_vec:
                 #lenElement.append(type(element))
@@ -507,7 +549,7 @@ for kB_i in kB: # Loop on the kB
                             #particle_vec[i_part]="void"
     
             if Display: print("\t\t particles : ", particle_vec)            
-            if Display: print("\t\t energy : ", energy_vec, "keV")
+            if Display: print("\t\t energy    : ", energy_vec, "keV")
            # if Display: print("\t\t remaing energy : ", round(Q_value[index_rad][iDaughter]-e_sum,3), " keV")
                
                            
@@ -551,17 +593,25 @@ for kB_i in kB: # Loop on the kB
                     energy_vec.append(511)
                     #print("542 ",e_beta[index_rad][iDaughter][i_branch])
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
+                    #if p == "gamma":
                     #print("529 energy",energy_vec[i])
                     energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])
                     #print("531 energy",energy_vec[i])
                     particle_vec[i] = "photon"
-             
                 if p == "Auger K" or p == "Auger L":
                     particle_vec[i] = "electron"
-    
+                '''
+                elif type(p) == list:
+                    for i3 in range(len(p)):
+                        if p[i3] == "Auger K" or p[i3] == "Auger L":
+                            particle_vec[i][i3] = "electron"
+                        if p[i3] == "XKA" or p[i3] == "XKB" or p[i3] == "XL":
+                            particle_vec[i][i3] = "photon"
+                            energy_vec[i][i3] = tl.energie_dep_gamma(energy_vec[i][i3])
+                '''
             if Display: print("\t Summary of the final charged particles")
             if Display: print("\t\t particles : ", particle_vec)
-            if Display: print("\t\t energy : ", energy_vec, "keV")
+            if Display: print("\t\t energy    : ", energy_vec, "keV")
     
     
            # tl.tic()
@@ -593,7 +643,7 @@ for kB_i in kB: # Loop on the kB
                 else:
                     #print("\t\tnone particle quenched") 
                     e_quenching.append(0)   
-            if Display: print("\t\t energy_vec : ", energy_vec, "keV")
+            if Display: print("\t\t energy_vec      : ", energy_vec, "keV")
             if Display: print("\t\t quenched energy : ", e_quenching, "keV")
     
            # tl.toc()

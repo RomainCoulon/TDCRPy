@@ -1033,8 +1033,9 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
     '''
     inde = sampling(matrice[1:,index])
     if inde == 1 : result = 0
-    elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
+        #elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
     else: result = e[inde]*1e3*e_inci/matrice[0][index]
+    if result  > e_inci: result = e_inci
     return result
 
 #for i in range(50):
