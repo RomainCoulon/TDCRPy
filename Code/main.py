@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10
-Rad=["I-124"]            # list of radionuclides (Na-24)
+Rad=["Xe-133m"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -61,9 +61,9 @@ DaughterVec = []       # Daughters -- indice 0
 Pdaughter = []         # Probabiblity related to daughters -- indice 1
 
 meta_vec = ["Am-242m","Pa-234m","Pm-148m","Pr-144m","Xe-133m","Te-127m","Ag-110m","Ag-108m","Tc-99m","Nb-95m","Y-90m","Mn-52m"]
-for rad_i1 in Rad:
-    if rad_i1 in meta_vec:
-        rad_i1 = rad_i1 - "m"
+#for rad_i1 in Rad:
+ #   if rad_i1 in meta_vec:
+  #      rad_i1 = rad_i1 - "m"
 for rad_i in Rad:
     out_PenNuc = tl.readPenNuc2(rad_i)
     particle.append(out_PenNuc[3])       # Particle(s) from the Mother  --  indice 3
