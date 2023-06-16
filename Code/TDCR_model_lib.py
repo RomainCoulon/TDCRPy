@@ -386,6 +386,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
         if "ALP " in decayData[il]: decayData[il] = decayData[il].replace("ALP ","ALP; ")
         if "CK " in decayData[il]: decayData[il] = decayData[il].replace("CK ","CK; ")
         if "CL " in decayData[il]: decayData[il] = decayData[il].replace("CL ","CL; ")
+        if "CO " in decayData[il]: decayData[il] = decayData[il].replace("CO ","CO; ")
         if "CL1 " in decayData[il]: decayData[il] = decayData[il].replace("CL1 ","CL1; ")
         if "CL2 " in decayData[il]: decayData[il] = decayData[il].replace("CL2 ","CL2; ")
         if "CL3 " in decayData[il]: decayData[il] = decayData[il].replace("CL3 ","CL3; ")
@@ -527,6 +528,8 @@ def readPenNuc2(rad,z1=z_PenNuc):
                         desin_type_b.append("Atom_M")
                     if "CN" == i4[0]:
                         desin_type_b.append("Atom_N")
+                    if "CO" == i4[0]:
+                        desin_type_b.append("Atom_O")
                     desin_prob_b.append(float(i4[1]))
                     desin_level_b.append(int(i4[3]))
                     desin_energy_b.append(float(i4[4]))
