@@ -17,25 +17,20 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
-<<<<<<< HEAD
 N= 10
-Rad=["Te-123m"]            # list of radionuclides (Na-24)
-=======
-N= 10000
-Rad=["C-11"]            # list of radionuclides (Na-24)
->>>>>>> 6f0ed3f33371eba353f85ec15d3e7e4b10af504d
+Rad=["I-123"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
-# kB =[1.0e-5]
-kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
-# L=[1e-1]
-L = np.logspace(-3,1,50) # Free paramete in keV-1
+kB =[1.0e-5]
+#kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
+L=[1e-1]
+#L = np.logspace(-3,1,50) # Free paramete in keV-1
 
 
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
-Record = True                  # to record the efficiency curves
-Display = False               # to display calculation results on the console
+Record = False                  # to record the efficiency curves
+Display = True               # to display calculation results on the console
 #Display = True                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
@@ -65,8 +60,10 @@ Q_value = []           # Energy of the reaction -- indice 2
 DaughterVec = []       # Daughters -- indice 0
 Pdaughter = []         # Probabiblity related to daughters -- indice 1
 
-#meta_vec = ["Am-242m","Pa-234m","Pm-148m","Pr-144m","Xe-133m","Te-127m","Ag-110m","Ag-108m","Tc-99m","Nb-95m","Y-90m","Mn-52m"]
-
+meta_vec = ["Am-242m","Pa-234m","Pm-148m","Pr-144m","Xe-133m","Te-127m","Ag-110m","Ag-108m","Tc-99m","Nb-95m","Y-90m","Mn-52m"]
+for rad_i1 in Rad:
+    if rad_i1 in meta_vec:
+        rad_i1 = rad_i1 - "m"
 for rad_i in Rad:
     out_PenNuc = tl.readPenNuc2(rad_i)
     particle.append(out_PenNuc[3])       # Particle(s) from the Mother  --  indice 3

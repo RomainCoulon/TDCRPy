@@ -84,6 +84,40 @@ def sampling(p_x):
         if p> trial: break
     return i
 
+def meta(Rad):
+    '''
+    =========
+    PARAMETRE
+    =========
+    Rad -- type : list
+    pmf -- type : list
+
+    ======
+    RETURN
+    ======
+    Rad_out -- type : list
+    pmf_out -- type : list
+
+    '''
+    meta_vec = ["Am-242m","Pa-234m","Pr-144m","Xe-133m","Te-127m","Ag-110m","Ag-108m","Tc-99m","Nb-95m","Y-90m","Mn-52m"]
+    pmf_meta = [0.9954,0.0015,0.056,0.9994,1,0.9726999,0.0136,9.1e-2,1,0.975,0.999981,0.01705]
+    for i,p in enumerate(Rad):
+        if p in meta_vec:
+            prob_rad = pmf[i]
+            index_meta = meta_vec.index(p)
+            Rad[i] = p - "m"
+            if p == meta_vec[0]:
+                Rad.append("Np-238")
+                pmf[i] = prob_rad * pmf_meta[index_meta]
+                pmf.append(0.0046*prob_rad)
+            elif p == meta_vec[1]:
+                Rad.append("U-234")
+                pmf[i] = prob_rad * pmf_meta[index_meta]
+                pmf.append(0.9985*prob_rad)
+            elif p == meta_vec[2]:
+                pmf[i] = prob_rad * 1.0
+            elif p == meta_vec[4]:
+                pmf.append(0.9985*prob_rad)
 
 def readPenNuc(rad):
     """
@@ -267,6 +301,73 @@ file_pennuc = "decayData//All-nuclides_PenNuc.zip"
 z_PenNuc = zf.ZipFile(file_pennuc)
 
 def readPenNuc2(rad,z1=z_PenNuc):
+    '''
+     =========
+     PARAMETRE
+     =========
+     rad -- type: str (par exemple: "Am-241") -- radionucléide 
+
+     ======
+     RETURN
+     ======
+     daughter -- indice 0 -- des noyaux fils -- len = nb de noyaux fils
+     prob_daug -- indice 1 -- des probabilités de noyaux fils -- len = nb de noyaux fils
+     energy_Q -- indice 2 -- des énergies de désintégrations -- len = nb de noyaux fils
+
+     desin_type_tot -- indice 3 -- des types de désintégrations/particules émis
+         len = nb de noyaux fils 
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
+
+     desin_energy_tot -- indice 4 -- des énergies de désintégrations/énergies de patricules émis
+         len = nb de noyaux fils 
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des énergies de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
+
+     desin_prob_tot -- indice 5 -- des probabilités de désintégrations
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des probabilités de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
+     
+     desin_level_tot -- indice 6 -- des niveaux atteints après des désintégrations
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des niveaux après des désintégrations de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
+     
+     prob_branch_tot -- indice 7 -- probabilités de chaque branch
+         len = nb de noyaux fils
+         sous-list -- des probabilités de branchs de noyau fil -- len de sous-list = nb de branch de chaque fil
+         
+     tran_type_tot -- indice 8 -- transitions possibles 
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
+     
+     tran_energy_tot -- indice 9 -- énergies de transitions
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des énergies de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
+     
+     tran_prob_tot -- indice 10 -- probabilités de transitions
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des probabilités de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
+     
+     tran_level_tot -- indice 11 -- niveaux de branch correspondants
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des niveaux de chaque branch avant des transitions -- len de sous-list de sous-list = 1
+     
+     tran_level_end_tot -- indice 12 -- niveaux après des transitions
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des niveaux après des transitions de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
+     
+     level_energy_tot -- indice 13 -- énergies de niveaux
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des énergies de niveaux de chaque branch -- len de sous-list de sous-list = 1
+     '''
     doc = rad + ".PenNuc.txt"
     with z1.open(doc) as file_P:
         decayData = file_P.readlines()
@@ -442,7 +543,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
                         tran_type_b.append(i4[0])
                         tran_prob_b.append(float(i4[1]))
                         tran_energy_b.append(float(i4[3]))
-                        tran_level_end_b.append(float(i4[5]))
+                        tran_level_end_b.append(int(i4[5]))
             if branch:
                 desin_type_daug.append(desin_type_b)
                 desin_energy_daug.append(desin_energy_b)
