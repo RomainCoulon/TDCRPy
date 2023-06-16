@@ -263,6 +263,235 @@ def readPenNuc(rad):
 # toc() # 0.016 s
 
 
+file_pennuc = "decayData//All-nuclides_PenNuc.zip"
+z_PenNuc = zf.ZipFile(file_pennuc)
+
+def readPenNuc2(rad,z1=z_PenNuc):
+    doc = rad + ".PenNuc.txt"
+    with z1.open(doc) as file_P:
+        decayData = file_P.readlines()
+
+    for i in range(np.size(decayData)):
+        decayData[i] = str(decayData[i])
+        decayData[i] = decayData[i].replace("b'","")
+        decayData[i] = decayData[i].replace("\\r\\n","")
+        decayData[i] = decayData[i].replace("'","") 
+
+    for il in range(len(decayData)):
+        if "NDA " in decayData[il]: decayData[il] = decayData[il].replace("NDA ","NDA; ") 
+        if "DAU " in decayData[il]: decayData[il] = decayData[il].replace("DAU ","DAU; ") 
+        if "DDE " in decayData[il]: decayData[il] = decayData[il].replace("DDE ","DDE; ")
+        if "Q " in decayData[il]: decayData[il] = decayData[il].replace("Q ","Q; ")
+        if "ALP " in decayData[il]: decayData[il] = decayData[il].replace("ALP ","ALP; ")
+        if "CK " in decayData[il]: decayData[il] = decayData[il].replace("CK ","CK; ")
+        if "CL " in decayData[il]: decayData[il] = decayData[il].replace("CL ","CL; ")
+        if "CL1 " in decayData[il]: decayData[il] = decayData[il].replace("CL1 ","CL1; ")
+        if "CL2 " in decayData[il]: decayData[il] = decayData[il].replace("CL2 ","CL2; ")
+        if "CL3 " in decayData[il]: decayData[il] = decayData[il].replace("CL3 ","CL3; ")
+        if "CN " in decayData[il]: decayData[il] = decayData[il].replace("CN ","CN; ")
+        if "CM " in decayData[il]: decayData[il] = decayData[il].replace("CM ","CM; ")
+        if "BEM " in decayData[il]: decayData[il] = decayData[il].replace("BEM ","BEM; ")
+        if "BEP " in decayData[il]: decayData[il] = decayData[il].replace("BEP ","BEP; ")
+        if "LED " in decayData[il]: decayData[il] = decayData[il].replace("LED ","LED; ")
+        if "GA " in decayData[il]: decayData[il] = decayData[il].replace("GA ","GA; ")
+        if "EK " in decayData[il]: decayData[il] = decayData[il].replace("EK ","EK; ")
+        if "EL " in decayData[il]: decayData[il] = decayData[il].replace("EL ","EL; ")
+        if "EL1 " in decayData[il]: decayData[il] = decayData[il].replace("EL1 ","EL1; ")
+        if "EL2 " in decayData[il]: decayData[il] = decayData[il].replace("EL2 ","EL2; ")
+        if "EL3 " in decayData[il]: decayData[il] = decayData[il].replace("EL3 ","EL3; ")
+        if "EM " in decayData[il]: decayData[il] = decayData[il].replace("EM ","EM; ")
+        if "EN " in decayData[il]: decayData[il] = decayData[il].replace("EN ","EN; ")
+        if "COM " in decayData[il]: decayData[il] = decayData[il].replace("COM ","COM; ")
+        decayData[il] = decayData[il].split(';')
+
+    for a1 in decayData:
+        for a2 in range(len(a1)):
+            a1[a2] = a1[a2].strip()
+
+    '''
+     ========================
+     Repérer chaque noyau fil
+     ========================
+
+     daughter -- noyau(x) fil(s)
+     posi_daug -- l'indice de démarcation de noyau fil
+     posi_branch -- l'indice de démarcation de chaque branch
+     posi_tran -- l'indice de démarcation de transition
+     prob_daug -- probabilité de produire des noyaux fils
+     nb_branch -- nombre de branch possible au dessus de l'état fonda (n>0)
+     energy_Q -- l'énergie de désintégration
+
+    '''    
+    daughter = [];posi_daug = [];prob_daug=[];nb_branch=[];energy_Q=[];
+    end = len(decayData)
+    for indice,line in enumerate(decayData):
+        if "NDA" == line[0]:
+            nb_daug = int(line[1])
+        if "DAU" == line[0]:
+            daughter.append(line[1].replace(" ",""))
+        if "COM" == line[0] and "Daughter" in line[1]:
+            posi_daug.append(indice)
+        if "Q" == line[0]:
+            energy_Q.append(float(line[1]))
+        if "DDE" == line[0]:
+            prob_daug.append(float(line[1]))
+            nb_branch.append(int(line[-2]))
+    '''
+     ==========
+     LOOP START
+     ==========
+
+    ''' 
+    posi_end=[]
+    desin_type_tot=[];desin_energy_tot=[];desin_prob_tot=[];desin_level_tot=[]
+    tran_type_tot=[];tran_energy_tot=[];tran_prob_tot=[];tran_level_end_tot=[]; 
+    tran_level_tot=[];level_energy_tot=[]
+    prob_branch_tot=[] 
+
+    '''
+     =============
+     LOOP DAUGHTER 
+     =============
+
+    '''
+    for i1 in range(nb_daug):
+        start_p = posi_daug[i1]
+        if i1+1 == nb_daug:
+            end_p = end
+        else:
+            end_p = posi_daug[i1+1]
+
+        posi_end_i = []
+        for i2 in range(start_p,end_p):
+            if "COM" == decayData[i2][0] and "Branch" in decayData[i2][1]:
+                posi_end_i.append(i2)
+            if "COM" == decayData[i2][0] and "Level" in decayData[i2][1]:
+                posi_end_i.append(i2)
+        if end_p == end:
+            posi_end_i.append(end)
+        else:
+            posi_end_i.append(posi_daug[i1+1])
+        posi_end.append(posi_end_i)
+
+        '''
+         ==========================
+         LOOP Branch and Transition
+         ==========================
+        '''
+        desin_type_daug=[];desin_energy_daug=[];desin_prob_daug=[];desin_level_daug=[];
+        tran_type_daug=[];tran_energy_daug=[];tran_prob_daug=[];tran_level_end_daug=[];
+        tran_level_daug=[];level_energy_daug=[]
+        prob_branch_daug=[]
+
+        for i3 in range(len(posi_end_i)-1):
+            start_p1 = posi_end_i[i3]
+            end_p1 = posi_end_i[i3+1]
+            branch = False
+            transition = False
+            if "COM" == decayData[start_p1][0] and "Branch" in decayData[start_p1][1]:
+                branch=True
+            if "COM" == decayData[start_p1][0] and "Level" in decayData[start_p1][1]:
+                transition = True
+
+            '''
+             ====================================
+             LOOP EACH BLOCK OF BRANCH/TRANSITION
+             ====================================
+            ''' 
+            tran_type_b=[];tran_prob_b=[];tran_energy_b=[]; tran_level_end_b=[];
+            tran_level_b=[];level_energy_b=[]
+            desin_type_b=[];desin_energy_b=[];desin_prob_b=[];desin_level_b=[];
+             
+            for i4 in decayData[start_p1+1:end_p1]:
+                if start_p1+1 == end_p1:
+                    break
+                if branch:
+                    if "ALP" == i4[0]:
+                        desin_type_b.append("alpha")
+                    if "BEP" == i4[0]:
+                        desin_type_b.append("beta+")
+                    if "BEM" == i4[0]:
+                        desin_type_b.append("beta")
+                    if "CK" == i4[0]:
+                        desin_type_b.append("Atom_K")
+                    if "CL" == i4[0]:
+                        desin_type_b.append("Atom_L")
+                    if "CL1" == i4[0]:
+                        desin_type_b.append("Atom_L1")
+                    if "CL2" == i4[0]:
+                        desin_type_b.append("Atom_L2")
+                    if "CL3" == i4[0]:
+                        desin_type_b.append("Atom_L3")
+                    if "CM" == i4[0]:
+                        desin_type_b.append("Atom_M")
+                    if "CN" == i4[0]:
+                        desin_type_b.append("Atom_N")
+                    desin_prob_b.append(float(i4[1]))
+                    desin_level_b.append(int(i4[3]))
+                    desin_energy_b.append(float(i4[4]))
+                if transition:
+                    if i4[1] == '  ' or i4[1] == '   ': i4[1] = 0
+                    if len(i4)>2 and i4[2] == '  ': i4[2] = 0
+                    if len(i4)>4 and i4[4] == '  ': i4[4] = 0
+                    if len(i4)>5 and i4[5] == '  ': i4[5] = 0
+                    if "LED" == i4[0]:
+                        tran_level_b.append(int(i4[-1]))
+                        level_energy_b.append(float(i4[1]))
+                    if i4[0] == "GA" or i4[0] == "EK" or i4[0] == "EL" or i4[0] == "EL1" or i4[0] == "EL2" or i4[0] == "EL3" or i4[0] == "EM" or i4[0] == "EN":
+                        tran_type_b.append(i4[0])
+                        tran_prob_b.append(float(i4[1]))
+                        tran_energy_b.append(float(i4[3]))
+                        tran_level_end_b.append(float(i4[5]))
+            if branch:
+                desin_type_daug.append(desin_type_b)
+                desin_energy_daug.append(desin_energy_b)
+                desin_prob_daug.append(desin_prob_b)
+                desin_level_daug.append(desin_level_b)
+             
+            if transition:
+                tran_type_daug.append(tran_type_b)
+                tran_energy_daug.append(tran_energy_b)
+                tran_prob_daug.append(tran_prob_b)
+                tran_level_end_daug.append(tran_level_end_b)
+                tran_level_daug.append(tran_level_b)
+                level_energy_daug.append(level_energy_b)
+
+            if len(desin_prob_b)>0:
+                desin_prob_array = np.array(desin_prob_b)
+                prob_branch_i = np.sum(desin_prob_array)
+                if prob_branch_i >= 1:
+                    prob_branch_i = 1
+                prob_branch_daug.append(prob_branch_i)
+            elif branch and len(desin_prob_b)==0:
+                prob_branch_daug.append(0)
+
+        tran_type_daug.append([])
+        tran_prob_daug.append([])
+        tran_energy_daug.append([])
+        tran_level_end_daug.append([])
+        tran_level_daug.append([])
+        level_energy_daug.append([])
+
+        desin_type_tot.append(desin_type_daug)
+        desin_energy_tot.append(desin_energy_daug)
+        desin_prob_tot.append(desin_prob_daug)
+        desin_level_tot.append(desin_level_daug)
+
+        tran_type_tot.append(tran_type_daug)
+        tran_energy_tot.append(tran_energy_daug)
+        tran_prob_tot.append(tran_prob_daug)
+        tran_level_end_tot.append(tran_level_end_daug)
+        tran_level_tot.append(tran_level_daug)
+        level_energy_tot.append(level_energy_daug)
+        prob_branch_tot.append(prob_branch_daug)
+
+    out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
+    return out
+#tic()
+#o = readPenNuc2("H-3")
+#toc()
+#print(o)
+
 def readPenNuc1(rad):
      '''
      =========
@@ -334,7 +563,7 @@ def readPenNuc1(rad):
 
      url = "http://www.lnhb.fr/nuclides/"+rad+".PenNuc.txt"
      file = rq.urlopen(url)
-    
+     
      # Format the data 
      decayData = []
      for line in file:
@@ -462,6 +691,7 @@ def readPenNuc1(rad):
             desin_type_b=[];desin_energy_b=[];desin_prob_b=[];desin_level_b=[];
              
             for i4 in decayData[start_p1+1:end_p1]:
+                
                 if start_p1+1 == end_p1:
                     break
                 if branch:
@@ -548,12 +778,19 @@ def readPenNuc1(rad):
 
      out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
+<<<<<<< HEAD
  
 
 # tic()
 # readPenNuc1("Co-60")
 # toc() # 0.016 s
     
+=======
+
+#tic()
+#readPenNuc1("Ag-108m")
+#toc()
+>>>>>>> 50258c158b83367d7601d0a43ae158879db9be28
 #===============================================================================================================
 '''
 rad = "Am-244m"
@@ -753,8 +990,10 @@ plt.savefig('Quenching/stoppingpowerE_A.png')
 #=============================================================================================
 
 #====================  Fonction pour lire BetaShape   ========================================
+file_betashape = "decayData//All-nuclides_BetaShape.zip"
+z_betashape = zf.ZipFile(file_betashape)
 
-def readBetaShape(rad,mode,level):
+def readBetaShape(rad,mode,level,z=z_betashape):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
     refs:
@@ -777,9 +1016,7 @@ def readBetaShape(rad,mode,level):
         the probability density in keV-1.
 
     """
-   
-    file = "decayData//All-nuclides_BetaShape.zip"
-    z = zf.ZipFile(file)
+
     Rad = rad.replace('-','')
     name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
     with z.open(name_doc) as file_trans:
@@ -808,7 +1045,10 @@ def readBetaShape(rad,mode,level):
     dNdx /= sum(np.asarray(dNdx)) # normalization
     dNdx = list(dNdx)
     return e, dNdx
-#e,p = readBetaShape('C-11','beta+','trans0')
+
+#tic()
+#e,p = readBetaShape('C-11','beta+',0)
+#toc()
 #print(p,type(p))
 
 # tic()
@@ -1109,10 +1349,10 @@ def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C11
 
 #print(transf_name('108PD'))
 
-file = 'decayData//All-nuclides_Ensdf.zip'
-z = zf.ZipFile(file)
+file_ensdf = 'decayData//All-nuclides_Ensdf.zip'
+z_ensdf = zf.ZipFile(file_ensdf)
 #print(z.namelist())
-def readEShape(rad, *, z=z):
+def readEShape(rad, *, z=z_ensdf):
     """
     --------------------------------------------------
     pour lire les fichiers dans All-nuclides_Ensdf.zip

@@ -17,8 +17,8 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
-N= 10000
-Rad=["He-6"]            # list of radionuclides (Na-24)
+N= 10
+Rad=["Ag-108"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 # kB =[1.0e-5]
@@ -62,7 +62,7 @@ DaughterVec = []       # Daughters -- indice 0
 Pdaughter = []         # Probabiblity related to daughters -- indice 1
 
 for rad_i in Rad:
-    out_PenNuc = tl.readPenNuc1(rad_i)
+    out_PenNuc = tl.readPenNuc2(rad_i)
     particle.append(out_PenNuc[3])  # Particle(s) from the Mother  --  indice 3
     p_branch.append(out_PenNuc[5])  # Probablity of the different decay of branch -- indice 5
     e_branch.append(out_PenNuc[4])  # Energy of the different decay of branch -- indice 4
