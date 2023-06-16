@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10
-Rad=["Ag-108"]            # list of radionuclides (Na-24)
+Rad=["Te-123m"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -50,7 +50,6 @@ p_branch = []          # Probablity of the different decay of branch -- indice 5
 e_branch = []          # Energy of the different decay of branch -- indice 4
 LevelDaughter = []     # Level of the Daughter nucleus just after the particle emission -- indice 6
 levelNumber = []       # The vector of level of the daughter to get information of all possible isomeric transitions -- indice 11
-#prob = []              # Probibility density for each of the daughter level
 prob_trans = []        # Probability for each transition -- indice 10
 prob_branch = []       # Probability for each branch -- indice 7
 levelEnergy = []       # Energy of each level -- indice 13
@@ -61,142 +60,28 @@ Q_value = []           # Energy of the reaction -- indice 2
 DaughterVec = []       # Daughters -- indice 0
 Pdaughter = []         # Probabiblity related to daughters -- indice 1
 
+#meta_vec = ["Am-242m","Pa-234m","Pm-148m","Pr-144m","Xe-133m","Te-127m","Ag-110m","Ag-108m","Tc-99m","Nb-95m","Y-90m","Mn-52m"]
+
 for rad_i in Rad:
     out_PenNuc = tl.readPenNuc2(rad_i)
-    particle.append(out_PenNuc[3])  # Particle(s) from the Mother  --  indice 3
-    p_branch.append(out_PenNuc[5])  # Probablity of the different decay of branch -- indice 5
-    e_branch.append(out_PenNuc[4])  # Energy of the different decay of branch -- indice 4
-    LevelDaughter.append(out_PenNuc[6]) # Level of the Daughter nucleus just after the particle emission -- indice 6
-    levelNumber.append(out_PenNuc[11]) 
-    prob_trans.append(out_PenNuc[10])
-    prob_branch.append(out_PenNuc[7])
-    levelEnergy.append(out_PenNuc[13])
-    transitionType.append(out_PenNuc[8])
-    e_trans.append(out_PenNuc[9])
-    next_level.append(out_PenNuc[12])
-    Q_value.append(out_PenNuc[2])
-    DaughterVec.append(out_PenNuc[0])
-    Pdaughter.append(out_PenNuc[1])
+    particle.append(out_PenNuc[3])       # Particle(s) from the Mother  --  indice 3
+    p_branch.append(out_PenNuc[5])       # Probablity of the different decay of branch -- indice 5
+    e_branch.append(out_PenNuc[4])       # Energy of the different decay of branch -- indice 4
+    LevelDaughter.append(out_PenNuc[6])  # Level of the Daughter nucleus just after the particle emission -- indice 6
+    levelNumber.append(out_PenNuc[11])   # The vector of level of the daughter to get information of all possible isomeric transitions -- indice 11
+    prob_trans.append(out_PenNuc[10])    # Probability for each transition -- indice 10
+    prob_branch.append(out_PenNuc[7])    # Probability for each branch -- indice 7
+    levelEnergy.append(out_PenNuc[13])   # Energy of each level -- indice 13
+    transitionType.append(out_PenNuc[8]) # type of each possible transitions (internal transitions or gamma emission) -- indice 8
+    e_trans.append(out_PenNuc[9])        # Energy of the transition -- indice 9
+    next_level.append(out_PenNuc[12])    # Next level on the daughter nucleus -- indice 12
+    Q_value.append(out_PenNuc[2])        # Energy of the reaction -- indice 2
+    DaughterVec.append(out_PenNuc[0])    # Daughters -- indice 0
+    Pdaughter.append(out_PenNuc[1])      # Probabiblity related to daughters -- indice 1
 
-'''
-for rad_i in Rad: 
-    out_PenNuc = tl.readPenNuc(rad_i)
-    particle_r=[]; p_branch_r=[]; e_branch_r=[]; LevelDaughter_r=[]; levelNumber_r=[]
-    prob_r=[]; levelEnergy_r=[]; transitionType_r=[]; e_trans_r=[]; next_level_r=[]
-    Q_value_r=[]; DaughterVec_r=[]; Pdaughter_r=[]
-    for daughter_i in range(len(out_PenNuc)):
-    # for daughter_i in range(1):
-        particle_r.append(out_PenNuc[daughter_i][0])          # Particle(s) from the Mother
-        p_branch_r.append(out_PenNuc[daughter_i][1])          # Probablity of the branch
-        e_branch_r.append(out_PenNuc[daughter_i][2])          # Energy of the branch
-        LevelDaughter_r.append(out_PenNuc[daughter_i][3])     # Level of the Daughter nucleus just after the particle emission
-        levelNumber_r.append(out_PenNuc[daughter_i][4])       # The vector of level of the daughter to get information of all possible isomeric transitions
-        prob_r.append(out_PenNuc[daughter_i][5])              # Probibility density for each of the daughter level
-        levelEnergy_r.append(out_PenNuc[daughter_i][6])       # Energy of each level
-        transitionType_r.append(out_PenNuc[daughter_i][7])    # type of each possible transitions (internal transitions or gamma emission)
-        e_trans_r.append(out_PenNuc[daughter_i][8])           # Energy of the transition
-        next_level_r.append(out_PenNuc[daughter_i][9])        # Next level on the daughter nucleus
-        
-        Q_value_r.append(out_PenNuc[daughter_i][10])          # Energy of the reaction
-        DaughterVec_r.append(out_PenNuc[daughter_i][11])      # Daughters
-        Pdaughter_r.append(out_PenNuc[daughter_i][12])        # Probabiblity related to daughters
-    particle.append(particle_r)          # Particle(s) from the Mother
-    p_branch.append(p_branch_r)          # Probablity of the branch
-    e_branch.append(e_branch_r)          # Energy of the branch
-    LevelDaughter.append(LevelDaughter_r)     # Level of the Daughter nucleus just after the particle emission
-    levelNumber.append(levelNumber_r)       # The vector of level of the daughter to get information of all possible isomeric transitions
-    prob.append(prob_r)              # Probibility density for each of the daughter level
-    levelEnergy.append(levelEnergy_r)       # Energy of each level
-    transitionType.append(transitionType_r)    # type of each possible transitions (internal transitions or gamma emission)
-    e_trans.append(e_trans_r)           # Energy of the transition
-    next_level.append(next_level_r)        # Next level on the daughter nucleus
-    
-    Q_value.append(Q_value_r)          # Energy of the reaction
-    DaughterVec.append(DaughterVec_r)      # Daughters
-    Pdaughter.append(Pdaughter_r)        # Probabiblity related to daughters
-'''
-
-"""
-Read BetaShape
-"""
-#print('103',particle)
-'''
-e_beta = []
-p_beta = []
-for i, rad_i in enumerate(Rad): # radionuclide loop
-    e_beta_0 = []
-    p_beta_0 = []
-    out_PenNuc = tl.readPenNuc(rad_i)
-    for u in range(len(out_PenNuc)): # daughter loop
-        e_beta_1 = []
-        p_beta_1 = []
-        betam = 0   # counter of beta- transition 
-        betap = 0   # counter of beta+ transition
-        for j in range(len(particle[i][u])): # transition loop
-         if particle[i][u][j] == "beta":
-             e_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[0])
-             p_beta_1.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[1])
-             betam += 1
-         elif particle[i][u][j] == "beta+":
-             e_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[0])
-             p_beta_1.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[1])
-             betap += 1
-         else:
-             e_beta_1.append("")
-             p_beta_1.append("")   
-        #print('1:',p_beta_1)
-        e_beta_0.append(e_beta_1)
-        p_beta_0.append(p_beta_1)
-        #print('0:',e_beta_0,p_beta_0)
-    e_beta.append(e_beta_0)
-    p_beta.append(p_beta_0)
-
-'''
-'''
-e_beta = []
-p_beta = []
-for i, rad_i in enumerate(Rad): # radionuclide loop
-    e_beta_r = []
-    p_beta_r = []
-    out_PenNuc = tl.readPenNuc1(rad_i)
-    for u in range(len(out_PenNuc[0])): # daughter loop
-        #print("162",len(out_PenNuc[0]),out_PenNuc[0])
-        e_beta_d = []
-        p_beta_d = []
-        betam = 0   # counter of beta- transition 
-        betap = 0   # counter of beta+ transition
-        for j in range(len(particle[i][u])): # branch loop
-            #print("168",particle[i][u][j])
-            e_beta_b = []
-            p_beta_b = []
-            for k in range(len(particle[i][u][j])):  # particle loop
-                if particle[i][u][j][k] == 'beta':
-                    e,p = tl.readBetaShape(rad_i, "beta-", "trans" + str(betam))
-                    e_beta_b.append(e)
-                    p_beta_b.append(p)
-                    #e_beta_b.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[0])
-                    #p_beta_b.append(tl.readBetaShape(rad_i, "beta-", "trans"+str(betam))[1])
-                    betam += 1
-                elif particle[i][u][j][k] == "beta+":
-                    e,p = tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))
-                    e_beta_b.append(e)
-                    p_beta_b.append(p)
-                    #e_beta_b.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[0])
-                    #p_beta_b.append(tl.readBetaShape(rad_i, "beta+", "trans"+str(betap))[1])
-                    betap += 1
-                else:
-                    e_beta_b.append([])
-                    p_beta_b.append([])   
-            #print('180:',p_beta_b,len(p_beta_b))
-            e_beta_d.append(e_beta_b)
-            p_beta_d.append(p_beta_b)
-        e_beta_r.append(e_beta_d)
-        p_beta_r.append(p_beta_d)
-        #print('0:',e_beta_0,p_beta_0)
-    e_beta.append(e_beta_r)
-    p_beta.append(p_beta_r)
-'''
-#print("beta+  198",e_beta)
+    #if rad_i in meta_vec:
+        #name_fil = rad_i - "m"
+        #out2_meta = tl.readPenNuc2(name_fil)
 
 for kB_i in kB: # Loop on the kB
     mean_efficiency_S = []  # efficiency of single counte rate
@@ -218,29 +103,52 @@ for kB_i in kB: # Loop on the kB
            #tl.tic()
             particle_vec=[]
             energy_vec=[]
-        
-           ## Sampling of the radionuclide
+
+           #==============================
+            # Sampling of the radionuclide
+           #==============================
             index_rad = tl.sampling(pmf_1)
-           #print(index_rad)
             rad_i = Rad[index_rad]
             if Display: print("\n Sampled radionuclide = ", rad_i, "- L = ", L_i, ' keV-1 - kB = ', kB_i, ' cm/keV')
-        
-            """
+
+            '''
+            ===========================
             I. DESINTEGRATION NUCLEAIRE
-            """
-           ## sampling of the daughter
+            ===========================
+            '''
+
+            #=========================
+            # Sampling of the daughter
+            #=========================
             iDaughter=tl.sampling(np.asarray(Pdaughter[index_rad])/sum(np.asarray(Pdaughter[index_rad])))
-            #print("233 index daug   ",iDaughter)
+            Daughter = DaughterVec[index_rad][iDaughter]
             if Display: print("\t Sampled daughter:")
-            if Display: print("\t\t Daughter = ", DaughterVec[index_rad][iDaughter])           
-           
-           ## sampling of the decay branch
-           # multiplicity_branch = sum(np.asarray(p_branch[index_rad][iDaughter]))   # = prob_branch
-            i_branch=tl.sampling(prob_branch[index_rad][iDaughter]) # indice de la branche globale
-            #if Display: print("239 branch:",i_branch)
+            if Display: print("\t\t Daughter = ", Daughter)           
+            
+            #==========================
+            # Traitement de l'état méta
+            #==========================
+            '''
+            META_daug = ["AM242","PA234","PM148","PR144","XE133","TE127","AG110","AG108","TC99","NB95","Y90","MN52"]
+            if rad_i in meta_vec and Daughter in META_daug:
+                particle[index_rad][iDaughter] = out2_meta[3]
+                p_branch[index_rad][iDaughter] = out2_meta[5]
+                e_branch[index_rad][iDaughter] = out2_meta[4]
+                LevelDaughter[index_rad][iDaughter] = out2_meta[6]
+                levelNumber[index_rad][iDaughter] = out2_meta[11]
+                prob_trans[index_rad][iDaughter] = out2_meta[10]
+                prob_branch[index_rad][iDaughter] = out2_meta[5]
+            '''
+            #=============================
+            # Sampling of the decay branch
+            #=============================
+            branch_i = tl.normalise(prob_branch[index_rad][iDaughter])   # normalise la proba de branch
+            i_branch=tl.sampling(branch_i)                               # indice de la branche globale
+            #if Display: print("239 branch:",i_branch,branch_i)
+
             if p_branch[index_rad][iDaughter][i_branch] != []:
                 branch_proba = tl.normalise(p_branch[index_rad][iDaughter][i_branch])
-                index_subBranch = tl.sampling(branch_proba)
+                index_subBranch = tl.sampling(branch_proba)                                            # indice de la branch precise
                 #print("242   ",branch_proba)
                 #print("242   index_subBranch",index_subBranch)                
                 #index_branch = tl.sampling(p_branch[index_rad][iDaughter])
@@ -257,124 +165,84 @@ for kB_i in kB: # Loop on the kB
                 if Display: print("\t\t Particle =               ", particle_branch)
                 if Display: print("\t\t Energy of the particle = ", energy_branch, " keV")
                 if Display: print("\t\t Level of the daughter nucleus = ", levelOftheDaughter)
-           
-               # Scoring
+                
+                #========
+                # Scoring
+                #========
                 e_sum = energy_branch                               # Update the Energy summary
                 particle_vec.append(particle_branch)                # Update of the particle vector
                 energy_vec.append(energy_branch)                    # Update of the energy of the particle
             else:
                 if Display: print("\t Sampled decay branch:")
                 if Display: print("\t\t Particle = isomeric transition, no particle")
-                #if Display: print("\t\t Level number =", levelNumber[index_rad][iDaughter][0])
                 levelOftheDaughter = 0
                 e_sum = 0
 
             '''
+            ==============
             I-1 Transition
+            ==============
             '''  
     
-            if Display: print("\t Subsequent isomeric transition")          # finish with the mother / now with the daughter
-            while levelOftheDaughter > 0:                                   # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
-                #if p_branch[index_rad][iDaughter][i_branch] != []:
-                if transitionType[index_rad][iDaughter][i_branch] != []:
-                    i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])  # Find the position in the daughter level vector
+            if Display: print("\t Subsequent isomeric transition")                       # finish with the mother / now with the daughter
+            while levelOftheDaughter > 0:                                                # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
+                i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])  # Find the position in the daughter level vector
+                if transitionType[index_rad][iDaughter][i_level] != []:
+                    #print(transitionType[index_rad][iDaughter][i_branch])
+                    
+                    #====================================================================
+                    # Sampling of the transition in energy levels of the daughter nucleus
+                    #====================================================================
 
-                 ## sampling of the transition in energy levels of the daughter nucleus
-                    probability_tran = tl.normalise(prob_trans[index_rad][iDaughter][i_level])
+                    probability_tran = tl.normalise(prob_trans[index_rad][iDaughter][i_level])   # normaliser la proba de transition 
                     #print("prob",probability_tran)
-                    index_t = tl.sampling(probability_tran)
+                    index_t = tl.sampling(probability_tran)                                      # indice de la transition
                     #print("282 index_transi",index_t)
                     if Display: print("\t\t Energy of the level = ", levelEnergy[index_rad][iDaughter][i_level], " keV")
                     if Display: print("\t\t Transition type =          ", transitionType[index_rad][iDaughter][i_level][index_t])
                     if Display: print("\t\t Energy of the transition = ", e_trans[index_rad][iDaughter][i_level][index_t], "keV")
                     if Display: print("\t\t next level =               ", next_level[index_rad][iDaughter][i_level][index_t])
-                 
-                 # Scoring
-                    if transitionType[index_rad][iDaughter][i_level][index_t] == "GA":    # if it is a gamma that has been emitted
-                        particle_vec.append("gamma")                                   # Update of the particle vector
-                        energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])  # Update the energy vector
-                    else:                                           # if not, it is a internal conversion, so an electron
-                        particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
-                        energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])    # Update the energy vector
-                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":
-                            #particle_vec.append(["Atom_K",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the K shell of the dughter nucleus
+                    
+                    #========
+                    # Scoring
+                    #========
+
+                    if transitionType[index_rad][iDaughter][i_level][index_t] == "GA":            # if it is a gamma that has been emitted
+                        particle_vec.append("gamma")                                              # Update of the particle vector
+                        energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])        # Update the energy vector
+                    else:                                                                         # if not, it is a internal conversion, so an electron
+                        particle_vec.append("electron")                                           # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
+                        energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])        # Update the energy vector
+                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":        # record that an electron is missing on the K shell of the dughter nucleus
                             particle_vec.append("Atom_K")
                             energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EL1":
-                            #particle_vec.append(["Atom_L1",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L1 shell of the dughter nucleus
+
+                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EL1":       # record that an electron is missing on the L1 shell of the dughter nucleus
                             particle_vec.append("Atom_L1")
                             energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EL2":
-                            #particle_vec.append(["Atom_L2",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L2 shell of the dughter nucleus
+
+                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EL2":       # record that an electron is missing on the L2 shell of the dughter nucleus
                             particle_vec.append("Atom_L2")
                             energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EL3":
-                            #particle_vec.append(["Atom_L3",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L3 shell of the dughter nucleus
+
+                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EL3":       # record that an electron is missing on the L3 shell of the dughter nucleus
                             particle_vec.append("Atom_L3")
                             energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EM":
-                            #particle_vec.append(["Atom_M",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the M shell of the dughter nucleus
+
+                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EM":        # record that an electron is missing on the M shell of the dughter nucleus
                             particle_vec.append("Atom_M")
                             energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EN":
-                            #particle_vec.append(["Atom_N",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the N shell of the dughter nucleus
+
+                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EN":        # record that an electron is missing on the N shell of the dughter nucleus
                             particle_vec.append("Atom_N")
                             energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                    e_sum += e_trans[index_rad][iDaughter][i_level][index_t]                  # Energy summary
+
+                    e_sum += e_trans[index_rad][iDaughter][i_level][index_t]                      # Energy summary
         
-                    levelOftheDaughter = next_level[index_rad][iDaughter][i_level][index_t]   # set the next level
+                    levelOftheDaughter = next_level[index_rad][iDaughter][i_level][index_t]       # set the next level
                  
                 else:
                     i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])
-                    #i_level = levelNumber[index_rad][iDaughter][0]
-                    #index_t = tl.sampling(prob[index_rad][iDaughter][i_level])
-                    #index_t = tl.sampling(prob_trans[index_rad][iDaughter][i_level]) 
-                 # index_t = 0            # sampling of the transition
-                 
-                 # Scoring
-                    #if transitionType[index_rad][iDaughter][i_level][index_t] == "GA": # if it is a gamma that has been emitted
-                        #particle_vec.append("gamma")               # Update of the particle vector
-                        #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])    # Update the energy vector
-                    #else:                                          # if not, it is a internal conversion, so an electron
-                        #particle_vec.append("electron")               # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
-                        #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])    # Update the energy vector
-                        #if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":
-                            #particle_vec.append(["Atom_K",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the K shell of the dughter nucleus
-                            #particle_vec.append("Atom_K") # record that an electron is missing on the K shell of the dughter nucleus
-                            #energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        #if transitionType[index_rad][iDaughter][i_level][index_t] == "EL1":
-                            #particle_vec.append(["Atom_L1",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L1 shell of the dughter nucleus
-                            #particle_vec.append("Atom_L1")
-                            #energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        #if transitionType[index_rad][iDaughter][i_level][index_t] == "EL2":
-                            #particle_vec.append(["Atom_L2",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L2 shell of the dughter nucleus
-                            #particle_vec.append("Atom_L2")
-                            #energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        #if transitionType[index_rad][iDaughter][i_level][index_t] == "EL3":
-                            #particle_vec.append(["Atom_L3",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the L3 shell of the dughter nucleus
-                            #particle_vec.append("Atom_L3")
-                            #energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        #if transitionType[index_rad][iDaughter][i_level][index_t] == "EM":
-                            #particle_vec.append(["Atom_M",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the M shell of the dughter nucleus
-                            #particle_vec.append("Atom_M")
-                            #energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                        #if transitionType[index_rad][iDaughter][i_level][index_t] == "EN":
-                            #particle_vec.append(["Atom_N",DaughterVec[index_rad][iDaughter]]) # record that an electron is missing on the N shell of the dughter nucleus
-                            #particle_vec.append("Atom_N")
-                            #energy_vec.append(0)
-                            #energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])
-                    #e_sum += e_trans[index_rad][iDaughter][i_level][index_t]              # Energy summary
                     print("warning:pas de données de transition:daughter,niveau,niveau d'énergie",DaughterVec[index_rad][iDaughter],levelOftheDaughter,levelEnergy[index_rad][iDaughter][i_level] )
                     levelOftheDaughter = 0   # set the next level
 
@@ -389,7 +257,9 @@ for kB_i in kB: # Loop on the kB
     
     
             '''
+            ==========================
             II. LA RELAXATION ATOMIQUE
+            ==========================
             '''
            
             if Display: print("\t Summary of the atomic relaxation")
@@ -429,114 +299,6 @@ for kB_i in kB: # Loop on the kB
                         print("untermined x or Auger")
                         relaxation = False
                     e_sum += ef
-
-            '''   
-            for particles in particle_vec:
-                if "Atom_" in particles:
-                    relaxation = True
-                    break
-            while relaxation:
-                for i_part, part in enumerate(particle_vec):
-                    #print(part)
-                    if "Atom" in part:
-                        tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],part)
-                        #print(" 412 ",tf)
-                        if tf[0] == "X":
-                            if tf == "XKA":
-                                particle_vec[i_part] = "Atom_L"
-                                #energy_vec[i_part] = 0
-                                particle_vec.append("XKA")
-                                energy_vec.append(ef)
-                                relaxation = True
-                            elif tf == "XKB":
-                                particle_vec[i_part] = "Atom_M"
-                                #energy_vec[i_part] = ef
-                                particle_vec.append("XKB")
-                                energy_vec.append(ef)
-                                relaxation = False
-                            elif tf == "XL":
-                                particle_vec[i_part] = "Atom_M"
-                                #energy_vec[i_part] = ef
-                                particle_vec.append("XL")
-                                energy_vec.append(ef)
-                                relaxation = False
-                            else:
-                                print("\t\tundetermined x rays type")
-                                relaxation = False
-                            e_sum += ef
-                        elif tf[0] == "A":
-                            if tf == 'Auger K':
-                                #energy_vec[i_part] = ef
-                                particle_vec[i_part]='Atom_L'                          # mise à jour du vecteur particle avec l'électron Auger'
-                                particle_vec.append("Auger K")
-                                energy_vec.append(ef)
-                                relaxation = True
-                            elif tf == 'Auger L':
-                                particle_vec[i_part]='Atom_M'                          # mise à jour du vecteur particle avec l'électron Auger'
-                                particle_vec.append("Auger L")             # ajout de deux lacunes dans la couche M
-                                energy_vec.append(ef)                                 # initialisation du vecteur energie
-                                relaxation = False
-                                # energy_vec.append(0)         
-                            else:
-                                print("\t\tundetermined Auger type   ",part,tf,ef)
-                                relaxation = False
-                                #energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie de l'électron Auger
-                            e_sum += ef
-                        else:
-                            print("\t\tundertermined type   ",part,tf,ef)
-                            relaxation = False
-                            e_sum += ef  
-            '''             
-            #lenElement = [] # pour détecter la présence de lacunes atomiques
-            #for element in particle_vec:
-                #lenElement.append(type(element))
-           
-            #while list in lenElement:  # tant qu'il y a une lacune atomique
-                #lenElement = []         # pour détecter la présence de lacunes atomiques
-                #for element in particle_vec:
-                    #lenElement.append(type(element))
-                   
-                #for i_part, part in enumerate(particle_vec):
-                    #if type(part) == list: # indice de la lacune dans le vecteur particle
-                        #tf,ef = tl.relaxation_atom(part[1],Rad[index_rad],part[0])   # tirage de la transition atomique
-                        #if type(tf) != int:
-                            #if 'XK' in tf[0]:                               # cas des rayons XK
-                                #if tf == 'XKA':                                          # cas des rayons XK_alpha
-                                    #particle_vec.append(["Atom_L", part[1]])             # ajout d'un lacune dans la couche L
-                                    #energy_vec.append(0)                                 # initialisation du vecteur energie
-                                    #particle_vec[i_part]='xKA'                           # mise à jour du vecteur particle avec le rayon x
-                                #elif tf == 'XKB':                                        # cas des rayons XK_beta
-                                    #particle_vec.append(["Atom_M", part[1]])             # ajout d'un lacune dans la couche M
-                                    #energy_vec.append(0)                                 # initialisation du vecteur energie
-                                    #particle_vec[i_part]='xKB'                           # mise à jour du vecteur particle avec le rayon x
-                                #elif tf == 'XL':
-                                    #particle_vec[i_part]='xL'                           # mise à jour du vecteur particle avec le rayon x
-                                   # particle_vec.append(["Atom_M", part[1]])             # ajout d'un lacune dans la couche M
-                                   # energy_vec.append(0)                                 # initialisation du vecteur energie
-                                #else:
-                                    #print("undetermined x rays type")
-                               
-                                #energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie du rayon x
-                                #e_sum += ef                                              # mise à jour du bilan energétique
-                            #if 'Auger' in tf[0]:
-                                #if tf == 'Auger K':
-                                    #particle_vec.append(["Atom_L", part[1]])             # ajout de deux lacunes dans la couche L
-                                    #particle_vec.append(["Atom_L", part[1]])
-                                    #energy_vec.append(0)                                 # initialisation du vecteur energie
-                                    #energy_vec.append(0)
-                                    #particle_vec[i_part]='Auger K'                          # mise à jour du vecteur particle avec l'électron Auger'
-                                #elif tf == 'Auger L':
-                                    #particle_vec[i_part]='Auger L'                          # mise à jour du vecteur particle avec l'électron Auger'
-                                   # particle_vec.append(["Atom_M", part[1]])             # ajout de deux lacunes dans la couche M
-                                   # particle_vec.append(["Atom_M", part[1]])
-                                   # energy_vec.append(0)                                 # initialisation du vecteur energie
-                                   # energy_vec.append(0)         
-                                #else:
-                                    #print("undetermined Auger type")
-                                #energy_vec[i_part]=ef                                    # mise à jour du vecteur energie avec l'énergie de l'électron Auger
-                                #e_sum += ef                                              # mise à jour du bilan energétique
-                        #else:
-                            #particle_vec[i_part]="void"
     
             if Display: print("\t\t particles : ", particle_vec)            
             if Display: print("\t\t energy    : ", energy_vec, "keV")
@@ -545,43 +307,37 @@ for kB_i in kB: # Loop on the kB
                            
            # if me_M" in particle_vec): 
            #    print("OK")
-#                for ip, p in enumerate(particle_vec):
-#                  if ("Atom_K" in p) or ("Atom_L" in p) or ("Atom_M" in p):
-#                     # appelle fonction() => Electron ou photon # energy
-#                     # particle_vec[ip] = "electron"
-#                     # energy_vec[ip] = Eout
-#                     #
+                #for ip, p in enumerate(particle_vec):
+                  #if ("Atom_K" in p) or ("Atom_L" in p) or ("Atom_M" in p):
+                     # appelle fonction() => Electron ou photon # energy
+                     # particle_vec[ip] = "electron"
+                     # energy_vec[ip] = Eout
+                     #
 
             '''
+            ==========================================================
             III. INTERACTION RAYONNEMENT/MATIERE + SPECTRES D'EMISSION
+            ==========================================================
             '''
             for i, p in enumerate(particle_vec):
                 if p == "beta":
-                    e_b,p_b = tl.readBetaShape(rad_i,"beta-",level_before_trans)
-                    #n_branch = len(e_branch[index_rad][iDaughter])
-                    #index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][-(1+i_branch)])
-                    #index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch][index_subBranch])
-                    index_beta_energy = tl.sampling(p_b)
+                    e_b,p_b = tl.readBetaShape(rad_i,"beta-",level_before_trans)   # read the data of BetaShape
+                    index_beta_energy = tl.sampling(p_b)                           # sampling energy of beta
                     particle_vec[i] = "electron"
                     energy_vec[i] = e_b[index_beta_energy]
-                    #energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_subBranch][index_beta_energy]
-                    #energy_vec[i] = e_beta[index_rad][iDaughter][-(1+i_branch)][index_beta_energy]
-             
+
                 if p == "beta+":
                     e_b,p_b = tl.readBetaShape(rad_i,"beta+",level_before_trans)
                     index_beta_energy = tl.sampling(p_b)
-                    #index_beta_energy = tl.sampling(p_beta[index_rad][iDaughter][i_branch][index_subBranch]) # tl.sampling(p_beta[index_rad][iDaughter][-(1+index_branch)])
                     particle_vec[i] = "positron"
                     energy_vec[i] = e_b[index_beta_energy]
-                    #energy_vec[i] = e_beta[index_rad][iDaughter][i_branch][index_subBranch][index_beta_energy] #e_beta[index_rad][iDaughter][-(1+index_branch)][index_beta_energy]
                     particle_vec.append("gamma")
                     particle_vec.append("gamma")
                     energy_vec.append(511)
                     energy_vec.append(511)
-                    #print("542 ",e_beta[index_rad][iDaughter][i_branch])
+
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                    #print("529 energy",energy_vec[i])
-                    energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])
+                    energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])          # sampling energy free from photon
                     particle_vec[i] = "photon"
                 if p == "Auger K" or p == "Auger L":
                     particle_vec[i] = "electron"
@@ -592,9 +348,13 @@ for kB_i in kB: # Loop on the kB
     
     
            # tl.tic()
+
             '''
+            ====================
             IV. LA SCINTILLATION
+            ====================
             '''
+
            ## Now we have the (particle, energy) vectors that we would like
     
            ## Calculation of the scintillation quenching with the Birks Model

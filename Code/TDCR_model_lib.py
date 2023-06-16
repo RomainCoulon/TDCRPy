@@ -59,7 +59,7 @@ def normalise(p_x):
         p_array = p_array/p_somme
     p = list(p_array)
     return p
-
+#print(normalise([0,0,0]))
 
 def sampling(p_x):
     """
@@ -430,14 +430,15 @@ def readPenNuc2(rad,z1=z_PenNuc):
                     desin_level_b.append(int(i4[3]))
                     desin_energy_b.append(float(i4[4]))
                 if transition:
-                    if i4[1] == '  ' or i4[1] == '   ': i4[1] = 0
-                    if len(i4)>2 and i4[2] == '  ': i4[2] = 0
-                    if len(i4)>4 and i4[4] == '  ': i4[4] = 0
-                    if len(i4)>5 and i4[5] == '  ': i4[5] = 0
+                    if i4[1] == '' or i4[1] == ' ': i4[1] = 0
+                    if len(i4)>2 and i4[2] == '': i4[2] = 0
+                    if len(i4)>4 and i4[4] == '': i4[4] = 0
+                    if len(i4)>5 and i4[5] == '': i4[5] = 0
                     if "LED" == i4[0]:
                         tran_level_b.append(int(i4[-1]))
                         level_energy_b.append(float(i4[1]))
                     if i4[0] == "GA" or i4[0] == "EK" or i4[0] == "EL" or i4[0] == "EL1" or i4[0] == "EL2" or i4[0] == "EL3" or i4[0] == "EM" or i4[0] == "EN":
+                        #print(i4)
                         tran_type_b.append(i4[0])
                         tran_prob_b.append(float(i4[1]))
                         tran_energy_b.append(float(i4[3]))
@@ -488,9 +489,9 @@ def readPenNuc2(rad,z1=z_PenNuc):
     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
     return out
 #tic()
-#o = readPenNuc2("H-3")
+#o = readPenNuc2("Sb-127")
 #toc()
-#print(o)
+#print(o[-4])
 
 def readPenNuc1(rad):
      '''
@@ -780,7 +781,8 @@ def readPenNuc1(rad):
      return out
 
 #tic()
-#readPenNuc1("Ag-108m")
+#o = readPenNuc1("Ag-110m")
+#print(o[-4])
 #toc()
 #===============================================================================================================
 '''
