@@ -17,14 +17,14 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
-N= 10
+N= 1000
 Rad=["Ag-108"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
-# kB =[1.0e-5]
-kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
+kB =[1.0e-5]
+#kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
 L=[1e-1]
-L = np.logspace(-3,1,50) # Free paramete in keV-1
+# L = np.logspace(-3,1,50) # Free paramete in keV-1
 
 
 TDCR_measure = 0.977784        # Measured TDCR value

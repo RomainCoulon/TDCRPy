@@ -487,9 +487,9 @@ def readPenNuc2(rad,z1=z_PenNuc):
 
     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
     return out
-#tic()
-#o = readPenNuc2("H-3")
-#toc()
+tic()
+o = readPenNuc2("H-3")
+toc()
 #print(o)
 
 def readPenNuc1(rad):
@@ -778,19 +778,11 @@ def readPenNuc1(rad):
 
      out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
-<<<<<<< HEAD
- 
 
 # tic()
 # readPenNuc1("Co-60")
 # toc() # 0.016 s
     
-=======
-
-#tic()
-#readPenNuc1("Ag-108m")
-#toc()
->>>>>>> 50258c158b83367d7601d0a43ae158879db9be28
 #===============================================================================================================
 '''
 rad = "Am-244m"
@@ -1053,7 +1045,7 @@ def readBetaShape(rad,mode,level,z=z_betashape):
 
 # tic()
 # e,p = readBetaShape('C-11','beta+',0)
-# toc() # 0.016 s
+# toc() # 0.016 s > 0s
 
 def readTDCR17spectra(rad):
     file = open("decayData/spectra/spectrumTDCR17_"+rad+".dat")
@@ -1071,9 +1063,9 @@ def readTDCR17spectra(rad):
 
 
 # tic()
-#e,r =  readBetaShape("Nb-95m", "beta-", 1)
-#print(e[-1])
-# toc() # 0.016 s
+# e,r =  readBetaShape("Nb-95m", "beta-", 1)
+# # print(e[-1])
+# toc() # 0.016 s > 0 s
 
 #=====================================================================================
 
@@ -1481,6 +1473,9 @@ def readEShape(rad, *, z=z_ensdf):
     #Prob =  np.array(Prob)         
     return  daug_name,Energy,Prob,Type        
 
+# tic()
+# d,e,p,t = readEShape('Cf-252')
+# toc() # 0 s
 #========  tester readEShape ==============
 # tic()
 # d,e,p,t = readEShape('Cf-252')
@@ -1593,7 +1588,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         type_fin = 'NON'
         energie_fin = 0
     return type_fin,energie_fin
-tic()
-tf,ef = relaxation_atom('CR52', 'Mn-52', 'Atom_K')
-toc()
+# tic()
+# tf,ef = relaxation_atom('CR52', 'Mn-52', 'Atom_K')
+# toc() # 0 s
 #print(tf,ef)
