@@ -488,17 +488,10 @@ def readPenNuc2(rad,z1=z_PenNuc):
 
     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
     return out
-<<<<<<< HEAD
 #tic()
 #o = readPenNuc2("Sb-127")
 #toc()
 #print(o[-4])
-=======
-# tic()
-# o = readPenNuc2("H-3")
-# toc()
-#print(o)
->>>>>>> 6f0ed3f33371eba353f85ec15d3e7e4b10af504d
 
 def readPenNuc1(rad):
      '''
@@ -787,17 +780,10 @@ def readPenNuc1(rad):
      out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
 
-<<<<<<< HEAD
 #tic()
 #o = readPenNuc1("Ag-110m")
 #print(o[-4])
 #toc()
-=======
-# tic()
-# readPenNuc1("Co-60")
-# toc() # 0.016 s
-    
->>>>>>> 6f0ed3f33371eba353f85ec15d3e7e4b10af504d
 #===============================================================================================================
 '''
 rad = "Am-244m"
