@@ -548,6 +548,12 @@ def readPenNuc1(rad):
 
      out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
+ 
+
+# tic()
+# readPenNuc1("Co-60")
+# toc() # 0.016 s
+    
 #===============================================================================================================
 '''
 rad = "Am-244m"
@@ -805,7 +811,9 @@ def readBetaShape(rad,mode,level):
 #e,p = readBetaShape('C-11','beta+','trans0')
 #print(p,type(p))
 
-
+# tic()
+# e,p = readBetaShape('C-11','beta+',0)
+# toc() # 0.016 s
 
 def readTDCR17spectra(rad):
     file = open("decayData/spectra/spectrumTDCR17_"+rad+".dat")
@@ -1235,7 +1243,7 @@ def readEShape(rad, *, z=z):
 
 #========  tester readEShape ==============
 # tic()
-#d,e,p,t = readEShape('Cf-252')
+# d,e,p,t = readEShape('Cf-252')
 #print(d,e,p,t)
 #d1,e1,p1,t1 = readEShape('At-218')
 #print(d1,e1,p1,t1)
@@ -1345,6 +1353,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         type_fin = 'NON'
         energie_fin = 0
     return type_fin,energie_fin
-
-#tf,ef = relaxation_atom('CR52', 'Mn-52', 'Atom_K')
+tic()
+tf,ef = relaxation_atom('CR52', 'Mn-52', 'Atom_K')
+toc()
 #print(tf,ef)
