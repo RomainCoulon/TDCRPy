@@ -54,12 +54,12 @@ def normalise(p_x):
     if len(p_x)>1:
         p_somme = sum(p_array)
         p_array = p_array/p_somme
-    else:
+    elif len(p_x)==0:
         p_somme = p_x[0]
         p_array = p_array/p_somme
     p = list(p_array)
     return p
-#print(normalise([0,0,0]))
+#print(normalise([1, 0.9974641, 0]))
 
 def sampling(p_x):
     """
@@ -557,7 +557,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
         tran_level_daug.append([])
         level_energy_daug.append([])
         prob_tran_daug.append(0)
-        
+
         desin_type_tot.append(desin_type_daug)
         desin_energy_tot.append(desin_energy_daug)
         desin_prob_tot.append(desin_prob_daug)

@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10
-Rad=["Y-90m"]            # list of radionuclides (Na-24)
+Rad=["Nb-93m"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -160,10 +160,14 @@ for kB_i in kB: # Loop on the kB
             else:
                 if Display: print("\t Sampled decay branch:")
                 if Display: print("\t\t Particle = isomeric transition, no particle")
-                transition_prob = tl.normalise(Transition_prob_sum[index_rad][iDaughter][0])
+                #print("163  ",Transition_prob_sum[index_rad][iDaughter])
+                transition_prob = tl.normalise(Transition_prob_sum[index_rad][iDaughter])
+                #print("165  ",transition_prob)
                 index_transition_level = tl.sampling(transition_prob)
+                #print("166  ",index_transition_level)
                 levelOftheDaughter = levelNumber[index_rad][iDaughter][index_transition_level][0]
-                print("166  ",levelOftheDaughter)
+                #print("166  ",levelNumber[index_rad][iDaughter])
+                #levelOftheDaughter = 0
                 e_sum = 0
 
             '''
