@@ -129,7 +129,7 @@ for kB_i in kB: # Loop on the kB
             #=============================
             branch_i = tl.normalise(prob_branch[index_rad][iDaughter])   # normalise la proba de branch
             i_branch=tl.sampling(branch_i)                               # indice de la branche globale
-            #if Display: print("239 branch:",i_branch,branch_i)
+            if Display: print("132 branch:",prob_branch[index_rad][iDaughter])
 
             if p_branch[index_rad][iDaughter][i_branch] != []:
                 branch_proba = tl.normalise(p_branch[index_rad][iDaughter][i_branch])

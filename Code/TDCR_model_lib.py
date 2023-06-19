@@ -53,8 +53,9 @@ def normalise(p_x):
     p_array = np.array(p_x)
     if len(p_x)>1:
         p_somme = sum(p_array)
-        p_array = p_array/p_somme
-    elif len(p_x)==0:
+        if p_somme>0.0:
+            p_array = p_array/p_somme
+    else:
         p_somme = p_x[0]
         p_array = p_array/p_somme
     p = list(p_array)
