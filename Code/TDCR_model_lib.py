@@ -333,6 +333,11 @@ def readPenNuc2(rad,z1=z_PenNuc):
          len = nb de noyaux fils
          sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
          sous-list de sous-list -- des énergies de niveaux de chaque branch -- len de sous-list de sous-list = 1
+
+     prob_tran_tot -- indice 14 -- la somme de transition de chaque branch
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des énergies de niveaux de chaque branch -- len de sous-list de sous-list = 1
      '''
     doc = rad + ".PenNuc.txt"
     with z1.open(doc) as file_P:
@@ -414,7 +419,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
     desin_type_tot=[];desin_energy_tot=[];desin_prob_tot=[];desin_level_tot=[]
     tran_type_tot=[];tran_energy_tot=[];tran_prob_tot=[];tran_level_end_tot=[]; 
     tran_level_tot=[];level_energy_tot=[]
-    prob_branch_tot=[] 
+    prob_branch_tot=[];prob_tran_tot=[] 
 
     '''
      =============
@@ -449,7 +454,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
         desin_type_daug=[];desin_energy_daug=[];desin_prob_daug=[];desin_level_daug=[];
         tran_type_daug=[];tran_energy_daug=[];tran_prob_daug=[];tran_level_end_daug=[];
         tran_level_daug=[];level_energy_daug=[]
-        prob_branch_daug=[]
+        prob_branch_daug=[];prob_tran_daug=[]
 
         for i3 in range(len(posi_end_i)-1):
             start_p1 = posi_end_i[i3]
@@ -536,6 +541,15 @@ def readPenNuc2(rad,z1=z_PenNuc):
             elif branch and len(desin_prob_b)==0:
                 prob_branch_daug.append(0)
 
+            if len(tran_prob_b)>0:
+                tran_prob_array = np.array(tran_prob_b)
+                prob_tran_i = np.sum(tran_prob_array)
+                if prob_tran_i >= 1:
+                    prob_tran_i = 1
+                prob_tran_daug.append(prob_tran_i)
+            elif transition and len(tran_prob_b)==0:
+                prob_tran_daug.append(0)
+
         tran_type_daug.append([])
         tran_prob_daug.append([])
         tran_energy_daug.append([])
@@ -555,8 +569,8 @@ def readPenNuc2(rad,z1=z_PenNuc):
         tran_level_tot.append(tran_level_daug)
         level_energy_tot.append(level_energy_daug)
         prob_branch_tot.append(prob_branch_daug)
-
-    out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
+        prob_tran_tot.append(prob_tran_daug)
+    out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot,prob_tran_tot]
     return out
 #tic()
 #o = readPenNuc2("Sb-127")
