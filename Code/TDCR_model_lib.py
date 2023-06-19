@@ -579,35 +579,6 @@ def readPenNuc2(rad,z1=z_PenNuc):
 #toc()
 #print(o[-4])
 
-def meta(Rad,pmf,particle,p_branch,e_branch,LevelDaughter,levelNumber,prob_trans,prob_branch,levelEnergy,transitionType,e_trans,next_level,Q_value,DaughterVec,Pdaughter):
-    '''
-    =========
-    PARAMETRE
-    =========
-    Rad -- type : list
-    pmf -- type : list
-
-    ======
-    RETURN
-    ======
-    Rad_out -- type : list
-    pmf_out -- type : list
-
-    '''
-    meta_vec = ["Am-242m","Pa-234m","Pm-148m","Pr-144m","Xe-133m","Te-127m","Ag-110m","Ag-108m","Tc-99m","Nb-95m","Y-90m","Mn-52m"]
-    META = ["AM242","PA234","PM148","PR144","XE133","TE127","AG110","AG108","TC99","NB95","Y90","MN52"]
-    pmf_meta = [0.9954,0.0015,0.056,0.9994,1,0.9726999,0.0136,9.1e-2,1,0.975,0.999981,0.01705]
-    for i_rad in range(len(Rad)):
-        if Rad[i_rad] in meta_vec:
-            rad_name = Rad[i_rad] - "m"
-            out_meta = readPenNuc2(rad_name)
-            particle[i_rad][0] = out_meta[3][0]
-            
-            for i_n in range(len(out_meta[0])):
-                
-                particle[i_rad][0].insert(1,out_meta[3][1])
-
-
 
 def readPenNuc1(rad):
      '''

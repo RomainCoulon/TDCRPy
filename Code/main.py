@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10
-Rad=["Nb-93m"]            # list of radionuclides (Na-24)
+Rad=["Eu-155"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 kB =[1.0e-5]
@@ -129,7 +129,7 @@ for kB_i in kB: # Loop on the kB
             #=============================
             branch_i = tl.normalise(prob_branch[index_rad][iDaughter])   # normalise la proba de branch
             i_branch=tl.sampling(branch_i)                               # indice de la branche globale
-            if Display: print("132 branch:",prob_branch[index_rad][iDaughter])
+            #if Display: print("132 branch:",prob_branch[index_rad][iDaughter])
 
             if p_branch[index_rad][iDaughter][i_branch] != []:
                 branch_proba = tl.normalise(p_branch[index_rad][iDaughter][i_branch])
@@ -160,14 +160,10 @@ for kB_i in kB: # Loop on the kB
             else:
                 if Display: print("\t Sampled decay branch:")
                 if Display: print("\t\t Particle = isomeric transition, no particle")
-                #print("163  ",Transition_prob_sum[index_rad][iDaughter])
                 transition_prob = tl.normalise(Transition_prob_sum[index_rad][iDaughter])
-                #print("165  ",transition_prob)
                 index_transition_level = tl.sampling(transition_prob)
-                #print("166  ",index_transition_level)
                 levelOftheDaughter = levelNumber[index_rad][iDaughter][index_transition_level][0]
-                #print("166  ",levelNumber[index_rad][iDaughter])
-                #levelOftheDaughter = 0
+                if Display: print("\t\t Level of the nucleus : ",levelOftheDaughter)
                 e_sum = 0
 
             '''
@@ -207,6 +203,10 @@ for kB_i in kB: # Loop on the kB
                         energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])        # Update the energy vector
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":        # record that an electron is missing on the K shell of the dughter nucleus
                             particle_vec.append("Atom_K")
+                            energy_vec.append(0)
+
+                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EL":       # record that an electron is missing on the L1 shell of the dughter nucleus
+                            particle_vec.append("Atom_L")
                             energy_vec.append(0)
 
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EL1":       # record that an electron is missing on the L1 shell of the dughter nucleus
