@@ -59,7 +59,7 @@ def normalise(p_x):
         p_array = p_array/p_somme
     p = list(p_array)
     return p
-
+#print(normalise([0,0,0]))
 
 def sampling(p_x):
     """
@@ -267,6 +267,73 @@ file_pennuc = "decayData//All-nuclides_PenNuc.zip"
 z_PenNuc = zf.ZipFile(file_pennuc)
 
 def readPenNuc2(rad,z1=z_PenNuc):
+    '''
+     =========
+     PARAMETRE
+     =========
+     rad -- type: str (par exemple: "Am-241") -- radionucléide 
+
+     ======
+     RETURN
+     ======
+     daughter -- indice 0 -- des noyaux fils -- len = nb de noyaux fils
+     prob_daug -- indice 1 -- des probabilités de noyaux fils -- len = nb de noyaux fils
+     energy_Q -- indice 2 -- des énergies de désintégrations -- len = nb de noyaux fils
+
+     desin_type_tot -- indice 3 -- des types de désintégrations/particules émis
+         len = nb de noyaux fils 
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
+
+     desin_energy_tot -- indice 4 -- des énergies de désintégrations/énergies de patricules émis
+         len = nb de noyaux fils 
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des énergies de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
+
+     desin_prob_tot -- indice 5 -- des probabilités de désintégrations
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des probabilités de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
+     
+     desin_level_tot -- indice 6 -- des niveaux atteints après des désintégrations
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des niveaux après des désintégrations de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
+     
+     prob_branch_tot -- indice 7 -- probabilités de chaque branch
+         len = nb de noyaux fils
+         sous-list -- des probabilités de branchs de noyau fil -- len de sous-list = nb de branch de chaque fil
+         
+     tran_type_tot -- indice 8 -- transitions possibles 
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
+     
+     tran_energy_tot -- indice 9 -- énergies de transitions
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des énergies de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
+     
+     tran_prob_tot -- indice 10 -- probabilités de transitions
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des probabilités de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
+     
+     tran_level_tot -- indice 11 -- niveaux de branch correspondants
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des niveaux de chaque branch avant des transitions -- len de sous-list de sous-list = 1
+     
+     tran_level_end_tot -- indice 12 -- niveaux après des transitions
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des niveaux après des transitions de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
+     
+     level_energy_tot -- indice 13 -- énergies de niveaux
+         len = nb de noyaux fils
+         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
+         sous-list de sous-list -- des énergies de niveaux de chaque branch -- len de sous-list de sous-list = 1
+     '''
     doc = rad + ".PenNuc.txt"
     with z1.open(doc) as file_P:
         decayData = file_P.readlines()
@@ -285,6 +352,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
         if "ALP " in decayData[il]: decayData[il] = decayData[il].replace("ALP ","ALP; ")
         if "CK " in decayData[il]: decayData[il] = decayData[il].replace("CK ","CK; ")
         if "CL " in decayData[il]: decayData[il] = decayData[il].replace("CL ","CL; ")
+        if "CO " in decayData[il]: decayData[il] = decayData[il].replace("CO ","CO; ")
         if "CL1 " in decayData[il]: decayData[il] = decayData[il].replace("CL1 ","CL1; ")
         if "CL2 " in decayData[il]: decayData[il] = decayData[il].replace("CL2 ","CL2; ")
         if "CL3 " in decayData[il]: decayData[il] = decayData[il].replace("CL3 ","CL3; ")
@@ -426,22 +494,25 @@ def readPenNuc2(rad,z1=z_PenNuc):
                         desin_type_b.append("Atom_M")
                     if "CN" == i4[0]:
                         desin_type_b.append("Atom_N")
+                    if "CO" == i4[0]:
+                        desin_type_b.append("Atom_O")
                     desin_prob_b.append(float(i4[1]))
                     desin_level_b.append(int(i4[3]))
                     desin_energy_b.append(float(i4[4]))
                 if transition:
-                    if i4[1] == '  ' or i4[1] == '   ': i4[1] = 0
-                    if len(i4)>2 and i4[2] == '  ': i4[2] = 0
-                    if len(i4)>4 and i4[4] == '  ': i4[4] = 0
-                    if len(i4)>5 and i4[5] == '  ': i4[5] = 0
+                    if i4[1] == '' or i4[1] == ' ': i4[1] = 0
+                    if len(i4)>2 and i4[2] == '': i4[2] = 0
+                    if len(i4)>4 and i4[4] == '': i4[4] = 0
+                    if len(i4)>5 and i4[5] == '': i4[5] = 0
                     if "LED" == i4[0]:
                         tran_level_b.append(int(i4[-1]))
                         level_energy_b.append(float(i4[1]))
                     if i4[0] == "GA" or i4[0] == "EK" or i4[0] == "EL" or i4[0] == "EL1" or i4[0] == "EL2" or i4[0] == "EL3" or i4[0] == "EM" or i4[0] == "EN":
+                        #print(i4)
                         tran_type_b.append(i4[0])
                         tran_prob_b.append(float(i4[1]))
                         tran_energy_b.append(float(i4[3]))
-                        tran_level_end_b.append(float(i4[5]))
+                        tran_level_end_b.append(int(i4[5]))
             if branch:
                 desin_type_daug.append(desin_type_b)
                 desin_energy_daug.append(desin_energy_b)
@@ -487,10 +558,40 @@ def readPenNuc2(rad,z1=z_PenNuc):
 
     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
     return out
-# tic()
-# o = readPenNuc2("H-3")
-# toc()
-#print(o)
+#tic()
+#o = readPenNuc2("Sb-127")
+#toc()
+#print(o[-4])
+
+def meta(Rad,pmf,particle,p_branch,e_branch,LevelDaughter,levelNumber,prob_trans,prob_branch,levelEnergy,transitionType,e_trans,next_level,Q_value,DaughterVec,Pdaughter):
+    '''
+    =========
+    PARAMETRE
+    =========
+    Rad -- type : list
+    pmf -- type : list
+
+    ======
+    RETURN
+    ======
+    Rad_out -- type : list
+    pmf_out -- type : list
+
+    '''
+    meta_vec = ["Am-242m","Pa-234m","Pm-148m","Pr-144m","Xe-133m","Te-127m","Ag-110m","Ag-108m","Tc-99m","Nb-95m","Y-90m","Mn-52m"]
+    META = ["AM242","PA234","PM148","PR144","XE133","TE127","AG110","AG108","TC99","NB95","Y90","MN52"]
+    pmf_meta = [0.9954,0.0015,0.056,0.9994,1,0.9726999,0.0136,9.1e-2,1,0.975,0.999981,0.01705]
+    for i_rad in range(len(Rad)):
+        if Rad[i_rad] in meta_vec:
+            rad_name = Rad[i_rad] - "m"
+            out_meta = readPenNuc2(rad_name)
+            particle[i_rad][0] = out_meta[3][0]
+            
+            for i_n in range(len(out_meta[0])):
+                
+                particle[i_rad][0].insert(1,out_meta[3][1])
+
+
 
 def readPenNuc1(rad):
      '''
@@ -779,10 +880,10 @@ def readPenNuc1(rad):
      out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
      return out
 
-# tic()
-# readPenNuc1("Co-60")
-# toc() # 0.016 s
-    
+#tic()
+#o = readPenNuc1("Ag-110m")
+#print(o[-4])
+#toc()
 #===============================================================================================================
 '''
 rad = "Am-244m"
