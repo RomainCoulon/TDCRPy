@@ -556,7 +556,8 @@ def readPenNuc2(rad,z1=z_PenNuc):
         tran_level_end_daug.append([])
         tran_level_daug.append([])
         level_energy_daug.append([])
-
+        prob_tran_daug.append(0)
+        
         desin_type_tot.append(desin_type_daug)
         desin_energy_tot.append(desin_energy_daug)
         desin_prob_tot.append(desin_prob_daug)

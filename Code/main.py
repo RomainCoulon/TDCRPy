@@ -160,8 +160,10 @@ for kB_i in kB: # Loop on the kB
             else:
                 if Display: print("\t Sampled decay branch:")
                 if Display: print("\t\t Particle = isomeric transition, no particle")
-
-                levelOftheDaughter = 0
+                transition_prob = tl.normalise(Transition_prob_sum[index_rad][iDaughter][0])
+                index_transition_level = tl.sampling(transition_prob)
+                levelOftheDaughter = levelNumber[index_rad][iDaughter][index_transition_level][0]
+                print("166  ",levelOftheDaughter)
                 e_sum = 0
 
             '''
