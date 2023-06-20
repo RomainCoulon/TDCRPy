@@ -59,11 +59,10 @@ next_level = []        # Next level on the daughter nucleus -- indice 12
 Q_value = []           # Energy of the reaction -- indice 2
 DaughterVec = []       # Daughters -- indice 0
 Pdaughter = []         # Probabiblity related to daughters -- indice 1
+Transition_prob_sum = []
 
 meta_vec = ["Am-242m","Pa-234m","Pm-148m","Pr-144m","Xe-133m","Te-127m","Ag-110m","Ag-108m","Tc-99m","Nb-95m","Y-90m","Mn-52m"]
-#for rad_i1 in Rad:
- #   if rad_i1 in meta_vec:
-  #      rad_i1 = rad_i1 - "m"
+
 for rad_i in Rad:
     out_PenNuc = tl.readPenNuc2(rad_i)
     particle.append(out_PenNuc[3])       # Particle(s) from the Mother  --  indice 3
@@ -80,10 +79,8 @@ for rad_i in Rad:
     Q_value.append(out_PenNuc[2])        # Energy of the reaction -- indice 2
     DaughterVec.append(out_PenNuc[0])    # Daughters -- indice 0
     Pdaughter.append(out_PenNuc[1])      # Probabiblity related to daughters -- indice 1
+    Transition_prob_sum.append(out_PenNuc[14])
 
-    #if rad_i in meta_vec:
-        #name_fil = rad_i - "m"
-        #out2_meta = tl.readPenNuc2(name_fil)
 
 for kB_i in kB: # Loop on the kB
     mean_efficiency_S = []  # efficiency of single counte rate
@@ -127,26 +124,12 @@ for kB_i in kB: # Loop on the kB
             if Display: print("\t Sampled daughter:")
             if Display: print("\t\t Daughter = ", Daughter)           
             
-            #==========================
-            # Traitement de l'état méta
-            #==========================
-            '''
-            META_daug = ["AM242","PA234","PM148","PR144","XE133","TE127","AG110","AG108","TC99","NB95","Y90","MN52"]
-            if rad_i in meta_vec and Daughter in META_daug:
-                particle[index_rad][iDaughter] = out2_meta[3]
-                p_branch[index_rad][iDaughter] = out2_meta[5]
-                e_branch[index_rad][iDaughter] = out2_meta[4]
-                LevelDaughter[index_rad][iDaughter] = out2_meta[6]
-                levelNumber[index_rad][iDaughter] = out2_meta[11]
-                prob_trans[index_rad][iDaughter] = out2_meta[10]
-                prob_branch[index_rad][iDaughter] = out2_meta[5]
-            '''
             #=============================
             # Sampling of the decay branch
             #=============================
             branch_i = tl.normalise(prob_branch[index_rad][iDaughter])   # normalise la proba de branch
             i_branch=tl.sampling(branch_i)                               # indice de la branche globale
-            #if Display: print("239 branch:",i_branch,branch_i)
+            #if Display: print("132 branch:",prob_branch[index_rad][iDaughter])
 
             if p_branch[index_rad][iDaughter][i_branch] != []:
                 branch_proba = tl.normalise(p_branch[index_rad][iDaughter][i_branch])
@@ -177,7 +160,10 @@ for kB_i in kB: # Loop on the kB
             else:
                 if Display: print("\t Sampled decay branch:")
                 if Display: print("\t\t Particle = isomeric transition, no particle")
-                levelOftheDaughter = 0
+                transition_prob = tl.normalise(Transition_prob_sum[index_rad][iDaughter])
+                index_transition_level = tl.sampling(transition_prob)
+                levelOftheDaughter = levelNumber[index_rad][iDaughter][index_transition_level][0]
+                if Display: print("\t\t Level of the nucleus : ",levelOftheDaughter)
                 e_sum = 0
 
             '''
@@ -217,6 +203,10 @@ for kB_i in kB: # Loop on the kB
                         energy_vec.append(e_trans[index_rad][iDaughter][i_level][index_t])        # Update the energy vector
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":        # record that an electron is missing on the K shell of the dughter nucleus
                             particle_vec.append("Atom_K")
+                            energy_vec.append(0)
+
+                        if transitionType[index_rad][iDaughter][i_level][index_t] == "EL":       # record that an electron is missing on the L1 shell of the dughter nucleus
+                            particle_vec.append("Atom_L")
                             energy_vec.append(0)
 
                         if transitionType[index_rad][iDaughter][i_level][index_t] == "EL1":       # record that an electron is missing on the L1 shell of the dughter nucleus
