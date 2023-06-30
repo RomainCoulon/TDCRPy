@@ -226,15 +226,15 @@ def plotL(radv,kB,L): # plot the fitted efficiecny curves for a range of kB
 ## CALCULATION OF THE EFFICIENCY
 # Reference Point Co-60 => TDCR=0.9788 Eff_D = 0.9767 => L = 
 
-radv = ["H-3", "He-6", "Be-7", "C-11", "C-14", "N-13", "O-15", "F-18", "Na-22", \
-        "Na-24", "Al-26", "P-32", "P-33", "S-35", "Cl-36", "Ar-41", "K-40", \
-            "Ca-41", "Ca-45", "Sc-44", "Sc-46", "Sc-47", "Fe-55", "Co-60", \
-                "Ni-63", "Pu-241"]
+# radv = ["H-3", "He-6", "Be-7", "C-11", "C-14", "N-13", "O-15", "F-18", "Na-22", \
+#         "Na-24", "Al-26", "P-32", "P-33", "S-35", "Cl-36", "Ar-41", "K-40", \
+#             "Ca-41", "Ca-45", "Sc-44", "Sc-46", "Sc-47", "Ti-44", "Fe-55", "Co-60", \
+#                 "Ni-63", "Pu-241"]
 
-# radv = ["Co-60"]
-kB = 1.2e-5
-L = 1.30
-plotL(radv, kB, L)
+# # radv = ["Co-60"]
+# # kB = 1.2e-5
+# # L = 1.30
+# # plotL(radv, kB, L)
 
 # AB = 657.296
 # BC = 695.919
