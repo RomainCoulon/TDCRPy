@@ -17,20 +17,20 @@ import scipy.stats as st
 
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
-N= 10
-Rad=["Eu-155"]            # list of radionuclides (Na-24)
+N= 10000
+Rad=["Mn-52"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
-kB =[1.0e-5]
-#kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
-L=[1e-1]
-#L = np.logspace(-3,1,50) # Free paramete in keV-1
+# kB =[1.0e-5]
+kB = [0.8e-5, 0.9e-5, 1.0e-5, 1.1e-5, 1.2e-5]    # Birks constant in cm/keV
+# L=[1e-1]
+L = np.logspace(-3,1,50) # Free paramete in keV-1
 
 
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
-Record = False                  # to record the efficiency curves
-Display = True               # to display calculation results on the console
+Record = True                  # to record the efficiency curves
+Display = False               # to display calculation results on the console
 #Display = True                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
@@ -288,7 +288,7 @@ for kB_i in kB: # Loop on the kB
                         energy_vec.append(ef)
                         relaxation = False
                     else:
-                        print("untermined x or Auger")
+                        if Display: print("untermined x or Auger")
                         relaxation = False
                     e_sum += ef
     

@@ -179,7 +179,37 @@ def plotSmoothing(Rad,SDT): # plot the fitted efficiecny curves for a range of k
     plt.savefig("EfficiencyCurves/"+Rad+"/tdcr_"+Rad+"_fit.png")
     # plt.close()
 
+def plotL(radv,kB,L): # plot the fitted efficiecny curves for a range of kB 
+    
+    effD = []; effT = []
+    for Rad in radv:
+        out = readProfil(Rad,kB,"D")               # probability vector of double events
+        effD.append(np.interp(L, out[0], np.asarray(out[1])))
+        out = readProfil(Rad,kB,"T")               # probability vector of triple events
+        effT.append(np.interp(L, out[0], np.asarray(out[1])))
+    
+    effD = np.asarray(effD)
+    effT = np.asarray(effT)
+    
+    x = effT/effD
+    plt.figure(r"Fitting of calculated points")#" - $kB$ = "+str(kB)+" cm/keV - $L$ = "+str(L)+" keV$^{-1}$")
+    plt.clf()
+    plt.title('  ') 
+    plt.plot(x, effD, "ok", label="TDCR model")
+    for ix, c in enumerate(x):
+        plt.text(c, effD[ix]+0.000, radv[ix], color="b")
+    plt.errorbar(0.9788, 0.9767, xerr=0.0012, yerr=0.011, fmt="or", label="experiemental result")
+    plt.text(0.9788, 0.9767, "Co-60", color = "r")
+    plt.ylabel(r"$\epsilon_D$", fontsize = 14)
+    plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
+    plt.legend(fontsize = 12)
+    plt.savefig("EfficiencyCurves/ESIRIC/EfficiencyCurve.png")
+    
+    # plt.xscale("log")
 
+    # bbox_inches = "tight", format = "png", dpi = 500
+
+    # plt.close()
 
 ## PLOT EFFICIENCY CURVES FOR SEVERAL KB VALUES
 # plotEffProfilkB("C-14","D")
@@ -190,7 +220,21 @@ def plotSmoothing(Rad,SDT): # plot the fitted efficiecny curves for a range of k
 ## PLOT THE FIT OF THE EFFICIENCY FUNCTION
 # plotSmoothing("C-14","D")
 
+## PLOT THE EFFICIENCY FOR A GIVEN FREE PARAMETER
+# plotSmoothing("C-14","D")
+
 ## CALCULATION OF THE EFFICIENCY
+# Reference Point Co-60 => TDCR=0.9788 Eff_D = 0.9767 => L = 
+
+# radv = ["H-3", "He-6", "Be-7", "C-11", "C-14", "N-13", "O-15", "F-18", "Na-22", \
+#         "Na-24", "Al-26", "P-32", "P-33", "S-35", "Cl-36", "Ar-41", "K-40", \
+#             "Ca-41", "Ca-45", "Sc-44", "Sc-46", "Sc-47", "Ti-44", "Cr-51", "Fe-55", "Co-60", \
+#                 "Ni-63", "Pu-241"]
+
+# # radv = ["Co-60"]
+# # kB = 1.2e-5
+# # L = 1.30
+# # plotL(radv, kB, L)
 
 # AB = 657.296
 # BC = 695.919
@@ -210,15 +254,15 @@ def plotSmoothing(Rad,SDT): # plot the fitted efficiecny curves for a range of k
 # print(T/D)
 # D = AB+BC+AC-2*T
 
-TDCR = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-kB = 0.8E-5
-rad = "C-14"
-TDCR.reverse()
-for t in TDCR:
-    eff = effTDCR(t, rad, kB)[1] # H-3
-    eff2 = dtc.I2calc(t, 0, 0, 0, rad, kB*1e3)[2]
-    digRound = 2
-    print("Efficiency of double coincidences = ", round(100*eff2, digRound),"% - ", round(100*eff, digRound),"%")
+# TDCR = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+# kB = 0.8E-5
+# rad = "C-14"
+# TDCR.reverse()
+# for t in TDCR:
+#     eff = effTDCR(t, rad, kB)[1] # H-3
+#     eff2 = dtc.I2calc(t, 0, 0, 0, rad, kB*1e3)[2]
+#     digRound = 2
+#     print("Efficiency of double coincidences = ", round(100*eff2, digRound),"% - ", round(100*eff, digRound),"%")
 
     
 

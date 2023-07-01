@@ -1665,7 +1665,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
                 type_fin = type_2[index_fin]        # type of transition     
                 energie_fin = energy_2[index_fin]   # energy of the transition
             else:
-                print("pas de transition de rayon X ni d'électron Auger pour cette lacune: ",lacune)
+                # print("pas de transition de rayon X ni d'électron Auger pour cette lacune: ",lacune)
                 type_fin = 'NON'
                 energie_fin = 0            
         else:
