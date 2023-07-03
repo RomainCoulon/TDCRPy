@@ -301,13 +301,13 @@ L=2.2
 TD=TDCR_measure
 Rad="H-3"
 pmf_1=1
-N=100
+N=1000
 kB=1e-5
 RHO=0.98
 nE=1000
 
 
-r=opt.minimize(TDCRPy, L, args=(TD,Rad,pmf_1,N,kB,RHO,nE), method='nelder-mead',options={'xatol': 1e-5, 'disp': True, 'maxiter':50})
+r=opt.minimize(TDCRPy, L, args=(TD,Rad,pmf_1,N,kB,RHO,nE), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
 L=r.x
 print(L)
 
