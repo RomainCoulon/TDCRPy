@@ -202,6 +202,7 @@ def plotL(radv,kB,L): # plot the fitted efficiecny curves for a range of kB
     plt.text(0.9788, 0.9767, "Co-60", color = "r")
     plt.ylabel(r"$\epsilon_D$", fontsize = 14)
     plt.xlabel(r"$\epsilon_T/\epsilon_D$", fontsize = 14)
+    # plt.xscale("log")
     plt.legend(fontsize = 12)
     plt.savefig("EfficiencyCurves/ESIRIC/EfficiencyCurve.png")
     
@@ -227,14 +228,16 @@ def plotL(radv,kB,L): # plot the fitted efficiecny curves for a range of kB
 # Reference Point Co-60 => TDCR=0.9788 Eff_D = 0.9767 => L = 
 
 # radv = ["H-3", "He-6", "Be-7", "C-11", "C-14", "N-13", "O-15", "F-18", "Na-22", \
-#         "Na-24", "Al-26", "P-32", "P-33", "S-35", "Cl-36", "Ar-41", "K-40", \
-#             "Ca-41", "Ca-45", "Sc-44", "Sc-46", "Sc-47", "Ti-44", "Cr-51", "Fe-55", "Co-60", \
-#                 "Ni-63", "Pu-241"]
+# "Na-24", "Al-26", "P-32", "P-33", "S-35", "Cl-36", "Ar-41", "K-40", \
+# "Ca-41", "Ca-45", "Sc-44", "Sc-46", "Sc-47", "Ti-44", "Cr-51", \
+# "Mn-52", "Mn-54", "Mn-56", "Fe-52", "Fe-55", "Fe-59", "Co-60", \
+# "Sb-124", "Sb-125", "Te-123m", "Te-127", "Te-127m", \
+# "Ni-63", "Pu-241"]
 
-# # radv = ["Co-60"]
-# # kB = 1.2e-5
-# # L = 1.30
-# # plotL(radv, kB, L)
+# radv = ["Co-60"]
+# kB = 1.0e-5
+# L = 1.30
+# plotL(radv, kB, L)
 
 # AB = 657.296
 # BC = 695.919
