@@ -18,7 +18,7 @@ import scipy.stats as st
 ## INPUT OF THE MODEL
 # N=1                   # number of simulated decay (MC trials)
 N= 10000
-Rad=["Co-60"]            # list of radionuclides (Na-24)
+Rad=["Ga-66"]            # list of radionuclides (Na-24)
 # Rad = ["Cs-137"]
 pmf_1=[1]                # relative abondance (pmf)
 # kB =[1.0e-5]
@@ -29,9 +29,10 @@ L = np.logspace(-3,1,50) # Free paramete in keV-1
 
 TDCR_measure = 0.977784        # Measured TDCR value
 u_TDCR_measure = 0.000711      # standard uncertainty
+# Record = False                  # to record the efficiency curves
 Record = True                  # to record the efficiency curves
 Display = False               # to display calculation results on the console
-#Display = True                # to display calculation results on the console
+# Display = True                # to display calculation results on the console
 # RHO = 0.96         #density of absorber (Toluene) g/cm3
 RHO = 0.98           #density of absorber (UG + H20) g/cm3
 nE = 1000            #number of bin to discretize the energy vector for scintillation quenching calculation
@@ -258,7 +259,7 @@ for kB_i in kB: # Loop on the kB
             daughter_relax = DaughterVec[index_rad][iDaughter]
             for i_part in range(len(particle_vec)):
                 relaxation = False
-                if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part]:
+                if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part] or "Atom_M" in particle_vec[i_part]:
                     relaxation = True
                 while relaxation:
                     tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec[i_part])
