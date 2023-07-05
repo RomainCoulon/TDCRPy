@@ -5,39 +5,84 @@ Created on Wed Jul  5 10:04:53 2023
 @author: romain.coulon
 """
 
-
+import numpy as np
 import TDCRPy as td
 import scipy.optimize as opt
+import sys, time
+sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
+import TDCRcalculation as tc 
 
 
-## INPUT OF THE MODEL
-N=10                   # number of simulated decay (MC trials)
+
+def eff(TDCR_measure, TAB, TBC, TAC, Rad, kB):
+    N=3000
+    L=(1.31, 1.31, 1.31)           # Free paramete in keV-1
+    r=opt.minimize(td.TDCRPy, L, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "asym"), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
+    L=r.x
+    print(r)
+    out=td.TDCRPy(L,TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "eff", "asym")
+    return np.mean(L), L, out[2], out[2] 
+    
+def TicTocGenerator():
+    """
+    Generator that returns time differences
+    """
+    ti = 0           # initial time
+    tf = time.time() # final time
+    while True:
+        ti = tf
+        tf = time.time()
+        yield tf-ti # returns the time difference
+
+TicToc = TicTocGenerator() # create an instance of the TicTocGen generator
+
+# This will be the main function through which we define both tic() and toc()
+def toc(tempBool=True):
+    """
+    Prints the time difference yielded by generator instance TicToc
+    """
+    
+    tempTimeInterval = next(TicToc)
+    if tempBool:
+        print( "Elapsed time: %f seconds.\n" %tempTimeInterval )
+
+def tic():
+    """
+    Records a time in TicToc, marks the beginning of a time interval
+    """
+    toc(False)
+
+
+"""
+TEST
+"""
+
 Rad="Co-60"    # list of radionuclides (Na-24)
-pmf_1="1"        # relative abondance (pmf)
 kB =1.0e-5       # Birks constant in cm/keV  
-L=(1.13, 1.13, 1.13)           # Free paramete in keV-1
+TDCR_measure = 0.977667386529166        # Measured TDCR value
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
 
 
-TDCR_measure = 0.977784        # Measured TDCR value
-u_TDCR_measure = 0.000711      # standard uncertainty
 
-TAB = 0.85
-TBC = 0.85
-TAC = 0.85
+tic()
+F1, FFF, eff1, eff2 = tc.I2calc(TDCR_measure, TAB, TBC, TAC, Rad, kB)
+toc()
 
-Display = False               # to display calculation results on the console
-# RHO = 0.96         #density of absorber (Toluene) g/cm3
-RHO = 0.98           #density of absorber (UG + H20) g/cm3
-nE = 1000            #number of bin to discretize the energy vector for scintillation quenching calculation
+print("/nanalytical model")
+print("free parameter = ", F1)
+print("free parameters = ", FFF)
+print("Double count rate efficiency (sym) = ", eff1)
+print("Double count rate efficiency (asym) = ", eff2)
 
-mode = "res"
-mode2 = "asym"
 
-r=opt.minimize(td.TDCRPy, L, args=(TDCR_measure, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
-L=r.x
-print(r)
-print(L)
+tic()
+F1, FFF, eff1, eff2 = eff(TDCR_measure, TAB, TBC, TAC, Rad, kB)
+toc()
 
-mode = "eff"
-out=td.TDCRPy(L,TDCR_measure, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2)
-print(out)
+print("/nstochastic model")
+print("free parameter = ", F1)
+print("free parameters = ", FFF)
+print("Double count rate efficiency (sym) = ", eff1)
+print("Double count rate efficiency (asym) = ", eff2)
