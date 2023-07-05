@@ -11,7 +11,7 @@ import scipy.optimize as opt
 
 
 ## INPUT OF THE MODEL
-N=1000                   # number of simulated decay (MC trials)
+N=10                   # number of simulated decay (MC trials)
 Rad="Co-60"    # list of radionuclides (Na-24)
 pmf_1="1"        # relative abondance (pmf)
 kB =1.0e-5       # Birks constant in cm/keV  

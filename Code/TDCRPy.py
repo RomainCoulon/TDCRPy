@@ -354,7 +354,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
             efficiency_AC.append(pA_single*pC_single)
             efficiency_T.append(pA_single*pB_single*pC_single)
             
-            efficiency_D.append(efficiency_AB[-1]*efficiency_BC[-1]*efficiency_AC[-1]-2*efficiency_T[-1])
+            efficiency_D.append(efficiency_AB[-1]+efficiency_BC[-1]+efficiency_AC[-1]-2*efficiency_T[-1])
             efficiency_S.append((pA_single+pB_single+pC_single-efficiency_D[-1]-efficiency_T[-1])/3)
             
             
