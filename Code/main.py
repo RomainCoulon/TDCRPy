@@ -95,6 +95,9 @@ for kB_i in kB: # Loop on the kB
         efficiency_S = []        # results calculated efficiency for single events
         efficiency_D = []        # results calculated efficiency for double coincidence
         efficiency_T = []        # results calculated efficiency for triple coincidence
+        
+        
+        
         for i in range(N): # Main Loop - Monte Carlo trials
             particle_vec=[]
             energy_vec=[]
@@ -287,7 +290,7 @@ for kB_i in kB: # Loop on the kB
 
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
                     energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])          # sampling energy free from photon
-                    particle_vec[i] = "photon"
+                    particle_vec[i] = "electron"
                 if p == "Auger K" or p == "Auger L":
                     particle_vec[i] = "electron"
             if Display: print("\t Summary of the final charged particles")
@@ -313,6 +316,7 @@ for kB_i in kB: # Loop on the kB
                 else:
                     e_quenching.append(0)
             if Display: print("\t Summary of the estimation of quenched energies")
+            
             if Display: print("\t\t energy_vec      : ", energy_vec, "keV")
             if Display: print("\t\t quenched energy : ", e_quenching, "keV")
     
