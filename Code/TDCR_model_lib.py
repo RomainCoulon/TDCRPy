@@ -1265,15 +1265,15 @@ def E_quench_a(e,kB,nE):
 #========================= énergie gamma ===================================================
 #'''
 if absolutePath: 
-    f1 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
-    f2 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
-    f3 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
-    fe = open("G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/E_depose.txt")   
+    f1 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_1_200k.txt')
+    f2 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_200_2000k.txt')
+    f3 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_2000_10000k.txt')
+    fe = open("G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt")   
 else:
-    f1 = open('MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
-    f2 = open('MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
-    f3 = open('MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
-    fe = open("MCNP-MATRIX/matrice/E_depose.txt")
+    f1 = open('MCNP-MATRIX/matrice/fichier/matrice_p_1_200k.txt')
+    f2 = open('MCNP-MATRIX/matrice/fichier/matrice_p_200_2000k.txt')
+    f3 = open('MCNP-MATRIX/matrice/fichier/matrice_p_2000_10000k.txt')
+    fe = open("MCNP-MATRIX/matrice/fichier/E_depose.txt")
 
 data1 = f1.readlines()
 data2 = f2.readlines()
