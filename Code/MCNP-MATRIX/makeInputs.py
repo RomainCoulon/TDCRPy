@@ -35,7 +35,7 @@ with open("script3.bat", "w") as file2:
         file2.write("mcnp6 i=input3/input_"+str(int(i))+"keV.mcn r=run/run_"+str(int(i))+"keV.r o=output3/output_"+str(int(i))+"keV.o\n")
 '''
 
-def make_input(niveau,NPS,par):
+def make_input(niveau,NPS,par,v):
     ## par (string) : 'p' (photon) ou 'b' (beta-) ou 'bp' (beta+)
     start_E = 0
 
@@ -61,14 +61,22 @@ def make_input(niveau,NPS,par):
         delta_E = 10
 
     energy_i = np.linspace(start_energy,end_energy,taille_x)
-
-    if par == 'p':
-        doc = 'template.txt'
-    elif par == 'b':
-        doc = 'template_b.txt'
-    elif par == 'bp':
-        doc = 'template_bp.txt'
     
+    if v == 10:
+        if par == 'p':
+            doc = 'template.txt'
+        elif par == 'b':
+            doc = 'template_b.txt'
+        elif par == 'bp':
+            doc = 'template_bp.txt'
+    elif v==16:
+        if par == 'p':
+            doc = 'template16mL.txt'
+        elif par == 'b':
+            doc = 'template16mL.txt'
+        elif par == 'bp':
+            doc = 'template16mL.txt'
+
     name_bat = "script" + input_n + par +".bat"
 
     for i in energy_i:
@@ -92,5 +100,5 @@ def make_input(niveau,NPS,par):
             file2.write(contenu)
     return 1
 
-write = make_input(2,1e6,'bp')   
+write = make_input(0,1e6,'p',16)   
  
