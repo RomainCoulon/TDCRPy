@@ -103,7 +103,8 @@ def readMCNP(energy,niveau,par,npas=1000,mode='N'):
         p /= sum(np.asarray(p)) # normaliser p
     return e,p
 
-
+#e, p = readMCNP(9000,2,'b')
+#print(e[-10:])
 # ---------------------- créer la matrice de pdf et cdf -----------------------
 
 def creat_matrice(niveau,par,mode='pdf',npas=1000):
@@ -162,6 +163,7 @@ def creat_matrice(niveau,par,mode='pdf',npas=1000):
 
     for i in range(taille_x):
         energy = energy_inci[i]
+        print(energy)
         e,p = readMCNP(energy,niveau=NIVEAU,par=PAR)
         #if mode == "cdf":
          #   p = np.cumsum(p)
@@ -273,7 +275,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     print(xx[0,0],yy.shape,zz[0,0])
     h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot)
     cb = plt.colorbar(h)
-    cb.set_label("probabilité en log")
+    cb.set_label("probabilité")
     #plt.xticks(xs,s)
     #plt.yticks(np.linspace(0,end,10))
     #x_maj = MultipleLocator(1)
@@ -477,10 +479,11 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 
 
 #================ tracer la matrice ========================================
-#e,matrice_p = creat_matrice(1,par='b')
+e,matrice_p = creat_matrice(2,par='b')
+print(e[-10:])
 #print(matrice_p.shape,matrice_p[0,541:543])
-#ecri = ecrit_matrice(matrice_p,1,par='b') 
-#fig1 = matrice_fig(matrice_p,41,80,e)
+#ecri = ecrit_matrice(matrice_p,2,par='b') 
+#fig1 = matrice_fig(matrice_p,2000,10000,e)
 #for i in range(1003):
     #for j in range(901):
         #matrice_p[i][j] = np.log(matrice_p[i][j]+6e-6)
