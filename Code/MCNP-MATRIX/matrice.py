@@ -71,8 +71,10 @@ def readMCNP(energy,niveau,par,npas=1000,mode='N'):
 
     if par == 'p':
         name1 = 'p/'
-    else:
+    elif par=='b':
         name1 = 'b/'
+    else:
+        name1='bp/'
 
     if niveau == 0:
         output = 'output1'
@@ -103,7 +105,13 @@ def readMCNP(energy,niveau,par,npas=1000,mode='N'):
         p /= sum(np.asarray(p)) # normaliser p
     return e,p
 
-#e, p = readMCNP(9000,2,'b')
+#e1, p1 = readMCNP(1000,1,'b')
+#e2, p2 = readMCNP(1000,1,'bp')  
+#plt.plot(e1,p1,label='beta-')
+#plt.plot(e2,p2,label='beta+')
+#plt.yscale('log')
+#plt.legend(fontsize=10,loc='best')
+#plt.savefig('matrice/spectre comparison.png')
 #print(e[-10:])
 # ---------------------- créer la matrice de pdf et cdf -----------------------
 
