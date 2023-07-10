@@ -163,7 +163,7 @@ def creat_matrice(niveau,par,mode='pdf',npas=1000):
 
     for i in range(taille_x):
         energy = energy_inci[i]
-        print(energy)
+        #print(energy)
         e,p = readMCNP(energy,niveau=NIVEAU,par=PAR)
         #if mode == "cdf":
          #   p = np.cumsum(p)
@@ -275,7 +275,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     print(xx[0,0],yy.shape,zz[0,0])
     h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot)
     cb = plt.colorbar(h)
-    cb.set_label("probabilité")
+    cb.set_label("probabilité en log")
     #plt.xticks(xs,s)
     #plt.yticks(np.linspace(0,end,10))
     #x_maj = MultipleLocator(1)
@@ -289,7 +289,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     plt.ylabel("énergie déposée/MeV")
     title = "probabilité d'énergie déposée par " + particle + " de " + str(start) + "-" + str(end) + "keV"
     plt.title(title)
-    name = "matrice/matrice_fig_" + particle +"_" + str(start) + "_" + str(end) + "k.png"
+    name = "matrice/matrice_fig_log-1e-7" + particle +"_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
     return 0
 #'''
@@ -480,14 +480,14 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 
 #================ tracer la matrice ========================================
 e,matrice_p = creat_matrice(2,par='b')
-print(e[-10:])
+#print(e[-10:])
 #print(matrice_p.shape,matrice_p[0,541:543])
-#ecri = ecrit_matrice(matrice_p,2,par='b') 
-#fig1 = matrice_fig(matrice_p,2000,10000,e)
-#for i in range(1003):
-    #for j in range(901):
-        #matrice_p[i][j] = np.log(matrice_p[i][j]+6e-6)
-#fig2 = matrice_fig(matrice_p,200,900,e,'b')
+ecri = ecrit_matrice(matrice_p,2,par='b') 
+#fig1 = matrice_fig(matrice_p,2000,10000,e,'b')
+for i in range(1003):
+    for j in range(801):
+        matrice_p[i][j] = np.log(matrice_p[i][j]+1e-7)
+fig2 = matrice_fig(matrice_p,2000,10000,e,'b')
 #print(fig2)
 
 #============= tracer la proba à Ei=Ed ====================================== 
