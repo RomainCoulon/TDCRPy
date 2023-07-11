@@ -198,7 +198,7 @@ if energy_inci[0] == 0.:
 
 
 
-def matrice_fig(matrice_p,start,end,e,par):
+def matrice_fig(matrice_p,start,end,e,par,v):
     '''
     *************************************************
     pour tracer la matrice de proba d'énergie déposée
@@ -220,7 +220,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     # vecteur de l'énergie déposée pour chaque gamme
     # start et end en keV
     if par == 'p':
-        particle = 'gamma'
+        particle = 'photon'
     elif par == 'b':
         particle = 'beta-'
     elif par == 'bp':
@@ -233,7 +233,10 @@ def matrice_fig(matrice_p,start,end,e,par):
         i_st = int(start-1)
         i_end = int(end-1)
         #x = i_end - i_st +1
-        end_point = 2 + 5*(end+1)
+        if end < 200:
+            end_point = 2 + 5*(end+1)
+        elif end ==200:
+            end_point = -1    
 
     elif end <= 2000:    # delta_Ei = 1
         delta_Ei = 2
@@ -296,7 +299,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     plt.ylabel("énergie déposée/MeV")
     title = "probabilité d'énergie déposée par " + particle + " de " + str(start) + "-" + str(end) + "keV"
     plt.title(title)
-    name = "matrice/matrice_pho-" + particle +"_" + str(start) + "_" + str(end) + "k.png"
+    name = "matrice/matrice_pho-" +str(v)+  particle +"_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
     return 0
 #'''
@@ -304,7 +307,7 @@ def matrice_fig(matrice_p,start,end,e,par):
 
 
 
-def ecrit_matrice(matrice,niveau,par):
+def ecrit_matrice(matrice,niveau,par,v):
     '''
     ***************************************************************************
     pour écrire une matrice complète de proba d'énergie déposée dans un fichier
@@ -345,7 +348,7 @@ def ecrit_matrice(matrice,niveau,par):
         taille_x = 801      #2M-10M où delta = 0.1M
 
     taille_y = 1003
-    name = 'matrice/matrice_' + name1 + str(start_energy) + '_' + str(end_energy) + 'k.txt'
+    name = 'matrice/matrice_' + str(v) + name1 + str(start_energy) + '_' + str(end_energy) + 'k.txt'
     with open(name,'w') as file:
     #file.write('# matrice energy\n')
         for i in range(taille_y):
@@ -486,11 +489,12 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 
 
 #================ tracer la matrice ========================================
-#e,matrice_p = creat_matrice(1,par='p')
+e,matrice_p = creat_matrice(0,par='p')
+#print(len(e))
 #print(matrice_p[76:90,25])
 #print(matrice_p.shape,matrice_p[0,541:543])
-#ecri = ecrit_matrice(matrice_p,2,par='b') 
-#fig1 = matrice_fig(matrice_p,200,250,e,'p')
+#ecri = ecrit_matrice(matrice_p,0,'p',16) 
+fig1 = matrice_fig(matrice_p,100,200,e,'p',10)
 #for i in range(1003):
  #   for j in range(801):
   #      matrice_p[i][j] = np.log(matrice_p[i][j]+1e-7)
