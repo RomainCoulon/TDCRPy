@@ -1368,10 +1368,133 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
     if result  > e_inci: result = e_inci
     return result
 
-for i in range(50):
-    print(energie_dep_gamma(511))
+#for i in range(50):
+    #print(energie_dep_gamma(511))
 
+tic()
+if absolutePath: 
+    f1 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_1_200k.txt') # gamma-10ml-1-200keV-niveau 0
+    f2 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_200_2000k.txt') # gamma-10ml-200-2000keV-niveau 1
+    f3 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_2000_10000k.txt') # gamma-10ml-2000-10000keV-niveau 2
+    fe = open("G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt")   # gamma-10ml-énergie-niveau 'e'
+else:
+    f1 = open('MCNP-MATRIX/matrice/fichier/matrice_p_1_200k.txt') # gamma-10ml-1-200keV-niveau 0
+    f2 = open('MCNP-MATRIX/matrice/fichier/matrice_p_200_2000k.txt') # gamma-10ml-200-2000keV-niveau 1
+    f3 = open('MCNP-MATRIX/matrice/fichier/matrice_p_2000_10000k.txt') # gamma-10ml-2000-10000keV-niveau 2
+    fe = open("MCNP-MATRIX/matrice/fichier/E_depose.txt") # gamma-10ml-énergie-niveau 'e'
 
+'''
+data1 = f1.readlines()
+data2 = f2.readlines()
+data3 = f3.readlines()
+data_e = fe.readlines()
+
+Matrice1 = np.zeros((1003,200))
+Matrice2 = np.zeros((1003,901))
+Matrice3 = np.zeros((1003,801))
+Matrice_e = np.zeros((1002,3))
+
+for i in range(1002):
+    data_e[i] = data_e[i].split()
+    for j in range(3):
+        Matrice_e[i][j] = float(data_e[i][j])
+for i in range(1003):
+    data1[i] = data1[i].split()
+    data2[i] = data2[i].split()
+    data3[i] = data3[i].split()
+    for j in range(200):
+        Matrice1[i][j] = float(data1[i][j])
+    for k in range(901):
+        Matrice2[i][k] = float(data2[i][k])
+    for l in range(801):
+        Matrice3[i][l] = float(data3[i][l])
+toc()        
+#print(Matrice1[0:10,10])
+
+'''
+
+def read_matrice(path,niveau):
+    f = open(path)
+    data = f.readlines()
+    if niveau == 0:
+        taille_x = 200
+        taille_y = 1003
+    elif niveau == 1:
+        taille_x = 901
+        taille_y = 1003
+    elif niveau == 2:
+        taille_x = 801
+        taille_y = 1003
+    elif niveau=='e':
+        taille_x = 3
+        taille_y = 1002
+
+    matrice = np.zeros((taille_y,taille_x))
+    for i in range(taille_y):
+        data[i] = data[i].split()
+        for j in range(taille_x):
+            matrice[i][j] = float(data[i][j])
+    return matrice
+#tic()
+
+Matrice1 = read_matrice(f1,0)
+Matrice2 = read_matrice(f2,1)
+Matrice3 = read_matrice(f3,2)
+Matrice_e = read_matrice(fe,'e')
+#toc()
+
+def energie_dep_beta(e_inci,*,matrice10_1=Matrice1,matrice10_2=Matrice2,matrice10_3=Matrice3,ed=Matrice_e):
+    """ 
+    ----------
+    Parameters
+    ----------
+    e_inci : float
+        l'énergie incidente de particule.
+    * : TYPE
+        DESCRIPTION.
+    matrice10_1 : matrix
+        matrice de photon de 1-200keV de solution 10ml.
+    matrice2 : TYPE, optional
+        matrice de photon de 200-2000keV de solution 10ml.
+    matrice3 : TYPE, optional
+        matrice de photon de 2000-10000keV de solution 10ml.
+    ed : TYPE, optional
+        matrice de bins d'énergie. colonne 0: 1-200keV; colonne 1: 200-2000keV
+
+    Returns
+    -------
+    result : TYPE
+        DESCRIPTION.
+
+    """
+    ## sort keV / entrée : keV
+    if e_inci <= 200:
+        index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_1_200k.txt'
+        matrice = matrice10_1
+        #taille_x = 200
+        e = ed[:,0]
+    
+    elif e_inci <= 2000:
+        index = int((e_inci-200)/2)
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_200_2000k.txt'
+        matrice = matrice10_2
+        #taille_x = 901
+        e = ed[:,1]
+
+    else:
+        index = (int(e_inci)-2000)//10
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt'
+        matrice = matrice10_3
+        #taille_x = 801
+        e = ed[:,2]
+    
+    inde = sampling(matrice[1:,index])
+    if inde == 1 : result = 0
+        #elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
+    else: result = e[inde]*1e3*e_inci/matrice[0][index]
+    if result  > e_inci: result = e_inci
+    return result
 
 '''
 r = []   
