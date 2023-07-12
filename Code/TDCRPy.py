@@ -282,12 +282,14 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
                 index_beta_energy = tl.sampling(p_b)                           # sampling energy of beta
                 particle_vec[i] = "electron"
                 energy_vec[i] = e_b[index_beta_energy]
+                energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
 
             if p == "beta+":
                 e_b,p_b = tl.readBetaShape(rad_i,"beta+",level_before_trans)
                 index_beta_energy = tl.sampling(p_b)
                 particle_vec[i] = "positron"
                 energy_vec[i] = e_b[index_beta_energy]
+                energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
                 particle_vec.append("gamma")
                 particle_vec.append("gamma")
                 energy_vec.append(511)
@@ -298,6 +300,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
                 particle_vec[i] = "electron"
             if p == "Auger K" or p == "Auger L":
                 particle_vec[i] = "electron"
+                energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
         if Display: print("\t Summary of the final charged particles")
         if Display: print("\t\t particles : ", particle_vec)
         if Display: print("\t\t energy    : ", energy_vec, "keV")
