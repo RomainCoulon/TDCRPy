@@ -263,8 +263,9 @@ def readPenNuc(rad):
 # readPenNuc("Co-60")
 # toc() # 0.016 s
 
+if absolutePath: file_pennuc = 'G:\Python_modules\Jialin\Code\decayData\\All-nuclides_PenNuc.zip'
+else: file_pennuc = "decayData//All-nuclides_PenNuc.zip"
 
-file_pennuc = "decayData//All-nuclides_PenNuc.zip"
 z_PenNuc = zf.ZipFile(file_pennuc)
 
 def readPenNuc2(rad,z1=z_PenNuc):
@@ -1367,8 +1368,8 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
     if result  > e_inci: result = e_inci
     return result
 
-#for i in range(50):
-    #print(energie_dep_gamma(511))
+for i in range(50):
+    print(energie_dep_gamma(511))
 
 
 
