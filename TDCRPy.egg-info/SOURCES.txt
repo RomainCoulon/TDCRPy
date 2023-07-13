@@ -1,0 +1,16 @@
+LICENCE
+README.md
+setup.py
+Code/Activity_TDCR.py
+Code/EfficiencyProfils.py
+Code/TDCRPy.py
+Code/TDCR_model_lib.py
+Code/TDCRoptimize.py
+Code/__init__.py
+Code/decay.py
+Code/test1.py
+TDCRPy.egg-info/PKG-INFO
+TDCRPy.egg-info/SOURCES.txt
+TDCRPy.egg-info/dependency_links.txt
+TDCRPy.egg-info/requires.txt
+TDCRPy.egg-info/top_level.txt
