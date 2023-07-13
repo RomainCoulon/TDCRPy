@@ -263,8 +263,9 @@ def readPenNuc(rad):
 # readPenNuc("Co-60")
 # toc() # 0.016 s
 
+if absolutePath: file_pennuc = 'G:\Python_modules\Jialin\Code\decayData\\All-nuclides_PenNuc.zip'
+else: file_pennuc = "decayData//All-nuclides_PenNuc.zip"
 
-file_pennuc = "decayData//All-nuclides_PenNuc.zip"
 z_PenNuc = zf.ZipFile(file_pennuc)
 
 def readPenNuc2(rad,z1=z_PenNuc):
@@ -1265,16 +1266,16 @@ def E_quench_a(e,kB,nE):
 #========================= énergie gamma ===================================================
 #'''
 if absolutePath: 
-    f1 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
-    f2 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
-    f3 = open('G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
-    fe = open("G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/E_depose.txt")   
+    fp1 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
+    fp2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_200_2000k.txt'    #gamma-10ml-200-2000keV-niveau 0
+    fp3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_2000_10000k.txt'  #gamma-10ml-2000-10000keV-niveau 0
+    fe = "G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt"  
 else:
-    f1 = open('MCNP-MATRIX/matrice/matrice_p_1_200k.txt')
-    f2 = open('MCNP-MATRIX/matrice/matrice_p_200_2000k.txt')
-    f3 = open('MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt')
-    fe = open("MCNP-MATRIX/matrice/E_depose.txt")
-
+    fp1 = 'MCNP-MATRIX/matrice/fichier/matrice_p_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
+    fp2 = 'MCNP-MATRIX/matrice/fichier/matrice_p_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 0
+    fp3 = 'MCNP-MATRIX/matrice/fichier/matrice_p_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 0
+    fe = "MCNP-MATRIX/matrice/fichier/E_depose.txt"
+'''
 data1 = f1.readlines()
 data2 = f2.readlines()
 data3 = f3.readlines()
@@ -1299,32 +1300,59 @@ for i in range(1003):
         Matrice2[i][k] = float(data2[i][k])
     for l in range(801):
         Matrice3[i][l] = float(data3[i][l])
+'''
 
-#'''
+def read_matrice(path,niveau):
+    f = open(path)
+    data = f.readlines()
+    if niveau == 0:
+        taille_x = 200
+        taille_y = 1003
+    elif niveau == 1:
+        taille_x = 901
+        taille_y = 1003
+    elif niveau == 2:
+        taille_x = 801
+        taille_y = 1003
+    elif niveau=='e':
+        taille_x = 3
+        taille_y = 1002
 
-def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matrice3,ed=Matrice_e):
-    """
-    
+    matrice = np.zeros((taille_y,taille_x))
+    for i in range(taille_y):
+        data[i] = data[i].split()
+        for j in range(taille_x):
+            matrice[i][j] = float(data[i][j])
+    return matrice
 
+
+Matrice10_p_1 = read_matrice(fp1,0)
+Matrice10_p_2 = read_matrice(fp2,1)
+Matrice10_p_3 = read_matrice(fp3,2)
+Matrice_e = read_matrice(fe,'e')
+
+def energie_dep_gamma(e_inci,*,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,ed=Matrice_e):
+    """ 
+    ----------
     Parameters
     ----------
-    e_inci : TYPE
-        DESCRIPTION.
+    e_inci : float
+        l'énergie incidente de particule.
     * : TYPE
         DESCRIPTION.
-    matrice1 : TYPE, optional
-        DESCRIPTION. The default is Matrice1.
+    matrice10_1 : matrix
+        matrice de photon de 1-200keV de solution 10ml.
     matrice2 : TYPE, optional
-        DESCRIPTION. The default is Matrice2.
+        matrice de photon de 200-2000keV de solution 10ml.
     matrice3 : TYPE, optional
-        DESCRIPTION. The default is Matrice3.
+        matrice de photon de 2000-10000keV de solution 10ml.
     ed : TYPE, optional
-        DESCRIPTION. The default is Matrice_e.
+        matrice de bins d'énergie. colonne 0: 1-200keV; colonne 1: 200-2000keV
 
     Returns
     -------
-    result : TYPE
-        DESCRIPTION.
+    result : float
+        l'énergie déposée.
 
     """
     ## sort keV / entrée : keV
@@ -1371,11 +1399,82 @@ def energie_dep_gamma(e_inci,*,matrice1=Matrice1,matrice2=Matrice2,matrice3=Matr
     #print(energie_dep_gamma(511))
 
 
+if absolutePath: 
+    fe1 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
+    fe2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
+    fe3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
+    fe = "G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt"   # electron-10ml-énergie-niveau 'e'
+else:
+    fe1 = 'MCNP-MATRIX/matrice/fichier/matrice_beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
+    fe2 = 'MCNP-MATRIX/matrice/fichier/matrice_beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
+    fe3 = 'MCNP-MATRIX/matrice/fichier/matrice_beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
+    fe = "MCNP-MATRIX/matrice/fichier/E_depose.txt" # electron-10ml-énergie-niveau 'e'
+
+
+
+Matrice10_e_1 = read_matrice(fe1,0)
+Matrice10_e_2 = read_matrice(fe2,1)
+Matrice10_e_3 = read_matrice(fe3,2)
+#Matrice_e = read_matrice(fe,'e')
+
+
+def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,ed=Matrice_e):
+    """ 
+    ----------
+    Parameters
+    ----------
+    e_inci : float
+        l'énergie incidente de particule.
+    * : TYPE
+        DESCRIPTION.
+    matrice10_1 : matrix
+        matrice d'électrons de 1-200keV de solution 10ml.
+    matrice2 : TYPE, optional
+        matrice d'électrons de 200-2000keV de solution 10ml.
+    matrice3 : TYPE, optional
+        matrice d'électrons de 2000-10000keV de solution 10ml.
+    ed : TYPE, optional
+        matrice de bins d'énergie. colonne 0: 1-200keV; colonne 1: 200-2000keV
+
+    Returns
+    -------
+    result : float
+        l'énergie déposée.
+
+    """
+    ## sort keV / entrée : keV
+    if e_inci <= 200:
+        index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_1_200k.txt'
+        matrice = matrice10_1
+        #taille_x = 200
+        e = ed[:,0]
+    
+    elif e_inci <= 2000:
+        index = int((e_inci-200)/2)
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_200_2000k.txt'
+        matrice = matrice10_2
+        #taille_x = 901
+        e = ed[:,1]
+
+    else:
+        index = (int(e_inci)-2000)//10
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt'
+        matrice = matrice10_3
+        #taille_x = 801
+        e = ed[:,2]
+    
+    inde = sampling(matrice[1:,index])
+    if inde == 1 : result = 0
+        #elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
+    else: result = e[inde]*1e3*e_inci/matrice[0][index]
+    if result  > e_inci: result = e_inci
+    return result
 
 '''
 r = []   
 for i in range(10):
-    r.append(energie_dep_gamma(17.055))
+    r.append(energie_dep_beta(17.055))
 print(r)
 '''
 #print(Matrice_e[0:5,:])

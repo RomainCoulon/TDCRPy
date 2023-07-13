@@ -71,8 +71,10 @@ def readMCNP(energy,niveau,par,npas=1000,mode='N'):
 
     if par == 'p':
         name1 = 'p/'
-    else:
+    elif par=='b':
         name1 = 'b/'
+    else:
+        name1='bp/'
 
     if niveau == 0:
         output = 'output1'
@@ -103,7 +105,14 @@ def readMCNP(energy,niveau,par,npas=1000,mode='N'):
         p /= sum(np.asarray(p)) # normaliser p
     return e,p
 
-
+#e1, p1 = readMCNP(1000,1,'b')
+#e2, p2 = readMCNP(1000,1,'bp')  
+#plt.plot(e1,p1,label='beta-')
+#plt.plot(e2,p2,label='beta+')
+#plt.yscale('log')
+#plt.legend(fontsize=10,loc='best')
+#plt.savefig('matrice/spectre comparison.png')
+#print(e[-10:])
 # ---------------------- créer la matrice de pdf et cdf -----------------------
 
 def creat_matrice(niveau,par,mode='pdf',npas=1000):
@@ -162,6 +171,7 @@ def creat_matrice(niveau,par,mode='pdf',npas=1000):
 
     for i in range(taille_x):
         energy = energy_inci[i]
+        #print(energy)
         e,p = readMCNP(energy,niveau=NIVEAU,par=PAR)
         #if mode == "cdf":
          #   p = np.cumsum(p)
@@ -188,7 +198,7 @@ if energy_inci[0] == 0.:
 
 
 
-def matrice_fig(matrice_p,start,end,e,par):
+def matrice_fig(matrice_p,start,end,e,par,v):
     '''
     *************************************************
     pour tracer la matrice de proba d'énergie déposée
@@ -210,7 +220,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     # vecteur de l'énergie déposée pour chaque gamme
     # start et end en keV
     if par == 'p':
-        particle = 'gamma'
+        particle = 'photon'
     elif par == 'b':
         particle = 'beta-'
     elif par == 'bp':
@@ -223,7 +233,10 @@ def matrice_fig(matrice_p,start,end,e,par):
         i_st = int(start-1)
         i_end = int(end-1)
         #x = i_end - i_st +1
-        end_point = 2 + 5*(end+1)
+        if end < 200:
+            end_point = 2 + 5*(end+1)
+        elif end ==200:
+            end_point = -1    
 
     elif end <= 2000:    # delta_Ei = 1
         delta_Ei = 2
@@ -266,14 +279,13 @@ def matrice_fig(matrice_p,start,end,e,par):
     if end > 20 and par=='p':
         zz = zz[2:,:]
         y = y[2:]
-    
     #print(xx.shape,yy.shape,zz.shape)
     #print(zz[0,0],yy[0,0])
     xx,yy = np.meshgrid(x,y)
-    print(xx[0,0],yy.shape,zz[0,0])
-    h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot)
+    #print(xx[0,0],yy.shape,zz[0,0])
+    h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot,vmin=0.0)
     cb = plt.colorbar(h)
-    cb.set_label("probabilité en log")
+    cb.set_label("probabilité")
     #plt.xticks(xs,s)
     #plt.yticks(np.linspace(0,end,10))
     #x_maj = MultipleLocator(1)
@@ -287,7 +299,7 @@ def matrice_fig(matrice_p,start,end,e,par):
     plt.ylabel("énergie déposée/MeV")
     title = "probabilité d'énergie déposée par " + particle + " de " + str(start) + "-" + str(end) + "keV"
     plt.title(title)
-    name = "matrice/matrice_fig_" + particle +"_" + str(start) + "_" + str(end) + "k.png"
+    name = "matrice/matrice_pho-" +str(v)+  particle +"_" + str(start) + "_" + str(end) + "k.png"
     plt.savefig(name)
     return 0
 #'''
@@ -295,7 +307,7 @@ def matrice_fig(matrice_p,start,end,e,par):
 
 
 
-def ecrit_matrice(matrice,niveau,par):
+def ecrit_matrice(matrice,niveau,par,v):
     '''
     ***************************************************************************
     pour écrire une matrice complète de proba d'énergie déposée dans un fichier
@@ -336,7 +348,7 @@ def ecrit_matrice(matrice,niveau,par):
         taille_x = 801      #2M-10M où delta = 0.1M
 
     taille_y = 1003
-    name = 'matrice/matrice_' + name1 + str(start_energy) + '_' + str(end_energy) + 'k.txt'
+    name = 'matrice/matrice_' + str(v) + name1 + str(start_energy) + '_' + str(end_energy) + 'k.txt'
     with open(name,'w') as file:
     #file.write('# matrice energy\n')
         for i in range(taille_y):
@@ -477,14 +489,16 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 
 
 #================ tracer la matrice ========================================
-#e,matrice_p = creat_matrice(1,par='b')
+e,matrice_p = creat_matrice(0,par='p')
+#print(len(e))
+#print(matrice_p[76:90,25])
 #print(matrice_p.shape,matrice_p[0,541:543])
-#ecri = ecrit_matrice(matrice_p,1,par='b') 
-#fig1 = matrice_fig(matrice_p,41,80,e)
+#ecri = ecrit_matrice(matrice_p,0,'p',16) 
+fig1 = matrice_fig(matrice_p,100,200,e,'p',10)
 #for i in range(1003):
-    #for j in range(901):
-        #matrice_p[i][j] = np.log(matrice_p[i][j]+6e-6)
-#fig2 = matrice_fig(matrice_p,200,900,e,'b')
+ #   for j in range(801):
+  #      matrice_p[i][j] = np.log(matrice_p[i][j]+1e-7)
+#fig2 = matrice_fig(matrice_p,2000,10000,e,'b')
 #print(fig2)
 
 #============= tracer la proba à Ei=Ed ====================================== 
