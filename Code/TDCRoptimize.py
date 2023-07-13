@@ -15,13 +15,23 @@ import TDCRcalculation as tc
 
 
 def eff(TDCR_measure, TAB, TBC, TAC, Rad, kB):
-    N=3000
-    L=(1.31, 1.31, 1.31)           # Free paramete in keV-1
-    r=opt.minimize(td.TDCRPy, L, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "asym"), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
+    
+    N=10000
+    L=1
+    # r=opt.minimize_scalar(td.TDCRPy, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "sym"), method='golden')#,options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
+    # r=opt.minimize_scalar(td.TDCRPy, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "sym"), method='brent')
+    r=opt.minimize_scalar(td.TDCRPy, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "sym"), method='bounded', bounds=[0.5, 2])
+    
+    # r=opt.minimize(td.TDCRPy, L, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "sym"), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
     L=r.x
     print(r)
-    out=td.TDCRPy(L,TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "eff", "asym")
-    return np.mean(L), L, out[2], out[2] 
+    #L=(L*0.995, L*1.021, L*0.988)           # Free paramete in keV-1
+    # L = (L, L, L)
+    # r=opt.minimize(td.TDCRPy, L, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "asym"), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
+    # L=r.x
+    # print(r)
+    out=td.TDCRPy(L,TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "eff", "sym")
+    return np.mean(L), L, out[2], out[2], out[3]
     
 def TicTocGenerator():
     """
@@ -78,7 +88,7 @@ print("Double count rate efficiency (asym) = ", eff2)
 
 
 tic()
-F1, FFF, eff1, eff2 = eff(TDCR_measure, TAB, TBC, TAC, Rad, kB)
+F1, FFF, eff1, eff2, u = eff(TDCR_measure, TAB, TBC, TAC, Rad, kB)
 toc()
 
 print("/nstochastic model")
@@ -86,3 +96,4 @@ print("free parameter = ", F1)
 print("free parameters = ", FFF)
 print("Double count rate efficiency (sym) = ", eff1)
 print("Double count rate efficiency (asym) = ", eff2)
+print("u(eff) = ", u)
