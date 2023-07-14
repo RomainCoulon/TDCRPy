@@ -1,4 +1,4 @@
-LICENCE
+LICENCE.md
 README.md
 setup.py
 Code/Activity_TDCR.py

@@ -1,1 +1,7 @@
 numpy
+scipy
+sys
+time
+urllib
+zipfile
+re

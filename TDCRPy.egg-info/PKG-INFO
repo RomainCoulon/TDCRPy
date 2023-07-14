@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: TDCRPy
-Version: 0.0.5
+Version: 0.0.6
 Summary: TDCR model
 Home-page: UNKNOWN
 Author: RomainCoulon (Romain Coulon)
@@ -11,11 +11,14 @@ Platform: UNKNOWN
 Classifier: Development Status :: 2 - Pre-Alpha
 Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Natural Language :: French
 Classifier: Programming Language :: Python :: 3
 Classifier: Operating System :: Unix
 Classifier: Operating System :: MacOS :: MacOS X
 Classifier: Operating System :: Microsoft :: Windows
-License-File: LICENCE
+Classifier: Topic :: Scientific/Engineering :: Physics
+License-File: LICENCE.md
 
 UNKNOWN
 
