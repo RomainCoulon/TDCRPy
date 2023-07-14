@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "0.0.1"
+VERSION = "0.0.5"
 DESCRIPTION = "TDCR model"
 
 setup(
@@ -13,10 +13,11 @@ setup(
     description = DESCRIPTION,
     packages = find_packages(),
     install_requires = ["numpy"],
-    keywords = ["python","TDCR"],
+    keywords = ["python","TDCR","Monte-Carlo","radionuclide","scintillation","counting"],
     classifiers=[
-        "Development Status :: 1 - Planning",
-        "Intended Audience :: Developers",
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Science/Research",
+		"License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
         "Operating System :: Unix",
         "Operating System :: MacOS :: MacOS X",

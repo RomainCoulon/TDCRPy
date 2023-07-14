@@ -8,6 +8,7 @@ Code/TDCR_model_lib.py
 Code/TDCRoptimize.py
 Code/__init__.py
 Code/decay.py
+Code/test.py
 Code/test1.py
 TDCRPy.egg-info/PKG-INFO
 TDCRPy.egg-info/SOURCES.txt
