@@ -296,7 +296,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
                 energy_vec.append(511)
 
             if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                energy_vec[i] = tl.energie_dep_gamma(energy_vec[i])          # sampling energy free from photon
+                energy_vec[i] = tl.energie_dep_gamma(energy_vec[i],v=10)          # sampling energy free from photon
                 particle_vec[i] = "electron"
             if p == "Auger K" or p == "Auger L":
                 particle_vec[i] = "electron"

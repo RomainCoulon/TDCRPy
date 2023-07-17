@@ -1266,14 +1266,18 @@ def E_quench_a(e,kB,nE):
 #========================= énergie gamma ===================================================
 #'''
 if absolutePath: 
-    fp1 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
-    fp2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_200_2000k.txt'    #gamma-10ml-200-2000keV-niveau 0
-    fp3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_p_2000_10000k.txt'  #gamma-10ml-2000-10000keV-niveau 0
+    fp1 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
+    fp2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_200_2000k.txt'    #gamma-10ml-200-2000keV-niveau 0
+    fp3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_2000_10000k.txt'  #gamma-10ml-2000-10000keV-niveau 0
+    fp4 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
+    fp5 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_200_2000k.txt'       #gamma-10ml-1-200keV-niveau 0
     fe = "G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt"  
 else:
-    fp1 = 'MCNP-MATRIX/matrice/fichier/matrice_p_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-    fp2 = 'MCNP-MATRIX/matrice/fichier/matrice_p_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 0
-    fp3 = 'MCNP-MATRIX/matrice/fichier/matrice_p_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 0
+    fp1 = 'MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
+    fp2 = 'MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 0
+    fp3 = 'MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 0
+    fp4 = 'MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
+    fp5 = 'MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_200_2000k.txt'      #gamma-10ml-1-200keV-niveau 0
     fe = "MCNP-MATRIX/matrice/fichier/E_depose.txt"
 '''
 data1 = f1.readlines()
@@ -1329,9 +1333,11 @@ def read_matrice(path,niveau):
 Matrice10_p_1 = read_matrice(fp1,0)
 Matrice10_p_2 = read_matrice(fp2,1)
 Matrice10_p_3 = read_matrice(fp3,2)
+Matrice16_p_1 = read_matrice(fp4,0)
+Matrice16_p_2 = read_matrice(fp5,1)
 Matrice_e = read_matrice(fe,'e')
 
-def energie_dep_gamma(e_inci,*,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,ed=Matrice_e):
+def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,ed=Matrice_e):
     """ 
     ----------
     Parameters
@@ -1357,16 +1363,19 @@ def energie_dep_gamma(e_inci,*,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
     """
     ## sort keV / entrée : keV
     if e_inci <= 200:
-        index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche 
-        #doc = 'MCNP-MATRIX/matrice/matrice_p_1_200k.txt'
-        matrice = matrice1
-        #taille_x = 200
+        index = int(e_inci)            # index de colonne de la matrice de l'énergie incidente la plus proche
+        if v == 10: 
+            matrice = matrice10_1
+        elif v == 16:
+            matrice = matrice16_1
         e = ed[:,0]
     
     elif e_inci <= 2000:
         index = int((e_inci-200)/2)
-        #doc = 'MCNP-MATRIX/matrice/matrice_p_200_2000k.txt'
-        matrice = matrice2
+        if v == 10: 
+            matrice = matrice10_2
+        elif v == 16:
+            matrice = matrice16_2
         #taille_x = 901
         e = ed[:,1]
 
@@ -1395,8 +1404,8 @@ def energie_dep_gamma(e_inci,*,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
     if result  > e_inci: result = e_inci
     return result
 
-#for i in range(50):
-    #print(energie_dep_gamma(511))
+#for i in range(10):
+ #   print(energie_dep_gamma(511,16))
 
 
 if absolutePath: 

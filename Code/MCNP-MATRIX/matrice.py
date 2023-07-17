@@ -244,7 +244,10 @@ def matrice_fig(matrice_p,start,end,e,par,v):
         i_st = int((start-200)/delta_Ei)
         i_end = int((end-200)/delta_Ei)
         #x = i_end - i_st + 1
-        end_point = int(end/2+1)
+        if end < 2000:
+            end_point = int(end/2+1)
+        elif end == 2000:
+            end_point = -1
 
     else:
         delta_Ei = 10
@@ -489,12 +492,12 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 
 
 #================ tracer la matrice ========================================
-e,matrice_p = creat_matrice(0,par='p')
+e,matrice_p = creat_matrice(1,par='p')
 #print(len(e))
 #print(matrice_p[76:90,25])
 #print(matrice_p.shape,matrice_p[0,541:543])
-#ecri = ecrit_matrice(matrice_p,0,'p',16) 
-fig1 = matrice_fig(matrice_p,100,200,e,'p',10)
+#ecri = ecrit_matrice(matrice_p,1,'p',16) 
+fig1 = matrice_fig(matrice_p,1000,2000,e,'p',16)
 #for i in range(1003):
  #   for j in range(801):
   #      matrice_p[i][j] = np.log(matrice_p[i][j]+1e-7)
