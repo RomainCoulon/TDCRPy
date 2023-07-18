@@ -9,7 +9,7 @@ Bureau International des Poids et Mesures
 """
 
 ## IMPORT PYTHON MODULES
-import TDCRPy.TDCR_model_lib as tl
+import TDCR_model_lib as tl
 import numpy as np
 
 def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Display=False):
