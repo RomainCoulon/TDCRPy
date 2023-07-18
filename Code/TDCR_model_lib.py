@@ -1376,27 +1376,16 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
             matrice = matrice10_2
         elif v == 16:
             matrice = matrice16_2
-        #taille_x = 901
         e = ed[:,1]
 
     else:
         index = (int(e_inci)-2000)//10
-        #doc = 'MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt'
-        matrice = matrice3
-        #taille_x = 801
+        if v == 10: 
+            matrice = matrice10_3
+        elif v == 16:
+            matrice = matrice10_3
         e = ed[:,2]
     
-    '''
-    with open(doc) as f:
-        data = f.readlines()
-    
-        matrice = np.zeros((1002,taille_x))
-
-        for i in range(1002):
-            data[i] = data[i].split()
-            for j in range(taille_x):
-                matrice[i][j] = float(data[i][j])
-    '''
     inde = sampling(matrice[1:,index])
     if inde == 1 : result = 0
         #elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
