@@ -2,98 +2,88 @@
 """
 Created on Wed Jul  5 10:04:53 2023
 
-@author: romain.coulon
+@author: romain.coulon, jialin.hu
 """
 
 import numpy as np
 import tdcrpy.TDCRPy as td
 import scipy.optimize as opt
-import sys, time
+# import sys, time
 # sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
 # import TDCRcalculation as tc 
 
+def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, RHO=0.98, nE=1000, L=1):
+    """
+    Caclulation of the efficiency of a TDCR system based on the model TDCRPy
 
+    Parameters
+    ----------
+    TD : float
+        triple-to-double coincidence ratio. Not consider if mode2="asym". Not consider if mode2="asym".
+    TAB : float
+        triple-to-double coincidence ratio (coincidences between channel A and B). Not consider if mode2="sym".
+    TBC : float
+        triple-to-double coincidence ratio (coincidences between channel B and C). Not consider if mode2="sym".
+    TAC : float
+        triple-to-double coincidence ratio (coincidences between channel A and C). Not consider if mode2="sym".
+    Rad : string
+        List of radionuclides.
+    pmf_1 : string
+        list of probability of each radionuclide..
+    kB : float
+        Birks constant.
+    mode2 : string
+        "sym" for symetrical model, "asym" for symetrical model.
+    N : interger, optional
+        number of Monte-Carlo trials. The default is 1000.
+    RHO : float, optional
+        density of the source. The default is 0.98.
+    nE : interger, optional
+        number of bins for the quenching function. The default is 1000.
+    L : float, optional
+        free parameter(s) as initial guess. The default is 1.
 
-def eff(TDCR_measure, TAB, TBC, TAC, Rad, kB):
-    
-    N=50000
-    L=1
-    # r=opt.minimize_scalar(td.TDCRPy, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "sym"), method='golden')#,options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
-    # r=opt.minimize_scalar(td.TDCRPy, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "sym"), method='brent')
-    r=opt.minimize_scalar(td.TDCRPy, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "sym"), method='bounded', bounds=[0.5, 2])
-    
-    # r=opt.minimize(td.TDCRPy, L, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "sym"), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
+    Returns
+    -------
+    L0 : float
+        global free parameter.
+    L : tuple or float
+        free parameters (relevant for the asymetric model).
+    eff_S : float
+        counting efficiency of single events.
+    u_eff_S : float
+        standard uncertainty of eff_S.
+    eff_D : float
+        counting efficiency of double coincidences.
+    u_eff_D : float
+        standard uncertainty of eff_D.
+    eff_T : float
+        counting efficiency of triple coincidences.
+    u_eff_T : float
+        standard uncertainty of eff_T.
+
+    """
+    # Estimation of the free parameter that minimize the residuals
+    r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "res", "sym"), method='bounded', bounds=[0.5, 2])
     L=r.x
     print(r)
-    #L=(L*0.995, L*1.021, L*0.988)           # Free paramete in keV-1
-    # L = (L, L, L)
-    # r=opt.minimize(td.TDCRPy, L, args=(TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "res", "asym"), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
-    # L=r.x
-    # print(r)
-    out=td.TDCRPy(L,TDCR_measure, TAB, TBC, TAC, Rad, "1", N, kB, 0.98, 1000, "eff", "sym")
-    return np.mean(L), L, out[2], out[2], out[3]
     
-def TicTocGenerator():
-    """
-    Generator that returns time differences
-    """
-    ti = 0           # initial time
-    tf = time.time() # final time
-    while True:
-        ti = tf
-        tf = time.time()
-        yield tf-ti # returns the time difference
-
-TicToc = TicTocGenerator() # create an instance of the TicTocGen generator
-
-# This will be the main function through which we define both tic() and toc()
-def toc(tempBool=True):
-    """
-    Prints the time difference yielded by generator instance TicToc
-    """
+    if mode2 == "asym":
+        L=(L, L, L)           # Free paramete in keV-1
+        r=opt.minimize(td.TDCRPy, L, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "res", "asym"), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
+        L=r.x
+        print(r)
+        out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "eff", "asym")
+    else:
+        out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "eff", "sym")
+        
+    L0 = np.mean(L)
+    eff_S = out[0]
+    u_eff_S = out[1]
+    eff_D = out[2]
+    u_eff_D = out[3]
+    eff_T = out[4]
+    u_eff_T = out[5]
     
-    tempTimeInterval = next(TicToc)
-    if tempBool:
-        print( "Elapsed time: %f seconds.\n" %tempTimeInterval )
-
-def tic():
-    """
-    Records a time in TicToc, marks the beginning of a time interval
-    """
-    toc(False)
-
-
-"""
-TEST
-"""
-
-# Rad="Co-60"    # list of radionuclides (Na-24)
-# kB =1.0e-5       # Birks constant in cm/keV  
-# TDCR_measure = 0.977667386529166        # Measured TDCR value
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-
-
-
-# # tic()
-# # F1, FFF, eff1, eff2 = tc.I2calc(TDCR_measure, TAB, TBC, TAC, Rad, kB)
-# # toc()
-
-# # print("/nanalytical model")
-# # print("free parameter = ", F1)
-# # print("free parameters = ", FFF)
-# # print("Double count rate efficiency (sym) = ", eff1)
-# # print("Double count rate efficiency (asym) = ", eff2)
-
-
-# tic()
-# F1, FFF, eff1, eff2, u = eff(TDCR_measure, TAB, TBC, TAC, Rad, kB)
-# toc()
-
-# print("/nstochastic model")
-# print("free parameter = ", F1)
-# print("free parameters = ", FFF)
-# print("Double count rate efficiency (sym) = ", eff1)
-# print("Double count rate efficiency (asym) = ", eff2)
-# print("u(eff) = ", u)
+    return L0, L, eff_S, u_eff_S, eff_D, u_eff_D, eff_T, u_eff_T
+    
