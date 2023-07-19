@@ -20,8 +20,14 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
     ----------
     L : Float (if mode2="sym") or a tuple (if mode2="asym")
         Free parameter.
-    TD : Float
-        Measured TDCR.
+    TD : float
+        triple-to-double coincidence ratio. Not consider if mode2="asym". Not consider if mode2="asym".
+    TAB : float
+        triple-to-double coincidence ratio (coincidences between channel A and B). Not consider if mode2="sym".
+    TBC : float
+        triple-to-double coincidence ratio (coincidences between channel B and C). Not consider if mode2="sym".
+    TAC : float
+        triple-to-double coincidence ratio (coincidences between channel A and C). Not consider if mode2="sym".
     Rad : string
         List of radionuclides.
     pmf_1 : string
@@ -303,8 +309,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
                 energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
         if Display: print("\t Summary of the final charged particles")
         if Display: print("\t\t particles : ", particle_vec)
-        if Display: print("\t\t energy    : ", energy_vec, "keV")
-
+        if Display: print("\t\t energy after interaction : ", energy_vec, "keV")
+        
         '''
         ====================
         IV. LA SCINTILLATION
