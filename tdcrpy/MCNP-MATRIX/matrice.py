@@ -290,7 +290,7 @@ def matrice_fig(matrice_p,start,end,e,par,v):
     #print(zz[0,0],yy[0,0])
     xx,yy = np.meshgrid(x,y)
     #print(xx[0,0],yy.shape,zz[0,0])
-    h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot,vmin=0.0)
+    h = plt.pcolormesh(xx,yy,zz,cmap = plt.cm.hot)
     cb = plt.colorbar(h)
     cb.set_label("probabilité")
     #plt.xticks(xs,s)
@@ -496,12 +496,12 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 
 
 #================ tracer la matrice ========================================
-e,matrice_p = creat_matrice(2,par='p')
+e,matrice_p = creat_matrice(0,par='b')
 #print(len(e))
 #print(matrice_p[76:90,25])
 #print(matrice_p.shape,matrice_p[0,541:543])
-#ecri = ecrit_matrice(matrice_p,2,'p',16) 
-fig1 = matrice_fig(matrice_p,5000,10000,e,'p',10)
+#ecri = ecrit_matrice(matrice_p,0,'b',16) 
+fig1 = matrice_fig(matrice_p,1,100,e,'b',16)
 #for i in range(1003):
  #   for j in range(801):
   #      matrice_p[i][j] = np.log(matrice_p[i][j]+1e-7)
