@@ -1430,6 +1430,7 @@ if absolutePath:
     fe1 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
     fe2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
     fe3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
+    fe4 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-beta-_1_200k.txt' # electron-16ml-1-200keV-niveau 0
     fe = "G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt"   # electron-10ml-énergie-niveau 'e'
 else:
     # fe1 = 'MCNP-MATRIX/matrice/fichier/matrice_beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
@@ -1440,6 +1441,7 @@ else:
         fe1 = data_path / 'matrice/fichier/matrice_10ml-beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
         fe2 = data_path / 'matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
         fe3 = data_path / 'matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
+        fe4 = data_path / 'matrice/fichier/matrice_16ml-beta-_1_200k.txt' # electron-16ml-1-200keV-niveau 0
         fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
 
 
@@ -1447,6 +1449,7 @@ else:
 Matrice10_e_1 = read_matrice(fe1,0)
 Matrice10_e_2 = read_matrice(fe2,1)
 Matrice10_e_3 = read_matrice(fe3,2)
+Matrice16_e_3 = read_matrice(fe4,0)
 #Matrice_e = read_matrice(fe,'e')
 
 
