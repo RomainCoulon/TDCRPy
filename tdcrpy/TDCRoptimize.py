@@ -8,9 +8,6 @@ Created on Wed Jul  5 10:04:53 2023
 import numpy as np
 import tdcrpy.TDCRPy as td
 import scipy.optimize as opt
-# import sys, time
-# sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
-# import TDCRcalculation as tc 
 
 def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, RHO=0.98, nE=1000, L=1):
     """
@@ -47,7 +44,7 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, RHO=0.98, nE=1000, L=1
     -------
     L0 : float
         global free parameter.
-    L : tuple or float
+    L : tuple
         free parameters (relevant for the asymetric model).
     eff_S : float
         counting efficiency of single events.
@@ -78,6 +75,8 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, RHO=0.98, nE=1000, L=1
         out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "eff", "sym")
         
     L0 = np.mean(L)
+    if mode2 == "sym":
+        L=(L, L, L)
     eff_S = out[0]
     u_eff_S = out[1]
     eff_D = out[2]
