@@ -10,6 +10,8 @@ Bureau International des Poids et Mesures
 
 ## IMPORT PYTHON MODULES
 import tdcrpy.TDCR_model_lib as tl
+import importlib.resources
+import configparser
 import numpy as np
 
 def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Display=False):
@@ -54,11 +56,14 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
         if mode=="eff", the efficiencies (list)
 
     """
-    
+    config = configparser.ConfigParser()
+    with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
+        file_conf = data_path       
+    config.read(file_conf)
+    Y=config["Inputs"].getboolean("Y")
     radListPureBeta = ["H-3","C-14","S-35","Ca-45","Ni-63","Sr-89","Sr-90","Tc-99","Pm-417","Pu-241"]
     X = Rad in radListPureBeta
-    if X: Y=input("Would you like to apply the analytical model for "+str(Rad)+"? (y or n)")
-    if X and Y=="y":
+    if X and Y:
         out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,mode,mode2,nE)
         if mode == "res":
             return out
@@ -327,6 +332,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
             Calculation of the scintillation quenching with the Birks Model
             ====================
             '''
+            if Display: print("\t Summary of the estimation of quenched energies")
+            if Display: print("\t\t energy_vec      : ", energy_vec, "keV")
             e_quenching=[]
             for i, p in enumerate(particle_vec):
                 e_discrete = np.linspace(0,energy_vec[i],nE) # vector for the quenched  energy calculation keV
@@ -339,9 +346,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
                     e_quenching.append(energy_vec[i])
                 else:
                     e_quenching.append(0)
-            if Display: print("\t Summary of the estimation of quenched energies")
-            
-            if Display: print("\t\t energy_vec      : ", energy_vec, "keV")
             if Display: print("\t\t quenched energy : ", e_quenching, "keV")
     
             '''
@@ -359,7 +363,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
                 if Display: print("\t Summary of TDCR measurement")
                 if Display: print("\t\t Efficiency of single events: ", efficiency_S[-1])
                 if Display: print("\t\t Efficiency of double events: ", efficiency_D[-1])
-                if Display: print("\t\t Efficiency of triple events: ", efficiency_D[-1])
+                if Display: print("\t\t Efficiency of triple events: ", efficiency_T[-1])
             elif mode2=="asym":
                 pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
                 pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
@@ -372,7 +376,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
                 efficiency_BC.append(pB_single*pC_single)
                 efficiency_AC.append(pA_single*pC_single)
                 efficiency_T.append(pA_single*pB_single*pC_single)
-                
                 efficiency_D.append(efficiency_AB[-1]+efficiency_BC[-1]+efficiency_AC[-1]-2*efficiency_T[-1])
                 efficiency_S.append(pA_single+pB_single+pC_single-efficiency_D[-1]-efficiency_T[-1])
                 

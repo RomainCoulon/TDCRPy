@@ -12,10 +12,7 @@ Bureau International des Poids et Mesures
 import urllib.request as rq
 import importlib.resources
 import numpy as np
-from numpy.core.multiarray import where
 import zipfile as zf
-# import statsmodels.api as sm
-import matplotlib.pyplot as plt
 import time
 import re
 absolutePath = False
@@ -1284,10 +1281,11 @@ def E_quench_a(e,kB,nE):
 #'''
 if absolutePath: 
     fp1 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
-    fp2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_200_2000k.txt'    #gamma-10ml-200-2000keV-niveau 0
-    fp3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_2000_10000k.txt'  #gamma-10ml-2000-10000keV-niveau 0
+    fp2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_200_2000k.txt'    #gamma-10ml-200-2000keV-niveau 1
+    fp3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_2000_10000k.txt'  #gamma-10ml-2000-10000keV-niveau 2
     fp4 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
-    fp5 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_200_2000k.txt'       #gamma-10ml-1-200keV-niveau 0
+    fp5 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_200_2000k.txt'       #gamma-10ml-1-200keV-niveau 1
+    fp6 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_2000_10000k.txt'       #gamma-10ml-1-200keV-niveau 2
     fe = "G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt"  
 else:
     # fp1 = 'MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
@@ -1298,10 +1296,11 @@ else:
     # fe = "MCNP-MATRIX/matrice/fichier/E_depose.txt"
     with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
         fp1 = data_path / 'matrice/fichier/matrice_10ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-        fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 0
-        fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 0
+        fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 1
+        fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 2
         fp4 = data_path / 'matrice/fichier/matrice_16ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-        fp5 = data_path / 'matrice/fichier/matrice_16ml-photon_200_2000k.txt'      #gamma-10ml-1-200keV-niveau 0
+        fp5 = data_path / 'matrice/fichier/matrice_16ml-photon_200_2000k.txt'      #gamma-10ml-1-200keV-niveau 1
+        fp6 = data_path / 'matrice/fichier/matrice_16ml-photon_2000_10000k.txt'      #gamma-10ml-1-200keV-niveau 2
         fe = data_path / 'matrice/fichier/E_depose.txt'
 
 '''
@@ -1360,9 +1359,10 @@ Matrice10_p_2 = read_matrice(fp2,1)
 Matrice10_p_3 = read_matrice(fp3,2)
 Matrice16_p_1 = read_matrice(fp4,0)
 Matrice16_p_2 = read_matrice(fp5,1)
+Matrice16_p_3 = read_matrice(fp6,2)
 Matrice_e = read_matrice(fe,'e')
 
-def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,ed=Matrice_e):
+def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,ed=Matrice_e):
     """ 
     ----------
     Parameters
@@ -1388,10 +1388,11 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
     """
     ## sort keV / entrée : keV
     if e_inci <= 200:
-        if e_inci < 200:
-            index = int(e_inci)-1            # index de colonne de la matrice de l'énergie incidente la plus proche 
-        elif e_inci == 200:
-            index = -1
+        if e_inci < 1:
+            index = 0            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        else:
+            index = int(e_inci)-1
+            
         if v == 10: 
             matrice = matrice10_1
         elif v == 16:
@@ -1408,7 +1409,10 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
 
     else:
         index = (int(e_inci)-2000)//10
-        matrice = matrice10_3
+        if v == 10: 
+            matrice = matrice10_3
+        elif v == 16:
+            matrice = matrice16_3
         e = ed[:,2]
     
     inde = sampling(matrice[1:,index])
@@ -1472,10 +1476,10 @@ def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_
     """
     ## sort keV / entrée : keV
     if e_inci <= 200:
-        if e_inci < 200:
-            index = int(e_inci)-1            # index de colonne de la matrice de l'énergie incidente la plus proche 
-        elif e_inci == 200:
-            index = -1
+        if e_inci < 1:
+            index = 0            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        else:
+            index = int(e_inci)-1
         matrice = matrice10_1
         e = ed[:,0]
     
@@ -1811,3 +1815,73 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
 # tf,ef = relaxation_atom('CR52', 'Mn-52', 'Atom_K')
 # toc() # 0 s
 #print(tf,ef)
+
+
+def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
+    """
+    TDCR analytical model that can be used for pure beta emitting radionuclides
+
+    Parameters
+    ----------
+    L : float or tuple
+        free parameter(s).
+    TD : float
+        triple-to-double coincidence ratio that was measured (logic sum).
+    TAB : float
+        triple-to-double coincidence ratio that was measured (channels A and B).
+    TBC : flat
+        triple-to-double coincidence ratio that was measured (channels B and C).
+    TAC : float
+        triple-to-double coincidence ratio that was measured (channels A and C).
+    rad : string
+        radionuclide (eg. "Na-22").
+    kB : float
+        Birks constant in cm/keV.
+    mode : string
+        "res" to return the residual, "eff" to return efficiencies.
+    mode2 : string
+        "sym" for symetrical model, "asym" for symetrical model.
+    nE : integer
+         Number of bins for the quenching function.
+
+
+    Returns
+    -------
+    Tuple
+        if mode=="res", the residual (float).
+        if mode=="eff", the efficiencies (list)
+
+    """
+    
+    e, p = readBetaShape(rad, 'beta-', 0)
+    em=np.empty(len(e))
+    for i, ei in enumerate(e): 
+        em[i] = E_quench_e(ei*1e3,kB*1e3,ne)*1e-3
+        
+        
+    if mode2=="sym":
+        eff_S = sum(p*(1-np.exp(-L*em/3)))
+        eff_T = sum(p*(1-np.exp(-L*em/3))**3)
+        eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
+        TDCR_calcul=eff_T/eff_D
+        res=(TDCR_calcul-TD)**2
+
+    if mode2=="asym":
+        eff_A = sum(p*(1-np.exp(-L[0]*em/3)))
+        eff_B = sum(p*(1-np.exp(-L[1]*em/3)))
+        eff_C = sum(p*(1-np.exp(-L[2]*em/3)))
+        eff_AB = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))) 
+        eff_BC = sum(p*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))) 
+        eff_AC = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[2]*em/3))) 
+        eff_T = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))
+        eff_D = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
+        eff_S = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))-(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
+        TABmodel = eff_T/eff_AB
+        TBCmodel = eff_T/eff_BC
+        TACmodel = eff_T/eff_AC
+        res=(TAB-TABmodel)**2+(TBC-TBCmodel)**2+(TAC-TACmodel)**2
+    
+    if mode == "res":
+        return res
+    if mode == "eff":
+        return eff_S, eff_D, eff_T

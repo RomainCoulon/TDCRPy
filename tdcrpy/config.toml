@@ -1,0 +1,6 @@
+## This is the configuration file of the TDCRPy code
+
+[Inputs]
+# Analytical model for pure beta emitting radionuclides (True or False)
+Y = True
+

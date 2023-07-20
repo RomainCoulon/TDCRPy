@@ -1854,14 +1854,15 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
     """
     
     e, p = readBetaShape(rad, 'beta-', 0)
-    em=[]
+    em=np.empty(len(e))
     for i, ei in enumerate(e): 
-        em.append(E_quench_e(ei*1e3,kB*1e3,ne)*1e-3)
+        em[i] = E_quench_e(ei*1e3,kB*1e3,ne)*1e-3
+        
         
     if mode2=="sym":
         eff_S = sum(p*(1-np.exp(-L*em/3)))
-        eff_T = eff_S**3
-        eff_D = 3*eff_S**2-2*eff_T
+        eff_T = sum(p*(1-np.exp(-L*em/3))**3)
+        eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
         TDCR_calcul=eff_T/eff_D
         res=(TDCR_calcul-TD)**2
 
@@ -1869,12 +1870,12 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
         eff_A = sum(p*(1-np.exp(-L[0]*em/3)))
         eff_B = sum(p*(1-np.exp(-L[1]*em/3)))
         eff_C = sum(p*(1-np.exp(-L[2]*em/3)))
-        eff_AB = eff_A*eff_B
-        eff_BC = eff_B*eff_C
-        eff_AC = eff_A*eff_C
-        eff_T =  eff_A*eff_B*eff_C
-        eff_D = eff_AB+eff_BC+eff_AC-2*eff_T
-        eff_S = eff_A+eff_B+eff_C-eff_D-eff_T
+        eff_AB = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))) 
+        eff_BC = sum(p*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))) 
+        eff_AC = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[2]*em/3))) 
+        eff_T = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))
+        eff_D = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
+        eff_S = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))-(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
         TABmodel = eff_T/eff_AB
         TBCmodel = eff_T/eff_BC
         TACmodel = eff_T/eff_AC
