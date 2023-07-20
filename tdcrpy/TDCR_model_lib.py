@@ -1808,3 +1808,72 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
 # tf,ef = relaxation_atom('CR52', 'Mn-52', 'Atom_K')
 # toc() # 0 s
 #print(tf,ef)
+
+
+def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
+    """
+    TDCR analytical model that can be used for pure beta emitting radionuclides
+
+    Parameters
+    ----------
+    L : float or tuple
+        free parameter(s).
+    TD : float
+        triple-to-double coincidence ratio that was measured (logic sum).
+    TAB : float
+        triple-to-double coincidence ratio that was measured (channels A and B).
+    TBC : flat
+        triple-to-double coincidence ratio that was measured (channels B and C).
+    TAC : float
+        triple-to-double coincidence ratio that was measured (channels A and C).
+    rad : string
+        radionuclide (eg. "Na-22").
+    kB : float
+        Birks constant in cm/keV.
+    mode : string
+        "res" to return the residual, "eff" to return efficiencies.
+    mode2 : string
+        "sym" for symetrical model, "asym" for symetrical model.
+    nE : integer
+         Number of bins for the quenching function.
+
+
+    Returns
+    -------
+    Tuple
+        if mode=="res", the residual (float).
+        if mode=="eff", the efficiencies (list)
+
+    """
+    
+    e, p = readBetaShape(rad, 'beta-', 0)
+    em=[]
+    for i, ei in enumerate(e): 
+        em.append(E_quench_e(ei*1e3,kB*1e3,ne)*1e-3)
+        
+    if mode2=="sym":
+        eff_S = sum(p*(1-np.exp(-L*em/3)))
+        eff_T = eff_S**3
+        eff_D = 3*eff_S**2-2*eff_T
+        TDCR_calcul=eff_T/eff_D
+        res=(TDCR_calcul-TD)**2
+
+    if mode2=="asym":
+        eff_A = sum(p*(1-np.exp(-L[0]*em/3)))
+        eff_B = sum(p*(1-np.exp(-L[1]*em/3)))
+        eff_C = sum(p*(1-np.exp(-L[2]*em/3)))
+        eff_AB = eff_A*eff_B
+        eff_BC = eff_B*eff_C
+        eff_AC = eff_A*eff_C
+        eff_T =  eff_A*eff_B*eff_C
+        eff_D = eff_AB+eff_BC+eff_AC-2*eff_T
+        eff_S = eff_A+eff_B+eff_C-eff_D-eff_T
+        TABmodel = eff_T/eff_AB
+        TBCmodel = eff_T/eff_BC
+        TACmodel = eff_T/eff_AC
+        res=(TAB-TABmodel)**2+(TBC-TBCmodel)**2+(TAC-TACmodel)**2
+    
+    if mode == "res":
+        return res
+    if mode == "eff":
+        return eff_S, eff_D, eff_T
