@@ -1388,10 +1388,10 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
     """
     ## sort keV / entrée : keV
     if e_inci <= 200:
-        if e_inci < 200:
-            index = int(e_inci)-1            # index de colonne de la matrice de l'énergie incidente la plus proche 
-        elif e_inci == 200:
-            index = -1
+        if e_inci < 1:
+            index = 0            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        else:
+            index = int(e_inci)-1
         if v == 10: 
             matrice = matrice10_1
         elif v == 16:
@@ -1472,10 +1472,10 @@ def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_
     """
     ## sort keV / entrée : keV
     if e_inci <= 200:
-        if e_inci < 200:
-            index = int(e_inci)-1            # index de colonne de la matrice de l'énergie incidente la plus proche 
-        elif e_inci == 200:
-            index = -1
+        if e_inci < 1:
+            index = 0            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        else:
+            index = int(e_inci)-1
         matrice = matrice10_1
         e = ed[:,0]
     
