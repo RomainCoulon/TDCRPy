@@ -12,10 +12,7 @@ Bureau International des Poids et Mesures
 import urllib.request as rq
 import importlib.resources
 import numpy as np
-from numpy.core.multiarray import where
 import zipfile as zf
-# import statsmodels.api as sm
-import matplotlib.pyplot as plt
 import time
 import re
 absolutePath = False
