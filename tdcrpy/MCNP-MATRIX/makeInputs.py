@@ -73,7 +73,7 @@ def make_input(niveau,NPS,par,v):
         if par == 'p':
             doc = 'template16mL.txt'
         elif par == 'b':
-            doc = 'template16mL.txt'
+            doc = 'template_e_16mL.txt'
         elif par == 'bp':
             doc = 'template16mL.txt'
 
@@ -100,5 +100,5 @@ def make_input(niveau,NPS,par,v):
             file2.write(contenu)
     return 1
 
-write = make_input(2,1e6,'p',16)   
+write = make_input(0,1e6,'b',16)   
  

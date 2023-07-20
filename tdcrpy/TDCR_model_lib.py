@@ -1281,10 +1281,11 @@ def E_quench_a(e,kB,nE):
 #'''
 if absolutePath: 
     fp1 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
-    fp2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_200_2000k.txt'    #gamma-10ml-200-2000keV-niveau 0
-    fp3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_2000_10000k.txt'  #gamma-10ml-2000-10000keV-niveau 0
+    fp2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_200_2000k.txt'    #gamma-10ml-200-2000keV-niveau 1
+    fp3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_2000_10000k.txt'  #gamma-10ml-2000-10000keV-niveau 2
     fp4 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
-    fp5 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_200_2000k.txt'       #gamma-10ml-1-200keV-niveau 0
+    fp5 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_200_2000k.txt'       #gamma-10ml-1-200keV-niveau 1
+    fp6 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_2000_10000k.txt'       #gamma-10ml-1-200keV-niveau 2
     fe = "G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt"  
 else:
     # fp1 = 'MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
@@ -1295,10 +1296,11 @@ else:
     # fe = "MCNP-MATRIX/matrice/fichier/E_depose.txt"
     with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
         fp1 = data_path / 'matrice/fichier/matrice_10ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-        fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 0
-        fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 0
+        fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 1
+        fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 2
         fp4 = data_path / 'matrice/fichier/matrice_16ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-        fp5 = data_path / 'matrice/fichier/matrice_16ml-photon_200_2000k.txt'      #gamma-10ml-1-200keV-niveau 0
+        fp5 = data_path / 'matrice/fichier/matrice_16ml-photon_200_2000k.txt'      #gamma-10ml-1-200keV-niveau 1
+        fp6 = data_path / 'matrice/fichier/matrice_16ml-photon_2000_10000k.txt'      #gamma-10ml-1-200keV-niveau 2
         fe = data_path / 'matrice/fichier/E_depose.txt'
 
 '''
@@ -1357,9 +1359,10 @@ Matrice10_p_2 = read_matrice(fp2,1)
 Matrice10_p_3 = read_matrice(fp3,2)
 Matrice16_p_1 = read_matrice(fp4,0)
 Matrice16_p_2 = read_matrice(fp5,1)
+Matrice16_p_3 = read_matrice(fp6,2)
 Matrice_e = read_matrice(fe,'e')
 
-def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,ed=Matrice_e):
+def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,ed=Matrice_e):
     """ 
     ----------
     Parameters
@@ -1385,10 +1388,11 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
     """
     ## sort keV / entrée : keV
     if e_inci <= 200:
-        if e_inci < 200:
-            index = int(e_inci)-1            # index de colonne de la matrice de l'énergie incidente la plus proche 
-        elif e_inci == 200:
-            index = -1
+        if e_inci < 1:
+            index = 0            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        else:
+            index = int(e_inci)-1
+            
         if v == 10: 
             matrice = matrice10_1
         elif v == 16:
@@ -1405,7 +1409,10 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
 
     else:
         index = (int(e_inci)-2000)//10
-        matrice = matrice10_3
+        if v == 10: 
+            matrice = matrice10_3
+        elif v == 16:
+            matrice = matrice16_3
         e = ed[:,2]
     
     inde = sampling(matrice[1:,index])
@@ -1469,10 +1476,10 @@ def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_
     """
     ## sort keV / entrée : keV
     if e_inci <= 200:
-        if e_inci < 200:
-            index = int(e_inci)-1            # index de colonne de la matrice de l'énergie incidente la plus proche 
-        elif e_inci == 200:
-            index = -1
+        if e_inci < 1:
+            index = 0            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        else:
+            index = int(e_inci)-1
         matrice = matrice10_1
         e = ed[:,0]
     
