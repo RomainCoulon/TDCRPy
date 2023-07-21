@@ -21,7 +21,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
     Parameters
     ----------
     L : Float (if mode2="sym") or a tuple (if mode2="asym")
-        Free parameter.
+        Free parameter in keV-1.
     TD : float
         triple-to-double coincidence ratio. Not consider if mode2="asym". Not consider if mode2="asym".
     TAB : float
@@ -31,17 +31,24 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
     TAC : float
         triple-to-double coincidence ratio (coincidences between channel A and C). Not consider if mode2="sym".
     Rad : string
-        List of radionuclides.
+        List of radionuclides (eg. "H-3, Co-60").
     pmf_1 : string
-        list of probability of each radionuclide.
+        list of probability of each radionuclide (eg. "0.8, 0.2").
     N : integer
-        Number of Monte-Carlo trials.
+        Number of Monte-Carlo trials. recommanded N=10000
+        N=1000, relative uncertainty from MC calculation = 1.0 %
+        N=10000, relative uncertainty from MC calculation = 0.33 %
+        N=100000, relative uncertainty from MC calculation = 0.10 %
     kB : float
         Birks constant in cm/keV.
     RHO : float
-        Density of the scintillator.
+        Density of the scintillator in g/cm3.
     nE : integer
-        Number of bins for the quenching function.
+        Number of bins for the quenching function. recommanded nE=7000
+        nE=100, relative uncertainty from energy discretization = 0.8 %
+        nE=1000, relative uncertainty from energy discretization = 0.08 %
+        nE=7000, relative uncertainty from energy discretization = 0.01 %
+        nE=10000, relative uncertainty from energy discretization = 0.008 %
     mode : string
         "res" to return the residual, "eff" to return efficiencies.
     mode2 : string
@@ -61,7 +68,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
         file_conf = data_path       
     config.read(file_conf)
     Y=config["Inputs"].getboolean("Y")
-    radListPureBeta = ["H-3","C-14","S-35","Ca-45","Ni-63","Sr-89","Sr-90","Tc-99","Pm-417","Pu-241"]
+    radListPureBeta = ["H-3","C-14","S-35","Ca-45","Ni-63","Sr-89","Sr-90","Tc-99","Pm-147","Pu-241"]
     X = Rad in radListPureBeta
     if X and Y:
         out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,mode,mode2,nE)
