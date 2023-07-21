@@ -35,11 +35,11 @@ Validation with standard solution for Co-60
 Validation with the analytical model
 """
 
-Rad="Pm-147"
+Rad="Sr-89"
 pmf_1="1"
 kB =1.0e-5       # Birks constant in cm/keV
 RHO = 0.98
-nE = 10000
+nE = 100000
 TD = 0.70        # Measured TDCR value
 TAB = 0.992232838598821
 TBC = 0.992343419459002

@@ -68,9 +68,17 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
         file_conf = data_path       
     config.read(file_conf)
     Y=config["Inputs"].getboolean("Y")
-    radListPureBeta = ["H-3","C-14","S-35","Ca-45","Ni-63","Sr-89","Sr-90","Tc-99","Pm-147","Pu-241"]
+    radListPureBeta=config["Inputs"].get("radListPureBeta")
+    radListPureBeta=radListPureBeta.replace(" ","")
+    radListPureBeta=radListPureBeta.split(',')
     X = Rad in radListPureBeta
+    if X:
+        nElist=config["Inputs"].get("nE")
+        nElist=nElist.split(',')
+        nElist = [int(i) for i in nElist]
     if X and Y:
+        inE = radListPureBeta.index(Rad)
+        nE = nElist[inE]
         out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,mode,mode2,nE)
         if mode == "res":
             return out

@@ -3,4 +3,9 @@
 [Inputs]
 # Analytical model for pure beta emitting radionuclides (True or False)
 Y = True
+# List of radionuclides for which the analytical model is applied
+radListPureBeta = H-3, C-14, S-35, Ca-45, Ni-63, Sr-89, Sr-90, Tc-99, Pm-147, Pu-241
+# Number of bins to discretize the linear energy space for quenching calculation
+# and achieve a relative standard uncertainty below 1e-4.
+nE = 7000, 1000, 1000, 500, 2000, 50, 200, 500, 1000, 7000
 
