@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "0.0.42"
+VERSION = "0.0.47"
 DESCRIPTION = "TDCR model"
 
 with open("README.md", "r") as f:
@@ -17,7 +17,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/RomainCoulon/TDCRPy",
-    packages = find_packages(),
+    packages = find_packages(exclude=["EfficiencyProfils"]),
     install_requires = ["numpy"],
     keywords = ["python","TDCR","Monte-Carlo","radionuclide","scintillation","counting"],
     classifiers=[

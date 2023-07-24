@@ -13,8 +13,9 @@ import tdcrpy.TDCR_model_lib as tl
 import importlib.resources
 import configparser
 import numpy as np
+from tqdm import tqdm
 
-def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Display=False):
+def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, mode, mode2, Display=False, barp=True):
     """
     This is a Monte-Carlo TDCR model
 
@@ -35,26 +36,17 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
     pmf_1 : string
         list of probability of each radionuclide (eg. "0.8, 0.2").
     N : integer
-        Number of Monte-Carlo trials. recommanded N=10000
-        N=1000, relative uncertainty from MC calculation = 1.0 %
-        N=10000, relative uncertainty from MC calculation = 0.33 %
-        N=100000, relative uncertainty from MC calculation = 0.10 %
+        Number of Monte-Carlo trials. recommanded N>10000. Not applied in the case of pure beta emitting radionuclides.
     kB : float
         Birks constant in cm/keV.
-    RHO : float
-        Density of the scintillator in g/cm3.
-    nE : integer
-        Number of bins for the quenching function. recommanded nE=7000
-        nE=100, relative uncertainty from energy discretization = 0.8 %
-        nE=1000, relative uncertainty from energy discretization = 0.08 %
-        nE=7000, relative uncertainty from energy discretization = 0.01 %
-        nE=10000, relative uncertainty from energy discretization = 0.008 %
     mode : string
         "res" to return the residual, "eff" to return efficiencies.
     mode2 : string
         "sym" for symetrical model, "asym" for symetrical model.
     Display : Boolean, optional
         "True" to display details on the decay sampling. The default is False.
+    barp : Boolean, optional
+        "True" to display the calculation progress. The default is True.
 
     Returns
     -------
@@ -63,6 +55,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
         if mode=="eff", the efficiencies (list)
 
     """
+    if barp: tl.display_header()
     config = configparser.ConfigParser()
     with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
         file_conf = data_path       
@@ -85,6 +78,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
         if mode == "eff":
             return out[0], 0, out[1], 0, out[2], 0
     else:
+        nE_electron = config["Inputs"].getint("nE_electron")
+        nE_alpha = config["Inputs"].getint("nE_alpha")
         Rad=Rad.replace(" ","")
         Rad=Rad.split(",")
         pmf_1=pmf_1.split(",")
@@ -132,13 +127,16 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
             Pdaughter.append(out_PenNuc[1])      # Probabiblity related to daughters -- indice 1
             Transition_prob_sum.append(out_PenNuc[14])
     
-            efficiency_S = []
-            efficiency_D = []
-            efficiency_T = []
-            efficiency_AB = []
-            efficiency_BC = []
-            efficiency_AC = []
-        for i in range(N): # Main Loop - Monte Carlo trials
+        efficiency_S = []
+        efficiency_D = []
+        efficiency_T = []
+        efficiency_AB = []
+        efficiency_BC = []
+        efficiency_AC = []
+        
+        if barp and not Display: NN = tqdm(range(N), desc="Processing", unit=" decays")
+        else: NN = range(N)
+        for i in NN: # Main Loop - Monte Carlo trials
             particle_vec=[]
             energy_vec=[]
             '''
@@ -351,13 +349,11 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
             if Display: print("\t\t energy_vec      : ", energy_vec, "keV")
             e_quenching=[]
             for i, p in enumerate(particle_vec):
-                e_discrete = np.linspace(0,energy_vec[i],nE) # vector for the quenched  energy calculation keV
-                delta_e = e_discrete[2]-e_discrete[1]  #keV
                 if p == "alpha":
-                    energy_vec[i] = np.cumsum(delta_e/(1+kB*tl.stoppingpowerA(e_discrete)))[-1]
+                    energy_vec[i] = tl.E_quench_a(energy_vec[i],kB,nE_alpha)
                     e_quenching.append(energy_vec[i])
                 elif p == "electron" or p == "positron":
-                    energy_vec[i] = tl.E_quench_e(energy_vec[i]*1e3,kB*1e3,nE)*1e-3
+                    energy_vec[i] = tl.E_quench_e(energy_vec[i]*1e3,kB*1e3,nE_electron)*1e-3
                     e_quenching.append(energy_vec[i])
                 else:
                     e_quenching.append(0)
@@ -401,21 +397,18 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, mode, mode2, Displa
         VI. CALCULATION OF THE FINAL ESTIMATORS
         ====================
         '''
+        mean_efficiency_T = np.mean(efficiency_T) # average
+        std_efficiency_T = np.std(efficiency_T)/np.sqrt(N)   # standard deviation
+        std_efficiency_T = np.sqrt(std_efficiency_T**2+1e-8) # combined with uncertainty due to quenching calculation
+        mean_efficiency_D = np.mean(efficiency_D)
+        std_efficiency_D = np.std(efficiency_D)/np.sqrt(N)
+        std_efficiency_D = np.sqrt(std_efficiency_D**2+1e-8)
+        mean_efficiency_S = np.mean(efficiency_S)
+        std_efficiency_S = np.std(efficiency_S)/np.sqrt(N)
+        std_efficiency_S = np.sqrt(std_efficiency_S**2+1e-8)
         if mode2=="sym":
-            mean_efficiency_T = np.mean(efficiency_T) # average
-            std_efficiency_T = np.std(efficiency_T)/np.sqrt(N)   # standard deviation
-            mean_efficiency_D = np.mean(efficiency_D)
-            std_efficiency_D = np.std(efficiency_D)/np.sqrt(N)
-            mean_efficiency_S = np.mean(efficiency_S)
-            std_efficiency_S = np.std(efficiency_S)/np.sqrt(N)
             TDCR_calcul = mean_efficiency_T/mean_efficiency_D
         elif mode2=="asym":
-            mean_efficiency_T = np.mean(efficiency_T) # average
-            std_efficiency_T = np.std(efficiency_T)/np.sqrt(N)   # standard deviation
-            mean_efficiency_D = np.mean(efficiency_D)
-            std_efficiency_D = np.std(efficiency_D)/np.sqrt(N)
-            mean_efficiency_S = np.mean(efficiency_S)
-            std_efficiency_S = np.std(efficiency_S)/np.sqrt(N)
             mean_efficiency_AB = np.mean(efficiency_AB)
             std_efficiency_AB = np.std(efficiency_AB)/np.sqrt(N)
             mean_efficiency_BC = np.mean(efficiency_BC)

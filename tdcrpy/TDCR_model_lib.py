@@ -9,13 +9,14 @@ Bureau International des Poids et Mesures
 """
 
 ### IMPORT Python Module
-import urllib.request as rq
 import importlib.resources
+import pkg_resources
+import configparser
 import numpy as np
 import zipfile as zf
 import time
 import re
-absolutePath = False
+import os
 
 
 def TicTocGenerator():
@@ -415,6 +416,14 @@ def readPenNuc2(rad,z1=z_PenNuc):
 with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     f_alpha = open(data_path / "alpha_toulene.txt")
 
+config = configparser.ConfigParser()
+with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
+    file_conf = data_path       
+config.read(file_conf)
+RHO=config["Inputs"].getfloat("density")
+Z=config["Inputs"].getfloat("Z")
+A=config["Inputs"].getfloat("A")
+
 data_ASTAR = f_alpha.readlines()
 f_alpha.close()
 energy_alph = []
@@ -426,7 +435,7 @@ for i in range(np.size(data_ASTAR)):
     energy_alph.append(data_ASTAR[i][0])
     dEdx_alph.append(data_ASTAR[i][1])
 
-def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
+def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     """
     Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code
     ref: https://dx.doi.org/10.18434/T4NC7P
@@ -467,7 +476,7 @@ data_TanXia=data_TanXia.split("\n"); data_TanXia_f = np.empty(len(data_TanXia))
 for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
-def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
+def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
     At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
@@ -1144,3 +1153,36 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
         return res
     if mode == "eff":
         return eff_S, eff_D, eff_T
+    
+def clear_terminal():
+    # Function to clear the terminal screen
+    if os.name == "posix":
+        os.system("clear")  # For UNIX/Linux/MacOS
+    else:
+        os.system("cls")    # For Windows
+
+def display_header():
+    # Function to display the header
+    clear_terminal()
+    version = pkg_resources.get_distribution("tdcrpy").version
+    header_text = r'''
+ ______  ______  ______ _______  ________
+|__  __||  ___ \|  ___||  ___ | |  ____ |
+  | |   | |  | || |    | |  | | | |___| |___     ___
+  | |   | |  | || |    | |__| | |  _____|\  \   |  |
+  | |   | |__| || |____|  __  \ | |       \  \  |  |
+  |_|   |_____/ |_____||_|  \__\|_|        \  \_|  |
+  +++++++++++++++++++++++++++++++++++++++++/      /
+  ________________________________________/      /
+ |______________________________________________/     
+
+'''
+    header_text2 = "version "+version+"\n\
+BIPM 2023 - licence MIT \n\
+distribution: https://pypi.org/project/TDCRPy \n\
+developement: https://github.com/RomainCoulon/TDCRPy \n\n\
+start calculation..."
+ 
+ # Start Calculation
+    print(header_text)
+    print(header_text2)

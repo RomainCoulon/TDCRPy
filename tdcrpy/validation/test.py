@@ -12,20 +12,20 @@ import matplotlib.pyplot as plt
 Validation with standard solution for Co-60
 """
 
-# Rad="Co-60"    # list of radionuclides (Na-24)
-# pmf_1="1"
-# kB =1.0e-5       # Birks constant in cm/keV
-# RHO = 0.98
-# nE = 1000
-# TD = 0.977667386529166        # Measured TDCR value
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# L = 1
-# N = 10
+Rad="Co-60"    # list of radionuclides (Na-24)
+pmf_1="1"
+kB =1.0e-5       # Birks constant in cm/keV
+RHO = 0.98
+nE = 1000
+TD = 0.977667386529166        # Measured TDCR value
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+L = 1
+N = 100
 
-# resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "eff", "sym", Display=False)
-# print(resuts_1)
+resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "eff", "sym")
+print(resuts_1)
 
 # resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
 # print(resuts_2)
@@ -35,23 +35,35 @@ Validation with standard solution for Co-60
 Validation with the analytical model
 """
 
-Rad="Sr-89"
-pmf_1="1"
-kB =1.0e-5       # Birks constant in cm/keV
-RHO = 0.98
-nE = 100000
-TD = 0.70        # Measured TDCR value
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-L = 1
-N = 100
+# Rad="Sr-89"
+# pmf_1="1"
+# kB =1.0e-5       # Birks constant in cm/keV
+# TD = 0.70        # Measured TDCR value
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# L = 1
+# N = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 
-resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "eff", "sym", Display=False)
-print(resuts_1)
+# print("Rad",Rad)
+# for iN in N:
+#     resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, iN, kB, "eff", "sym", Display=False)
+#     print(resuts_1[0],resuts_1[1],resuts_1[2],resuts_1[3],resuts_1[4],resuts_1[5])
 
 # resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
 # print(resuts_2)
+
+# """
+# Validation with the analytical model
+# """
+
+# kB =1.0e-5       # Birks constant in cm/keV
+# nE=[10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000]
+# e = 1000 # energy incidente
+# for inE in nE:
+#     # results = td.TDCR_model_lib.E_quench_e(e*1e3, kB*1e3, inE)*1e-3
+#     results = td.TDCR_model_lib.E_quench_a(e,kB,inE)
+#     print(results)
 
 #===================================================================================================
 #============================tracer stopping power of electron and alpha ===========================
