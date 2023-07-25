@@ -36,10 +36,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, mode, mode2, Display=False, 
     pmf_1 : string
         list of probability of each radionuclide (eg. "0.8, 0.2").
     N : integer
-        Number of Monte-Carlo trials. recommanded N=10000
-        N=1000, relative uncertainty from MC calculation = 1.0 %
-        N=10000, relative uncertainty from MC calculation = 0.33 %
-        N=100000, relative uncertainty from MC calculation = 0.10 %
+        Number of Monte-Carlo trials. recommanded N>10000. Not applied in the case of pure beta emitting radionuclides.
     kB : float
         Birks constant in cm/keV.
     mode : string

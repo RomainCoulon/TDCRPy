@@ -1178,7 +1178,7 @@ def display_header():
 
 '''
     header_text2 = "version "+version+"\n\
-BIPM 2023 - licence MIT \n\
+BIPM 2023 - license MIT \n\
 distribution: https://pypi.org/project/TDCRPy \n\
 developement: https://github.com/RomainCoulon/TDCRPy \n\n\
 start calculation..."
