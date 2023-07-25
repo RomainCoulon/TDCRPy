@@ -37,13 +37,8 @@ The module can be imported in your Python code such as.
 import tdcrpy
 ```
 
-## The function `TDCRPy()`
-
-This 
-
-
-
-
+## Documentation
+The full documentation for this project can be found [here](docs/_build/index.html).
 
 
 

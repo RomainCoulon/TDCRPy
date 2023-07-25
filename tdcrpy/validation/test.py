@@ -53,7 +53,7 @@ TD = T/D
 # print(resuts_1)
 
 resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
-print("/n",resuts_2)
+print("\n",resuts_2)
 
 
 
