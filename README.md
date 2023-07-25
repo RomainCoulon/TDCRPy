@@ -39,16 +39,7 @@ import tdcrpy
 
 ## Documentation
 
-The full documentation for this project can be found [here](https://github.com/RomainCoulon/TDCRPy/blob/main/docs/_build/html/index.md).
-
-### The module `tdcrpy.TDCRPy`
-
-The full documentation the module `tdcrpy.TDCRPy` can be found [here](https://github.com/RomainCoulon/TDCRPy/docs/_build/html/source/tdcrpy.html).
-
-
-
-
-
+The full documentation for this project can be found [here](docs/_build/html/index.md).
 
 The process is summarized in the figure below.
 
