@@ -23,6 +23,12 @@ tdcrpy.EfficiencyProfils module
 tdcrpy.TDCRPy module
 --------------------
 
+The process is summarized in the figure below.
+
+.. image:: ./FlowChart.jpg
+    :alt: drawing
+    :width: 500
+
 .. automodule:: tdcrpy.TDCRPy
    :members:
    :undoc-members:
