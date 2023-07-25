@@ -19,7 +19,7 @@ or in `conda` environement:
 conda install importlib.resources configparser numpy tqdm setuptools scipy
 ```
 
-Then, TDCRPy can be installed.
+Then, `TDCRPy` can be installed.
 
 ```shell
 pip install TDCRPy
