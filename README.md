@@ -6,19 +6,19 @@ The calculation is based on the photo-physical model called of the Triple-to-Dou
 The code is developped and maintained by the BIPM (MIT license).
 
 
-
 ## Installation
 
-TDCRPy requires that the following packages are installed in your Python environement.
+TDCRPy requires that the following packages are installed in your `Python` environement.
 
 ```shell
-pip install importlib.resources
-pip install configparser
-pip install numpy
-pip install tqdm
-pip install setuptools
-pip install scipy
+pip install importlib.resources configparser numpy tqdm setuptools scipy
 ```
+or in conda environement:
+
+```shell
+conda install importlib.resources configparser numpy tqdm setuptools scipy
+```
+
 Then, TDCRPy can be installed.
 
 ```shell
