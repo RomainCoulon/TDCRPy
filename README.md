@@ -39,7 +39,7 @@ import tdcrpy
 
 ## Documentation
 
-The full documentation for this project can be found [here](docs/_build/html/index.md).
+The full documentation for this project can be found [here](docs/_build/html/index.html).
 
 The process is summarized in the figure below.
 
