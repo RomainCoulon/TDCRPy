@@ -1,0 +1,51 @@
+Nuclear decay
+------------
+
+The code directly reads decay data from the Decay Data Evaluation Project (DDEP) web interface [#2]_ that is recommended to be used by the radionuclide metrology community. The PenNuc format [#3]_ is used to simulate decays and the $\beta$ spectra from the BetaShape code [#4]_ are used. The BetaShape code estimates accurate $\beta$ spectra by taking the atomic exchange effect and also simulates accurately electron capture decay [#5]_. It has been demonstrated to offer significant improvement in the context of liquid scintillation counting [#6]_.
+
+Atomic relaxation
+-----------------
+
+The atomic relaxation from missing electrons in the inner-shell following electron capture and internal conversion is simulated by ENSDF data on the DDEP web interface.
+
+Interaction
+-----------
+
+The interaction of $\gamma$ rays, electrons, and positrons are simulated using response kernels calculated by the Monte-Carlo code MCNP6 developed by Los Alamos [#13]_.
+
+Scintillation
+-------------
+
+The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [#7]_ and a collision model [#8]_ that has been validated against the NIST model ESTAR [#9]_ recommended by the ICRU Report 37 [#10]_. At low energy - between 10 eV and 20 keV - the model from Tan and Xia [#11]_ is implemented.
+
+The stopping power of $\alpha$ particles of energy comprises between 1 keV and 8 MeV comes from the NIST code ASTAR [#9]_ recommended in the ICRU Report 49 [#12]_. For energy below 1 keV, an extrapolation is made.
+
+Statistical model
+-----------------
+
+...
+
+References
+----------
+
+.. [#1] Ryszard Broda, Krzysztof Pochwalski, Tomasz Radoszewski, Calculation of liquid-scintillation detector efficiency, *Applied Radiation and Isotopes* **39**:2, 1988, 159-164, https://doi.org/10.1016/0883-2889(88)90161-X
+
+.. [#2] http://www.lnhb.fr/ddep_wg/
+
+.. [#3] E. García-Toraño, V. Peyres, F. Salvat, PenNuc: Monte Carlo simulation of the decay of radionuclides, *Computer Physics Communications* **245**, 2019, 106849 https://doi.org/10.1016/j.cpc.2019.08.002
+
+.. [#4] X. Mougeot, Erratum: Reliability of usual assumptions in the calculation of $\beta$ and $\bar{\mu}$ spectra, *Physical Review C* **91**, 2015, 055504, https://doi.org/10.1103/PhysRevC.92.059902
+
+.. [#5] X. Mougeot, Towards high-precision calculation of electron capture decays, *Applied Radiation and Isotopes* **154**, 2019, 108884,  https://doi.org/10.1016/j.apradiso.2019.108884
+
+.. [#6] K. Kossert, X. Mougeot, Improved activity standardization of <sup>90</sup>Sr/<sup>90</sup>Y by means of liquid scintillation counting, *Applied Radiation and Isotopes* **168**, 2021, 109478, https://doi.org/10.1016/j.apradiso.2020.109478
+
+.. [#7] S.M. Seltzer, M.R. Berger, M. R., Evaluation of the collision stopping power of elements and compounds for electrons and positrons, *Applied Radiation and Isotopes* **33**:11, 1982, 1189-1218, https://doi.org/10.1016/0020-708x(82)90244-7
+
+.. [#8] M.O. El-Ghossain, Calculations Of Stopping Power, And Range Of Electrons Interaction With Different Material And Human Body Parts, *International Journal of Scientific & Technology Research* **6**:1 2017. https://www.ijstr.org/final-print/jan2017/Calculations-Of-Stopping-Power-And-Range-Of-Electrons-Interaction-With-Different-Material-And-Human-Body-Parts.pdf
+
+.. [#9] M.J. Berger, J.S. Coursey, M.A. Zucker and J. Chang,Stopping-Power & Range Tables for Electrons, Protons, and Helium Ions, *NIST Standard Reference Database 124*, 2017, https://dx.doi.org/10.18434/T4NC7P
+
+.. [#10] ICRU Report 37, *Stopping Powers for Electrons and Positrons*
+
+.. [#11] Z. Tan, Y. Xia, Stopping power and mean free path for low-energy electrons in ten scintillators over energy range of 20–20,000 eV, *Applied Radiation and Isotopes* **70

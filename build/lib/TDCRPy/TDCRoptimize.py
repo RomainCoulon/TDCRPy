@@ -8,11 +8,8 @@ Created on Wed Jul  5 10:04:53 2023
 import numpy as np
 import tdcrpy.TDCRPy as td
 import scipy.optimize as opt
-# import sys, time
-# sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
-# import TDCRcalculation as tc 
 
-def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, RHO=0.98, nE=1000, L=1):
+def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, L=1):
     """
     Caclulation of the efficiency of a TDCR system based on the model TDCRPy
 
@@ -36,10 +33,6 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, RHO=0.98, nE=1000, L=1
         "sym" for symetrical model, "asym" for symetrical model.
     N : interger, optional
         number of Monte-Carlo trials. The default is 1000.
-    RHO : float, optional
-        density of the source. The default is 0.98.
-    nE : interger, optional
-        number of bins for the quenching function. The default is 1000.
     L : float, optional
         free parameter(s) as initial guess. The default is 1.
 
@@ -47,7 +40,7 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, RHO=0.98, nE=1000, L=1
     -------
     L0 : float
         global free parameter.
-    L : tuple or float
+    L : tuple
         free parameters (relevant for the asymetric model).
     eff_S : float
         counting efficiency of single events.
@@ -64,20 +57,22 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, RHO=0.98, nE=1000, L=1
 
     """
     # Estimation of the free parameter that minimize the residuals
-    r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "res", "sym"), method='bounded', bounds=[0.5, 2])
+    r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "res", "sym"), method='bounded', bounds=[0.5, 2])
     L=r.x
     print(r)
     
     if mode2 == "asym":
         L=(L, L, L)           # Free paramete in keV-1
-        r=opt.minimize(td.TDCRPy, L, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "res", "asym"), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
+        r=opt.minimize(td.TDCRPy, L, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "res", "asym"), method='nelder-mead',options={'xatol': 1e-7, 'disp': True, 'maxiter':100})
         L=r.x
         print(r)
-        out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "eff", "asym")
+        out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "eff", "asym")
     else:
-        out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, RHO, nE, "eff", "sym")
+        out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "eff", "sym")
         
     L0 = np.mean(L)
+    if mode2 == "sym":
+        L=(L, L, L)
     eff_S = out[0]
     u_eff_S = out[1]
     eff_D = out[2]

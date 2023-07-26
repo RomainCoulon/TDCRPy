@@ -9,13 +9,14 @@ Bureau International des Poids et Mesures
 """
 
 ### IMPORT Python Module
-import urllib.request as rq
 import importlib.resources
+import pkg_resources
+import configparser
 import numpy as np
 import zipfile as zf
 import time
 import re
-absolutePath = False
+import os
 
 
 def TicTocGenerator():
@@ -48,6 +49,20 @@ def tic():
     toc(False)
 
 def normalise(p_x):
+    """
+    This function is used to ensure that the sum of probability is equal to 1.
+
+    Parameters
+    ----------
+    p_x : list
+        vector of probabilities.
+
+    Returns
+    -------
+    p : list
+        normalized probability vector.
+
+    """
     p_array = np.array(p_x)
     if len(p_x)>1:
         p_somme = sum(p_array)
@@ -58,7 +73,7 @@ def normalise(p_x):
         p_array = p_array/p_somme
     p = list(p_array)
     return p
-#print(normalise([1, 0.9974641, 0]))
+
 
 def sampling(p_x):
     """
@@ -83,194 +98,13 @@ def sampling(p_x):
         if p> trial: break
     return i
 
-
-def readPenNuc(rad):
-    """
-    This function reads the PenNuc files published in the DDEP web page
-    http://www.lnhb.fr/donnees-nucleaires/donnees-nucleaires-tableau/
-    
-    Parameters
-    ----------
-    rad : string
-        Indentifier of the radionuclide (e.g. Na-22).
-
-    Returns
-    -------
-    out : list
-        list of elements in list describing the decay of the radionuclide with,
-        *particle* is the list of particle of the decay branches 
-        *p_branch* is the list of probabilty of the decay branches
-        *e_branch* is the list of energy of the decay branches
-        *LevelDaughter* is the list of energy levels of the daughter nucleus following the decay branch
-        *levelNumber* is the list of number of the energy level of the daughter nucleus following the decay branch
-        *prob* is the list of probabilty of isomeric transitions
-        *levelEnergy* is the energy levels of the isomeric transitions
-        *transitionType* is the type of isomeric transitions
-        *e_trans* is the energy of the isomeric transitions
-        *next_level* is the possible next energy level following a given isomeric transtion 
-        *Q_value_vec[dd]* is the Q-value of the decay when decaying to the daughter of index dd
-        *Daughter_vec[dd]* is the vecteur of daugher nuclei
-        *Pdaughter_vec[dd]* is the probability of daughter nuclei
-    """
-    
-    url = "http://www.lnhb.fr/nuclides/"+rad+".PenNuc.txt"
-    file = rq.urlopen(url)
-    
-    # Format the data 
-    decayData = []
-    for line in file:
-      decayData.append(line.decode("utf-8"))
-      if "NDA " in decayData[-1]:    decayData[-1] = decayData[-1].replace("NDA ", "NDA; ") # number of daughter
-      if "DAU " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DAU ", "DAU; ") # daughter
-      if "DDE " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DDE ", "DDE; ") # daughter description : probability of disintegration to NDA, uncertainty, number of excited levels of NDA; number of branche to NDA
-      if "Q " in decayData[-1]:      decayData[-1] = decayData[-1].replace("Q ", "Q; ")     # total energy of the branch, uncertainty 
-      if "ALP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("ALP ", "ALP; ") # type of the disintegration = alpha
-      if "CK " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CK ", "CK; ") # type of the disintegration = Electron Capture K shell
-      if "CL " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL ", "CL; ") # type of the disintegration = Electron Capture L shell 1
-      if "CL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL1 ", "CL1; ") # type of the disintegration = Electron Capture L shell 1
-      if "CL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL2 ", "CL2; ") # type of the disintegration = Electron Capture L shell 2
-      if "CM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CM ", "CM; ") # type of the disintegration = Electron Capture M shell
-      if "CN " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CN ", "CN; ") # type of the disintegration = Electron Capture N shell
-      if "BEM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEM ", "BEM; ") # type disintegration-beta- :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
-      if "BEP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEP ", "BEP; ") # type disintegration-beta+ :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
-      if "LED " in decayData[-1]:    decayData[-1] = decayData[-1].replace("LED ", "LED; ") # level description:energy of level,uncertainty, number of transitions that depopulate this level,level time,uncertainty,level number
-      if "GA " in decayData[-1]:     decayData[-1] = decayData[-1].replace("GA ", "GA; ")   # type transition: gamma
-      if "EK " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EK ", "EK; ")   # type transition: internal conversion -- electron K
-      if "EL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL1 ", "EL1; ") # type transition: internal conversion -- electron L1
-      if "EL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL2 ", "EL2; ") # type transition: internal conversion -- electron L2
-      if "EL3 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL3 ", "EL3; ") # type transition: internal conversion -- electron L3
-      if "EM " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EM ", "EM; ")   # type transition: internal conversion -- electron M
-      if "EN " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EN ", "EN; ")   # type transition: internal conversion -- electron N
-      if "COM" in decayData[-1]:     decayData[-1] = decayData[-1].replace("COM ", "COM; ")   # commentaire
-      decayData[-1]=decayData[-1].split(";")
-      if "\r\n" in decayData[-1][-1]:  decayData[-1][-1] = decayData[-1][-1].replace("\r\n", " ")
-    
-   
-      
-    """
-    LOOP IN NDAUGH (Daughters)
-    """
-    Daughter_vec = []; Pdaughter_vec = []; Q_value_vec = []
-    for d in decayData:
-      if d[0] == "NDA": Ndaughter = int(d[1])   # Read the number of daughter
-      if d[0] == "DAU" :
-          d[1] = d[1].replace(" ","")
-          Daughter_vec.append(d[1])        # Read the daughter
-      if d[0] == "DDE": Pdaughter_vec.append(float(d[1])) # Read the probability of disintegration to daughter
-      if d[0] == "Q":   Q_value_vec.append(float(d[1]))   # Read the Q-value
-    
-    out = []
-    for dd in range(Ndaughter):
-        
-        # index_Daughter = sampling(np.asarray(Pdaughter_vec)/sum(np.asarray(Pdaughter_vec)))
-        # Daughter = Daughter_vec[index_Daughter]
-        # Pdaughter =  Pdaughter_vec[index_Daughter]
-        # Q_value = Q_value_vec[index_Daughter]    
-         
-        
-        """
-        LOOP IN NBRANCH (Branches of each daughter)
-        """
-        # Probablity vector of the decay branch
-        particle=[]; LevelDaughter = []; p_branch = []; u_p_branch = []; e_branch = []; u_e_branch = []
-        daughterFlag = True
-        countBranch = 0
-        for d in decayData:
-            if d[0] == "DAU" and d[1] == Daughter_vec[dd]:
-                daughterFlag = True
-            if d[0] == "DAU" and d[1] != Daughter_vec[dd]:
-                daughterFlag = False
-            
-            if daughterFlag:
-                # particle_i = []; p_branch_i=[]; u_p_branch_i=[];  e_branch_i=[];   u_e_branch_i=[];  LevelDaughter_i=[]
-                if d[0] =="COM":
-                    if "Branch" in d[1] or "Level" in d[1]:
-                        print(d[1])
-                        if countBranch % 2 == 1:
-                            p_branch.append(p_branch_i); u_p_branch.append(u_p_branch_i); # Branching ratio of the decay branch
-                            e_branch.append(e_branch_i); u_e_branch.append(u_e_branch_i); # Energy of the decay branch (kinetic energy of the particle)
-                            LevelDaughter.append(LevelDaughter_i); particle.append(particle_i)
-                            
-                            particle_i = []; p_branch_i=[]; u_p_branch_i=[];  e_branch_i=[];   u_e_branch_i=[];  LevelDaughter_i=[]
-                        else:
-                            particle_i = []; p_branch_i=[]; u_p_branch_i=[];  e_branch_i=[];   u_e_branch_i=[];  LevelDaughter_i=[]
-                    
-                    
-                        countBranch += 1    
-                    # p_branch=
-                
-                
-                if d[0] == "ALP" or d[0] == "BEM" or d[0] == "BEP" or d[0] == "CK" or d[0] == "CL" or d[0] == "CL1" or d[0] == "CL2" or d[0] == "CM" or d[0] == "CN":                         # Read information on the decay branch
-                    if d[0] == "ALP": particle_i.append("alpha")
-                    if d[0] == "BEP": particle_i.append("beta+")
-                    if d[0] == "BEM": particle_i.append("beta")
-                    if d[0] == "CK": particle_i.append("Atom_K")
-                    if d[0] == "CL": particle_i.append("Atom_L")
-                    if d[0] == "CL1": particle_i.append("Atom_L1")
-                    if d[0] == "CL2": particle_i.append("Atom_L2")
-                    if d[0] == "CM": particle_i.append("Atom_M")
-                    if d[0] == "CN": particle_i.append("Atom_N")
-                    if d[2] == "  ": d[2]=0
-            
-                    p_branch_i.append(float(d[1])); u_p_branch_i.append(float(d[2])); # Branching ratio of the decay branch
-                    e_branch_i.append(float(d[4])); u_e_branch_i.append(float(d[5])); # Energy of the decay branch (kinetic energy of the particle)
-                    LevelDaughter_i.append(int(d[3]))                               # Level fed in daughter
-                    
-                
-        
-        """
-        LOOP IN NLEVEL (Levels for each daughter, starting in NLEVEL, ending in 1)
-        """
-        levelEnergy = []; fromBranch = []; lineL=[]; listTran = []; levelNumber = []
-        transitionType = []; prob = []; u_prob = []; e_trans = []; u_e_trans = []; next_level = []
-        transitionType_i = []; prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = []; next_level_i = []; levelEnergy_i = []
-        for d in decayData:
-          if d[0] == "DAU" and d[1] == Daughter_vec[dd]:
-                daughterFlag = True
-          if d[0] == "DAU" and d[1] != Daughter_vec[dd]:
-                daughterFlag = False
-          if daughterFlag:
-              if d[0] == "LED":
-                # record transition details of the previous level
-                 transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i);levelEnergy.append(levelEnergy_i)
-            #    if int(d[6]) in LevelDaughter :  # Read the information on the possible energy levels after the emission of the alpha particle 
-                 levelEnergy_i.append(float(d[1]))   #levelEnergy.append(float(d[1]));     # Energie (rounded) of the level
-                 listTran.append(int(d[3]))           # Number of transitions that depopulate this level
-                 levelNumber.append(int(d[6]))        # Level number
-                 transitionType_i = []; next_level_i = []; levelEnergy_i = [];prob_i = []; u_prob_i = []; e_trans_i = []; u_e_trans_i = [];
-                  
-              """
-              LOOP IN NTRANS (Transitions depopulating this level)
-              """
-              if d[0] == "GA" or d[0] == "EK" or d[0] == "EL1" or d[0] == "EL2" or d[0] == "EL3" or d[0] == "EM" or d[0] == "EN":
-                  if d[1] == '  ' or d[1] == '   ': d[1] = 0
-                  if d[2] == '  ': d[2] = 0
-                  if d[4] == '  ': d[4] = 0
-                  transitionType_i.append(d[0])                                          # Read the type of transtion
-                  prob_i.append(float(d[1])); u_prob_i.append(float(d[2]))                 # Read the emission probability of the transition
-                  e_trans_i.append(float(d[3])); u_e_trans_i.append(float(d[4]))           # Read the energy of the transition
-                  next_level_i.append(int(d[5]))                                         # Read the level fed by this transition
-            
-        transitionType.append(transitionType_i); prob.append(prob_i); u_prob.append(u_prob_i); e_trans.append(e_trans_i); u_e_trans.append(u_e_trans_i); next_level.append(next_level_i);levelEnergy.append(levelEnergy_i)
-    
-        out.append([particle, p_branch, e_branch, LevelDaughter, levelNumber, prob, levelEnergy, transitionType, e_trans, next_level, Q_value_vec[dd], Daughter_vec[dd], Pdaughter_vec[dd]])
-    return out
-#out = readPenNuc('Am-242')
-#print(len(out),out)
-# tic()
-# readPenNuc("Co-60")
-# toc() # 0.016 s
-
-if absolutePath: file_pennuc = 'G:\Python_modules\Jialin\Code\decayData\\All-nuclides_PenNuc.zip'
-else:
-    # file_pennuc = "decayData//All-nuclides_PenNuc.zip"
-    with importlib.resources.path('tdcrpy', 'decayData') as data_path:
-        file_pennuc = data_path / "All-nuclides_PenNuc.zip"
-
+with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+    file_pennuc = data_path / "All-nuclides_PenNuc.zip"
 z_PenNuc = zf.ZipFile(file_pennuc)
-
 def readPenNuc2(rad,z1=z_PenNuc):
     '''
+    This function is used to read PenNuc files to format the decay data in lists.
+    
      =========
      PARAMETRE
      =========
@@ -576,348 +410,19 @@ def readPenNuc2(rad,z1=z_PenNuc):
         prob_tran_tot.append(prob_tran_daug)
     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot,prob_tran_tot]
     return out
-#tic()
-#o = readPenNuc2("Sb-127")
-#toc()
-#print(o[-4])
 
-
-def readPenNuc1(rad):
-     '''
-     =========
-     PARAMETRE
-     =========
-     rad -- type: str (par exemple: "Am-241") -- radionucléide 
-
-     ======
-     RETURN
-     ======
-     daughter -- indice 0 -- des noyaux fils -- len = nb de noyaux fils
-     prob_daug -- indice 1 -- des probabilités de noyaux fils -- len = nb de noyaux fils
-     energy_Q -- indice 2 -- des énergies de désintégrations -- len = nb de noyaux fils
-
-     desin_type_tot -- indice 3 -- des types de désintégrations/particules émis
-         len = nb de noyaux fils 
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
-
-     desin_energy_tot -- indice 4 -- des énergies de désintégrations/énergies de patricules émis
-         len = nb de noyaux fils 
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des énergies de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
-
-     desin_prob_tot -- indice 5 -- des probabilités de désintégrations
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des probabilités de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
-     
-     desin_level_tot -- indice 6 -- des niveaux atteints après des désintégrations
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des niveaux après des désintégrations de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
-     
-     prob_branch_tot -- indice 7 -- probabilités de chaque branch
-         len = nb de noyaux fils
-         sous-list -- des probabilités de branchs de noyau fil -- len de sous-list = nb de branch de chaque fil
-         
-     tran_type_tot -- indice 8 -- transitions possibles 
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
-     
-     tran_energy_tot -- indice 9 -- énergies de transitions
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des énergies de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
-     
-     tran_prob_tot -- indice 10 -- probabilités de transitions
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des probabilités de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
-     
-     tran_level_tot -- indice 11 -- niveaux de branch correspondants
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des niveaux de chaque branch avant des transitions -- len de sous-list de sous-list = 1
-     
-     tran_level_end_tot -- indice 12 -- niveaux après des transitions
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des niveaux après des transitions de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
-     
-     level_energy_tot -- indice 13 -- énergies de niveaux
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des énergies de niveaux de chaque branch -- len de sous-list de sous-list = 1
-     '''
-
-     url = "http://www.lnhb.fr/nuclides/"+rad+".PenNuc.txt"
-     file = rq.urlopen(url)
-     
-     # Format the data 
-     decayData = []
-     for line in file:
-        decayData.append(line.decode("utf-8"))
-        if "NDA " in decayData[-1]:    decayData[-1] = decayData[-1].replace("NDA ", "NDA; ") # number of daughter
-        if "DAU " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DAU ", "DAU; ") # daughter
-        if "DDE " in decayData[-1]:    decayData[-1] = decayData[-1].replace("DDE ", "DDE; ") # daughter description : probability of disintegration to NDA, uncertainty, number of excited levels of NDA; number of branche to NDA
-        if "Q " in decayData[-1]:      decayData[-1] = decayData[-1].replace("Q ", "Q; ")     # total energy of the branch, uncertainty 
-        if "ALP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("ALP ", "ALP; ") # type of the disintegration = alpha
-        if "CK " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CK ", "CK; ") # type of the disintegration = Electron Capture K shell
-        if "CL " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL ", "CL; ") # type of the disintegration = Electron Capture L shell
-        if "CL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL1 ", "CL1; ") # type of the disintegration = Electron Capture L shell 1
-        if "CL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL2 ", "CL2; ") # type of the disintegration = Electron Capture L shell 2
-        if "CL3 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CL3 ", "CL3; ") # type of the disintegration = Electron Capture L shell 3
-        if "CM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CM ", "CM; ") # type of the disintegration = Electron Capture M shell
-        if "CN " in decayData[-1]:    decayData[-1] = decayData[-1].replace("CN ", "CN; ") # type of the disintegration = Electron Capture N shell
-        if "BEM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEM ", "BEM; ") # type disintegration-beta- :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
-        if "BEP " in decayData[-1]:    decayData[-1] = decayData[-1].replace("BEP ", "BEP; ") # type disintegration-beta+ :branching ratio, uncertainty, level fed in daughter, energy, uncertainty,prohibition factor for beta emission
-        if "LED " in decayData[-1]:    decayData[-1] = decayData[-1].replace("LED ", "LED; ") # level description:energy of level,uncertainty, number of transitions that depopulate this level,level time,uncertainty,level number
-        if "GA " in decayData[-1]:     decayData[-1] = decayData[-1].replace("GA ", "GA; ")   # type transition: gamma
-        if "EK " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EK ", "EK; ")   # type transition: internal conversion -- electron K
-        if "EL " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL ", "EL; ") # type transition: internal conversion -- electron L
-        if "EL1 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL1 ", "EL1; ") # type transition: internal conversion -- electron L1
-        if "EL2 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL2 ", "EL2; ") # type transition: internal conversion -- electron L2
-        if "EL3 " in decayData[-1]:    decayData[-1] = decayData[-1].replace("EL3 ", "EL3; ") # type transition: internal conversion -- electron L3
-        if "EM " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EM ", "EM; ")   # type transition: internal conversion -- electron M
-        if "EN " in decayData[-1]:     decayData[-1] = decayData[-1].replace("EN ", "EN; ")   # type transition: internal conversion -- electron N
-        if "COM " in decayData[-1]:    decayData[-1] = decayData[-1].replace("COM ", "COM; ") 
-        decayData[-1]=decayData[-1].split(";")
-        if "\r\n" in decayData[-1][-1]:  decayData[-1][-1] = decayData[-1][-1].replace("\r\n", " ")
-
-     '''
-     ========================
-     Repérer chaque noyau fil
-     ========================
-
-     daughter -- noyau(x) fil(s)
-     posi_daug -- l'indice de démarcation de noyau fil
-     posi_branch -- l'indice de démarcation de chaque branch
-     posi_tran -- l'indice de démarcation de transition
-     prob_daug -- probabilité de produire des noyaux fils
-     nb_branch -- nombre de branch possible au dessus de l'état fonda (n>0)
-     energy_Q -- l'énergie de désintégration
-
-     '''    
-     daughter = [];posi_daug = [];prob_daug=[];nb_branch=[];energy_Q=[];
-     end = len(decayData)
-     for indice,line in enumerate(decayData):
-         if "NDA" == line[0]:
-             nb_daug = int(line[1])
-         if "DAU" == line[0]:
-             daughter.append(line[1].replace(" ",""))
-         if "COM" == line[0] and "Daughter" in line[1]:
-             posi_daug.append(indice)
-         if "Q" == line[0]:
-             energy_Q.append(float(line[1]))
-         if "DDE" == line[0]:
-             prob_daug.append(float(line[1]))
-             nb_branch.append(int(line[-2]))
-
-     '''
-     ==========
-     LOOP START
-     ==========
-
-     '''  
-     posi_end=[]
-     desin_type_tot=[];desin_energy_tot=[];desin_prob_tot=[];desin_level_tot=[]
-     tran_type_tot=[];tran_energy_tot=[];tran_prob_tot=[];tran_level_end_tot=[]; 
-     tran_level_tot=[];level_energy_tot=[]
-     prob_branch_tot=[]
-
-     '''
-     =============
-     LOOP DAUGHTER 
-     =============
-     '''
-     for i1 in range(nb_daug):
-        start_p = posi_daug[i1]
-        if i1+1 == nb_daug:
-            end_p = end
-        else:
-            end_p = posi_daug[i1+1]
-
-        posi_end_i = []
-        for i2 in range(start_p,end_p):
-            if "COM" == decayData[i2][0] and "Branch" in decayData[i2][1]:
-                posi_end_i.append(i2)
-            if "COM" == decayData[i2][0] and "Level" in decayData[i2][1]:
-                posi_end_i.append(i2)
-        if end_p == end:
-            posi_end_i.append(end)
-        else:
-            posi_end_i.append(posi_daug[i1+1])
-        posi_end.append(posi_end_i)
-     
-        '''
-        ==========================
-        LOOP Branch and Transition
-        ==========================
-        '''
-
-        desin_type_daug=[];desin_energy_daug=[];desin_prob_daug=[];desin_level_daug=[];
-        tran_type_daug=[];tran_energy_daug=[];tran_prob_daug=[];tran_level_end_daug=[];
-        tran_level_daug=[];level_energy_daug=[]
-        prob_branch_daug=[]
-
-        for i3 in range(len(posi_end_i)-1):
-            start_p1 = posi_end_i[i3]
-            end_p1 = posi_end_i[i3+1]
-            branch = False
-            transition = False
-            if "COM" == decayData[start_p1][0] and "Branch" in decayData[start_p1][1]:
-                branch=True
-            if "COM" == decayData[start_p1][0] and "Level" in decayData[start_p1][1]:
-                transition = True
-
-            '''
-            ====================================
-            LOOP EACH BLOCK OF BRANCH/TRANSITION
-            ====================================
-            ''' 
-            tran_type_b=[];tran_prob_b=[];tran_energy_b=[]; tran_level_end_b=[];
-            tran_level_b=[];level_energy_b=[]
-            desin_type_b=[];desin_energy_b=[];desin_prob_b=[];desin_level_b=[];
-             
-            for i4 in decayData[start_p1+1:end_p1]:
-                
-                if start_p1+1 == end_p1:
-                    break
-                if branch:
-                    if "ALP" == i4[0]:
-                        desin_type_b.append("alpha")
-                    if "BEP" == i4[0]:
-                        desin_type_b.append("beta+")
-                    if "BEM" == i4[0]:
-                        desin_type_b.append("beta")
-                    if "CK" == i4[0]:
-                        desin_type_b.append("Atom_K")
-                    if "CL" == i4[0]:
-                        desin_type_b.append("Atom_L")
-                    if "CL1" == i4[0]:
-                        desin_type_b.append("Atom_L1")
-                    if "CL2" == i4[0]:
-                        desin_type_b.append("Atom_L2")
-                    if "CL3" == i4[0]:
-                        desin_type_b.append("Atom_L3")
-                    if "CM" == i4[0]:
-                        desin_type_b.append("Atom_M")
-                    if "CN" == i4[0]:
-                        desin_type_b.append("Atom_N")
-                    desin_prob_b.append(float(i4[1]))
-                    desin_level_b.append(int(i4[3]))
-                    desin_energy_b.append(float(i4[4]))
-
-                if transition:
-                    if i4[1] == '  ' or i4[1] == '   ': i4[1] = 0
-                    if len(i4)>2 and i4[2] == '  ': i4[2] = 0
-                    if len(i4)>4 and i4[4] == '  ': i4[4] = 0
-                    if len(i4)>5 and i4[5] == '  ': i4[5] = 0
-                    if "LED" == i4[0]:
-                        tran_level_b.append(int(i4[-1]))
-                        level_energy_b.append(float(i4[1]))
-                    if i4[0] == "GA" or i4[0] == "EK" or i4[0] == "EL" or i4[0] == "EL1" or i4[0] == "EL2" or i4[0] == "EL3" or i4[0] == "EM" or i4[0] == "EN":
-                        tran_type_b.append(i4[0])
-                        tran_prob_b.append(float(i4[1]))
-                        tran_energy_b.append(float(i4[3]))
-                        tran_level_end_b.append(float(i4[5]))
-
-            if branch:
-                desin_type_daug.append(desin_type_b)
-                desin_energy_daug.append(desin_energy_b)
-                desin_prob_daug.append(desin_prob_b)
-                desin_level_daug.append(desin_level_b)
-             
-            if transition:
-                tran_type_daug.append(tran_type_b)
-                tran_energy_daug.append(tran_energy_b)
-                tran_prob_daug.append(tran_prob_b)
-                tran_level_end_daug.append(tran_level_end_b)
-                tran_level_daug.append(tran_level_b)
-                level_energy_daug.append(level_energy_b)
-
-            if len(desin_prob_b)>0:
-                desin_prob_array = np.array(desin_prob_b)
-                prob_branch_i = np.sum(desin_prob_array)
-                if prob_branch_i >= 1:
-                    prob_branch_i = 1
-                prob_branch_daug.append(prob_branch_i)
-            elif branch and len(desin_prob_b)==0:
-                prob_branch_daug.append(0)
-
-        tran_type_daug.append([])
-        tran_prob_daug.append([])
-        tran_energy_daug.append([])
-        tran_level_end_daug.append([])
-        tran_level_daug.append([])
-        level_energy_daug.append([])
-
-        desin_type_tot.append(desin_type_daug)
-        desin_energy_tot.append(desin_energy_daug)
-        desin_prob_tot.append(desin_prob_daug)
-        desin_level_tot.append(desin_level_daug)
-
-        tran_type_tot.append(tran_type_daug)
-        tran_energy_tot.append(tran_energy_daug)
-        tran_prob_tot.append(tran_prob_daug)
-        tran_level_end_tot.append(tran_level_end_daug)
-        tran_level_tot.append(tran_level_daug)
-        level_energy_tot.append(level_energy_daug)
-        prob_branch_tot.append(prob_branch_daug)
-
-     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot]
-     return out
-
-#tic()
-#o = readPenNuc1("Ag-110m")
-#print(o[-4])
-#toc()
-#===============================================================================================================
-'''
-rad = "Am-244m"
-out1 = readPenNuc1(rad)
-print(rad)
-print("    ")
-print("DAU",out1[0])
-print("    ")
-print("prob_daug",out1[1])
-print("    ")
-print("Q",out1[2])
-print("    ")
-print("desin_type",out1[3],len(out1[3]))
-print("    ")
-print("desin-prob",out1[5],len(out1[5]))
-print("    ")
-print("desin-level",out1[6],len(out1[6]))
-print("    ")
-print("prob-branch",out1[7])
-print("    ")
-print("len-tran-type",len(out1[8]))
-for i in range(len(out1[8])):
-    print("fil",i)
-    for i1,p1 in enumerate(out1[8][i]):
-        print(p1,len(p1))
-    print("energy")
-    for i2,p2 in enumerate(out1[9][i]):
-        print(p2,len(p2))
-    print("tran-prob")
-    for i4,p4 in enumerate(out1[10][i]):
-        print(p4)
-    print("end_level")
-    for i3,p3 in enumerate(out1[12][i]):
-        print(p3,len(p3))
-'''
-#print(readPenNuc1('Tc-99m'))
-#out = readPenNuc1('Tc-99m')
-#print(sampling(out[1]))
 #================================== StoppingPower for alpha particle ===========================================
 
-if absolutePath: f_alpha = open('G:\Python_modules\Jialin\Code\Quenching\\alpha_toulene.txt')
-else:
-#	f_alpha = open('Quenching/alpha_toulene.txt')
-    with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-        f_alpha = open(data_path / "alpha_toulene.txt")
+with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    f_alpha = open(data_path / "alpha_toulene.txt")
+
+config = configparser.ConfigParser()
+with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
+    file_conf = data_path       
+config.read(file_conf)
+RHO=config["Inputs"].getfloat("density")
+Z=config["Inputs"].getfloat("Z")
+A=config["Inputs"].getfloat("A")
 
 data_ASTAR = f_alpha.readlines()
 f_alpha.close()
@@ -930,7 +435,7 @@ for i in range(np.size(data_ASTAR)):
     energy_alph.append(data_ASTAR[i][0])
     dEdx_alph.append(data_ASTAR[i][1])
 
-def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
+def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     """
     Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code
     ref: https://dx.doi.org/10.18434/T4NC7P
@@ -958,29 +463,20 @@ def stoppingpowerA(e,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
     return dEdx*rho                        #unit keV.cm-1
 
-# tic()
-# stoppingpowerA(5000,rho=0.96,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph)
-# toc() # 0 s
 
 #===============================================================================================
 
 #========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
 
-
-if absolutePath: file_TanXia=open('G:\Python_modules\Jialin\Code\Quenching\\TandataUG.txt', "r")
-else:
-    #file_TanXia=open('Quenching/TandataUG.txt', "r")
-    with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-        file_TanXia = open(data_path / "TandataUG.txt")
-
-
+with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    file_TanXia = open(data_path / "TandataUG.txt")
 
 data_TanXia=file_TanXia.read(); file_TanXia.close()
 data_TanXia=data_TanXia.split("\n"); data_TanXia_f = np.empty(len(data_TanXia))
 for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
-def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
+def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
     At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
@@ -1043,51 +539,12 @@ def stoppingpower(e,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f):
         dEdx=0
     return dEdx    
 
-# tic()
-# stoppingpower(100,rho=0.96,Z=5.2,A=11.04,emin=0,file=data_TanXia_f)
-# toc() # 0 s
-#===================================================================================================
-
-#===================================================================================================
-#============================tracer stopping power of electron and alpha ===========================
-
-'''
-e1 = np.linspace(10,1.99e4,10000)
-e2 = np.linspace(1.99e4,1e8,20000)
-sp1 = []
-for i in e1:
-    sp1.append(stoppingpower(i))
-sp2=[]
-for i in e2:
-    sp2.append(stoppingpower(i))
-
-ea = np.linspace(1,8e3,4000)
-spa = []
-for i in ea:
-    spa.append(stoppingpowerA(i)*1e-3)
-x = ea*1e3
-plt.plot(e1,sp1,color='blue',label="pouvoir d'arrête électron")
-plt.plot(e2,sp2,color='blue')
-plt.plot(x,spa,label="pouvoir d'arrête alpha")
-plt.xscale('log')
-plt.yscale('log')
-plt.title("pouvoir d'arrête d'electron et alpha")
-plt.ylabel("pouvoir d'arrête/MeV.cm-1")
-plt.xlabel('énergie cinétique/eV')
-plt.legend(fontsize=10,loc='best')
-plt.savefig('Quenching/stoppingpowerE_A.png')
-
-'''
-
 #=============================================================================================
 
 #====================  Fonction pour lire BetaShape   ========================================
-# file_betashape = "decayData//All-nuclides_BetaShape.zip"
 with importlib.resources.path('tdcrpy', 'decayData') as data_path:
     file_betashape = data_path / "All-nuclides_BetaShape.zip"
-
 z_betashape = zf.ZipFile(file_betashape)
-
 def readBetaShape(rad,mode,level,z=z_betashape):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
@@ -1140,51 +597,6 @@ def readBetaShape(rad,mode,level,z=z_betashape):
     dNdx /= sum(np.asarray(dNdx)) # normalization
     dNdx = list(dNdx)
     return e, dNdx
-
-#tic()
-#e,p = readBetaShape('C-11','beta+',0)
-#toc()
-#print(p,type(p))
-
-# tic()
-# e,p = readBetaShape('C-11','beta+',0)
-# toc() # 0.016 s > 0s
-
-def readTDCR17spectra(rad):
-    file = open("decayData/spectra/spectrumTDCR17_"+rad+".dat")
-    data = file.read()
-    file.close()
-    data = data.split("\n")
-    e = []; r = []
-    for i in data:
-        if "keV" not in i:
-            a = i.split("  ")
-            if len(a)>1:
-                e.append(float(a[1])*1e-3)
-                r.append(float(a[2]))
-    return e, r
-
-
-# tic()
-# e,r =  readBetaShape("Nb-95m", "beta-", 1)
-# # print(e[-1])
-# toc() # 0.016 s > 0 s
-
-#=====================================================================================
-
-## Display beta spectra
-# rplot = "S-35"
-# out = readBetaShape(rplot, "beta-", "tot"); print(sum(out[1]))
-# out_t = readTDCR17spectra(rplot); print(sum(out_t[1])) # TDCR17 spectra
-# plt.figure("beta spectrum")
-# plt.clf()
-# plt.plot(out[0],out[1]/(out[0][1]-out[0][0]),label='Beta spectrum - BetaShape',ls='-',color='red',lw=3)
-# plt.plot(out_t[0],np.asarray(out_t[1])/(out_t[0][1]-out_t[0][0]),label='Beta spectrum - TDCR17',ls='-',color='blue',lw=3)
-# plt.xscale('linear')
-# plt.legend(fontsize=12,loc='best')
-# plt.xlabel(r'$E$ /keV', fontsize=12)
-# plt.ylabel(r'd$N$/d$E$ /keV$^{-1}$',fontsize=12)
-# plt.savefig("decayData/spectra/BetaSpectrum_"+rplot+".png")
 
 #=======================================================================================
 
@@ -1240,95 +652,20 @@ def E_quench_a(e,kB,nE):
         q += delta/(1+kB*stoppingpowerA(i))
     return q
 
-#=========================================================================================
-
-
-
-#print(E_quench_e(3.996e5,1e-2,1000)*1e-3)
-
-#======================================================================================
-
-#========================= Tracer les courbes avec kB différents ======================
-
-'''
-
-# s1 = []
-# s2 = []
-# s3 = []
-# x = np.linspace(5,8000,4000) 
-
-# for i in x:
-#     s1.append(E_quench_a(i,kB=7e-6)/i)
-#     s2.append(E_quench_a(i,kB=1e-5)/i)
-#     s3.append(E_quench_a(i,kB=1.4e-5)/i)
-
-# plt.plot(x,s1,label='kB=0.007cm/MeV',color='green',lw=2)
-# plt.plot(x,s2,label='kB=0.01cm/MeV',ls=':',color='red',lw=3)
-# plt.plot(x,s3,label='kB=0.014cm/MeV')
-# plt.xscale('log')
-# #plt.yscale('log')
-# plt.legend(fontsize=12,loc='best')
-# plt.xlabel('E de particule/keV')
-# plt.ylabel("énergie d'extinction/E")
-# plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
-
-#'''
 #============================================================================================
 
 #============================================================================================
 
 #========================= énergie gamma ===================================================
 #'''
-if absolutePath: 
-    fp1 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
-    fp2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_200_2000k.txt'    #gamma-10ml-200-2000keV-niveau 1
-    fp3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_2000_10000k.txt'  #gamma-10ml-2000-10000keV-niveau 2
-    fp4 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_1_200k.txt'       #gamma-10ml-1-200keV-niveau 0
-    fp5 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_200_2000k.txt'       #gamma-10ml-1-200keV-niveau 1
-    fp6 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_2000_10000k.txt'       #gamma-10ml-1-200keV-niveau 2
-    fe = "G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt"  
-else:
-    # fp1 = 'MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-    # fp2 = 'MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 0
-    # fp3 = 'MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 0
-    # fp4 = 'MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-    # fp5 = 'MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_200_2000k.txt'      #gamma-10ml-1-200keV-niveau 0
-    # fe = "MCNP-MATRIX/matrice/fichier/E_depose.txt"
-    with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
-        fp1 = data_path / 'matrice/fichier/matrice_10ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-        fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 1
-        fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 2
-        fp4 = data_path / 'matrice/fichier/matrice_16ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-        fp5 = data_path / 'matrice/fichier/matrice_16ml-photon_200_2000k.txt'      #gamma-10ml-1-200keV-niveau 1
-        fp6 = data_path / 'matrice/fichier/matrice_16ml-photon_2000_10000k.txt'      #gamma-10ml-1-200keV-niveau 2
-        fe = data_path / 'matrice/fichier/E_depose.txt'
-
-'''
-data1 = f1.readlines()
-data2 = f2.readlines()
-data3 = f3.readlines()
-data_e = fe.readlines()
-
-Matrice1 = np.zeros((1003,200))
-Matrice2 = np.zeros((1003,901))
-Matrice3 = np.zeros((1003,801))
-Matrice_e = np.zeros((1002,3))
-
-for i in range(1002):
-    data_e[i] = data_e[i].split()
-    for j in range(3):
-        Matrice_e[i][j] = float(data_e[i][j])
-for i in range(1003):
-    data1[i] = data1[i].split()
-    data2[i] = data2[i].split()
-    data3[i] = data3[i].split()
-    for j in range(200):
-        Matrice1[i][j] = float(data1[i][j])
-    for k in range(901):
-        Matrice2[i][k] = float(data2[i][k])
-    for l in range(801):
-        Matrice3[i][l] = float(data3[i][l])
-'''
+with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+    fp1 = data_path / 'matrice/fichier/matrice_10ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
+    fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 1
+    fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 2
+    fp4 = data_path / 'matrice/fichier/matrice_16ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
+    fp5 = data_path / 'matrice/fichier/matrice_16ml-photon_200_2000k.txt'      #gamma-10ml-1-200keV-niveau 1
+    fp6 = data_path / 'matrice/fichier/matrice_16ml-photon_2000_10000k.txt'      #gamma-10ml-1-200keV-niveau 2
+    fe = data_path / 'matrice/fichier/E_depose.txt'
 
 def read_matrice(path,niveau):
     f = open(path)
@@ -1422,36 +759,19 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
     if result  > e_inci: result = e_inci
     return result
 
-#for i in range(10):
- #   print(energie_dep_gamma(511,16))
 
-
-if absolutePath: 
-    fe1 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
-    fe2 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
-    fe3 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
-    fe4 = 'G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/matrice_16ml-beta-_1_200k.txt' # electron-16ml-1-200keV-niveau 0
-    fe = "G:\Python_modules\Jialin\Code\\MCNP-MATRIX/matrice/fichier/E_depose.txt"   # electron-10ml-énergie-niveau 'e'
-else:
-    # fe1 = 'MCNP-MATRIX/matrice/fichier/matrice_beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
-    # fe2 = 'MCNP-MATRIX/matrice/fichier/matrice_beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
-    # fe3 = 'MCNP-MATRIX/matrice/fichier/matrice_beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
-    # fe = "MCNP-MATRIX/matrice/fichier/E_depose.txt" # electron-10ml-énergie-niveau 'e'
-    with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
-        fe1 = data_path / 'matrice/fichier/matrice_10ml-beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
-        fe2 = data_path / 'matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
-        fe3 = data_path / 'matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
-        fe4 = data_path / 'matrice/fichier/matrice_16ml-beta-_1_200k.txt' # electron-16ml-1-200keV-niveau 0
-        fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
-
-
+with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+    fe1 = data_path / 'matrice/fichier/matrice_10ml-beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
+    fe2 = data_path / 'matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
+    fe3 = data_path / 'matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
+    fe4 = data_path / 'matrice/fichier/matrice_16ml-beta-_1_200k.txt' # electron-16ml-1-200keV-niveau 0
+    fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
 
 Matrice10_e_1 = read_matrice(fe1,0)
 Matrice10_e_2 = read_matrice(fe2,1)
 Matrice10_e_3 = read_matrice(fe3,2)
 Matrice16_e_3 = read_matrice(fe4,0)
 #Matrice_e = read_matrice(fe,'e')
-
 
 def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,ed=Matrice_e):
     """ 
@@ -1507,28 +827,6 @@ def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_
     if result  > e_inci: result = e_inci
     return result
 
-'''
-r = []   
-for i in range(10):
-    r.append(energie_dep_beta(17.055))
-print(r)
-'''
-#print(Matrice_e[0:5,:])
-
-# tic()
-# energie_dep_gamma(800)
-# toc()   # 0 s
-
-
-
-## Non parametric regression
-
-# def regress(x,y):
-#     z = sm.nonparametric.lowess(y, x, return_sorted = True)
-#     return z
-
-    
-
 def writeEffcurves(x,y,uy,rad,p,kB,SDT):
     if SDT == "S":
         file = open("EfficiencyCurves/"+''.join(rad)+"/EffS_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
@@ -1556,20 +854,14 @@ def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C11
     RAD -- type: str par exemple 'AG108' qui correspond à la structure de fille de PenNuc
 
     """
-    # rad -- type : str par exemple '108AG'
-
     name_lis = re.split('(\d+)',rad)
     RAD = name_lis[2]+name_lis[1]
     return RAD
 
-#print(transf_name('108PD'))
-
-# file_ensdf = 'decayData//All-nuclides_Ensdf.zip'
 with importlib.resources.path('tdcrpy', 'decayData') as data_path:
     file_ensdf = data_path / 'All-nuclides_Ensdf.zip'
-
 z_ensdf = zf.ZipFile(file_ensdf)
-#print(z.namelist())
+
 def readEShape(rad, *, z=z_ensdf):
     """
     --------------------------------------------------
@@ -1595,21 +887,17 @@ def readEShape(rad, *, z=z_ensdf):
     with z.open(name) as f:
         data = f.readlines()
         nl = np.size(data)
-        #print(data)
         for i in range(nl):
             data[i] = str(data[i])
             data[i] = data[i].replace("b",'')
             data[i] = data[i].replace("\\r\\n",'')
             data[i] = data[i].replace("'",'')
             if "\\n" in data[i]:data[i] = data[i].replace("\\n","")     # pour traiter "\\n" dans Mn-52 et Mn-52m (cas particuliers)
-        #print(data)
         for i in range(nl):
             data[i] = data[i].split()
-        
         for i in range(nl):
             if i>0 and ('L' in data[i]) and ("AUGER" in data[i]) and ("|]" in data[i-1]):
                 data.insert(i,[data[i][0],'T'])
-    #print(data)
     index_auger = []
     index_end = []
     daug_name = []
@@ -1694,27 +982,8 @@ def readEShape(rad, *, z=z_ensdf):
             Type.append(type_)
             energy = []
             prob = []
-            type_ = []
-    #Energy =  np.array(Energy)
-    #Prob =  np.array(Prob)         
+            type_ = []     
     return  daug_name,Energy,Prob,Type        
-
-# tic()
-# d,e,p,t = readEShape('Cf-252')
-# toc() # 0 s
-#========  tester readEShape ==============
-# tic()
-# d,e,p,t = readEShape('Cf-252')
-#print(d,e,p,t)
-#d1,e1,p1,t1 = readEShape('At-218')
-#print(d1,e1,p1,t1)
-# toc()
-# print(d,e[0][1],p[1][2],t)
-# print('  ')
-# for i in range(len(d)):
-#     print(d[i],e[i],p[i],t[i])
-#     print(' ')
-#     print(len(e[i]),len(p[i]),len(t[i]))
 
 #============  traiter la relaxation ===============
 def relaxation_atom(daugther,rad,lacune='defaut'):
@@ -1814,10 +1083,6 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         type_fin = 'NON'
         energie_fin = 0
     return type_fin,energie_fin
-# tic()
-# tf,ef = relaxation_atom('CR52', 'Mn-52', 'Atom_K')
-# toc() # 0 s
-#print(tf,ef)
 
 
 def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
@@ -1857,27 +1122,28 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
     """
     
     e, p = readBetaShape(rad, 'beta-', 0)
-    em=[]
+    em=np.empty(len(e))
     for i, ei in enumerate(e): 
-        em.append(E_quench_e(ei*1e3,kB*1e3,ne)*1e-3)
+        em[i] = E_quench_e(ei*1e3,kB*1e3,ne)*1e-3
+        
         
     if mode2=="sym":
         eff_S = sum(p*(1-np.exp(-L*em/3)))
-        eff_T = eff_S**3
-        eff_D = 3*eff_S**2-2*eff_T
+        eff_T = sum(p*(1-np.exp(-L*em/3))**3)
+        eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
         TDCR_calcul=eff_T/eff_D
         res=(TDCR_calcul-TD)**2
 
     if mode2=="asym":
-        eff_A = sum(p*(1-np.exp(-L[0]*em/3)))
-        eff_B = sum(p*(1-np.exp(-L[1]*em/3)))
-        eff_C = sum(p*(1-np.exp(-L[2]*em/3)))
-        eff_AB = eff_A*eff_B
-        eff_BC = eff_B*eff_C
-        eff_AC = eff_A*eff_C
-        eff_T =  eff_A*eff_B*eff_C
-        eff_D = eff_AB+eff_BC+eff_AC-2*eff_T
-        eff_S = eff_A+eff_B+eff_C-eff_D-eff_T
+        # eff_A = sum(p*(1-np.exp(-L[0]*em/3)))
+        # eff_B = sum(p*(1-np.exp(-L[1]*em/3)))
+        # eff_C = sum(p*(1-np.exp(-L[2]*em/3)))
+        eff_AB = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))) 
+        eff_BC = sum(p*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))) 
+        eff_AC = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[2]*em/3))) 
+        eff_T = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))
+        eff_D = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
+        eff_S = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))-(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
         TABmodel = eff_T/eff_AB
         TBCmodel = eff_T/eff_BC
         TACmodel = eff_T/eff_AC
@@ -1887,3 +1153,36 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
         return res
     if mode == "eff":
         return eff_S, eff_D, eff_T
+    
+def clear_terminal():
+    # Function to clear the terminal screen
+    if os.name == "posix":
+        os.system("clear")  # For UNIX/Linux/MacOS
+    else:
+        os.system("cls")    # For Windows
+
+def display_header():
+    # Function to display the header
+    clear_terminal()
+    version = pkg_resources.get_distribution("tdcrpy").version
+    header_text = r'''
+ ______  ______  ______ _______  ________
+|__  __||  ___ \|  ___||  ___ | |  ____ |
+  | |   | |  | || |    | |  | | | |___| |___     ___
+  | |   | |  | || |    | |__| | |  _____|\  \   |  |
+  | |   | |__| || |____|  __  \ | |       \  \  |  |
+  |_|   |_____/ |_____||_|  \__\|_|        \  \_|  |
+  +++++++++++++++++++++++++++++++++++++++++/      /
+  ________________________________________/      /
+ |______________________________________________/     
+
+'''
+    header_text2 = "version "+version+"\n\
+BIPM 2023 - license MIT \n\
+distribution: https://pypi.org/project/TDCRPy \n\
+developement: https://github.com/RomainCoulon/TDCRPy \n\n\
+start calculation..."
+ 
+ # Start Calculation
+    print(header_text)
+    print(header_text2)
