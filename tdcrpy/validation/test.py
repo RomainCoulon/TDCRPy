@@ -12,20 +12,21 @@ import matplotlib.pyplot as plt
 # Validation with standard solution for Co-60
 # """
 
-# Rad="Co-60"    # list of radionuclides (Na-24)
-# pmf_1="1"
-# kB =1.0e-5       # Birks constant in cm/keV
-# RHO = 0.98
-# nE = 1000
-# TD = 0.977667386529166        # Measured TDCR value
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# L = 1
-# N = 100
+Rad="Co-60"    # list of radionuclides (Na-24)
+pmf_1="1"
+kB =1.0e-5       # Birks constant in cm/keV
+RHO = 0.98
+V = 10
+nE = 1000
+TD = 0.977667386529166        # Measured TDCR value
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+L = 1
+N = 100
 
-# resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "eff", "sym")
-# print(resuts_1)
+resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "eff", "sym")
+print(resuts_1)
 
 # # resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
 # # print(resuts_2)
@@ -176,4 +177,4 @@ Validation with the analytical model
 # plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
 
 
-td.TDCR_model_lib.readPenNuc2("H-3")
+# td.TDCR_model_lib.readPenNuc2("H-3")

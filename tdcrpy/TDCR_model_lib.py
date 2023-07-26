@@ -547,7 +547,7 @@ def readBetaShape(rad,mode,level,z=z_betashape):
         the energy vector in keV.
     dNdx : list
         the probability density in keV-1.
-
+    
     """
 
     Rad = rad.replace('-','')
@@ -614,19 +614,19 @@ def E_quench_e(e,kB,nE):
 def E_quench_a(e,kB,nE): 
     """
     This function calculate the quenched energy alpha particles according to  the Birks model of scintillation quenching
-
+    
     Parameters
     ----------
     e : float
         energy of the alpha particle in keV.
     kB : float
         Birks constant in cm/keV.
-
+    
     Returns
     -------
     float
         Quenched energy in keV.
-
+    
     """
 
     e_dis = np.linspace(1,e,nE)
@@ -1117,7 +1117,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
 def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
     """
     TDCR analytical model that is used for pure beta emitting radionuclides
-
+    
     Parameters
     ----------
     L : float or tuple
@@ -1142,8 +1142,8 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
         "sym" for symetrical model, "asym" for symetrical model.
     nE : integer
          Number of bins for the quenching function.
-
-
+    
+    
     Returns
     -------
     res : float
@@ -1154,13 +1154,14 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
         Estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
     mean_efficiency_T : float
         Estimation of the efficiency of triple coincidences. (only in mode="eff")
-
+    
     """
     
     e, p = readBetaShape(rad, 'beta-', 'tot')
     em=np.empty(len(e))
-    for i, ei in enumerate(e): 
-        em[i] = E_quench_e(ei*1e3,kB*1e3,ne)*1e-3
+    for i, ei in enumerate(e):
+        ed = energie_dep_beta(ei)
+        em[i] = E_quench_e(ed*1e3,kB*1e3,ne)*1e-3
         
         
     if mode2=="sym":

@@ -103,79 +103,48 @@ with importlib.resources.path('tdcrpy', 'decayData') as data_path:
 z_PenNuc = zf.ZipFile(file_pennuc)
 def readPenNuc2(rad,z1=z_PenNuc):
     '''
-    This function is used to read PenNuc files to format the decay data in lists.
+    This function is used to read PenNuc files to format the decay data in lists readable by TDCRPy.
     
-     =========
-     PARAMETRE
-     =========
-     rad -- type: str (par exemple: "Am-241") -- radionucléide 
+    
+    Parameters
+    ----------
+    rad : string
+        name of the radionculide (for example: "Am-241"). 
 
-     ======
-     RETURN
-     ======
-     daughter -- indice 0 -- des noyaux fils -- len = nb de noyaux fils
-     prob_daug -- indice 1 -- des probabilités de noyaux fils -- len = nb de noyaux fils
-     energy_Q -- indice 2 -- des énergies de désintégrations -- len = nb de noyaux fils
+    Returns
+    -------
+    daughter : list
+        list of the daughter nucleus -- indice 0.
+    prob_daug : list
+        list of probabilities to produce daugter nuclei -- indice 1.
+    energy_Q : list
+        list of Q value for each transition to a given daughter nucleus -- indice 2.
+    desin_type_tot : list[list]
+        list of type of decay branch / emitted particules -- indice 3. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    desin_energy_tot : list[list]
+        list of the energies of decay transition or the emitted particles -- indice 4. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    desin_prob_tot : list[list]
+        list of the prabability of decay transition or the emitted particles -- indice 5. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    desin_level_tot : list[list]
+        list of energy level that the daughter nucleus can have just after the decay of the mother nucleus -- indice 6. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    prob_branch_tot : list
+        list of branch probabilities -- indice 7. It contains a sub-list for all possible branches of a given daughter nucleus.
+    tran_type_tot : list[list]
+        list of all possible transitions -- indice 8. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    tran_energy_tot : list[list]
+        list of energy associated with transitions -- indice 9. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    tran_prob_tot : list[list]
+        list of probability associated with transitions -- indice 10. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    tran_level_tot : list[list]
+        list of corresponding branch levels -- indice 11. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level before the transition.
+    tran_level_end_tot : list[list]
+        list of level following given transitions -- indice 12. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level after the transition.
+    level_energy_tot : list[list]
+        list of energy levels -- indice 13. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    prob_tran_tot : list[list]
+        list of sum of transition of each branches -- indice 14. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
 
-     desin_type_tot -- indice 3 -- des types de désintégrations/particules émis
-         len = nb de noyaux fils 
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
-
-     desin_energy_tot -- indice 4 -- des énergies de désintégrations/énergies de patricules émis
-         len = nb de noyaux fils 
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des énergies de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
-
-     desin_prob_tot -- indice 5 -- des probabilités de désintégrations
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des probabilités de désintégrations possibles de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
-     
-     desin_level_tot -- indice 6 -- des niveaux atteints après des désintégrations
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des niveaux après des désintégrations de chaque branch -- len de sous-list de sous-list = nb de type de désintégrations de chaque branch
-     
-     prob_branch_tot -- indice 7 -- probabilités de chaque branch
-         len = nb de noyaux fils
-         sous-list -- des probabilités de branchs de noyau fil -- len de sous-list = nb de branch de chaque fil
-         
-     tran_type_tot -- indice 8 -- transitions possibles 
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
-     
-     tran_energy_tot -- indice 9 -- énergies de transitions
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des énergies de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
-     
-     tran_prob_tot -- indice 10 -- probabilités de transitions
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des probabilités de transitions possibles de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
-     
-     tran_level_tot -- indice 11 -- niveaux de branch correspondants
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des niveaux de chaque branch avant des transitions -- len de sous-list de sous-list = 1
-     
-     tran_level_end_tot -- indice 12 -- niveaux après des transitions
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des niveaux après des transitions de chaque branch -- len de sous-list de sous-list = nb de type de transitions de chaque branch
-     
-     level_energy_tot -- indice 13 -- énergies de niveaux
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des énergies de niveaux de chaque branch -- len de sous-list de sous-list = 1
-
-     prob_tran_tot -- indice 14 -- la somme de transition de chaque branch
-         len = nb de noyaux fils
-         sous-list -- des branchs possibles de noyau fil -- len de sous-list = nb de branch de chaque fil
-         sous-list de sous-list -- des énergies de niveaux de chaque branch -- len de sous-list de sous-list = 1
-     '''
+    '''
     doc = rad + ".PenNuc.txt"
     with z1.open(doc) as file_P:
         decayData = file_P.readlines()
@@ -438,7 +407,10 @@ for i in range(np.size(data_ASTAR)):
 def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     """
     Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code
-    ref: https://dx.doi.org/10.18434/T4NC7P
+    
+    ref:
+     
+        https://dx.doi.org/10.18434/T4NC7P
     
     Parameters
     ----------
@@ -480,11 +452,17 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
     At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
+    
     Refs:
+        
         [1] https://doi.org/10.1016/0020-708x(82)90244-7
+        
         [2] https://www.ijstr.org/final-print/jan2017/Calculations-Of-Stopping-Power-And-Range-Of-Electrons-Interaction-With-Different-Material-And-Human-Body-Parts.pdf
+        
         [3] https://dx.doi.org/10.18434/T4NC7P
+        
         [4] ICRU Report 37, Stopping Powers for Electrons and Positrons
+        
         [5] https://doi.org/10.1016/j.apradiso.2011.08.012
         
     Parameters
@@ -548,8 +526,11 @@ z_betashape = zf.ZipFile(file_betashape)
 def readBetaShape(rad,mode,level,z=z_betashape):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
+    
     refs:
+        
         https://doi.org/10.1103/PhysRevC.92.059902
+        
         http://www.lnhb.fr/ddep_wg/
 
     Parameters
@@ -558,19 +539,22 @@ def readBetaShape(rad,mode,level,z=z_betashape):
         identifier of the radionuclide. e.g. 'Na-22'
     mode : string
         identifier of the decay mode. 'beta-' or 'beta+'
-    level : int
-        level of the daughter after decay.  0,1,2,3 ....
+    level : int or string
+        level of the daughter after decay.  0,1,2,3 .... or 'tot' in case of pure beta emitting radionuclides
     Returns
     -------
     e : list
         the energy vector in keV.
     dNdx : list
         the probability density in keV-1.
-
+    
     """
 
     Rad = rad.replace('-','')
-    name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
+    if level == 'tot':
+        name_doc = Rad+'/'+mode+'_'+Rad+'_tot.bs'
+    else:
+        name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
     with z.open(name_doc) as file_trans:
         data = file_trans.readlines()
 
@@ -630,19 +614,19 @@ def E_quench_e(e,kB,nE):
 def E_quench_a(e,kB,nE): 
     """
     This function calculate the quenched energy alpha particles according to  the Birks model of scintillation quenching
-
+    
     Parameters
     ----------
     e : float
         energy of the alpha particle in keV.
     kB : float
         Birks constant in cm/keV.
-
+    
     Returns
     -------
     float
         Quenched energy in keV.
-
+    
     """
 
     e_dis = np.linspace(1,e,nE)
@@ -668,6 +652,22 @@ with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fe = data_path / 'matrice/fichier/E_depose.txt'
 
 def read_matrice(path,niveau):
+    """
+    This function read the response matrix calculated by MCNP6 simulation.
+
+    Parameters
+    ----------
+    path : string
+        path to the response matrix.
+    niveau : integer or string
+        energy range of the response matrix. 0: [1-200] keV; 1: [200-2000] keV; 2: [2000-10000] keV. "e" for the input energy matrix.
+
+    Returns
+    -------
+    matrice : list[list]
+        formatted response matrix.
+
+    """
     f = open(path)
     data = f.readlines()
     if niveau == 0:
@@ -700,29 +700,30 @@ Matrice16_p_3 = read_matrice(fp6,2)
 Matrice_e = read_matrice(fe,'e')
 
 def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,ed=Matrice_e):
-    """ 
-    ----------
+    """ This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
+    
     Parameters
     ----------
     e_inci : float
-        l'énergie incidente de particule.
-    * : TYPE
-        DESCRIPTION.
-    matrice10_1 : matrix
-        matrice de photon de 1-200keV de solution 10ml.
-    matrice2 : TYPE, optional
-        matrice de photon de 200-2000keV de solution 10ml.
-    matrice3 : TYPE, optional
-        matrice de photon de 2000-10000keV de solution 10ml.
-    ed : TYPE, optional
-        matrice de bins d'énergie. colonne 0: 1-200keV; colonne 1: 200-2000keV
+        energy of the photon in keV.
+    v : float
+        volume of the scintillator in ml.
+    matrice10_1 : list[list], optional
+        response matrix for photons in the range [1-200] keV and for a scintillator volume of 10 ml.
+    matrice10_2 : list[list], optional
+        response matrix for photons in the range [200-2000] keV and for a scintillator volume of 10 ml.
+    matrice10_3 : list[list], optional
+        response matrix for photons in the range [2000-10000] keV and for a scintillator volume of 10 ml.
+    ed : list[list], optional
+        matrix of input energies. column 0: [1-200] keV; column 1: [200-2000] keV; column 2: [2000-10000] keV
 
     Returns
     -------
     result : float
-        l'énergie déposée.
+        deposited energy in keV.
 
     """
+    
     ## sort keV / entrée : keV
     if e_inci <= 200:
         if e_inci < 1:
@@ -774,27 +775,25 @@ Matrice16_e_3 = read_matrice(fe4,0)
 #Matrice_e = read_matrice(fe,'e')
 
 def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,ed=Matrice_e):
-    """ 
-    ----------
+    """ This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
+    
     Parameters
     ----------
     e_inci : float
-        l'énergie incidente de particule.
-    * : TYPE
-        DESCRIPTION.
-    matrice10_1 : matrix
-        matrice d'électrons de 1-200keV de solution 10ml.
-    matrice2 : TYPE, optional
-        matrice d'électrons de 200-2000keV de solution 10ml.
-    matrice3 : TYPE, optional
-        matrice d'électrons de 2000-10000keV de solution 10ml.
-    ed : TYPE, optional
-        matrice de bins d'énergie. colonne 0: 1-200keV; colonne 1: 200-2000keV
+        energy of the electron in keV.
+    matrice10_1 : list[list], optional
+        response matrix for electrons in the range [1-200] keV and for a scintillator volume of 10 ml.
+    matrice10_2 : list[list], optional
+        response matrix for electrons in the range [200-2000] keV and for a scintillator volume of 10 ml.
+    matrice10_3 : list[list], optional
+        response matrix for electrons in the range [2000-10000] keV and for a scintillator volume of 10 ml.
+    ed : list[list], optional
+        matrix of input energies. column 0: [1-200] keV; column 1: [200-2000] keV; column 2: [2000-10000] keV
 
     Returns
     -------
     result : float
-        l'énergie déposée.
+        deposited energy in keV.
 
     """
     ## sort keV / entrée : keV
@@ -828,6 +827,31 @@ def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_
     return result
 
 def writeEffcurves(x,y,uy,rad,p,kB,SDT):
+    """
+    This function writes efficiency curves
+
+    Parameters
+    ----------
+    x : TYPE
+        DESCRIPTION.
+    y : TYPE
+        DESCRIPTION.
+    uy : TYPE
+        DESCRIPTION.
+    rad : TYPE
+        DESCRIPTION.
+    p : TYPE
+        DESCRIPTION.
+    kB : TYPE
+        DESCRIPTION.
+    SDT : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
     if SDT == "S":
         file = open("EfficiencyCurves/"+''.join(rad)+"/EffS_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
     elif SDT == "D":
@@ -841,17 +865,18 @@ def writeEffcurves(x,y,uy,rad,p,kB,SDT):
     file.close()
 
 #======================== read ENSDF ============================================
-def transf_name(rad):     #  transformer le nom de rad par exemple '11C' à 'C11'
-    """
-    ---------
-    PARAMETRE
-    ---------
-    rad -- type: str par exemple '108AG'
+def transf_name(rad):
+    """ This function format the name of the nuclide to match with the PenNuc format.
     
-    ------
-    RETURN
-    ------
-    RAD -- type: str par exemple 'AG108' qui correspond à la structure de fille de PenNuc
+    Parameters 
+    ----------
+    rad : string
+        name of the radionculdie such as '108AG'.
+    
+    Returns 
+    -------
+    RAD : string
+        name of the radionuclide such as 'AG108' that match with PenNuc format.
 
     """
     name_lis = re.split('(\d+)',rad)
@@ -863,23 +888,25 @@ with importlib.resources.path('tdcrpy', 'decayData') as data_path:
 z_ensdf = zf.ZipFile(file_ensdf)
 
 def readEShape(rad, *, z=z_ensdf):
-    """
-    --------------------------------------------------
-    pour lire les fichiers dans All-nuclides_Ensdf.zip
-    --------------------------------------------------
-    ---------
-    PARAMETRE
-    ---------
-    rad -- type: str par exemple 'Ag-108'
-    z -- ENSDF files
+    """ This function reads the ENSDF zip files and format the data to be processed by TDCRPy. 
+
+    Parameters
+    ----------
+    rad : string
+        name of the radionuclide such as 'Ag-108'.
+    z : ZipFile object
+        zip ENSDF file.
     
-    ------
-    RETURN
-    ------
-    daug_name -- type: list -- les filles de désintégration
-    Energy ----- type: list -- chaque élément comprend toutes les énergies de transition de la fille de même indice
-    Prob ------- type: list -- chaque élément comprend toutes les proba de transition de la fille de même indice
-    Type ------- type: list -- chaque élément comprend touts les types de transition de la fille de même indice
+    Returns
+    -------
+    daug_name : list
+        daughter nucleus of the decay
+    Energy : list
+        comprise all transition energies of the daughter nucleus.
+    Prob : list
+        comprise all transtion probabilities of the daughter nucleus.
+    Type : list
+        comprise all type of transition of the daughter nucleus.
 
     """
        
@@ -987,19 +1014,21 @@ def readEShape(rad, *, z=z_ensdf):
 
 #============  traiter la relaxation ===============
 def relaxation_atom(daugther,rad,lacune='defaut'):
-    """
-    ---------
-    PARAMETRE
-    ---------
-    daugther -- type: str -- la fille tirée dans cette itération (par exemple NB95,PD110 etc.)
-    rad ------- type: str -- le radionucléide étudié (par exemple Am-241, C-11 etc.) 
-    lacuen ---- type: str -- la lacune atomique (par exemple 'Atom_K','Atom_L' etc.)
+    """ This function simulates the atomic rearangement following a missing electron an inner shell of the daughter atom.
+    
+    Parameters
+    ----------
+    daugther : string
+        The daughter nucleus (for example NB95,PD110 etc.)
+    rad : string
+        The mother nucleus (for exemple Am-241, C-11 etc.) 
+    lacune  : string
+        The shell where the electron is missing (for example 'Atom_K','Atom_L' etc.)
 
-    ------
-    RETURN
-    ------
-    Type ---- type de transition: Auger L ou K ou Rayon X
-    Energy -- énergie correspondante
+    Returns 
+    -------
+    Type : type of transition Auger L or K, or X Ray.
+    Energy : corresponding energy in keV.
 
     """
     daug_name,Energy,Prob,Type = readEShape(rad)  # tirer les vecteurs de rad d'Ensdf 
@@ -1085,10 +1114,10 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
     return type_fin,energie_fin
 
 
-def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
+def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
     """
-    TDCR analytical model that can be used for pure beta emitting radionuclides
-
+    TDCR analytical model that is used for pure beta emitting radionuclides
+    
     Parameters
     ----------
     L : float or tuple
@@ -1105,26 +1134,34 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
         radionuclide (eg. "Na-22").
     kB : float
         Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml. run only for 10 ml
     mode : string
         "res" to return the residual, "eff" to return efficiencies.
     mode2 : string
         "sym" for symetrical model, "asym" for symetrical model.
     nE : integer
          Number of bins for the quenching function.
-
-
+    
+    
     Returns
     -------
-    Tuple
-        if mode=="res", the residual (float).
-        if mode=="eff", the efficiencies (list)
-
+    res : float
+        Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode="res")
+    mean_efficiency_S : float
+        Estimation of the efficiency of single counting events. (only in mode="eff")
+    mean_efficiency_D : float
+        Estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
+    mean_efficiency_T : float
+        Estimation of the efficiency of triple coincidences. (only in mode="eff")
+    
     """
     
-    e, p = readBetaShape(rad, 'beta-', 0)
+    e, p = readBetaShape(rad, 'beta-', 'tot')
     em=np.empty(len(e))
-    for i, ei in enumerate(e): 
-        em[i] = E_quench_e(ei*1e3,kB*1e3,ne)*1e-3
+    for i, ei in enumerate(e):
+        ed = energie_dep_beta(ei)
+        em[i] = E_quench_e(ed*1e3,kB*1e3,ne)*1e-3
         
         
     if mode2=="sym":
@@ -1155,14 +1192,16 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,mode,mode2,ne):
         return eff_S, eff_D, eff_T
     
 def clear_terminal():
-    # Function to clear the terminal screen
+    """Function to clear the terminal screen
+    """
     if os.name == "posix":
         os.system("clear")  # For UNIX/Linux/MacOS
     else:
         os.system("cls")    # For Windows
 
 def display_header():
-    # Function to display the header
+    """ Function to display the header.
+    """
     clear_terminal()
     version = pkg_resources.get_distribution("tdcrpy").version
     header_text = r'''
