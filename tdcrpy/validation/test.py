@@ -35,25 +35,25 @@ import matplotlib.pyplot as plt
 Validation with Fe-55
 """
 
-Rad="Co-60"    # list of radionuclides (Na-24)
-pmf_1="1"
-kB =1.0e-5       # Birks constant in cm/keV
-RHO = 0.98
-nE = 1000
-D = 1000
-T = 700        # Measured TDCR value
-TAB = 800
-TBC = 800
-TAC = 800
-L = 1
-N = 5
-TD = T/D
+# Rad="Co-60"    # list of radionuclides (Na-24)
+# pmf_1="1"
+# kB =1.0e-5       # Birks constant in cm/keV
+# RHO = 0.98
+# nE = 1000
+# D = 1000
+# T = 700        # Measured TDCR value
+# TAB = 800
+# TBC = 800
+# TAC = 800
+# L = 1
+# N = 5
+# TD = T/D
 
-# resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "eff", "sym")
-# print(resuts_1)
+# # resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "eff", "sym")
+# # print(resuts_1)
 
-resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
-print("\n",resuts_2)
+# resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
+# print("\n",resuts_2)
 
 
 
@@ -174,3 +174,6 @@ Validation with the analytical model
 # plt.xlabel('E de particule/keV')
 # plt.ylabel("énergie d'extinction/E")
 # plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
+
+
+td.TDCR_model_lib.readPenNuc2("H-3")

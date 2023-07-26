@@ -14,6 +14,7 @@ tdcrpy/__init__.py
 tdcrpy/config.toml
 tdcrpy/../docs/_build/html/genindex.html
 tdcrpy/../docs/_build/html/index.html
+tdcrpy/../docs/_build/html/py-modindex.html
 tdcrpy/../docs/_build/html/search.html
 tdcrpy/MCNP-MATRIX/matrice/fichier/E_depose.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_1_200k.txt

@@ -18,19 +18,30 @@ from tqdm import tqdm
 def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=True):
     """
     This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
-    The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides) and a given Birks constant kB. 
+    The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB. 
+    
     It can operates in two modes:
-    --> In mode="eff", it calculates the efficiency of the TDCR system as a function of a value (triplet) of free parameter(s) L, the measurement data is not used;
-    -->In mode="res", it calculates the residual of the TDCR model parametrized by a value (or triplet) of free parameter(s) L and the measurement data TD, TAB, TBC, TAC.
+       
+       --> In mode="eff", it calculates the efficiency of the TDCR system as a function of a value (triplet) of free parameter(s) L, the measurement data is not used;
+       
+       --> In mode="res", it calculates the residual of the TDCR model parametrized by a value (or triplet) of free parameter(s) L and the measurement data TD, TAB, TBC, TAC.
+    
     also, two configuration can be set:
-    --> mode2="sym", where symmetry is considered between the 3 photomultiplier tubes - here L is a scalar and only the global TDCR value TD is used as measurement data.
-    --> mode2="asym", where an asymmetry between the 3 photomultiplier tubes is possible - here L is a triplet and only the specific TDCR values TAB, TBC, TAC are used as measurement data.
+       
+        --> mode2="sym", where symmetry is considered between the 3 photomultiplier tubes - here L is a scalar and only the global TDCR value TD is used as measurement data.
+        
+        --> mode2="asym", where an asymmetry between the 3 photomultiplier tubes is possible - here L is a triplet and only the specific TDCR values TAB, TBC, TAC are used as measurement data.
+    
     The parmeter N sets the number of Monte-Carlo trails used for the estimation. Each MC trial corresponds to a simulated radiactive decay.
-    TDCRPY() used a set of fonctions from the tdcrpy.TDCR_model_lib module. 
+    TDCRPY() used a set of fonctions from the tdcrpy.TDCR_model_lib module.
+    
     Advanced settings can be configured in the config.toml file.
-    --> By default Y = True so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set Y = False.
-    --> If you would like to change the number of bins nE to discretize the linear energy space for quenching calculation, you can change nE_electron and nE_alpha parameters for respectively electrons and alpha particles.
-    --> By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the density, the mean charge number Z and the mean mass number A of the scintillator.
+    
+       --> By default Y = True so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set Y = False.
+       
+       --> If you would like to change the number of bins nE to discretize the linear energy space for quenching calculation, you can change nE_electron and nE_alpha parameters for respectively electrons and alpha particles.
+       
+       --> By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the density, the mean charge number Z and the mean mass number A of the scintillator.
     
     Parameters
     ----------
@@ -97,7 +108,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
     if X and Y:
         inE = radListPureBeta.index(Rad)
         nE = nElist[inE]
-        out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,mode,mode2,nE)
+        out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,mode2,nE)
         if mode == "res":
             return out
         if mode == "eff":
