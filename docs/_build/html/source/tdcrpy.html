@@ -124,27 +124,19 @@ Bureau International des Poids et Mesures</p>
 <dt class="sig sig-object py" id="tdcrpy.TDCRPy.TDCRPy">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCRPy.</span></span><span class="sig-name descname"><span class="pre">TDCRPy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TBC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCRPy.TDCRPy" title="Permalink to this definition"></a></dt>
 <dd><p>This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
-The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB.</p>
-<p>It can operates in two modes:</p>
-<blockquote>
-<div><p>–&gt; In mode=”eff”, it calculates the efficiency of the TDCR system as a function of a value (triplet) of free parameter(s) L, the measurement data is not used;</p>
-<p class="attribution">—&gt; In mode=”res”, it calculates the residual of the TDCR model parametrized by a value (or triplet) of free parameter(s) L and the measurement data TD, TAB, TBC, TAC.</p>
-</div></blockquote>
-<p>also, two configuration can be set:</p>
-<blockquote>
-<div><p>–&gt; mode2=”sym”, where symmetry is considered between the 3 photomultiplier tubes - here L is a scalar and only the global TDCR value TD is used as measurement data.</p>
-<p class="attribution">—&gt; mode2=”asym”, where an asymmetry between the 3 photomultiplier tubes is possible - here L is a triplet and only the specific TDCR values TAB, TBC, TAC are used as measurement data.</p>
-</div></blockquote>
-<p>The parmeter N sets the number of Monte-Carlo trails used for the estimation. Each MC trial corresponds to a simulated radiactive decay.
-TDCRPY() used a set of fonctions from the tdcrpy.TDCR_model_lib module.</p>
-<p>Advanced settings can be configured in the config.toml file.</p>
-<blockquote>
-<div><p>–&gt; By default Y = True so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set Y = False.</p>
-<p class="attribution">—&gt; If you would like to change the number of bins nE to discretize the linear energy space for quenching calculation, you can change nE_electron and nE_alpha parameters for respectively electrons and alpha particles.</p>
-</div></blockquote>
-<blockquote>
-<div><p>–&gt; By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the density, the mean charge number Z and the mean mass number A of the scintillator.</p>
-</div></blockquote>
+The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides) and a given Birks constant kB. 
+It can operates in two modes:
+–&gt; In mode=”eff”, it calculates the efficiency of the TDCR system as a function of a value (triplet) of free parameter(s) L, the measurement data is not used;
+–&gt;In mode=”res”, it calculates the residual of the TDCR model parametrized by a value (or triplet) of free parameter(s) L and the measurement data TD, TAB, TBC, TAC.
+also, two configuration can be set:
+–&gt; mode2=”sym”, where symmetry is considered between the 3 photomultiplier tubes - here L is a scalar and only the global TDCR value TD is used as measurement data.
+–&gt; mode2=”asym”, where an asymmetry between the 3 photomultiplier tubes is possible - here L is a triplet and only the specific TDCR values TAB, TBC, TAC are used as measurement data.
+The parmeter N sets the number of Monte-Carlo trails used for the estimation. Each MC trial corresponds to a simulated radiactive decay.
+TDCRPY() used a set of fonctions from the tdcrpy.TDCR_model_lib module. 
+Advanced settings can be configured in the config.toml file.
+–&gt; By default Y = True so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set Y = False.
+–&gt; If you would like to change the number of bins nE to discretize the linear energy space for quenching calculation, you can change nE_electron and nE_alpha parameters for respectively electrons and alpha particles.
+–&gt; By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the density, the mean charge number Z and the mean mass number A of the scintillator.</p>
 <section id="parameters">
 <h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h3>
 <dl class="simple">
