@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "0.0.50"
+VERSION = "0.0.54"
 DESCRIPTION = "TDCR model"
 
 with open("README.md", "r") as f:
@@ -40,5 +40,7 @@ setup(
         'Quenching/alpha_toulene.txt',
 		'Quenching/TandataUG.txt',
 		'MCNP-MATRIX/matrice/fichier/*.txt',
+		'../*.html',
+                '../docs/_build/html/*.html'
 		]},
 )

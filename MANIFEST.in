@@ -11,3 +11,5 @@ include tdcrpy/decayData/All-nuclides_Ensdf.zip
 include tdrcpy/Quenching/alpha_toulene.txt
 include tdrcpy/Quenching/TandataUG.txt
 include tdrcpy/MCNP-MATRIX/matrice/fichier/*.txt
+include ../*.html
+include ../docs/_build/html/*.html

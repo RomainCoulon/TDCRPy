@@ -1,24 +1,10 @@
 tdcrpy package
 ==============
 
+This section provides documentation for the modules and classes in the project.
+
 Submodules
 ----------
-
-tdcrpy.Activity\_TDCR module
-----------------------------
-
-.. automodule:: tdcrpy.Activity_TDCR
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-tdcrpy.EfficiencyProfils module
--------------------------------
-
-.. automodule:: tdcrpy.EfficiencyProfils
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 tdcrpy.TDCRPy module
 --------------------
@@ -50,13 +36,6 @@ tdcrpy.TDCRoptimize module
    :undoc-members:
    :show-inheritance:
 
-tdcrpy.decay module
--------------------
-
-.. automodule:: tdcrpy.decay
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 Module contents
 ---------------

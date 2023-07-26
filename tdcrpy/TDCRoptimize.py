@@ -11,6 +11,7 @@ import scipy.optimize as opt
 
 def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, mode2, N=1000, L=1):
     """
+   
     Caclulation of the efficiency of a TDCR system based on the model TDCRPy
 
     Parameters

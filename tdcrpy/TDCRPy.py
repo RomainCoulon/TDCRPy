@@ -15,10 +15,23 @@ import configparser
 import numpy as np
 from tqdm import tqdm
 
-def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, mode, mode2, Display=False, barp=True):
+def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=True):
     """
-    This is a Monte-Carlo TDCR model
-
+    This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
+    The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides) and a given Birks constant kB. 
+    It can operates in two modes:
+    --> In mode="eff", it calculates the efficiency of the TDCR system as a function of a value (triplet) of free parameter(s) L, the measurement data is not used;
+    -->In mode="res", it calculates the residual of the TDCR model parametrized by a value (or triplet) of free parameter(s) L and the measurement data TD, TAB, TBC, TAC.
+    also, two configuration can be set:
+    --> mode2="sym", where symmetry is considered between the 3 photomultiplier tubes - here L is a scalar and only the global TDCR value TD is used as measurement data.
+    --> mode2="asym", where an asymmetry between the 3 photomultiplier tubes is possible - here L is a triplet and only the specific TDCR values TAB, TBC, TAC are used as measurement data.
+    The parmeter N sets the number of Monte-Carlo trails used for the estimation. Each MC trial corresponds to a simulated radiactive decay.
+    TDCRPY() used a set of fonctions from the tdcrpy.TDCR_model_lib module. 
+    Advanced settings can be configured in the config.toml file.
+    --> By default Y = True so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set Y = False.
+    --> If you would like to change the number of bins nE to discretize the linear energy space for quenching calculation, you can change nE_electron and nE_alpha parameters for respectively electrons and alpha particles.
+    --> By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the density, the mean charge number Z and the mean mass number A of the scintillator.
+    
     Parameters
     ----------
     L : Float (if mode2="sym") or a tuple (if mode2="asym")
@@ -36,9 +49,11 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, mode, mode2, Display=False, 
     pmf_1 : string
         list of probability of each radionuclide (eg. "0.8, 0.2").
     N : integer
-        Number of Monte-Carlo trials. recommanded N>10000. Not applied in the case of pure beta emitting radionuclides.
+        Number of Monte-Carlo trials. recommanded N>10000 (see JCGM 101). Not applied in the case of pure beta emitting radionuclides.
     kB : float
         Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml. run only for 10 ml
     mode : string
         "res" to return the residual, "eff" to return efficiencies.
     mode2 : string
@@ -47,13 +62,23 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, mode, mode2, Display=False, 
         "True" to display details on the decay sampling. The default is False.
     barp : Boolean, optional
         "True" to display the calculation progress. The default is True.
-
+    
     Returns
     -------
-    Tuple
-        if mode=="res", the residual (float).
-        if mode=="eff", the efficiencies (list)
-
+    res : float
+        Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode="res")
+    mean_efficiency_S : float
+        Estimation of the efficiency of single counting events. (only in mode="eff")
+    std_efficiency_S : float
+        Standard uncertainty from calculation associated with the estimation of the efficiency of single counting events. (only in mode="eff")
+    mean_efficiency_D : float
+        Estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
+    std_efficiency_D : float
+        Standard uncertainty from calculation associated with the estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
+    mean_efficiency_T : float
+        Estimation of the efficiency of triple coincidences. (only in mode="eff")
+    std_efficiency_T : float
+        Standard uncertainty from calculation associated with the estimation of the efficiency of triple coincidences. (only in mode="eff")    
     """
     if barp: tl.display_header()
     config = configparser.ConfigParser()
@@ -330,7 +355,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, mode, mode2, Display=False, 
                     energy_vec.append(511)
     
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                    energy_vec[i] = tl.energie_dep_gamma(energy_vec[i],v=10)          # sampling energy free from photon
+                    energy_vec[i] = tl.energie_dep_gamma(energy_vec[i],v=V)          # sampling energy free from photon
                     particle_vec[i] = "electron"
                 if p == "Auger K" or p == "Auger L":
                     particle_vec[i] = "electron"
