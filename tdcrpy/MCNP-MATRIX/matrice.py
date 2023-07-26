@@ -496,12 +496,12 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 
 
 #================ tracer la matrice ========================================
-e,matrice_p = creat_matrice(0,par='b')
+#e,matrice_p = creat_matrice(0,par='b')
 #print(len(e))
 #print(matrice_p[76:90,25])
 #print(matrice_p.shape,matrice_p[0,541:543])
 #ecri = ecrit_matrice(matrice_p,0,'b',16) 
-fig1 = matrice_fig(matrice_p,1,100,e,'b',16)
+#fig1 = matrice_fig(matrice_p,1,100,e,'b',16)
 #for i in range(1003):
  #   for j in range(801):
   #      matrice_p[i][j] = np.log(matrice_p[i][j]+1e-7)
