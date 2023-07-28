@@ -8,7 +8,10 @@ Library of function of the TDCRpy code
 Bureau International des Poids et Mesures
 """
 
-### IMPORT Python Module
+"""
+======= Import Python Module =======
+"""
+
 import importlib.resources
 import pkg_resources
 import configparser
@@ -18,6 +21,79 @@ import time
 import re
 import os
 
+"""
+======= Import ressource data =======
+"""
+
+# import advanced configuration data
+config = configparser.ConfigParser()
+with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
+    file_conf = data_path       
+config.read(file_conf)
+RHO=config["Inputs"].getfloat("density")
+Z=config["Inputs"].getfloat("Z")
+A=config["Inputs"].getfloat("A")
+
+# import PenNuc data
+with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+    file_pennuc = data_path / "All-nuclides_PenNuc.zip"
+z_PenNuc = zf.ZipFile(file_pennuc)
+
+# import BetaShape data
+with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+    file_betashape = data_path / "All-nuclides_BetaShape.zip"
+z_betashape = zf.ZipFile(file_betashape)
+
+# import ENSDF data
+with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+    file_ensdf = data_path / 'All-nuclides_Ensdf.zip'
+z_ensdf = zf.ZipFile(file_ensdf)
+
+# import photon interaction data (MCNP6 calculation) 
+with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+    fp1 = data_path / 'matrice/fichier/matrice_10ml-photon_1_200k.txt'          #gamma-10ml-1-200keV-niveau 0
+    fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'       #gamma-10ml-200-2000keV-niveau 1
+    fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt'     #gamma-10ml-2000-10000keV-niveau 2
+    fp4 = data_path / 'matrice/fichier/matrice_16ml-photon_1_200k.txt'          #gamma-10ml-1-200keV-niveau 0
+    fp5 = data_path / 'matrice/fichier/matrice_16ml-photon_200_2000k.txt'       #gamma-10ml-1-200keV-niveau 1
+    fp6 = data_path / 'matrice/fichier/matrice_16ml-photon_2000_10000k.txt'     #gamma-10ml-1-200keV-niveau 2
+    fe = data_path / 'matrice/fichier/E_depose.txt'
+
+# import electron interaction data (MCNP6 calculation) 
+with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+    fe1 = data_path / 'matrice/fichier/matrice_10ml-beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
+    fe2 = data_path / 'matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
+    fe3 = data_path / 'matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
+    fe4 = data_path / 'matrice/fichier/matrice_16ml-beta-_1_200k.txt' # electron-16ml-1-200keV-niveau 0
+    fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
+
+# import stopping power data for electron
+with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    file_TanXia = open(data_path / "TandataUG.txt")
+
+data_TanXia=file_TanXia.read(); file_TanXia.close()
+data_TanXia=data_TanXia.split("\n"); data_TanXia_f = np.empty(len(data_TanXia))
+for i, x in enumerate(data_TanXia):
+  if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
+
+# import stopping power data for electron for alpha particle (ASTAR data)
+with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    f_alpha = open(data_path / "alpha_toulene.txt")
+
+data_ASTAR = f_alpha.readlines()
+f_alpha.close()
+energy_alph = []
+dEdx_alph = []
+for i in range(np.size(data_ASTAR)):
+    data_ASTAR[i] = data_ASTAR[i].split()
+    for j in range(2):
+        data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
+    energy_alph.append(data_ASTAR[i][0])
+    dEdx_alph.append(data_ASTAR[i][1])
+
+"""
+======= Library of functions =======
+"""
 
 def TicTocGenerator():
     """
@@ -47,7 +123,7 @@ def tic():
     Records a time in TicToc, marks the beginning of a time interval
     """
     toc(False)
-
+    
 def normalise(p_x):
     """
     This function is used to ensure that the sum of probability is equal to 1.
@@ -98,9 +174,6 @@ def sampling(p_x):
         if p> trial: break
     return i
 
-with importlib.resources.path('tdcrpy', 'decayData') as data_path:
-    file_pennuc = data_path / "All-nuclides_PenNuc.zip"
-z_PenNuc = zf.ZipFile(file_pennuc)
 def readPenNuc2(rad,z1=z_PenNuc):
     '''
     This function is used to read PenNuc files to format the decay data in lists readable by TDCRPy.
@@ -382,28 +455,6 @@ def readPenNuc2(rad,z1=z_PenNuc):
 
 #================================== StoppingPower for alpha particle ===========================================
 
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-    f_alpha = open(data_path / "alpha_toulene.txt")
-
-config = configparser.ConfigParser()
-with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
-    file_conf = data_path       
-config.read(file_conf)
-RHO=config["Inputs"].getfloat("density")
-Z=config["Inputs"].getfloat("Z")
-A=config["Inputs"].getfloat("A")
-
-data_ASTAR = f_alpha.readlines()
-f_alpha.close()
-energy_alph = []
-dEdx_alph = []
-for i in range(np.size(data_ASTAR)):
-    data_ASTAR[i] = data_ASTAR[i].split()
-    for j in range(2):
-        data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
-    energy_alph.append(data_ASTAR[i][0])
-    dEdx_alph.append(data_ASTAR[i][1])
-
 def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     """
     Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code
@@ -439,14 +490,6 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 #===============================================================================================
 
 #========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
-
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-    file_TanXia = open(data_path / "TandataUG.txt")
-
-data_TanXia=file_TanXia.read(); file_TanXia.close()
-data_TanXia=data_TanXia.split("\n"); data_TanXia_f = np.empty(len(data_TanXia))
-for i, x in enumerate(data_TanXia):
-  if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
 def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
     """
@@ -520,9 +563,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
 #=============================================================================================
 
 #====================  Fonction pour lire BetaShape   ========================================
-with importlib.resources.path('tdcrpy', 'decayData') as data_path:
-    file_betashape = data_path / "All-nuclides_BetaShape.zip"
-z_betashape = zf.ZipFile(file_betashape)
+
 def readBetaShape(rad,mode,level,z=z_betashape):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
@@ -589,19 +630,19 @@ def readBetaShape(rad,mode,level,z=z_betashape):
 def E_quench_e(e,kB,nE):
     """
     This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching
-
+    
     Parameters
     ----------
     e : float
         energy of the electron in eV.
     kB : float
         Birks constant in cm/MeV.
-
+    
     Returns
     -------
     float
         Quenched energy in eV.
-
+    
     """
     
     e_dis = np.linspace(0,e,nE)
@@ -628,7 +669,7 @@ def E_quench_a(e,kB,nE):
         Quenched energy in keV.
     
     """
-
+    
     e_dis = np.linspace(1,e,nE)
     delta = e_dis[2] - e_dis[1]
     q = 0
@@ -642,14 +683,6 @@ def E_quench_a(e,kB,nE):
 
 #========================= énergie gamma ===================================================
 #'''
-with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
-    fp1 = data_path / 'matrice/fichier/matrice_10ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-    fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'   #gamma-10ml-200-2000keV-niveau 1
-    fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt' #gamma-10ml-2000-10000keV-niveau 2
-    fp4 = data_path / 'matrice/fichier/matrice_16ml-photon_1_200k.txt'      #gamma-10ml-1-200keV-niveau 0
-    fp5 = data_path / 'matrice/fichier/matrice_16ml-photon_200_2000k.txt'      #gamma-10ml-1-200keV-niveau 1
-    fp6 = data_path / 'matrice/fichier/matrice_16ml-photon_2000_10000k.txt'      #gamma-10ml-1-200keV-niveau 2
-    fe = data_path / 'matrice/fichier/E_depose.txt'
 
 def read_matrice(path,niveau):
     """
@@ -760,13 +793,87 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
     if result  > e_inci: result = e_inci
     return result
 
+def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,ed=Matrice_e):
+    """ This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
+    
+    Parameters
+    ----------
+    e_inci : float
+        energy of the photon in keV.
+    v : float
+        volume of the scintillator in ml.
+    matrice10_1 : list[list], optional
+        response matrix for photons in the range [1-200] keV and for a scintillator volume of 10 ml.
+    matrice10_2 : list[list], optional
+        response matrix for photons in the range [200-2000] keV and for a scintillator volume of 10 ml.
+    matrice10_3 : list[list], optional
+        response matrix for photons in the range [2000-10000] keV and for a scintillator volume of 10 ml.
+    matrice16_1 : list[list], optional
+        response matrix for photons in the range [1-200] keV and for a scintillator volume of 16 ml.
+    matrice16_2 : list[list], optional
+        response matrix for photons in the range [200-2000] keV and for a scintillator volume of 16 ml.
+    matrice16_3 : list[list], optional
+        response matrix for photons in the range [2000-10000] keV and for a scintillator volume of 16 ml.
+    ed : list[list], optional
+        matrix of input energies. column 0: [1-200] keV; column 1: [200-2000] keV; column 2: [2000-10000] keV
 
-with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
-    fe1 = data_path / 'matrice/fichier/matrice_10ml-beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
-    fe2 = data_path / 'matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
-    fe3 = data_path / 'matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
-    fe4 = data_path / 'matrice/fichier/matrice_16ml-beta-_1_200k.txt' # electron-16ml-1-200keV-niveau 0
-    fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
+    Returns
+    -------
+    result : float
+        deposited energy in keV.
+
+    """
+    
+    ## sort keV / entrée : keV
+    if e_inci <= 200:
+        if e_inci < 1:
+            index = 0            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        else:
+            index = int(e_inci)-1
+            
+        if v == 10: 
+            matrice = matrice10_1[1:,index]
+            matrice0 = matrice10_1[0,index]
+        elif v == 16:
+            matrice = matrice16_1[1:,index]
+            matrice0 = matrice16_1[0,index]
+        else:
+            matrice = (matrice16_1[1:,index]-matrice10_1[1:,index])*v/6 + (matrice10_1[1:,index]-(matrice16_1[1:,index]-matrice10_1[1:,index])*10/6)
+            matrice0 = (matrice16_1[0,index]-matrice10_1[0,index])*v/6 + (matrice10_1[0,index]-(matrice16_1[0,index]-matrice10_1[0,index])*10/6)
+        e = ed[:,0]
+    
+    elif e_inci <= 2000:
+        index = int((e_inci-200)/2)
+        if v == 10: 
+            matrice = matrice10_2[1:,index]
+            matrice0 = matrice10_2[0,index]
+        elif v == 16:
+            matrice = matrice16_2[1:,index]
+            matrice0 = matrice16_2[0,index]
+        else:
+            matrice = (matrice16_2[1:,index]-matrice10_2[1:,index])*v/6 + (matrice10_2[1:,index]-(matrice16_2[1:,index]-matrice10_2[1:,index])*10/6) 
+            matrice0 = (matrice16_2[0,index]-matrice10_2[0,index])*v/6 + (matrice10_2[0,index]-(matrice16_2[0,index]-matrice10_2[0,index])*10/6) 
+        e = ed[:,1]
+
+    else:
+        index = (int(e_inci)-2000)//10
+        if v == 10: 
+            matrice = matrice10_3[1:,index]
+            matrice0 = matrice10_3[0,index]
+        elif v == 16:
+            matrice = matrice16_3[1:,index]
+            matrice0 = matrice16_3[0,index]
+        else:
+            matrice = (matrice16_3[1:,index]-matrice10_3[1:,index])*v/6 + (matrice10_3[1:,index]-(matrice16_3[1:,index]-matrice10_3[1:,index])*10/6) 
+            matrice0 = (matrice16_3[0,index]-matrice10_3[0,index])*v/6 + (matrice10_3[0,index]-(matrice16_3[0,index]-matrice10_3[0,index])*10/6)
+        e = ed[:,2]
+    
+    inde = sampling(matrice)
+    if inde == 1 : result = 0
+        #elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
+    else: result = e[inde]*1e3*e_inci/matrice0
+    if result  > e_inci: result = e_inci
+    return result
 
 Matrice10_e_1 = read_matrice(fe1,0)
 Matrice10_e_2 = read_matrice(fe2,1)
@@ -826,6 +933,63 @@ def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_
     if result  > e_inci: result = e_inci
     return result
 
+
+def energie_dep_beta2(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,ed=Matrice_e):
+    """ This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
+    
+    Parameters
+    ----------
+    e_inci : float
+        energy of the electron in keV.
+    matrice10_1 : list[list], optional
+        response matrix for electrons in the range [1-200] keV and for a scintillator volume of 10 ml.
+    matrice10_2 : list[list], optional
+        response matrix for electrons in the range [200-2000] keV and for a scintillator volume of 10 ml.
+    matrice10_3 : list[list], optional
+        response matrix for electrons in the range [2000-10000] keV and for a scintillator volume of 10 ml.
+    ed : list[list], optional
+        matrix of input energies. column 0: [1-200] keV; column 1: [200-2000] keV; column 2: [2000-10000] keV
+
+    Returns
+    -------
+    result : float
+        deposited energy in keV.
+
+    """
+    ## sort keV / entrée : keV
+    if e_inci <= 200:
+        if e_inci < 1:
+            index = 0            # index de colonne de la matrice de l'énergie incidente la plus proche 
+        else:
+            index = int(e_inci)-1
+        matrice = matrice10_1[1:,index]
+        matrice0 = matrice10_1[0,index]
+        e = ed[:,0]
+    
+    elif e_inci <= 2000:
+        index = int((e_inci-200)/2)
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_200_2000k.txt'
+        matrice = matrice10_2[1:,index]
+        matrice0 = matrice10_2[0,index]
+        #taille_x = 901
+        e = ed[:,1]
+
+    else:
+        index = (int(e_inci)-2000)//10
+        #doc = 'MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt'
+        matrice = matrice10_3[1:,index]
+        matrice0 = matrice10_3[0,index]
+        #taille_x = 801
+        e = ed[:,2]
+    
+    inde = sampling(matrice)
+    if inde == 1 : result = 0
+        #elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
+    else: result = e[inde]*1e3*e_inci/matrice0
+    if result  > e_inci: result = e_inci
+    return result
+
+
 def writeEffcurves(x,y,uy,rad,p,kB,SDT):
     """
     This function writes efficiency curves
@@ -882,10 +1046,6 @@ def transf_name(rad):
     name_lis = re.split('(\d+)',rad)
     RAD = name_lis[2]+name_lis[1]
     return RAD
-
-with importlib.resources.path('tdcrpy', 'decayData') as data_path:
-    file_ensdf = data_path / 'All-nuclides_Ensdf.zip'
-z_ensdf = zf.ZipFile(file_ensdf)
 
 def readEShape(rad, *, z=z_ensdf):
     """ This function reads the ENSDF zip files and format the data to be processed by TDCRPy. 

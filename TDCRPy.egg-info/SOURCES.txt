@@ -34,3 +34,5 @@ tdcrpy/docs/_build/html/py-modindex.html
 tdcrpy/docs/_build/html/search.html
 tdcrpy/docs/_build/html/source/modules.html
 tdcrpy/docs/_build/html/source/tdcrpy.html
+tdcrpy/tests/__init__.py
+tdcrpy/tests/test_tdcrpy.py

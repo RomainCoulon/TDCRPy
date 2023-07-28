@@ -123,7 +123,7 @@ def tic():
     Records a time in TicToc, marks the beginning of a time interval
     """
     toc(False)
-
+    
 def normalise(p_x):
     """
     This function is used to ensure that the sum of probability is equal to 1.
