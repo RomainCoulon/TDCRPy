@@ -1,0 +1,15 @@
+include tdcrpy/TDCRPy.py
+include tdcrpy/TDCRoptimize.py
+include tdcrpy/TDCR_model_lib.py
+include tdcrpy/config.toml
+exclude tdcrpy/Activity_TDCR.py
+exclude tdcrpy/decay.py
+exclude tdcrpy/EfficiencyProfils.py
+include tdcrpy/decayData/All-nuclides_PenNuc.zip
+include tdcrpy/decayData/All-nuclides_BetaShape.zip
+include tdcrpy/decayData/All-nuclides_Ensdf.zip
+include tdrcpy/Quenching/alpha_toulene.txt
+include tdrcpy/Quenching/TandataUG.txt
+include tdrcpy/MCNP-MATRIX/matrice/fichier/*.txt
+include ../*.html
+include ../docs/_build/html/*.html

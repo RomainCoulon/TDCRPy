@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tdcrpy package &mdash; TDCRPy 1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TDCRPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">tdcrpy package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-tdcrpy.TDCRPy">tdcrpy.TDCRPy module</a><ul>
+<li><a class="reference internal" href="#tdcrpy.TDCRPy.TDCRPy"><code class="docutils literal notranslate"><span class="pre">TDCRPy()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-tdcrpy.TDCR_model_lib">tdcrpy.TDCR_model_lib module</a><ul>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.E_quench_a"><code class="docutils literal notranslate"><span class="pre">E_quench_a()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.E_quench_e"><code class="docutils literal notranslate"><span class="pre">E_quench_e()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.TicTocGenerator"><code class="docutils literal notranslate"><span class="pre">TicTocGenerator()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.clear_terminal"><code class="docutils literal notranslate"><span class="pre">clear_terminal()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.display_header"><code class="docutils literal notranslate"><span class="pre">display_header()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.energie_dep_beta"><code class="docutils literal notranslate"><span class="pre">energie_dep_beta()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.energie_dep_gamma"><code class="docutils literal notranslate"><span class="pre">energie_dep_gamma()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.modelAnalytical"><code class="docutils literal notranslate"><span class="pre">modelAnalytical()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.normalise"><code class="docutils literal notranslate"><span class="pre">normalise()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.readBetaShape"><code class="docutils literal notranslate"><span class="pre">readBetaShape()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.readEShape"><code class="docutils literal notranslate"><span class="pre">readEShape()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.readPenNuc2"><code class="docutils literal notranslate"><span class="pre">readPenNuc2()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.read_matrice"><code class="docutils literal notranslate"><span class="pre">read_matrice()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.relaxation_atom"><code class="docutils literal notranslate"><span class="pre">relaxation_atom()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.sampling"><code class="docutils literal notranslate"><span class="pre">sampling()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.stoppingpower"><code class="docutils literal notranslate"><span class="pre">stoppingpower()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.stoppingpowerA"><code class="docutils literal notranslate"><span class="pre">stoppingpowerA()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.tic"><code class="docutils literal notranslate"><span class="pre">tic()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.toc"><code class="docutils literal notranslate"><span class="pre">toc()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.transf_name"><code class="docutils literal notranslate"><span class="pre">transf_name()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.writeEffcurves"><code class="docutils literal notranslate"><span class="pre">writeEffcurves()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-tdcrpy.TDCRoptimize">tdcrpy.TDCRoptimize module</a><ul>
+<li><a class="reference internal" href="#tdcrpy.TDCRoptimize.eff"><code class="docutils literal notranslate"><span class="pre">eff()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-tdcrpy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TDCRPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">tdcrpy package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/tdcrpy.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tdcrpy-package">
+<h1>tdcrpy package<a class="headerlink" href="#tdcrpy-package" title="Permalink to this heading"></a></h1>
+<p>This section provides documentation for the modules and classes in the project.</p>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-tdcrpy.TDCRPy">
+<span id="tdcrpy-tdcrpy-module"></span><h2>tdcrpy.TDCRPy module<a class="headerlink" href="#module-tdcrpy.TDCRPy" title="Permalink to this heading"></a></h2>
+<p>Created on Mon Jan 23 16:01:49 2023</p>
+<p>A Monte-Carlo code to calculate detection efficiency in TDCR measurements</p>
+<p>&#64;author: Romain Coulon, Jialin Hu
+Bureau International des Poids et Mesures</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCRPy.TDCRPy">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCRPy.</span></span><span class="sig-name descname"><span class="pre">TDCRPy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TBC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCRPy.TDCRPy" title="Permalink to this definition"></a></dt>
+<dd><p>This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
+The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB.</p>
+<p>It can operates in two modes:</p>
+<blockquote>
+<div><p>–&gt; In mode=”eff”, it calculates the efficiency of the TDCR system as a function of a value (triplet) of free parameter(s) L, the measurement data is not used;</p>
+<p class="attribution">—&gt; In mode=”res”, it calculates the residual of the TDCR model parametrized by a value (or triplet) of free parameter(s) L and the measurement data TD, TAB, TBC, TAC.</p>
+</div></blockquote>
+<p>also, two configuration can be set:</p>
+<blockquote>
+<div><p>–&gt; mode2=”sym”, where symmetry is considered between the 3 photomultiplier tubes - here L is a scalar and only the global TDCR value TD is used as measurement data.</p>
+<p class="attribution">—&gt; mode2=”asym”, where an asymmetry between the 3 photomultiplier tubes is possible - here L is a triplet and only the specific TDCR values TAB, TBC, TAC are used as measurement data.</p>
+</div></blockquote>
+<p>The parmeter N sets the number of Monte-Carlo trails used for the estimation. Each MC trial corresponds to a simulated radiactive decay.
+TDCRPY() used a set of fonctions from the tdcrpy.TDCR_model_lib module.</p>
+<p>Advanced settings can be configured in the config.toml file.</p>
+<blockquote>
+<div><p>–&gt; By default Y = True so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set Y = False.</p>
+<p class="attribution">—&gt; If you would like to change the number of bins nE to discretize the linear energy space for quenching calculation, you can change nE_electron and nE_alpha parameters for respectively electrons and alpha particles.</p>
+</div></blockquote>
+<blockquote>
+<div><p>–&gt; By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the density, the mean charge number Z and the mean mass number A of the scintillator.</p>
+</div></blockquote>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>L<span class="classifier">Float (if mode2=”sym”) or a tuple (if mode2=”asym”)</span></dt><dd><p>Free parameter in keV-1.</p>
+</dd>
+<dt>TD<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio. Not consider if mode2=”asym”. Not consider if mode2=”asym”.</p>
+</dd>
+<dt>TAB<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio (coincidences between channel A and B). Not consider if mode2=”sym”.</p>
+</dd>
+<dt>TBC<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio (coincidences between channel B and C). Not consider if mode2=”sym”.</p>
+</dd>
+<dt>TAC<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio (coincidences between channel A and C). Not consider if mode2=”sym”.</p>
+</dd>
+<dt>Rad<span class="classifier">string</span></dt><dd><p>List of radionuclides (eg. “H-3, Co-60”).</p>
+</dd>
+<dt>pmf_1<span class="classifier">string</span></dt><dd><p>list of probability of each radionuclide (eg. “0.8, 0.2”).</p>
+</dd>
+<dt>N<span class="classifier">integer</span></dt><dd><p>Number of Monte-Carlo trials. recommanded N&gt;10000 (see JCGM 101). Not applied in the case of pure beta emitting radionuclides.</p>
+</dd>
+<dt>kB<span class="classifier">float</span></dt><dd><p>Birks constant in cm/keV.</p>
+</dd>
+<dt>V<span class="classifier">float</span></dt><dd><p>volume of the scintillator in ml. run only for 10 ml</p>
+</dd>
+<dt>mode<span class="classifier">string</span></dt><dd><p>“res” to return the residual, “eff” to return efficiencies.</p>
+</dd>
+<dt>mode2<span class="classifier">string</span></dt><dd><p>“sym” for symetrical model, “asym” for symetrical model.</p>
+</dd>
+<dt>Display<span class="classifier">Boolean, optional</span></dt><dd><p>“True” to display details on the decay sampling. The default is False.</p>
+</dd>
+<dt>barp<span class="classifier">Boolean, optional</span></dt><dd><p>“True” to display the calculation progress. The default is True.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>res<span class="classifier">float</span></dt><dd><p>Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode=”res”)</p>
+</dd>
+<dt>mean_efficiency_S<span class="classifier">float</span></dt><dd><p>Estimation of the efficiency of single counting events. (only in mode=”eff”)</p>
+</dd>
+<dt>std_efficiency_S<span class="classifier">float</span></dt><dd><p>Standard uncertainty from calculation associated with the estimation of the efficiency of single counting events. (only in mode=”eff”)</p>
+</dd>
+<dt>mean_efficiency_D<span class="classifier">float</span></dt><dd><p>Estimation of the efficiency of logic sum of double coincidences. (only in mode=”eff”)</p>
+</dd>
+<dt>std_efficiency_D<span class="classifier">float</span></dt><dd><p>Standard uncertainty from calculation associated with the estimation of the efficiency of logic sum of double coincidences. (only in mode=”eff”)</p>
+</dd>
+<dt>mean_efficiency_T<span class="classifier">float</span></dt><dd><p>Estimation of the efficiency of triple coincidences. (only in mode=”eff”)</p>
+</dd>
+<dt>std_efficiency_T<span class="classifier">float</span></dt><dd><p>Standard uncertainty from calculation associated with the estimation of the efficiency of triple coincidences. (only in mode=”eff”)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-tdcrpy.TDCR_model_lib">
+<span id="tdcrpy-tdcr-model-lib-module"></span><h2>tdcrpy.TDCR_model_lib module<a class="headerlink" href="#module-tdcrpy.TDCR_model_lib" title="Permalink to this heading"></a></h2>
+<p>Created on Mon Jan 23 16:04:46 2023</p>
+<p>Library of function of the TDCRpy code</p>
+<p>&#64;author: Romain Coulon, Jialin Hu
+Bureau International des Poids et Mesures</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.E_quench_a">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">E_quench_a</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.E_quench_a" title="Permalink to this definition"></a></dt>
+<dd><p>This function calculate the quenched energy alpha particles according to  the Birks model of scintillation quenching</p>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>e<span class="classifier">float</span></dt><dd><p>energy of the alpha particle in keV.</p>
+</dd>
+<dt>kB<span class="classifier">float</span></dt><dd><p>Birks constant in cm/keV.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Returns<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>float</dt><dd><p>Quenched energy in keV.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.E_quench_e">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">E_quench_e</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.E_quench_e" title="Permalink to this definition"></a></dt>
+<dd><p>This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching</p>
+<section id="id3">
+<h3>Parameters<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>e<span class="classifier">float</span></dt><dd><p>energy of the electron in eV.</p>
+</dd>
+<dt>kB<span class="classifier">float</span></dt><dd><p>Birks constant in cm/MeV.</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Returns<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>float</dt><dd><p>Quenched energy in eV.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.TicTocGenerator">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">TicTocGenerator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.TicTocGenerator" title="Permalink to this definition"></a></dt>
+<dd><p>Generator that returns time differences</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.clear_terminal">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">clear_terminal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.clear_terminal" title="Permalink to this definition"></a></dt>
+<dd><p>Function to clear the terminal screen</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.display_header">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">display_header</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.display_header" title="Permalink to this definition"></a></dt>
+<dd><p>Function to display the header.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.energie_dep_beta">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">energie_dep_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_inci</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">5.1e-05,</span> <span class="pre">4.7e-05,</span> <span class="pre">5.7e-05],</span> <span class="pre">[0.0,</span> <span class="pre">2e-06,</span> <span class="pre">2e-06,</span> <span class="pre">...,</span> <span class="pre">7.7e-05,</span> <span class="pre">7.4e-05,</span> <span class="pre">7e-05],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[5.7e-05,</span> <span class="pre">4.9e-05,</span> <span class="pre">5.6e-05,</span> <span class="pre">...,</span> <span class="pre">0.001795,</span> <span class="pre">0.001826,</span> <span class="pre">0.00181],</span> <span class="pre">[0.000494,</span> <span class="pre">0.000489,</span> <span class="pre">0.000492,</span> <span class="pre">...,</span> <span class="pre">0.000912,</span> <span class="pre">0.000912,</span> <span class="pre">0.000913],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.48222,</span> <span class="pre">6.8e-05,</span> <span class="pre">7e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">5e-06,</span> <span class="pre">0.481935,</span> <span class="pre">6.6e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">6e-06,</span> <span class="pre">0.481512]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[0.00181,</span> <span class="pre">0.001776,</span> <span class="pre">0.001775,</span> <span class="pre">...,</span> <span class="pre">0.012191,</span> <span class="pre">0.012222,</span> <span class="pre">0.012252],</span> <span class="pre">[0.004217,</span> <span class="pre">0.004213,</span> <span class="pre">0.004184,</span> <span class="pre">...,</span> <span class="pre">0.004783,</span> <span class="pre">0.004785,</span> <span class="pre">0.004751],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.000646,</span> <span class="pre">1.4e-05,</span> <span class="pre">1.5e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">1e-06,</span> <span class="pre">0.000645,</span> <span class="pre">1.5e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.00065]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0002008,</span> <span class="pre">0.001999,</span> <span class="pre">0.009991],</span> <span class="pre">[0.0004016,</span> <span class="pre">0.003998,</span> <span class="pre">0.019982],</span> <span class="pre">...,</span> <span class="pre">[0.2006,</span> <span class="pre">1.997,</span> <span class="pre">9.981],</span> <span class="pre">[0.2008,</span> <span class="pre">1.999,</span> <span class="pre">9.991],</span> <span class="pre">[0.201,</span> <span class="pre">2.001,</span> <span class="pre">10.001]])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.energie_dep_beta" title="Permalink to this definition"></a></dt>
+<dd><p>This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6.</p>
+<section id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>e_inci<span class="classifier">float</span></dt><dd><p>energy of the electron in keV.</p>
+</dd>
+<dt>matrice10_1<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for electrons in the range [1-200] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>matrice10_2<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for electrons in the range [200-2000] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>matrice10_3<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for electrons in the range [2000-10000] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>ed<span class="classifier">list[list], optional</span></dt><dd><p>matrix of input energies. column 0: [1-200] keV; column 1: [200-2000] keV; column 2: [2000-10000] keV</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Returns<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>result<span class="classifier">float</span></dt><dd><p>deposited energy in keV.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.energie_dep_gamma">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">energie_dep_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_inci</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">1e-06,</span> <span class="pre">2e-06,</span> <span class="pre">2e-06],</span> <span class="pre">[0.0,</span> <span class="pre">0.001795,</span> <span class="pre">0.005885,</span> <span class="pre">...,</span> <span class="pre">0.873706,</span> <span class="pre">0.87388,</span> <span class="pre">0.87406],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[2e-06,</span> <span class="pre">1e-06,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">4.5e-05,</span> <span class="pre">4.2e-05,</span> <span class="pre">4.8e-05],</span> <span class="pre">[0.877508,</span> <span class="pre">0.877865,</span> <span class="pre">0.878157,</span> <span class="pre">...,</span> <span class="pre">0.951362,</span> <span class="pre">0.951381,</span> <span class="pre">0.951434],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">4e-06,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">4e-06]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[6e-05,</span> <span class="pre">3e-05,</span> <span class="pre">8e-05,</span> <span class="pre">...,</span> <span class="pre">0.00017,</span> <span class="pre">0.00019,</span> <span class="pre">0.00015],</span> <span class="pre">[0.95212,</span> <span class="pre">0.95221,</span> <span class="pre">0.95236,</span> <span class="pre">...,</span> <span class="pre">0.97913,</span> <span class="pre">0.97918,</span> <span class="pre">0.97918],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">2e-06,</span> <span class="pre">1e-06,</span> <span class="pre">3e-06],</span> <span class="pre">[0.0,</span> <span class="pre">0.001533,</span> <span class="pre">0.005069,</span> <span class="pre">...,</span> <span class="pre">0.855719,</span> <span class="pre">0.855893,</span> <span class="pre">0.856118],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[3e-06,</span> <span class="pre">1e-06,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3.8e-05,</span> <span class="pre">4.8e-05,</span> <span class="pre">4.1e-05],</span> <span class="pre">[0.859989,</span> <span class="pre">0.860337,</span> <span class="pre">0.860676,</span> <span class="pre">...,</span> <span class="pre">0.943906,</span> <span class="pre">0.943951,</span> <span class="pre">0.944006],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">4e-06,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">4e-06]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[4.1e-05,</span> <span class="pre">3.1e-05,</span> <span class="pre">4.4e-05,</span> <span class="pre">...,</span> <span class="pre">0.000194,</span> <span class="pre">0.00019,</span> <span class="pre">0.000205],</span> <span class="pre">[0.944572,</span> <span class="pre">0.944712,</span> <span class="pre">0.944892,</span> <span class="pre">...,</span> <span class="pre">0.975521,</span> <span class="pre">0.975553,</span> <span class="pre">0.975526],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0002008,</span> <span class="pre">0.001999,</span> <span class="pre">0.009991],</span> <span class="pre">[0.0004016,</span> <span class="pre">0.003998,</span> <span class="pre">0.019982],</span> <span class="pre">...,</span> <span class="pre">[0.2006,</span> <span class="pre">1.997,</span> <span class="pre">9.981],</span> <span class="pre">[0.2008,</span> <span class="pre">1.999,</span> <span class="pre">9.991],</span> <span class="pre">[0.201,</span> <span class="pre">2.001,</span> <span class="pre">10.001]])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.energie_dep_gamma" title="Permalink to this definition"></a></dt>
+<dd><p>This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6.</p>
+<section id="id7">
+<h3>Parameters<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>e_inci<span class="classifier">float</span></dt><dd><p>energy of the photon in keV.</p>
+</dd>
+<dt>v<span class="classifier">float</span></dt><dd><p>volume of the scintillator in ml.</p>
+</dd>
+<dt>matrice10_1<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for photons in the range [1-200] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>matrice10_2<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for photons in the range [200-2000] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>matrice10_3<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for photons in the range [2000-10000] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>ed<span class="classifier">list[list], optional</span></dt><dd><p>matrix of input energies. column 0: [1-200] keV; column 1: [200-2000] keV; column 2: [2000-10000] keV</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Returns<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>result<span class="classifier">float</span></dt><dd><p>deposited energy in keV.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.modelAnalytical">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">modelAnalytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TBC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.modelAnalytical" title="Permalink to this definition"></a></dt>
+<dd><p>TDCR analytical model that is used for pure beta emitting radionuclides</p>
+<section id="id9">
+<h3>Parameters<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>L<span class="classifier">float or tuple</span></dt><dd><p>free parameter(s).</p>
+</dd>
+<dt>TD<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio that was measured (logic sum).</p>
+</dd>
+<dt>TAB<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio that was measured (channels A and B).</p>
+</dd>
+<dt>TBC<span class="classifier">flat</span></dt><dd><p>triple-to-double coincidence ratio that was measured (channels B and C).</p>
+</dd>
+<dt>TAC<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio that was measured (channels A and C).</p>
+</dd>
+<dt>rad<span class="classifier">string</span></dt><dd><p>radionuclide (eg. “Na-22”).</p>
+</dd>
+<dt>kB<span class="classifier">float</span></dt><dd><p>Birks constant in cm/keV.</p>
+</dd>
+<dt>V<span class="classifier">float</span></dt><dd><p>volume of the scintillator in ml. run only for 10 ml</p>
+</dd>
+<dt>mode<span class="classifier">string</span></dt><dd><p>“res” to return the residual, “eff” to return efficiencies.</p>
+</dd>
+<dt>mode2<span class="classifier">string</span></dt><dd><p>“sym” for symetrical model, “asym” for symetrical model.</p>
+</dd>
+<dt>nE<span class="classifier">integer</span></dt><dd><p>Number of bins for the quenching function.</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h3>Returns<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>res<span class="classifier">float</span></dt><dd><p>Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode=”res”)</p>
+</dd>
+<dt>mean_efficiency_S<span class="classifier">float</span></dt><dd><p>Estimation of the efficiency of single counting events. (only in mode=”eff”)</p>
+</dd>
+<dt>mean_efficiency_D<span class="classifier">float</span></dt><dd><p>Estimation of the efficiency of logic sum of double coincidences. (only in mode=”eff”)</p>
+</dd>
+<dt>mean_efficiency_T<span class="classifier">float</span></dt><dd><p>Estimation of the efficiency of triple coincidences. (only in mode=”eff”)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.normalise">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">normalise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.normalise" title="Permalink to this definition"></a></dt>
+<dd><p>This function is used to ensure that the sum of probability is equal to 1.</p>
+<section id="id11">
+<h3>Parameters<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>p_x<span class="classifier">list</span></dt><dd><p>vector of probabilities.</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Returns<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>p<span class="classifier">list</span></dt><dd><p>normalized probability vector.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.readBetaShape">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">readBetaShape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z=&lt;zipfile.ZipFile</span> <span class="pre">filename='C:\\Users\\romain.coulon\\Anaconda3\\lib\\site-packages\\tdcrpy\\decayData\\All-nuclides_BetaShape.zip'</span> <span class="pre">mode='r'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.readBetaShape" title="Permalink to this definition"></a></dt>
+<dd><p>This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.</p>
+<p>refs:</p>
+<blockquote>
+<div><p><a class="reference external" href="https://doi.org/10.1103/PhysRevC.92.059902">https://doi.org/10.1103/PhysRevC.92.059902</a></p>
+<p><a class="reference external" href="http://www.lnhb.fr/ddep_wg/">http://www.lnhb.fr/ddep_wg/</a></p>
+</div></blockquote>
+<section id="id13">
+<h3>Parameters<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>rad<span class="classifier">string</span></dt><dd><p>identifier of the radionuclide. e.g. ‘Na-22’</p>
+</dd>
+<dt>mode<span class="classifier">string</span></dt><dd><p>identifier of the decay mode. ‘beta-’ or ‘beta+’</p>
+</dd>
+<dt>level<span class="classifier">int or string</span></dt><dd><p>level of the daughter after decay.  0,1,2,3 …. or ‘tot’ in case of pure beta emitting radionuclides</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h3>Returns<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>e<span class="classifier">list</span></dt><dd><p>the energy vector in keV.</p>
+</dd>
+<dt>dNdx<span class="classifier">list</span></dt><dd><p>the probability density in keV-1.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.readEShape">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">readEShape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z=&lt;zipfile.ZipFile</span> <span class="pre">filename='C:\\Users\\romain.coulon\\Anaconda3\\lib\\site-packages\\tdcrpy\\decayData\\All-nuclides_Ensdf.zip'</span> <span class="pre">mode='r'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.readEShape" title="Permalink to this definition"></a></dt>
+<dd><p>This function reads the ENSDF zip files and format the data to be processed by TDCRPy.</p>
+<section id="id15">
+<h3>Parameters<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>rad<span class="classifier">string</span></dt><dd><p>name of the radionuclide such as ‘Ag-108’.</p>
+</dd>
+<dt>z<span class="classifier">ZipFile object</span></dt><dd><p>zip ENSDF file.</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h3>Returns<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>daug_name<span class="classifier">list</span></dt><dd><p>daughter nucleus of the decay</p>
+</dd>
+<dt>Energy<span class="classifier">list</span></dt><dd><p>comprise all transition energies of the daughter nucleus.</p>
+</dd>
+<dt>Prob<span class="classifier">list</span></dt><dd><p>comprise all transtion probabilities of the daughter nucleus.</p>
+</dd>
+<dt>Type<span class="classifier">list</span></dt><dd><p>comprise all type of transition of the daughter nucleus.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.readPenNuc2">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">readPenNuc2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z1=&lt;zipfile.ZipFile</span> <span class="pre">filename='C:\\Users\\romain.coulon\\Anaconda3\\lib\\site-packages\\tdcrpy\\decayData\\All-nuclides_PenNuc.zip'</span> <span class="pre">mode='r'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.readPenNuc2" title="Permalink to this definition"></a></dt>
+<dd><p>This function is used to read PenNuc files to format the decay data in lists readable by TDCRPy.</p>
+<section id="id17">
+<h3>Parameters<a class="headerlink" href="#id17" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>rad<span class="classifier">string</span></dt><dd><p>name of the radionculide (for example: “Am-241”).</p>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h3>Returns<a class="headerlink" href="#id18" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>daughter<span class="classifier">list</span></dt><dd><p>list of the daughter nucleus – indice 0.</p>
+</dd>
+<dt>prob_daug<span class="classifier">list</span></dt><dd><p>list of probabilities to produce daugter nuclei – indice 1.</p>
+</dd>
+<dt>energy_Q<span class="classifier">list</span></dt><dd><p>list of Q value for each transition to a given daughter nucleus – indice 2.</p>
+</dd>
+<dt>desin_type_tot<span class="classifier">list[list]</span></dt><dd><p>list of type of decay branch / emitted particules – indice 3. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.</p>
+</dd>
+<dt>desin_energy_tot<span class="classifier">list[list]</span></dt><dd><p>list of the energies of decay transition or the emitted particles – indice 4. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.</p>
+</dd>
+<dt>desin_prob_tot<span class="classifier">list[list]</span></dt><dd><p>list of the prabability of decay transition or the emitted particles – indice 5. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.</p>
+</dd>
+<dt>desin_level_tot<span class="classifier">list[list]</span></dt><dd><p>list of energy level that the daughter nucleus can have just after the decay of the mother nucleus – indice 6. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.</p>
+</dd>
+<dt>prob_branch_tot<span class="classifier">list</span></dt><dd><p>list of branch probabilities – indice 7. It contains a sub-list for all possible branches of a given daughter nucleus.</p>
+</dd>
+<dt>tran_type_tot<span class="classifier">list[list]</span></dt><dd><p>list of all possible transitions – indice 8. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.</p>
+</dd>
+<dt>tran_energy_tot<span class="classifier">list[list]</span></dt><dd><p>list of energy associated with transitions – indice 9. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.</p>
+</dd>
+<dt>tran_prob_tot<span class="classifier">list[list]</span></dt><dd><p>list of probability associated with transitions – indice 10. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.</p>
+</dd>
+<dt>tran_level_tot<span class="classifier">list[list]</span></dt><dd><p>list of corresponding branch levels – indice 11. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level before the transition.</p>
+</dd>
+<dt>tran_level_end_tot<span class="classifier">list[list]</span></dt><dd><p>list of level following given transitions – indice 12. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level after the transition.</p>
+</dd>
+<dt>level_energy_tot<span class="classifier">list[list]</span></dt><dd><p>list of energy levels – indice 13. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.</p>
+</dd>
+<dt>prob_tran_tot<span class="classifier">list[list]</span></dt><dd><p>list of sum of transition of each branches – indice 14. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.read_matrice">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">read_matrice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niveau</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.read_matrice" title="Permalink to this definition"></a></dt>
+<dd><p>This function read the response matrix calculated by MCNP6 simulation.</p>
+<section id="id19">
+<h3>Parameters<a class="headerlink" href="#id19" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>path<span class="classifier">string</span></dt><dd><p>path to the response matrix.</p>
+</dd>
+<dt>niveau<span class="classifier">integer or string</span></dt><dd><p>energy range of the response matrix. 0: [1-200] keV; 1: [200-2000] keV; 2: [2000-10000] keV. “e” for the input energy matrix.</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h3>Returns<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>matrice<span class="classifier">list[list]</span></dt><dd><p>formatted response matrix.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.relaxation_atom">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">relaxation_atom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">daugther</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lacune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'defaut'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.relaxation_atom" title="Permalink to this definition"></a></dt>
+<dd><p>This function simulates the atomic rearangement following a missing electron an inner shell of the daughter atom.</p>
+<section id="id21">
+<h3>Parameters<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>daugther<span class="classifier">string</span></dt><dd><p>The daughter nucleus (for example NB95,PD110 etc.)</p>
+</dd>
+<dt>rad<span class="classifier">string</span></dt><dd><p>The mother nucleus (for exemple Am-241, C-11 etc.)</p>
+</dd>
+<dt>lacune<span class="classifier">string</span></dt><dd><p>The shell where the electron is missing (for example ‘Atom_K’,’Atom_L’ etc.)</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h3>Returns<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h3>
+<p>Type : type of transition Auger L or K, or X Ray.
+Energy : corresponding energy in keV.</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.sampling">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.sampling" title="Permalink to this definition"></a></dt>
+<dd><p>This function aims to sample in a pdf or a pmf</p>
+<section id="id23">
+<h3>Parameters<a class="headerlink" href="#id23" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>p_x<span class="classifier">float vector</span></dt><dd><p>Probability Density (or mass) Function (PDF or PMF) of the random variable x.</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h3>Returns<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>i<span class="classifier">integer</span></dt><dd><p>index in x pointing the sampled value of the random variable X.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.stoppingpower">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">stoppingpower</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.96</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11.04</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.0,</span> <span class="pre">0.7,</span> <span class="pre">1.4,</span> <span class="pre">...,</span> <span class="pre">12.491336,</span> <span class="pre">12.490668,</span> <span class="pre">8.98619049e-43])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.stoppingpower" title="Permalink to this definition"></a></dt>
+<dd><p>The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
+At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.</p>
+<p>Refs:</p>
+<blockquote>
+<div><p>[1] <a class="reference external" href="https://doi.org/10.1016/0020-708x(82)90244-7">https://doi.org/10.1016/0020-708x(82)90244-7</a></p>
+<p>[2] <a class="reference external" href="https://www.ijstr.org/final-print/jan2017/Calculations-Of-Stopping-Power-And-Range-Of-Electrons-Interaction-With-Different-Material-And-Human-Body-Parts.pdf">https://www.ijstr.org/final-print/jan2017/Calculations-Of-Stopping-Power-And-Range-Of-Electrons-Interaction-With-Different-Material-And-Human-Body-Parts.pdf</a></p>
+<p>[3] <a class="reference external" href="https://dx.doi.org/10.18434/T4NC7P">https://dx.doi.org/10.18434/T4NC7P</a></p>
+<p>[4] ICRU Report 37, Stopping Powers for Electrons and Positrons</p>
+<p>[5] <a class="reference external" href="https://doi.org/10.1016/j.apradiso.2011.08.012">https://doi.org/10.1016/j.apradiso.2011.08.012</a></p>
+</div></blockquote>
+<section id="id25">
+<h3>Parameters<a class="headerlink" href="#id25" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>e<span class="classifier">float</span></dt><dd><p>Energy of the electron in eV.</p>
+</dd>
+<dt>rho<span class="classifier">float, optional</span></dt><dd><p>density of the source in g.cm-3. The default is 0.96.</p>
+</dd>
+<dt>Z<span class="classifier">float, optional</span></dt><dd><p>mean charge number of the source. The default is 5.2.</p>
+</dd>
+<dt>A<span class="classifier">float, optional</span></dt><dd><p>mean mass number of the source. The default is 11.04.</p>
+</dd>
+<dt>emin<span class="classifier">float, optional</span></dt><dd><p>the minimal energy to consider. The default is 0.</p>
+</dd>
+<dt>file<span class="classifier">list, optional</span></dt><dd><p>tabulated data form the Tan and Xia model. The default is data_TanXia_f.</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h3>Returns<a class="headerlink" href="#id26" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>dEdx<span class="classifier">float</span></dt><dd><p>Calculated stopping power in MeV.cm-1.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.stoppingpowerA">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">stoppingpowerA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.96</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1.0,</span> <span class="pre">1.5,</span> <span class="pre">2.0,</span> <span class="pre">2.5,</span> <span class="pre">3.0,</span> <span class="pre">4.0,</span> <span class="pre">5.0,</span> <span class="pre">6.0,</span> <span class="pre">7.0,</span> <span class="pre">8.0,</span> <span class="pre">9.0,</span> <span class="pre">10.0,</span> <span class="pre">12.5,</span> <span class="pre">15.0,</span> <span class="pre">17.5,</span> <span class="pre">20.0,</span> <span class="pre">22.5,</span> <span class="pre">25.0,</span> <span class="pre">27.5,</span> <span class="pre">30.0,</span> <span class="pre">35.0,</span> <span class="pre">40.0,</span> <span class="pre">45.0,</span> <span class="pre">50.0,</span> <span class="pre">55.0,</span> <span class="pre">60.0,</span> <span class="pre">65.0,</span> <span class="pre">70.0,</span> <span class="pre">75.0,</span> <span class="pre">80.0,</span> <span class="pre">85.0,</span> <span class="pre">90.0,</span> <span class="pre">95.0,</span> <span class="pre">100.0,</span> <span class="pre">125.0,</span> <span class="pre">150.0,</span> <span class="pre">175.0,</span> <span class="pre">200.0,</span> <span class="pre">225.0,</span> <span class="pre">250.0,</span> <span class="pre">275.0,</span> <span class="pre">300.0,</span> <span class="pre">350.0,</span> <span class="pre">400.0,</span> <span class="pre">450.0,</span> <span class="pre">500.0,</span> <span class="pre">550.0,</span> <span class="pre">600.0,</span> <span class="pre">650.0,</span> <span class="pre">700.0,</span> <span class="pre">750.0,</span> <span class="pre">800.0,</span> <span class="pre">850.0,</span> <span class="pre">900.0,</span> <span class="pre">950.0,</span> <span class="pre">1000.0,</span> <span class="pre">1250.0,</span> <span class="pre">1500.0,</span> <span class="pre">1750.0,</span> <span class="pre">2000.0,</span> <span class="pre">2250.0,</span> <span class="pre">2500.0,</span> <span class="pre">2750.0,</span> <span class="pre">3000.0,</span> <span class="pre">3500.0,</span> <span class="pre">4000.0,</span> <span class="pre">4500.0,</span> <span class="pre">5000.0,</span> <span class="pre">5500.0,</span> <span class="pre">6000.0,</span> <span class="pre">6500.0,</span> <span class="pre">7000.0,</span> <span class="pre">7500.0,</span> <span class="pre">8000.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dEdx_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[426600.0,</span> <span class="pre">442500.0,</span> <span class="pre">456000.0,</span> <span class="pre">468700.0,</span> <span class="pre">480800.0,</span> <span class="pre">504300.0,</span> <span class="pre">526800.0,</span> <span class="pre">548500.0,</span> <span class="pre">569400.0,</span> <span class="pre">589600.0,</span> <span class="pre">609100.0,</span> <span class="pre">628100.0,</span> <span class="pre">673000.0,</span> <span class="pre">715000.0,</span> <span class="pre">754500.0,</span> <span class="pre">791900.0,</span> <span class="pre">827400.0,</span> <span class="pre">861200.0,</span> <span class="pre">893600.0,</span> <span class="pre">924700.0,</span> <span class="pre">983500.0,</span> <span class="pre">1038000.0,</span> <span class="pre">1090000.0,</span> <span class="pre">1139000.0,</span> <span class="pre">1185000.0,</span> <span class="pre">1229000.0,</span> <span class="pre">1271000.0,</span> <span class="pre">1311000.0,</span> <span class="pre">1350000.0,</span> <span class="pre">1387000.0,</span> <span class="pre">1423000.0,</span> <span class="pre">1457000.0,</span> <span class="pre">1490000.0,</span> <span class="pre">1522000.0,</span> <span class="pre">1668000.0,</span> <span class="pre">1792000.0,</span> <span class="pre">1900000.0,</span> <span class="pre">1993000.0,</span> <span class="pre">2074000.0,</span> <span class="pre">2145000.0,</span> <span class="pre">2206000.0,</span> <span class="pre">2258000.0,</span> <span class="pre">2340000.0,</span> <span class="pre">2398000.0,</span> <span class="pre">2436000.0,</span> <span class="pre">2457000.0,</span> <span class="pre">2465000.0,</span> <span class="pre">2463000.0,</span> <span class="pre">2453000.0,</span> <span class="pre">2436000.0,</span> <span class="pre">2415000.0,</span> <span class="pre">2389000.0,</span> <span class="pre">2361000.0,</span> <span class="pre">2331000.0,</span> <span class="pre">2299000.0,</span> <span class="pre">2267000.0,</span> <span class="pre">2111000.0,</span> <span class="pre">1962000.0,</span> <span class="pre">1819000.0,</span> <span class="pre">1684000.0,</span> <span class="pre">1561000.0,</span> <span class="pre">1457000.0,</span> <span class="pre">1369000.0,</span> <span class="pre">1292000.0,</span> <span class="pre">1164000.0,</span> <span class="pre">1061000.0,</span> <span class="pre">977400.0,</span> <span class="pre">907300.0,</span> <span class="pre">847700.0,</span> <span class="pre">796300.0,</span> <span class="pre">751400.0,</span> <span class="pre">711800.0,</span> <span class="pre">676600.0,</span> <span class="pre">645000.0]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.stoppingpowerA" title="Permalink to this definition"></a></dt>
+<dd><p>Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code</p>
+<p>ref:</p>
+<blockquote>
+<div><p><a class="reference external" href="https://dx.doi.org/10.18434/T4NC7P">https://dx.doi.org/10.18434/T4NC7P</a></p>
+</div></blockquote>
+<section id="id27">
+<h3>Parameters<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>e<span class="classifier">float</span></dt><dd><p>energy of the alpha particle in keV.</p>
+</dd>
+<dt>rho<span class="classifier">float, optional</span></dt><dd><p>density of the source in g.cm-3. The default is 0.96.</p>
+</dd>
+<dt>energy_alpha<span class="classifier">list, optional</span></dt><dd><p>the list of energy (in keV) for which the stopping power was calculated with ASTAR. The default is energy_alph.</p>
+</dd>
+<dt>dEdx_alpha<span class="classifier">list, optional</span></dt><dd><p>the list of stopping powers (in keV.cm2/g) associated with the energy vector. The default is dEdx_alph.</p>
+</dd>
+</dl>
+</section>
+<section id="id28">
+<h3>Returns<a class="headerlink" href="#id28" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>float</dt><dd><p>Interpolated ASTAR estimation of the stopping power.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.tic">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">tic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.tic" title="Permalink to this definition"></a></dt>
+<dd><p>Records a time in TicToc, marks the beginning of a time interval</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.toc">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">toc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tempBool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.toc" title="Permalink to this definition"></a></dt>
+<dd><p>Prints the time difference yielded by generator instance TicToc</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.transf_name">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">transf_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rad</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.transf_name" title="Permalink to this definition"></a></dt>
+<dd><p>This function format the name of the nuclide to match with the PenNuc format.</p>
+<section id="id29">
+<h3>Parameters<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>rad<span class="classifier">string</span></dt><dd><p>name of the radionculdie such as ‘108AG’.</p>
+</dd>
+</dl>
+</section>
+<section id="id30">
+<h3>Returns<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>RAD<span class="classifier">string</span></dt><dd><p>name of the radionuclide such as ‘AG108’ that match with PenNuc format.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.writeEffcurves">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">writeEffcurves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SDT</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.writeEffcurves" title="Permalink to this definition"></a></dt>
+<dd><p>This function writes efficiency curves</p>
+<section id="id31">
+<h3>Parameters<a class="headerlink" href="#id31" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>x<span class="classifier">TYPE</span></dt><dd><p>DESCRIPTION.</p>
+</dd>
+<dt>y<span class="classifier">TYPE</span></dt><dd><p>DESCRIPTION.</p>
+</dd>
+<dt>uy<span class="classifier">TYPE</span></dt><dd><p>DESCRIPTION.</p>
+</dd>
+<dt>rad<span class="classifier">TYPE</span></dt><dd><p>DESCRIPTION.</p>
+</dd>
+<dt>p<span class="classifier">TYPE</span></dt><dd><p>DESCRIPTION.</p>
+</dd>
+<dt>kB<span class="classifier">TYPE</span></dt><dd><p>DESCRIPTION.</p>
+</dd>
+<dt>SDT<span class="classifier">TYPE</span></dt><dd><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h3>Returns<a class="headerlink" href="#id32" title="Permalink to this heading"></a></h3>
+<p>None.</p>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-tdcrpy.TDCRoptimize">
+<span id="tdcrpy-tdcroptimize-module"></span><h2>tdcrpy.TDCRoptimize module<a class="headerlink" href="#module-tdcrpy.TDCRoptimize" title="Permalink to this heading"></a></h2>
+<p>Created on Wed Jul  5 10:04:53 2023</p>
+<p>&#64;author: romain.coulon, jialin.hu</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCRoptimize.eff">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCRoptimize.</span></span><span class="sig-name descname"><span class="pre">eff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">TD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TBC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCRoptimize.eff" title="Permalink to this definition"></a></dt>
+<dd><p>Caclulation of the efficiency of a TDCR system based on the model TDCRPy.</p>
+<section id="id33">
+<h3>Parameters<a class="headerlink" href="#id33" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>TD<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio. Not consider if mode2=”asym”. Not consider if mode2=”asym”.</p>
+</dd>
+<dt>TAB<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio (coincidences between channel A and B). Not consider if mode2=”sym”.</p>
+</dd>
+<dt>TBC<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio (coincidences between channel B and C). Not consider if mode2=”sym”.</p>
+</dd>
+<dt>TAC<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio (coincidences between channel A and C). Not consider if mode2=”sym”.</p>
+</dd>
+<dt>Rad<span class="classifier">string</span></dt><dd><p>List of radionuclides.</p>
+</dd>
+<dt>pmf_1<span class="classifier">string</span></dt><dd><p>list of probability of each radionuclide..</p>
+</dd>
+<dt>kB<span class="classifier">float</span></dt><dd><p>Birks constant.</p>
+</dd>
+<dt>V<span class="classifier">float</span></dt><dd><p>volume of the scintillator in ml. run only for 10 ml</p>
+</dd>
+<dt>mode2<span class="classifier">string</span></dt><dd><p>“sym” for symetrical model, “asym” for symetrical model.</p>
+</dd>
+<dt>N<span class="classifier">interger, optional</span></dt><dd><p>number of Monte-Carlo trials. The default is 1000.</p>
+</dd>
+<dt>L<span class="classifier">float, optional</span></dt><dd><p>free parameter(s) as initial guess. The default is 1.</p>
+</dd>
+</dl>
+</section>
+<section id="id34">
+<h3>Returns<a class="headerlink" href="#id34" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>L0<span class="classifier">float</span></dt><dd><p>global free parameter.</p>
+</dd>
+<dt>L<span class="classifier">tuple</span></dt><dd><p>free parameters (relevant for the asymetric model).</p>
+</dd>
+<dt>eff_S<span class="classifier">float</span></dt><dd><p>counting efficiency of single events.</p>
+</dd>
+<dt>u_eff_S<span class="classifier">float</span></dt><dd><p>standard uncertainty of eff_S.</p>
+</dd>
+<dt>eff_D<span class="classifier">float</span></dt><dd><p>counting efficiency of double coincidences.</p>
+</dd>
+<dt>u_eff_D<span class="classifier">float</span></dt><dd><p>standard uncertainty of eff_D.</p>
+</dd>
+<dt>eff_T<span class="classifier">float</span></dt><dd><p>counting efficiency of triple coincidences.</p>
+</dd>
+<dt>u_eff_T<span class="classifier">float</span></dt><dd><p>standard uncertainty of eff_T.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-tdcrpy">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tdcrpy" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Romain Coulon, Jialin Hu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

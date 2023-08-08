@@ -7,11 +7,14 @@ TDCRPy.egg-info/SOURCES.txt
 TDCRPy.egg-info/dependency_links.txt
 TDCRPy.egg-info/requires.txt
 TDCRPy.egg-info/top_level.txt
+tdcrpy/Activity_TDCR.py
+tdcrpy/EfficiencyProfils.py
 tdcrpy/TDCRPy.py
 tdcrpy/TDCR_model_lib.py
 tdcrpy/TDCRoptimize.py
 tdcrpy/__init__.py
 tdcrpy/config.toml
+tdcrpy/decay.py
 tdcrpy/MCNP-MATRIX/matrice/fichier/E_depose.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_1_200k.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_2000_10000k.txt
@@ -28,3 +31,11 @@ tdcrpy/Quenching/alpha_toulene.txt
 tdcrpy/decayData/All-nuclides_BetaShape.zip
 tdcrpy/decayData/All-nuclides_Ensdf.zip
 tdcrpy/decayData/All-nuclides_PenNuc.zip
+tdcrpy/docs/_build/html/genindex.html
+tdcrpy/docs/_build/html/index.html
+tdcrpy/docs/_build/html/py-modindex.html
+tdcrpy/docs/_build/html/search.html
+tdcrpy/docs/_build/html/source/modules.html
+tdcrpy/docs/_build/html/source/tdcrpy.html
+tdcrpy/test/__init__.py
+tdcrpy/test/test_tdcrpy.py

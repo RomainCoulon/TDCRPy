@@ -12,48 +12,58 @@ import matplotlib.pyplot as plt
 # Validation with standard solution for Co-60
 # """
 
-# Rad="Co-60"    # list of radionuclides (Na-24)
-# pmf_1="1"
-# kB =1.0e-5       # Birks constant in cm/keV
-# RHO = 0.98
-# nE = 1000
-# TD = 0.977667386529166        # Measured TDCR value
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# L = 1
-# N = 100
+file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
+file = open(file_path, "w")
 
-# resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "eff", "sym")
-# print(resuts_1)
+Rad="Co-60"    # list of radionuclides (Na-24)
+pmf_1="1"
+kB =1.0e-5       # Birks constant in cm/keV
+RHO = 0.98
+V = 10
+nE = 1000
+TD = 0.977667386529166        # Measured TDCR value
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+L = 1.5
+# N = [10, 20, 50]#, 100, 1000, 2000, 3000, 5000]
+N = [50]
 
-# # resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
-# # print(resuts_2)
+
+for Ni in N:
+    #     resuts_1.append(td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "eff", "sym"))
+    # print(resuts_1)
+    td.TDCR_model_lib.tic()
+    resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
+    a = td.TDCR_model_lib.toc()
+    print("/n",resuts_2)
+    file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+
 
 
 """
 Validation with Fe-55
 """
 
-Rad="Co-60"    # list of radionuclides (Na-24)
-pmf_1="1"
-kB =1.0e-5       # Birks constant in cm/keV
-RHO = 0.98
-nE = 1000
-D = 1000
-T = 700        # Measured TDCR value
-TAB = 800
-TBC = 800
-TAC = 800
-L = 1
-N = 5
-TD = T/D
+# Rad="Co-60"    # list of radionuclides (Na-24)
+# pmf_1="1"
+# kB =1.0e-5       # Birks constant in cm/keV
+# RHO = 0.98
+# nE = 1000
+# D = 1000
+# T = 700        # Measured TDCR value
+# TAB = 800
+# TBC = 800
+# TAC = 800
+# L = 1
+# N = 5
+# TD = T/D
 
-# resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "eff", "sym")
-# print(resuts_1)
+# # resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, "eff", "sym")
+# # print(resuts_1)
 
-resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
-print("\n",resuts_2)
+# resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
+# print("\n",resuts_2)
 
 
 
@@ -174,3 +184,6 @@ Validation with the analytical model
 # plt.xlabel('E de particule/keV')
 # plt.ylabel("énergie d'extinction/E")
 # plt.savefig("Quenching/beta 100-10K E_Q sur E.png")
+
+
+# td.TDCR_model_lib.readPenNuc2("H-3")
