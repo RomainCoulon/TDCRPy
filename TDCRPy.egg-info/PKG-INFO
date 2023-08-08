@@ -1,11 +1,12 @@
 Metadata-Version: 2.1
 Name: TDCRPy
-Version: 0.0.61
+Version: 0.0.70
 Summary: TDCR model
 Home-page: https://github.com/RomainCoulon/TDCRPy
 Author: RomainCoulon (Romain Coulon)
 Author-email: <romain.coulon@bipm.org>
-Keywords: python,TDCR,Monte-Carlo,radionuclide,scintillation,counting
+Project-URL: Documentation, https://github.com/RomainCoulon/TDCRPy/
+Keywords: Python,TDCR,Monte-Carlo,radionuclide,scintillation,counting
 Classifier: Development Status :: 2 - Pre-Alpha
 Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: MIT License

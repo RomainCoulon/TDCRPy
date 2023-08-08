@@ -15,7 +15,7 @@ import configparser
 import numpy as np
 from tqdm import tqdm
 
-def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=True):
+def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False):
     """
     This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
     The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB. 

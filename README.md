@@ -37,6 +37,21 @@ The module can be imported in your Python code such as.
 import tdcrpy
 ```
 
+## Test
+
+To run the unit tests of the package:
+
+```shell
+python -m unittest tdcrpy.test.test_tdcrpy
+```
+
+or (using the coverage package)
+
+```shell
+coverage run -m unittest tdcrpy.test.test_tdcrpy
+coverage report -m
+```
+
 ## Documentation
 
 The full documentation for this project can be found in [docs/_build/html/index.html](docs/_build/html/index.html).
