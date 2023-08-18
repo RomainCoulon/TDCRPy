@@ -500,12 +500,12 @@ e,matrice_p = creat_matrice(1,par='b')
 #print(len(e))
 #print(matrice_p[76:90,25])
 #print(matrice_p.shape,matrice_p[0,541:543])
-#ecri = ecrit_matrice(matrice_p,0,'b',16) 
+ecri = ecrit_matrice(matrice_p,1,'b',16) 
 #fig1 = matrice_fig(matrice_p,1,100,e,'b',16)
-for i in range(1003):
-    for j in range(901):
-        matrice_p[i][j] = np.log(matrice_p[i][j]+1e-8)
-fig2 = matrice_fig(matrice_p,1000,2000,e,'b',v=10)
+#for i in range(1003):
+  #  for j in range(901):
+ #       matrice_p[i][j] = np.log(matrice_p[i][j]+1e-8)
+#fig2 = matrice_fig(matrice_p,200,1000,e,'b',v=16)
 #print(fig2)
 
 #============= tracer la proba à Ei=Ed ====================================== 

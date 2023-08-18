@@ -65,6 +65,7 @@ with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fe2 = data_path / 'matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
     fe3 = data_path / 'matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
     fe4 = data_path / 'matrice/fichier/matrice_16ml-beta-_1_200k.txt' # electron-16ml-1-200keV-niveau 0
+    fe5 = data_path / 'matrice/fichier/matrice_16ml-beta-_200_2000k.txt' # electron-16ml-1-200keV-niveau 1
     fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
 
 # import stopping power data for electron
@@ -878,10 +879,11 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
 Matrice10_e_1 = read_matrice(fe1,0)
 Matrice10_e_2 = read_matrice(fe2,1)
 Matrice10_e_3 = read_matrice(fe3,2)
-Matrice16_e_3 = read_matrice(fe4,0)
+Matrice16_e_1 = read_matrice(fe4,0)
+Matrice16_e_2 = read_matrice(fe4,1)
 #Matrice_e = read_matrice(fe,'e')
 
-def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,ed=Matrice_e):
+def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,ed=Matrice_e):
     """ This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
@@ -934,7 +936,7 @@ def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_
     return result
 
 
-def energie_dep_beta2(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,ed=Matrice_e):
+def energie_dep_beta2(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,ed=Matrice_e):
     """ This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
