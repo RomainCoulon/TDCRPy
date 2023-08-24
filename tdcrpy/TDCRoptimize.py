@@ -59,13 +59,14 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=1000, L=1):
 
     """
     # Estimation of the free parameter that minimize the residuals
-    r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='bounded', bounds=[0, 3],options={'xatol': 1e-4, 'disp': True, 'maxiter':20})
+    # r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='bounded', bounds=[0, 10000],options={'xatol': 1e-4, 'disp': True, 'maxiter':20})
+    r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='golden', options={'xatol': 1e-4, 'disp': True, 'maxiter':20})
     L=r.x
     print(r)
     
     if mode2 == "asym":
         L=(L, L, L)           # Free paramete in keV-1
-        r=opt.minimize(td.TDCRPy, L, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "asym"), method='nelder-mead',options={'xatol': 1e-5, 'disp': True, 'maxiter':100})
+        r=opt.minimize(td.TDCRPy, L, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "asym"), method='nelder-mead',options={'xatol': 1e-5, 'disp': True, 'maxiter':20})
         L=r.x
         print(r)
         out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "eff", "asym")

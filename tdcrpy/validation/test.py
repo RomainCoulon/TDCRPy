@@ -7,38 +7,88 @@ Validation test of the TDCRPy code
 import tdcrpy as td
 import numpy as np
 import matplotlib.pyplot as plt
+import cProfile
+import pstats
 
-# """
-# Validation with standard solution for Co-60
-# """
 
-file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
-file = open(file_path, "w")
-
-Rad="Co-60"    # list of radionuclides (Na-24)
-pmf_1="1"
-kB =1.0e-5       # Birks constant in cm/keV
-RHO = 0.98
-V = 10
-nE = 1000
+"""
+Profiling
+"""
 TD = 0.977667386529166        # Measured TDCR value
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
-L = 1.5
-# N = [10, 20, 50]#, 100, 1000, 2000, 3000, 5000]
-N = [50]
+L = 1.0
+
+def main():
+    td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Co-60", "1", 1, 1.0e-5, 10, "eff", "sym")
+    # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Am-241", "1", 1, 1.0e-5, 10, "eff", "sym")
+    # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "H-3", "1", 1, 1.0e-5, 10, "eff", "sym")
+    
+if __name__ == "__main__":
+    main()
+
+cProfile.run("main()", filename="profile_results.txt")
+stats = pstats.Stats("profile_results.txt")
+stats.sort_stats(pstats.SortKey.TIME)
+stats.print_stats()
 
 
-for Ni in N:
-    #     resuts_1.append(td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "eff", "sym"))
-    # print(resuts_1)
-    td.TDCR_model_lib.tic()
-    resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
-    a = td.TDCR_model_lib.toc()
-    print("/n",resuts_2)
-    file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
 
+# # Save the profiling information to a more readable text file
+# with open("readable_profile.txt", "w") as f:
+#     stats.print_stats()
+
+
+
+
+
+
+
+# if __name__ == "__main__": 
+#     with cProfile.Profile() as profile:
+#         td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Co-60", "1", 100, 1.0e-5, 10, "eff", "sym")
+#     result = ptats.Stats(profile)
+    
+    
+
+
+"""
+Validation with standard solution for Co-60 (comparison 2023)
+"""
+
+# file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
+# file = open(file_path, "w")
+
+# Rad="Co-60"    # list of radionuclides (Na-24)
+# pmf_1="1"
+# kB =1.0e-5       # Birks constant in cm/keV
+# RHO = 0.98
+# V = 10
+# nE = 1000
+# TD = 0.977667386529166        # Measured TDCR value
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# L = 1.5
+# # N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 10000]
+# N = [20000]
+
+# ## Symetrical model
+# # for Ni in N:
+# #     td.TDCR_model_lib.tic()
+# #     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
+# #     a = td.TDCR_model_lib.toc()
+# #     print("/n",Ni,resuts_2,"/n/n")
+# #     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+
+# ## Asymetrical model
+# for Ni in N:
+#     td.TDCR_model_lib.tic()
+#     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "asym", N=Ni)
+#     a = td.TDCR_model_lib.toc()
+#     print("\n",Ni,resuts_2,"\n\n")
+#     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
 
 
 """
@@ -74,6 +124,7 @@ Validation with the analytical model
 # Rad="Sr-89"
 # pmf_1="1"
 # kB =1.0e-5       # Birks constant in cm/keV
+# V = 10
 # TD = 0.70        # Measured TDCR value
 # TAB = 0.992232838598821
 # TBC = 0.992343419459002
@@ -83,9 +134,10 @@ Validation with the analytical model
 
 # print("Rad",Rad)
 # for iN in N:
-#     resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, iN, kB, "eff", "sym", Display=False)
-#     print(resuts_1[0],resuts_1[1],resuts_1[2],resuts_1[3],resuts_1[4],resuts_1[5])
-
+#     td.TDCR_model_lib.tic()    
+#     resuts_1=td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, iN, kB, V, "eff", "sym", Display=False)
+#     print(iN,resuts_1[0],resuts_1[1],resuts_1[2],resuts_1[3],resuts_1[4],resuts_1[5])
+#     td.TDCR_model_lib.toc()
 # resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, "sym", N=N)
 # print(resuts_2)
 

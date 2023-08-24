@@ -20,6 +20,7 @@ import zipfile as zf
 import time
 import re
 import os
+import scipy.interpolate as  interp
 
 """
 ======= Import ressource data =======
@@ -90,6 +91,37 @@ for i in range(np.size(data_ASTAR)):
         data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
     energy_alph.append(data_ASTAR[i][0])
     dEdx_alph.append(data_ASTAR[i][1])
+
+# import pre-calculated quenched energy tables
+kB_a = [6e-6, 7e-6, 8e-6, 9e-6, 1e-5, 1.1e-5, 1.2e-5, 1.3e-5, 1.4e-5, 1.5e-5] # cm/MeV
+Ei_alpha_fid = open("inputVecteurAlpha.txt")
+Ei_alpha = Ei_alpha_fid.readlines()
+Ei_alpha = Ei_alpha[0].split(" ")
+Ei_alpha = [float(x) for x in Ei_alpha[:-1]]
+
+Em_alpha = []
+for ikB in kB_a:
+    with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+        fid = open("QuenchEnergyAlpha_"+str(ikB)+".txt")
+    line = fid.readlines()
+    line = line[0].split(" ")
+    line = [float(x) for x in line[:-1]]
+    Em_alpha.append(line)
+    
+Ei_electron_fid = open("inputVecteurElectron.txt")
+Ei_electron = Ei_electron_fid.readlines()
+Ei_electron = Ei_electron[0].split(" ")
+Ei_electron = [float(x) for x in Ei_electron[:-1]]
+
+kB_e = [0.006, 0.007, 0.008, 0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015] # cm/MeV
+Em_electron = []
+for ikB in kB_e:
+    with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+        fid = open("QuenchEnergyElectron_"+str(ikB)+".txt")
+    line = fid.readlines()
+    line = line[0].split(" ")
+    line = [float(x) for x in line[:-1]]
+    Em_electron.append(line)
 
 """
 ======= Library of functions =======
@@ -637,6 +669,8 @@ def E_quench_e(e,kB,nE):
         energy of the electron in eV.
     kB : float
         Birks constant in cm/MeV.
+    nE : integer 
+        number of points of the energy linear space
     
     Returns
     -------
@@ -652,6 +686,7 @@ def E_quench_e(e,kB,nE):
         q += delta/(1+kB*stoppingpower(i))
     return q
 
+
 def E_quench_a(e,kB,nE): 
     """
     This function calculate the quenched energy alpha particles according to  the Birks model of scintillation quenching
@@ -662,6 +697,8 @@ def E_quench_a(e,kB,nE):
         energy of the alpha particle in keV.
     kB : float
         Birks constant in cm/keV.
+    nE : integer 
+        number of points of the energy linear space
     
     Returns
     -------
@@ -676,6 +713,147 @@ def E_quench_a(e,kB,nE):
     for i in e_dis:
         q += delta/(1+kB*stoppingpowerA(i))
     return q
+
+def run_interpolate(kB_vec, kB , Ev, Emv, E):
+    """
+    This fonction performs a cubic splin interpolation of pre-calculated quenching energies.
+    It aims to gain calculation time while inducing an acceptable calculation error.
+
+    Parameters
+    ----------
+    kB_vec : list
+        list of kB values for which the quenched energy was calculated.
+    kB : float
+        Exact value of the Birks constant.
+    Ev : list
+        Vector of deposited energies eV for electron and in keV for alpha (set by default)
+    Emv : list
+        Vector of quenched energies eV for electron and in keV for alpha (set by default)
+    E : TYPE
+        Exact value of the input energy.
+
+    Returns
+    -------
+    r : TYPE
+        the interpolated estimation of the quenched energy.
+
+    """
+    
+    if kB in kB_vec:
+        # Exact value for the kB
+        kBin = True
+        ind_k = kB_vec.index(kB)
+    else:
+        # non exact value for the kB
+        # find the index just above the true value
+        for index, value in enumerate(kB_vec):
+            ind_k = -1
+            if value > kB:
+                ind_k = index
+                break        
+        kBin = False
+    for index, value in enumerate(Ev):
+        # find the index just above the location of the exact value of the input energy 
+        ind = -1
+        if value > E:
+            ind = index
+            break
+    m = 5 # set the window depht of the spline interpolation around the energy index
+    if kBin:
+        # case of exact kB value
+        if ind<m and ind != -1:
+            # troncated window on low values
+            f = interp.UnivariateSpline(Ev[ind:ind+m], Emv[ind_k][ind:ind+m])
+        elif ind>len(Ev)-m or ind==-1:
+            # troncated window on high values
+            f = interp.UnivariateSpline(Ev[ind-m:ind], Emv[ind_k][ind-m:ind])
+        else:
+            f = interp.UnivariateSpline(Ev[ind-m:ind+m], Emv[ind_k][ind-m:ind+m])
+        r = f(E) # interpolated quenched energy
+    else:
+        # interpolation for the two indexes surounding the exact energy
+        if ind<m and ind != -1:
+            # troncated window on low values
+            f1 = interp.UnivariateSpline(Ev[ind:ind+m], Emv[ind_k][ind:ind+m])
+            f2 = interp.UnivariateSpline(Ev[ind:ind+m], Emv[ind_k-1][ind:ind+m])
+        elif ind>len(Ev)-m or ind==-1:
+            # troncated window on high values
+            f1 = interp.UnivariateSpline(Ev[ind-m:ind], Emv[ind_k][ind-m:ind])
+            f2 = interp.UnivariateSpline(Ev[ind-m:ind], Emv[ind_k-1][ind-m:ind])
+        else:
+            f1 = interp.UnivariateSpline(Ev[ind-m:ind+m], Emv[ind_k][ind-m:ind+m])
+            f2 = interp.UnivariateSpline(Ev[ind-m:ind+m], Emv[ind_k-1][ind-m:ind+m])
+        # linear interpolation for the estimation related to the exact kB value
+        r = f2(E)+(f1(E) - f2(E))/(kB_vec[ind_k]-kB_vec[ind_k-1])*(kB-kB_vec[ind_k-1])
+    return r
+
+def Em_a(E, kB, nE):
+    """
+    This fonction management the calculation of the quenched energy for alpha particles.
+    A mixture between the accurate quenching model and the extrapolated model can be setup. 
+
+    Parameters
+    ----------
+    E : float
+        Input energy in keV
+    kB : float
+        Birks constant in cm/keV
+    nE : interger 
+        number of points of the energy linear space
+
+    Returns
+    -------
+    Float
+        interpolated quenched energy in keV
+
+    """
+    Et = 5 # threshold to interpolated values above 5 keV
+    kB_vec = [6e-6, 7e-6, 8e-6, 9e-6, 1e-5, 1.1e-5, 1.2e-5, 1.3e-5, 1.4e-5, 1.5e-5] # in cm/keV
+    
+    if E <= Et:
+        # run the accurate quenching model
+        r = E_quench_a(E,kB,nE)
+    else:
+        # run interpolation
+        r = run_interpolate(kB_vec, kB , Ei_alpha, Em_alpha, E)    
+    return r
+
+def Em_e(E, kB, nE):
+    """
+    This fonction management the calculation of the quenched energy for electrons.
+    A mixture between the accurate quenching model and the extrapolated model can be setup. 
+
+    Parameters
+    ----------
+    E : float
+        Input energy in eV
+    kB : float
+        Birks constant in cm/MeV
+    nE : interger 
+        number of points of the energy linear space
+
+    Returns
+    -------
+    Float
+        interpolated quenched energy in eV for electron and in keV for alpha
+
+    """
+    Et = 5000 # threshold to interpolated values above 5 keV
+    kB_vec = [0.006, 0.007, 0.008, 0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015] # in cm/MeV
+    
+    if E <= Et:
+        # run the accurate quenching model
+        r = E_quench_e(E,kB,nE)
+    else:
+        # run interpolation
+        r = run_interpolate(kB_vec, kB , Ei_electron, Em_electron, E)
+    return r
+
+
+
+
+
+
 
 #============================================================================================
 
