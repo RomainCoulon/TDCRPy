@@ -52,11 +52,15 @@
 <li><a class="reference internal" href="#module-tdcrpy.TDCR_model_lib">tdcrpy.TDCR_model_lib module</a><ul>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.E_quench_a"><code class="docutils literal notranslate"><span class="pre">E_quench_a()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.E_quench_e"><code class="docutils literal notranslate"><span class="pre">E_quench_e()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.Em_a"><code class="docutils literal notranslate"><span class="pre">Em_a()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.Em_e"><code class="docutils literal notranslate"><span class="pre">Em_e()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.TicTocGenerator"><code class="docutils literal notranslate"><span class="pre">TicTocGenerator()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.clear_terminal"><code class="docutils literal notranslate"><span class="pre">clear_terminal()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.display_header"><code class="docutils literal notranslate"><span class="pre">display_header()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.energie_dep_beta"><code class="docutils literal notranslate"><span class="pre">energie_dep_beta()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.energie_dep_beta2"><code class="docutils literal notranslate"><span class="pre">energie_dep_beta2()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.energie_dep_gamma"><code class="docutils literal notranslate"><span class="pre">energie_dep_gamma()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.energie_dep_gamma2"><code class="docutils literal notranslate"><span class="pre">energie_dep_gamma2()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.modelAnalytical"><code class="docutils literal notranslate"><span class="pre">modelAnalytical()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.normalise"><code class="docutils literal notranslate"><span class="pre">normalise()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.readBetaShape"><code class="docutils literal notranslate"><span class="pre">readBetaShape()</span></code></a></li>
@@ -64,6 +68,7 @@
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.readPenNuc2"><code class="docutils literal notranslate"><span class="pre">readPenNuc2()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.read_matrice"><code class="docutils literal notranslate"><span class="pre">read_matrice()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.relaxation_atom"><code class="docutils literal notranslate"><span class="pre">relaxation_atom()</span></code></a></li>
+<li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.run_interpolate"><code class="docutils literal notranslate"><span class="pre">run_interpolate()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.sampling"><code class="docutils literal notranslate"><span class="pre">sampling()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.stoppingpower"><code class="docutils literal notranslate"><span class="pre">stoppingpower()</span></code></a></li>
 <li><a class="reference internal" href="#tdcrpy.TDCR_model_lib.stoppingpowerA"><code class="docutils literal notranslate"><span class="pre">stoppingpowerA()</span></code></a></li>
@@ -120,7 +125,7 @@
 Bureau International des Poids et Mesures</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tdcrpy.TDCRPy.TDCRPy">
-<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCRPy.</span></span><span class="sig-name descname"><span class="pre">TDCRPy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TBC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCRPy.TDCRPy" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCRPy.</span></span><span class="sig-name descname"><span class="pre">TDCRPy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TBC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCRPy.TDCRPy" title="Permalink to this definition"></a></dt>
 <dd><p>This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
 The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB.</p>
 <p>It can operates in two modes:</p>
@@ -215,6 +220,8 @@ Bureau International des Poids et Mesures</p>
 </dd>
 <dt>kB<span class="classifier">float</span></dt><dd><p>Birks constant in cm/keV.</p>
 </dd>
+<dt>nE<span class="classifier">integer </span></dt><dd><p>number of points of the energy linear space</p>
+</dd>
 </dl>
 </section>
 <section id="id2">
@@ -237,12 +244,72 @@ Bureau International des Poids et Mesures</p>
 </dd>
 <dt>kB<span class="classifier">float</span></dt><dd><p>Birks constant in cm/MeV.</p>
 </dd>
+<dt>nE<span class="classifier">integer </span></dt><dd><p>number of points of the energy linear space</p>
+</dd>
 </dl>
 </section>
 <section id="id4">
 <h3>Returns<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>float</dt><dd><p>Quenched energy in eV.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.Em_a">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">Em_a</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Et</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[6e-06,</span> <span class="pre">7e-06,</span> <span class="pre">8e-06,</span> <span class="pre">9e-06,</span> <span class="pre">1e-05,</span> <span class="pre">1.1e-05,</span> <span class="pre">1.2e-05,</span> <span class="pre">1.3e-05,</span> <span class="pre">1.4e-05,</span> <span class="pre">1.5e-05]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.Em_a" title="Permalink to this definition"></a></dt>
+<dd><p>This fonction management the calculation of the quenched energy for alpha particles.
+A mixture between the accurate quenching model and the extrapolated model can be setup.</p>
+<section id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>E<span class="classifier">float</span></dt><dd><p>Input energy in keV</p>
+</dd>
+<dt>kB<span class="classifier">float</span></dt><dd><p>Birks constant in cm/keV</p>
+</dd>
+<dt>nE<span class="classifier">interger </span></dt><dd><p>number of points of the energy linear space</p>
+</dd>
+<dt>Et<span class="classifier">float</span></dt><dd><p>energy (in keV) above which interpolation is applied. (Default Et = Einterp)</p>
+</dd>
+<dt>kB_vec<span class="classifier">list</span></dt><dd><p>list of Birks constants for which the quenched energy has been tabulated. (Default kB_vec = kB_a)</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Returns<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>Float</dt><dd><p>interpolated quenched energy in keV</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.Em_e">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">Em_e</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Et</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.006,</span> <span class="pre">0.007,</span> <span class="pre">0.008,</span> <span class="pre">0.009,</span> <span class="pre">0.01,</span> <span class="pre">0.011,</span> <span class="pre">0.012,</span> <span class="pre">0.013,</span> <span class="pre">0.014,</span> <span class="pre">0.015]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.Em_e" title="Permalink to this definition"></a></dt>
+<dd><p>This fonction management the calculation of the quenched energy for electrons.
+A mixture between the accurate quenching model and the extrapolated model can be setup.</p>
+<section id="id7">
+<h3>Parameters<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>E<span class="classifier">float</span></dt><dd><p>Input energy in eV</p>
+</dd>
+<dt>kB<span class="classifier">float</span></dt><dd><p>Birks constant in cm/MeV</p>
+</dd>
+<dt>nE<span class="classifier">interger </span></dt><dd><p>number of points of the energy linear space</p>
+</dd>
+<dt>Et<span class="classifier">float</span></dt><dd><p>energy (in eV) above which interpolation is applied. (Default Et = Einterp)</p>
+</dd>
+<dt>kB_vec<span class="classifier">list</span></dt><dd><p>list of Birks constants for which the quenched energy has been tabulated. (Default kB_vec = kB_e)</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Returns<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>Float</dt><dd><p>interpolated quenched energy in eV for electron and in keV for alpha</p>
 </dd>
 </dl>
 </section>
@@ -268,10 +335,10 @@ Bureau International des Poids et Mesures</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.energie_dep_beta">
-<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">energie_dep_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_inci</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">5.1e-05,</span> <span class="pre">4.7e-05,</span> <span class="pre">5.7e-05],</span> <span class="pre">[0.0,</span> <span class="pre">2e-06,</span> <span class="pre">2e-06,</span> <span class="pre">...,</span> <span class="pre">7.7e-05,</span> <span class="pre">7.4e-05,</span> <span class="pre">7e-05],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[5.7e-05,</span> <span class="pre">4.9e-05,</span> <span class="pre">5.6e-05,</span> <span class="pre">...,</span> <span class="pre">0.001795,</span> <span class="pre">0.001826,</span> <span class="pre">0.00181],</span> <span class="pre">[0.000494,</span> <span class="pre">0.000489,</span> <span class="pre">0.000492,</span> <span class="pre">...,</span> <span class="pre">0.000912,</span> <span class="pre">0.000912,</span> <span class="pre">0.000913],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.48222,</span> <span class="pre">6.8e-05,</span> <span class="pre">7e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">5e-06,</span> <span class="pre">0.481935,</span> <span class="pre">6.6e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">6e-06,</span> <span class="pre">0.481512]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[0.00181,</span> <span class="pre">0.001776,</span> <span class="pre">0.001775,</span> <span class="pre">...,</span> <span class="pre">0.012191,</span> <span class="pre">0.012222,</span> <span class="pre">0.012252],</span> <span class="pre">[0.004217,</span> <span class="pre">0.004213,</span> <span class="pre">0.004184,</span> <span class="pre">...,</span> <span class="pre">0.004783,</span> <span class="pre">0.004785,</span> <span class="pre">0.004751],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.000646,</span> <span class="pre">1.4e-05,</span> <span class="pre">1.5e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">1e-06,</span> <span class="pre">0.000645,</span> <span class="pre">1.5e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.00065]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0002008,</span> <span class="pre">0.001999,</span> <span class="pre">0.009991],</span> <span class="pre">[0.0004016,</span> <span class="pre">0.003998,</span> <span class="pre">0.019982],</span> <span class="pre">...,</span> <span class="pre">[0.2006,</span> <span class="pre">1.997,</span> <span class="pre">9.981],</span> <span class="pre">[0.2008,</span> <span class="pre">1.999,</span> <span class="pre">9.991],</span> <span class="pre">[0.201,</span> <span class="pre">2.001,</span> <span class="pre">10.001]])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.energie_dep_beta" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">energie_dep_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_inci</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">5.1e-05,</span> <span class="pre">4.7e-05,</span> <span class="pre">5.7e-05],</span> <span class="pre">[0.0,</span> <span class="pre">2e-06,</span> <span class="pre">2e-06,</span> <span class="pre">...,</span> <span class="pre">7.7e-05,</span> <span class="pre">7.4e-05,</span> <span class="pre">7e-05],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[5.7e-05,</span> <span class="pre">4.9e-05,</span> <span class="pre">5.6e-05,</span> <span class="pre">...,</span> <span class="pre">0.001795,</span> <span class="pre">0.001826,</span> <span class="pre">0.00181],</span> <span class="pre">[0.000494,</span> <span class="pre">0.000489,</span> <span class="pre">0.000492,</span> <span class="pre">...,</span> <span class="pre">0.000912,</span> <span class="pre">0.000912,</span> <span class="pre">0.000913],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.48222,</span> <span class="pre">6.8e-05,</span> <span class="pre">7e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">5e-06,</span> <span class="pre">0.481935,</span> <span class="pre">6.6e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">6e-06,</span> <span class="pre">0.481512]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[0.00181,</span> <span class="pre">0.001776,</span> <span class="pre">0.001775,</span> <span class="pre">...,</span> <span class="pre">0.012191,</span> <span class="pre">0.012222,</span> <span class="pre">0.012252],</span> <span class="pre">[0.004217,</span> <span class="pre">0.004213,</span> <span class="pre">0.004184,</span> <span class="pre">...,</span> <span class="pre">0.004783,</span> <span class="pre">0.004785,</span> <span class="pre">0.004751],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.000646,</span> <span class="pre">1.4e-05,</span> <span class="pre">1.5e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">1e-06,</span> <span class="pre">0.000645,</span> <span class="pre">1.5e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.00065]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3.5e-05,</span> <span class="pre">4.4e-05,</span> <span class="pre">4.2e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">3e-06,</span> <span class="pre">...,</span> <span class="pre">6.4e-05,</span> <span class="pre">6.1e-05,</span> <span class="pre">6e-05],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0002008,</span> <span class="pre">0.001999,</span> <span class="pre">0.009991],</span> <span class="pre">[0.0004016,</span> <span class="pre">0.003998,</span> <span class="pre">0.019982],</span> <span class="pre">...,</span> <span class="pre">[0.2006,</span> <span class="pre">1.997,</span> <span class="pre">9.981],</span> <span class="pre">[0.2008,</span> <span class="pre">1.999,</span> <span class="pre">9.991],</span> <span class="pre">[0.201,</span> <span class="pre">2.001,</span> <span class="pre">10.001]])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.energie_dep_beta" title="Permalink to this definition"></a></dt>
 <dd><p>This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6.</p>
-<section id="id5">
-<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<section id="id9">
+<h3>Parameters<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>e_inci<span class="classifier">float</span></dt><dd><p>energy of the electron in keV.</p>
 </dd>
@@ -285,8 +352,36 @@ Bureau International des Poids et Mesures</p>
 </dd>
 </dl>
 </section>
-<section id="id6">
-<h3>Returns<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
+<section id="id10">
+<h3>Returns<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>result<span class="classifier">float</span></dt><dd><p>deposited energy in keV.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.energie_dep_beta2">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">energie_dep_beta2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_inci</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">5.1e-05,</span> <span class="pre">4.7e-05,</span> <span class="pre">5.7e-05],</span> <span class="pre">[0.0,</span> <span class="pre">2e-06,</span> <span class="pre">2e-06,</span> <span class="pre">...,</span> <span class="pre">7.7e-05,</span> <span class="pre">7.4e-05,</span> <span class="pre">7e-05],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[5.7e-05,</span> <span class="pre">4.9e-05,</span> <span class="pre">5.6e-05,</span> <span class="pre">...,</span> <span class="pre">0.001795,</span> <span class="pre">0.001826,</span> <span class="pre">0.00181],</span> <span class="pre">[0.000494,</span> <span class="pre">0.000489,</span> <span class="pre">0.000492,</span> <span class="pre">...,</span> <span class="pre">0.000912,</span> <span class="pre">0.000912,</span> <span class="pre">0.000913],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.48222,</span> <span class="pre">6.8e-05,</span> <span class="pre">7e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">5e-06,</span> <span class="pre">0.481935,</span> <span class="pre">6.6e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">6e-06,</span> <span class="pre">0.481512]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[0.00181,</span> <span class="pre">0.001776,</span> <span class="pre">0.001775,</span> <span class="pre">...,</span> <span class="pre">0.012191,</span> <span class="pre">0.012222,</span> <span class="pre">0.012252],</span> <span class="pre">[0.004217,</span> <span class="pre">0.004213,</span> <span class="pre">0.004184,</span> <span class="pre">...,</span> <span class="pre">0.004783,</span> <span class="pre">0.004785,</span> <span class="pre">0.004751],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.000646,</span> <span class="pre">1.4e-05,</span> <span class="pre">1.5e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">1e-06,</span> <span class="pre">0.000645,</span> <span class="pre">1.5e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.00065]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3.5e-05,</span> <span class="pre">4.4e-05,</span> <span class="pre">4.2e-05],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">3e-06,</span> <span class="pre">...,</span> <span class="pre">6.4e-05,</span> <span class="pre">6.1e-05,</span> <span class="pre">6e-05],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0002008,</span> <span class="pre">0.001999,</span> <span class="pre">0.009991],</span> <span class="pre">[0.0004016,</span> <span class="pre">0.003998,</span> <span class="pre">0.019982],</span> <span class="pre">...,</span> <span class="pre">[0.2006,</span> <span class="pre">1.997,</span> <span class="pre">9.981],</span> <span class="pre">[0.2008,</span> <span class="pre">1.999,</span> <span class="pre">9.991],</span> <span class="pre">[0.201,</span> <span class="pre">2.001,</span> <span class="pre">10.001]])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.energie_dep_beta2" title="Permalink to this definition"></a></dt>
+<dd><p>This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6.</p>
+<section id="id11">
+<h3>Parameters<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>e_inci<span class="classifier">float</span></dt><dd><p>energy of the electron in keV.</p>
+</dd>
+<dt>matrice10_1<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for electrons in the range [1-200] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>matrice10_2<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for electrons in the range [200-2000] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>matrice10_3<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for electrons in the range [2000-10000] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>ed<span class="classifier">list[list], optional</span></dt><dd><p>matrix of input energies. column 0: [1-200] keV; column 1: [200-2000] keV; column 2: [2000-10000] keV</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Returns<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>result<span class="classifier">float</span></dt><dd><p>deposited energy in keV.</p>
 </dd>
@@ -298,8 +393,8 @@ Bureau International des Poids et Mesures</p>
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.energie_dep_gamma">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">energie_dep_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_inci</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">1e-06,</span> <span class="pre">2e-06,</span> <span class="pre">2e-06],</span> <span class="pre">[0.0,</span> <span class="pre">0.001795,</span> <span class="pre">0.005885,</span> <span class="pre">...,</span> <span class="pre">0.873706,</span> <span class="pre">0.87388,</span> <span class="pre">0.87406],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[2e-06,</span> <span class="pre">1e-06,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">4.5e-05,</span> <span class="pre">4.2e-05,</span> <span class="pre">4.8e-05],</span> <span class="pre">[0.877508,</span> <span class="pre">0.877865,</span> <span class="pre">0.878157,</span> <span class="pre">...,</span> <span class="pre">0.951362,</span> <span class="pre">0.951381,</span> <span class="pre">0.951434],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">4e-06,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">4e-06]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[6e-05,</span> <span class="pre">3e-05,</span> <span class="pre">8e-05,</span> <span class="pre">...,</span> <span class="pre">0.00017,</span> <span class="pre">0.00019,</span> <span class="pre">0.00015],</span> <span class="pre">[0.95212,</span> <span class="pre">0.95221,</span> <span class="pre">0.95236,</span> <span class="pre">...,</span> <span class="pre">0.97913,</span> <span class="pre">0.97918,</span> <span class="pre">0.97918],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">2e-06,</span> <span class="pre">1e-06,</span> <span class="pre">3e-06],</span> <span class="pre">[0.0,</span> <span class="pre">0.001533,</span> <span class="pre">0.005069,</span> <span class="pre">...,</span> <span class="pre">0.855719,</span> <span class="pre">0.855893,</span> <span class="pre">0.856118],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[3e-06,</span> <span class="pre">1e-06,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3.8e-05,</span> <span class="pre">4.8e-05,</span> <span class="pre">4.1e-05],</span> <span class="pre">[0.859989,</span> <span class="pre">0.860337,</span> <span class="pre">0.860676,</span> <span class="pre">...,</span> <span class="pre">0.943906,</span> <span class="pre">0.943951,</span> <span class="pre">0.944006],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">4e-06,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">4e-06]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[4.1e-05,</span> <span class="pre">3.1e-05,</span> <span class="pre">4.4e-05,</span> <span class="pre">...,</span> <span class="pre">0.000194,</span> <span class="pre">0.00019,</span> <span class="pre">0.000205],</span> <span class="pre">[0.944572,</span> <span class="pre">0.944712,</span> <span class="pre">0.944892,</span> <span class="pre">...,</span> <span class="pre">0.975521,</span> <span class="pre">0.975553,</span> <span class="pre">0.975526],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0002008,</span> <span class="pre">0.001999,</span> <span class="pre">0.009991],</span> <span class="pre">[0.0004016,</span> <span class="pre">0.003998,</span> <span class="pre">0.019982],</span> <span class="pre">...,</span> <span class="pre">[0.2006,</span> <span class="pre">1.997,</span> <span class="pre">9.981],</span> <span class="pre">[0.2008,</span> <span class="pre">1.999,</span> <span class="pre">9.991],</span> <span class="pre">[0.201,</span> <span class="pre">2.001,</span> <span class="pre">10.001]])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.energie_dep_gamma" title="Permalink to this definition"></a></dt>
 <dd><p>This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6.</p>
-<section id="id7">
-<h3>Parameters<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
+<section id="id13">
+<h3>Parameters<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>e_inci<span class="classifier">float</span></dt><dd><p>energy of the photon in keV.</p>
 </dd>
@@ -315,8 +410,44 @@ Bureau International des Poids et Mesures</p>
 </dd>
 </dl>
 </section>
-<section id="id8">
-<h3>Returns<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
+<section id="id14">
+<h3>Returns<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>result<span class="classifier">float</span></dt><dd><p>deposited energy in keV.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.energie_dep_gamma2">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">energie_dep_gamma2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_inci</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">1e-06,</span> <span class="pre">2e-06,</span> <span class="pre">2e-06],</span> <span class="pre">[0.0,</span> <span class="pre">0.001795,</span> <span class="pre">0.005885,</span> <span class="pre">...,</span> <span class="pre">0.873706,</span> <span class="pre">0.87388,</span> <span class="pre">0.87406],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[2e-06,</span> <span class="pre">1e-06,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">4.5e-05,</span> <span class="pre">4.2e-05,</span> <span class="pre">4.8e-05],</span> <span class="pre">[0.877508,</span> <span class="pre">0.877865,</span> <span class="pre">0.878157,</span> <span class="pre">...,</span> <span class="pre">0.951362,</span> <span class="pre">0.951381,</span> <span class="pre">0.951434],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">4e-06,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">4e-06]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice10_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[6e-05,</span> <span class="pre">3e-05,</span> <span class="pre">8e-05,</span> <span class="pre">...,</span> <span class="pre">0.00017,</span> <span class="pre">0.00019,</span> <span class="pre">0.00015],</span> <span class="pre">[0.95212,</span> <span class="pre">0.95221,</span> <span class="pre">0.95236,</span> <span class="pre">...,</span> <span class="pre">0.97913,</span> <span class="pre">0.97918,</span> <span class="pre">0.97918],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">...,</span> <span class="pre">198.0,</span> <span class="pre">199.0,</span> <span class="pre">200.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">2e-06,</span> <span class="pre">1e-06,</span> <span class="pre">3e-06],</span> <span class="pre">[0.0,</span> <span class="pre">0.001533,</span> <span class="pre">0.005069,</span> <span class="pre">...,</span> <span class="pre">0.855719,</span> <span class="pre">0.855893,</span> <span class="pre">0.856118],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[200.0,</span> <span class="pre">202.0,</span> <span class="pre">204.0,</span> <span class="pre">...,</span> <span class="pre">1996.0,</span> <span class="pre">1998.0,</span> <span class="pre">2000.0],</span> <span class="pre">[3e-06,</span> <span class="pre">1e-06,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3.8e-05,</span> <span class="pre">4.8e-05,</span> <span class="pre">4.1e-05],</span> <span class="pre">[0.859989,</span> <span class="pre">0.860337,</span> <span class="pre">0.860676,</span> <span class="pre">...,</span> <span class="pre">0.943906,</span> <span class="pre">0.943951,</span> <span class="pre">0.944006],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">3e-06,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">4e-06,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">4e-06]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrice16_3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[2000.0,</span> <span class="pre">2010.0,</span> <span class="pre">2020.0,</span> <span class="pre">...,</span> <span class="pre">9980.0,</span> <span class="pre">9990.0,</span> <span class="pre">10000.0],</span> <span class="pre">[4.1e-05,</span> <span class="pre">3.1e-05,</span> <span class="pre">4.4e-05,</span> <span class="pre">...,</span> <span class="pre">0.000194,</span> <span class="pre">0.00019,</span> <span class="pre">0.000205],</span> <span class="pre">[0.944572,</span> <span class="pre">0.944712,</span> <span class="pre">0.944892,</span> <span class="pre">...,</span> <span class="pre">0.975521,</span> <span class="pre">0.975553,</span> <span class="pre">0.975526],</span> <span class="pre">...,</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">...,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0],</span> <span class="pre">[0.0002008,</span> <span class="pre">0.001999,</span> <span class="pre">0.009991],</span> <span class="pre">[0.0004016,</span> <span class="pre">0.003998,</span> <span class="pre">0.019982],</span> <span class="pre">...,</span> <span class="pre">[0.2006,</span> <span class="pre">1.997,</span> <span class="pre">9.981],</span> <span class="pre">[0.2008,</span> <span class="pre">1.999,</span> <span class="pre">9.991],</span> <span class="pre">[0.201,</span> <span class="pre">2.001,</span> <span class="pre">10.001]])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.energie_dep_gamma2" title="Permalink to this definition"></a></dt>
+<dd><p>This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6.</p>
+<section id="id15">
+<h3>Parameters<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>e_inci<span class="classifier">float</span></dt><dd><p>energy of the photon in keV.</p>
+</dd>
+<dt>v<span class="classifier">float</span></dt><dd><p>volume of the scintillator in ml.</p>
+</dd>
+<dt>matrice10_1<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for photons in the range [1-200] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>matrice10_2<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for photons in the range [200-2000] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>matrice10_3<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for photons in the range [2000-10000] keV and for a scintillator volume of 10 ml.</p>
+</dd>
+<dt>matrice16_1<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for photons in the range [1-200] keV and for a scintillator volume of 16 ml.</p>
+</dd>
+<dt>matrice16_2<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for photons in the range [200-2000] keV and for a scintillator volume of 16 ml.</p>
+</dd>
+<dt>matrice16_3<span class="classifier">list[list], optional</span></dt><dd><p>response matrix for photons in the range [2000-10000] keV and for a scintillator volume of 16 ml.</p>
+</dd>
+<dt>ed<span class="classifier">list[list], optional</span></dt><dd><p>matrix of input energies. column 0: [1-200] keV; column 1: [200-2000] keV; column 2: [2000-10000] keV</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h3>Returns<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>result<span class="classifier">float</span></dt><dd><p>deposited energy in keV.</p>
 </dd>
@@ -328,8 +459,8 @@ Bureau International des Poids et Mesures</p>
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.modelAnalytical">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">modelAnalytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TBC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.modelAnalytical" title="Permalink to this definition"></a></dt>
 <dd><p>TDCR analytical model that is used for pure beta emitting radionuclides</p>
-<section id="id9">
-<h3>Parameters<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<section id="id17">
+<h3>Parameters<a class="headerlink" href="#id17" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>L<span class="classifier">float or tuple</span></dt><dd><p>free parameter(s).</p>
 </dd>
@@ -355,8 +486,8 @@ Bureau International des Poids et Mesures</p>
 </dd>
 </dl>
 </section>
-<section id="id10">
-<h3>Returns<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<section id="id18">
+<h3>Returns<a class="headerlink" href="#id18" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>res<span class="classifier">float</span></dt><dd><p>Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode=”res”)</p>
 </dd>
@@ -374,15 +505,15 @@ Bureau International des Poids et Mesures</p>
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.normalise">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">normalise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.normalise" title="Permalink to this definition"></a></dt>
 <dd><p>This function is used to ensure that the sum of probability is equal to 1.</p>
-<section id="id11">
-<h3>Parameters<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
+<section id="id19">
+<h3>Parameters<a class="headerlink" href="#id19" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>p_x<span class="classifier">list</span></dt><dd><p>vector of probabilities.</p>
 </dd>
 </dl>
 </section>
-<section id="id12">
-<h3>Returns<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
+<section id="id20">
+<h3>Returns<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>p<span class="classifier">list</span></dt><dd><p>normalized probability vector.</p>
 </dd>
@@ -399,8 +530,8 @@ Bureau International des Poids et Mesures</p>
 <div><p><a class="reference external" href="https://doi.org/10.1103/PhysRevC.92.059902">https://doi.org/10.1103/PhysRevC.92.059902</a></p>
 <p><a class="reference external" href="http://www.lnhb.fr/ddep_wg/">http://www.lnhb.fr/ddep_wg/</a></p>
 </div></blockquote>
-<section id="id13">
-<h3>Parameters<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
+<section id="id21">
+<h3>Parameters<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>rad<span class="classifier">string</span></dt><dd><p>identifier of the radionuclide. e.g. ‘Na-22’</p>
 </dd>
@@ -410,8 +541,8 @@ Bureau International des Poids et Mesures</p>
 </dd>
 </dl>
 </section>
-<section id="id14">
-<h3>Returns<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
+<section id="id22">
+<h3>Returns<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>e<span class="classifier">list</span></dt><dd><p>the energy vector in keV.</p>
 </dd>
@@ -425,8 +556,8 @@ Bureau International des Poids et Mesures</p>
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.readEShape">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">readEShape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z=&lt;zipfile.ZipFile</span> <span class="pre">filename='C:\\Users\\romain.coulon\\Anaconda3\\lib\\site-packages\\tdcrpy\\decayData\\All-nuclides_Ensdf.zip'</span> <span class="pre">mode='r'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.readEShape" title="Permalink to this definition"></a></dt>
 <dd><p>This function reads the ENSDF zip files and format the data to be processed by TDCRPy.</p>
-<section id="id15">
-<h3>Parameters<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h3>
+<section id="id23">
+<h3>Parameters<a class="headerlink" href="#id23" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>rad<span class="classifier">string</span></dt><dd><p>name of the radionuclide such as ‘Ag-108’.</p>
 </dd>
@@ -434,8 +565,8 @@ Bureau International des Poids et Mesures</p>
 </dd>
 </dl>
 </section>
-<section id="id16">
-<h3>Returns<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h3>
+<section id="id24">
+<h3>Returns<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>daug_name<span class="classifier">list</span></dt><dd><p>daughter nucleus of the decay</p>
 </dd>
@@ -453,15 +584,15 @@ Bureau International des Poids et Mesures</p>
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.readPenNuc2">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">readPenNuc2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z1=&lt;zipfile.ZipFile</span> <span class="pre">filename='C:\\Users\\romain.coulon\\Anaconda3\\lib\\site-packages\\tdcrpy\\decayData\\All-nuclides_PenNuc.zip'</span> <span class="pre">mode='r'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.readPenNuc2" title="Permalink to this definition"></a></dt>
 <dd><p>This function is used to read PenNuc files to format the decay data in lists readable by TDCRPy.</p>
-<section id="id17">
-<h3>Parameters<a class="headerlink" href="#id17" title="Permalink to this heading"></a></h3>
+<section id="id25">
+<h3>Parameters<a class="headerlink" href="#id25" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>rad<span class="classifier">string</span></dt><dd><p>name of the radionculide (for example: “Am-241”).</p>
 </dd>
 </dl>
 </section>
-<section id="id18">
-<h3>Returns<a class="headerlink" href="#id18" title="Permalink to this heading"></a></h3>
+<section id="id26">
+<h3>Returns<a class="headerlink" href="#id26" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>daughter<span class="classifier">list</span></dt><dd><p>list of the daughter nucleus – indice 0.</p>
 </dd>
@@ -501,8 +632,8 @@ Bureau International des Poids et Mesures</p>
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.read_matrice">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">read_matrice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niveau</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.read_matrice" title="Permalink to this definition"></a></dt>
 <dd><p>This function read the response matrix calculated by MCNP6 simulation.</p>
-<section id="id19">
-<h3>Parameters<a class="headerlink" href="#id19" title="Permalink to this heading"></a></h3>
+<section id="id27">
+<h3>Parameters<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>path<span class="classifier">string</span></dt><dd><p>path to the response matrix.</p>
 </dd>
@@ -510,8 +641,8 @@ Bureau International des Poids et Mesures</p>
 </dd>
 </dl>
 </section>
-<section id="id20">
-<h3>Returns<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h3>
+<section id="id28">
+<h3>Returns<a class="headerlink" href="#id28" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>matrice<span class="classifier">list[list]</span></dt><dd><p>formatted response matrix.</p>
 </dd>
@@ -523,8 +654,8 @@ Bureau International des Poids et Mesures</p>
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.relaxation_atom">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">relaxation_atom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">daugther</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lacune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'defaut'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.relaxation_atom" title="Permalink to this definition"></a></dt>
 <dd><p>This function simulates the atomic rearangement following a missing electron an inner shell of the daughter atom.</p>
-<section id="id21">
-<h3>Parameters<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h3>
+<section id="id29">
+<h3>Parameters<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>daugther<span class="classifier">string</span></dt><dd><p>The daughter nucleus (for example NB95,PD110 etc.)</p>
 </dd>
@@ -534,10 +665,41 @@ Bureau International des Poids et Mesures</p>
 </dd>
 </dl>
 </section>
-<section id="id22">
-<h3>Returns<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h3>
+<section id="id30">
+<h3>Returns<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h3>
 <p>Type : type of transition Auger L or K, or X Ray.
 Energy : corresponding energy in keV.</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.run_interpolate">
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">run_interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kB_vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Emv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.run_interpolate" title="Permalink to this definition"></a></dt>
+<dd><p>This fonction performs a cubic splin interpolation of pre-calculated quenching energies.
+It aims to gain calculation time while inducing an acceptable calculation error.</p>
+<section id="id31">
+<h3>Parameters<a class="headerlink" href="#id31" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>kB_vec<span class="classifier">list</span></dt><dd><p>list of kB values for which the quenched energy was calculated.</p>
+</dd>
+<dt>kB<span class="classifier">float</span></dt><dd><p>Exact value of the Birks constant.</p>
+</dd>
+<dt>Ev<span class="classifier">list</span></dt><dd><p>Vector of deposited energies eV for electron and in keV for alpha (set by default)</p>
+</dd>
+<dt>Emv<span class="classifier">list</span></dt><dd><p>Vector of quenched energies eV for electron and in keV for alpha (set by default)</p>
+</dd>
+<dt>E<span class="classifier">float</span></dt><dd><p>Exact value of the input energy.</p>
+</dd>
+<dt>m<span class="classifier">interger</span></dt><dd><p>depth (number of indexes on each side of the energy point) on which the spline interpolation is done.(Default. depthSpline)</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h3>Returns<a class="headerlink" href="#id32" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>r<span class="classifier">TYPE</span></dt><dd><p>the interpolated estimation of the quenched energy.</p>
+</dd>
+</dl>
 </section>
 </dd></dl>
 
@@ -545,15 +707,15 @@ Energy : corresponding energy in keV.</p>
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.sampling">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.sampling" title="Permalink to this definition"></a></dt>
 <dd><p>This function aims to sample in a pdf or a pmf</p>
-<section id="id23">
-<h3>Parameters<a class="headerlink" href="#id23" title="Permalink to this heading"></a></h3>
+<section id="id33">
+<h3>Parameters<a class="headerlink" href="#id33" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>p_x<span class="classifier">float vector</span></dt><dd><p>Probability Density (or mass) Function (PDF or PMF) of the random variable x.</p>
 </dd>
 </dl>
 </section>
-<section id="id24">
-<h3>Returns<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h3>
+<section id="id34">
+<h3>Returns<a class="headerlink" href="#id34" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>i<span class="classifier">integer</span></dt><dd><p>index in x pointing the sampled value of the random variable X.</p>
 </dd>
@@ -563,7 +725,7 @@ Energy : corresponding energy in keV.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.stoppingpower">
-<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">stoppingpower</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.96</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11.04</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.0,</span> <span class="pre">0.7,</span> <span class="pre">1.4,</span> <span class="pre">...,</span> <span class="pre">12.491336,</span> <span class="pre">12.490668,</span> <span class="pre">8.98619049e-43])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.stoppingpower" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">stoppingpower</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.96</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11.04</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.0,</span> <span class="pre">0.7,</span> <span class="pre">1.4,</span> <span class="pre">...,</span> <span class="pre">12.491336,</span> <span class="pre">12.490668,</span> <span class="pre">8.97630161e-67])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.stoppingpower" title="Permalink to this definition"></a></dt>
 <dd><p>The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
 At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.</p>
 <p>Refs:</p>
@@ -574,8 +736,8 @@ At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is imp
 <p>[4] ICRU Report 37, Stopping Powers for Electrons and Positrons</p>
 <p>[5] <a class="reference external" href="https://doi.org/10.1016/j.apradiso.2011.08.012">https://doi.org/10.1016/j.apradiso.2011.08.012</a></p>
 </div></blockquote>
-<section id="id25">
-<h3>Parameters<a class="headerlink" href="#id25" title="Permalink to this heading"></a></h3>
+<section id="id35">
+<h3>Parameters<a class="headerlink" href="#id35" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>e<span class="classifier">float</span></dt><dd><p>Energy of the electron in eV.</p>
 </dd>
@@ -591,8 +753,8 @@ At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is imp
 </dd>
 </dl>
 </section>
-<section id="id26">
-<h3>Returns<a class="headerlink" href="#id26" title="Permalink to this heading"></a></h3>
+<section id="id36">
+<h3>Returns<a class="headerlink" href="#id36" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>dEdx<span class="classifier">float</span></dt><dd><p>Calculated stopping power in MeV.cm-1.</p>
 </dd>
@@ -608,8 +770,8 @@ At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is imp
 <blockquote>
 <div><p><a class="reference external" href="https://dx.doi.org/10.18434/T4NC7P">https://dx.doi.org/10.18434/T4NC7P</a></p>
 </div></blockquote>
-<section id="id27">
-<h3>Parameters<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h3>
+<section id="id37">
+<h3>Parameters<a class="headerlink" href="#id37" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>e<span class="classifier">float</span></dt><dd><p>energy of the alpha particle in keV.</p>
 </dd>
@@ -621,8 +783,8 @@ At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is imp
 </dd>
 </dl>
 </section>
-<section id="id28">
-<h3>Returns<a class="headerlink" href="#id28" title="Permalink to this heading"></a></h3>
+<section id="id38">
+<h3>Returns<a class="headerlink" href="#id38" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>float</dt><dd><p>Interpolated ASTAR estimation of the stopping power.</p>
 </dd>
@@ -646,15 +808,15 @@ At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is imp
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.transf_name">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">transf_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rad</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.transf_name" title="Permalink to this definition"></a></dt>
 <dd><p>This function format the name of the nuclide to match with the PenNuc format.</p>
-<section id="id29">
-<h3>Parameters<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h3>
+<section id="id39">
+<h3>Parameters<a class="headerlink" href="#id39" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>rad<span class="classifier">string</span></dt><dd><p>name of the radionculdie such as ‘108AG’.</p>
 </dd>
 </dl>
 </section>
-<section id="id30">
-<h3>Returns<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h3>
+<section id="id40">
+<h3>Returns<a class="headerlink" href="#id40" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>RAD<span class="classifier">string</span></dt><dd><p>name of the radionuclide such as ‘AG108’ that match with PenNuc format.</p>
 </dd>
@@ -666,8 +828,8 @@ At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is imp
 <dt class="sig sig-object py" id="tdcrpy.TDCR_model_lib.writeEffcurves">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCR_model_lib.</span></span><span class="sig-name descname"><span class="pre">writeEffcurves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SDT</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCR_model_lib.writeEffcurves" title="Permalink to this definition"></a></dt>
 <dd><p>This function writes efficiency curves</p>
-<section id="id31">
-<h3>Parameters<a class="headerlink" href="#id31" title="Permalink to this heading"></a></h3>
+<section id="id41">
+<h3>Parameters<a class="headerlink" href="#id41" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>x<span class="classifier">TYPE</span></dt><dd><p>DESCRIPTION.</p>
 </dd>
@@ -685,8 +847,8 @@ At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is imp
 </dd>
 </dl>
 </section>
-<section id="id32">
-<h3>Returns<a class="headerlink" href="#id32" title="Permalink to this heading"></a></h3>
+<section id="id42">
+<h3>Returns<a class="headerlink" href="#id42" title="Permalink to this heading"></a></h3>
 <p>None.</p>
 </section>
 </dd></dl>
@@ -700,8 +862,8 @@ At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is imp
 <dt class="sig sig-object py" id="tdcrpy.TDCRoptimize.eff">
 <span class="sig-prename descclassname"><span class="pre">tdcrpy.TDCRoptimize.</span></span><span class="sig-name descname"><span class="pre">eff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">TD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TBC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdcrpy.TDCRoptimize.eff" title="Permalink to this definition"></a></dt>
 <dd><p>Caclulation of the efficiency of a TDCR system based on the model TDCRPy.</p>
-<section id="id33">
-<h3>Parameters<a class="headerlink" href="#id33" title="Permalink to this heading"></a></h3>
+<section id="id43">
+<h3>Parameters<a class="headerlink" href="#id43" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>TD<span class="classifier">float</span></dt><dd><p>triple-to-double coincidence ratio. Not consider if mode2=”asym”. Not consider if mode2=”asym”.</p>
 </dd>
@@ -727,8 +889,8 @@ At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is imp
 </dd>
 </dl>
 </section>
-<section id="id34">
-<h3>Returns<a class="headerlink" href="#id34" title="Permalink to this heading"></a></h3>
+<section id="id44">
+<h3>Returns<a class="headerlink" href="#id44" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>L0<span class="classifier">float</span></dt><dd><p>global free parameter.</p>
 </dd>

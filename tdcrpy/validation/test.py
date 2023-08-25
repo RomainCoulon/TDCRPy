@@ -14,81 +14,65 @@ import pstats
 """
 Profiling
 """
-TD = 0.977667386529166        # Measured TDCR value
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-L = 1.0
+# TD = 0.977667386529166        # Measured TDCR value
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# L = 1.0
 
-def main():
-    td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Co-60", "1", 1, 1.0e-5, 10, "eff", "sym")
-    # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Am-241", "1", 1, 1.0e-5, 10, "eff", "sym")
-    # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "H-3", "1", 1, 1.0e-5, 10, "eff", "sym")
+# def main():
+#     # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Co-60", "1", 1, 1.0e-5, 10, "eff", "sym")
+#     # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Am-241", "1", 1, 1.0e-5, 10, "eff", "sym")
+#     td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "H-3", "1", 1, 1.0e-5, 10, "eff", "sym")
     
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 
-cProfile.run("main()", filename="profile_results.txt")
-stats = pstats.Stats("profile_results.txt")
-stats.sort_stats(pstats.SortKey.TIME)
-stats.print_stats()
-
-
-
-# # Save the profiling information to a more readable text file
-# with open("readable_profile.txt", "w") as f:
-#     stats.print_stats()
-
-
-
-
-
-
-
-# if __name__ == "__main__": 
-#     with cProfile.Profile() as profile:
-#         td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Co-60", "1", 100, 1.0e-5, 10, "eff", "sym")
-#     result = ptats.Stats(profile)
-    
-    
+# cProfile.run("main()", filename="profile_results.txt")
+# stats = pstats.Stats("profile_results.txt")
+# stats.sort_stats(pstats.SortKey.TIME)
+# stats.print_stats()
+ 
 
 
 """
 Validation with standard solution for Co-60 (comparison 2023)
 """
 
-# file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
-# file = open(file_path, "w")
+file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
+file = open(file_path, "w")
 
-# Rad="Co-60"    # list of radionuclides (Na-24)
-# pmf_1="1"
-# kB =1.0e-5       # Birks constant in cm/keV
-# RHO = 0.98
-# V = 10
-# nE = 1000
-# TD = 0.977667386529166        # Measured TDCR value
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# L = 1.5
-# # N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 10000]
-# N = [20000]
+Rad="Co-60"    # list of radionuclides (Na-24)
+pmf_1="1"
+kB =1.0e-5       # Birks constant in cm/keV
+RHO = 0.98
+V = 10
+nE = 1000
+TD = 0.977667386529166        # Measured TDCR value
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+L = 1.5
+# N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 10000, 20000]
+N = [50000, 100000]
 
-# ## Symetrical model
-# # for Ni in N:
-# #     td.TDCR_model_lib.tic()
-# #     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
-# #     a = td.TDCR_model_lib.toc()
-# #     print("/n",Ni,resuts_2,"/n/n")
-# #     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
-
-# ## Asymetrical model
+# # Symetrical model
 # for Ni in N:
+#     print("symetrical model")
 #     td.TDCR_model_lib.tic()
-#     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "asym", N=Ni)
+#     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
 #     a = td.TDCR_model_lib.toc()
-#     print("\n",Ni,resuts_2,"\n\n")
+#     print("/n",Ni,resuts_2,"/n/n")
 #     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+
+# Asymetrical model
+for Ni in N:
+    print("asymetrical model")
+    td.TDCR_model_lib.tic()
+    resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "asym", N=Ni)
+    a = td.TDCR_model_lib.toc()
+    print("\n",Ni,resuts_2,"\n\n")
+    file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
 
 
 """

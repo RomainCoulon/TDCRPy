@@ -93,14 +93,12 @@ def Em(E,Ev,Emv,kB,p):
                     ind_k = index
                     break        
             kBin = False
-        
         for index, value in enumerate(Ev):
             # find the index just above the location of the exact value of the input energy 
             ind = -1
             if value > E:
                 ind = index
                 break
-
         m = 5 # set the window depht of the spline interpolation around the energy index
         if kBin:
             # case of exact kB value
@@ -128,7 +126,6 @@ def Em(E,Ev,Emv,kB,p):
                 f2 = interp.UnivariateSpline(Ev[ind-m:ind+m], Emv[ind_k-1][ind-m:ind+m])
             # linear interpolation for the estimation related to the exact kB value
             r = f2(E)+(f1(E) - f2(E))/(kB_vec[ind_k]-kB_vec[ind_k-1])*(kB-kB_vec[ind_k-1])
-            
     return r
 
 

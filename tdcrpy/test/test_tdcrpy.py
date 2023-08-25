@@ -84,7 +84,16 @@ class TestMyModule(unittest.TestCase):
         self.assertLessEqual(result[0], ['PD108', 'CD108'])
         self.assertLessEqual(result[1][0], [21.0203, 21.1774, 23.874466666666667, 24.3217, 20.580333333333332, 2.65])
         self.assertLessEqual(result[2][0], [0.44, 0.84, 0.23, 0.0391, 0.341, 1.97])
-        
+    
+    def test_Em_a(self):
+        result = tdcrpy.TDCR_model_lib.Em_a(5000, 1e-5, 10000)
+        self.assertLessEqual(result, 344.12105896)
+    
+    def test_Em_e(self):
+        result = tdcrpy.TDCR_model_lib.Em_e(50000, 1e-5, 10000)
+        self.assertLessEqual(result, 48568.14392205286)
+    
+    
     # relaxation_atom(daugther,rad,lacune='defaut')
     
     # modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne)

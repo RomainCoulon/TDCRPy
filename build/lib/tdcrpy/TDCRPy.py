@@ -386,10 +386,12 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             e_quenching=[]
             for i, p in enumerate(particle_vec):
                 if p == "alpha":
-                    energy_vec[i] = tl.E_quench_a(energy_vec[i],kB,nE_alpha)
+                    # energy_vec[i] = tl.E_quench_a(energy_vec[i],kB,nE_alpha)
+                    energy_vec[i] = tl.Em_a(energy_vec[i],kB,nE_alpha)
                     e_quenching.append(energy_vec[i])
                 elif p == "electron" or p == "positron":
-                    energy_vec[i] = tl.E_quench_e(energy_vec[i]*1e3,kB*1e3,nE_electron)*1e-3
+                    # energy_vec[i] = tl.E_quench_e(energy_vec[i]*1e3,kB*1e3,nE_electron)*1e-3
+                    energy_vec[i] = tl.Em_e(energy_vec[i]*1e3,kB*1e3,nE_electron)*1e-3
                     e_quenching.append(energy_vec[i])
                 else:
                     e_quenching.append(0)

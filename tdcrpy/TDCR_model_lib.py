@@ -31,9 +31,11 @@ config = configparser.ConfigParser()
 with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
     file_conf = data_path       
 config.read(file_conf)
-RHO=config["Inputs"].getfloat("density")
-Z=config["Inputs"].getfloat("Z")
-A=config["Inputs"].getfloat("A")
+RHO = config["Inputs"].getfloat("density")
+Z = config["Inputs"].getfloat("Z")
+A = config["Inputs"].getfloat("A")
+depthSpline = config["Inputs"].getint("depthSpline")
+Einterp = config["Inputs"].getfloat("Einterp")
 
 # import PenNuc data
 with importlib.resources.path('tdcrpy', 'decayData') as data_path:
@@ -95,7 +97,8 @@ for i in range(np.size(data_ASTAR)):
 
 # import pre-calculated quenched energy tables
 kB_a = [6e-6, 7e-6, 8e-6, 9e-6, 1e-5, 1.1e-5, 1.2e-5, 1.3e-5, 1.4e-5, 1.5e-5] # cm/MeV
-Ei_alpha_fid = open("inputVecteurAlpha.txt")
+with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    Ei_alpha_fid = open(data_path / "inputVecteurAlpha.txt")
 Ei_alpha = Ei_alpha_fid.readlines()
 Ei_alpha = Ei_alpha[0].split(" ")
 Ei_alpha = [float(x) for x in Ei_alpha[:-1]]
@@ -103,22 +106,25 @@ Ei_alpha = [float(x) for x in Ei_alpha[:-1]]
 Em_alpha = []
 for ikB in kB_a:
     with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-        fid = open("QuenchEnergyAlpha_"+str(ikB)+".txt")
+        tamptxt = "QuenchEnergyAlpha_"+str(ikB)+".txt"
+        fid = open(data_path / tamptxt)
     line = fid.readlines()
     line = line[0].split(" ")
     line = [float(x) for x in line[:-1]]
     Em_alpha.append(line)
-    
-Ei_electron_fid = open("inputVecteurElectron.txt")
+
+kB_e = [0.006, 0.007, 0.008, 0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015] # cm/MeV
+with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    Ei_electron_fid = open(data_path / "inputVecteurElectron.txt")
 Ei_electron = Ei_electron_fid.readlines()
 Ei_electron = Ei_electron[0].split(" ")
 Ei_electron = [float(x) for x in Ei_electron[:-1]]
 
-kB_e = [0.006, 0.007, 0.008, 0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015] # cm/MeV
 Em_electron = []
 for ikB in kB_e:
     with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-        fid = open("QuenchEnergyElectron_"+str(ikB)+".txt")
+        tamptxt = "QuenchEnergyElectron_"+str(ikB)+".txt"
+        fid = open(data_path / tamptxt)
     line = fid.readlines()
     line = line[0].split(" ")
     line = [float(x) for x in line[:-1]]
@@ -715,7 +721,7 @@ def E_quench_a(e,kB,nE):
         q += delta/(1+kB*stoppingpowerA(i))
     return q
 
-def run_interpolate(kB_vec, kB , Ev, Emv, E):
+def run_interpolate(kB_vec, kB , Ev, Emv, E, m = depthSpline):
     """
     This fonction performs a cubic splin interpolation of pre-calculated quenching energies.
     It aims to gain calculation time while inducing an acceptable calculation error.
@@ -730,8 +736,11 @@ def run_interpolate(kB_vec, kB , Ev, Emv, E):
         Vector of deposited energies eV for electron and in keV for alpha (set by default)
     Emv : list
         Vector of quenched energies eV for electron and in keV for alpha (set by default)
-    E : TYPE
+    E : float
         Exact value of the input energy.
+    m : interger
+        depth (number of indexes on each side of the energy point) on which the spline interpolation is done.(Default. depthSpline)
+        
 
     Returns
     -------
@@ -758,8 +767,7 @@ def run_interpolate(kB_vec, kB , Ev, Emv, E):
         ind = -1
         if value > E:
             ind = index
-            break
-    m = 5 # set the window depht of the spline interpolation around the energy index
+            break 
     if kBin:
         # case of exact kB value
         if ind<m and ind != -1:
@@ -788,7 +796,7 @@ def run_interpolate(kB_vec, kB , Ev, Emv, E):
         r = f2(E)+(f1(E) - f2(E))/(kB_vec[ind_k]-kB_vec[ind_k-1])*(kB-kB_vec[ind_k-1])
     return r
 
-def Em_a(E, kB, nE):
+def Em_a(E, kB, nE, Et = Einterp, kB_vec = kB_a):
     """
     This fonction management the calculation of the quenched energy for alpha particles.
     A mixture between the accurate quenching model and the extrapolated model can be setup. 
@@ -801,6 +809,10 @@ def Em_a(E, kB, nE):
         Birks constant in cm/keV
     nE : interger 
         number of points of the energy linear space
+    Et : float
+        energy (in keV) above which interpolation is applied. (Default Et = Einterp)
+    kB_vec : list
+        list of Birks constants for which the quenched energy has been tabulated. (Default kB_vec = kB_a)
 
     Returns
     -------
@@ -808,9 +820,6 @@ def Em_a(E, kB, nE):
         interpolated quenched energy in keV
 
     """
-    Et = 5 # threshold to interpolated values above 5 keV
-    kB_vec = [6e-6, 7e-6, 8e-6, 9e-6, 1e-5, 1.1e-5, 1.2e-5, 1.3e-5, 1.4e-5, 1.5e-5] # in cm/keV
-    
     if E <= Et:
         # run the accurate quenching model
         r = E_quench_a(E,kB,nE)
@@ -819,7 +828,7 @@ def Em_a(E, kB, nE):
         r = run_interpolate(kB_vec, kB , Ei_alpha, Em_alpha, E)    
     return r
 
-def Em_e(E, kB, nE):
+def Em_e(E, kB, nE, Et = Einterp*1e3, kB_vec = kB_e):
     """
     This fonction management the calculation of the quenched energy for electrons.
     A mixture between the accurate quenching model and the extrapolated model can be setup. 
@@ -832,16 +841,17 @@ def Em_e(E, kB, nE):
         Birks constant in cm/MeV
     nE : interger 
         number of points of the energy linear space
+    Et : float
+        energy (in eV) above which interpolation is applied. (Default Et = Einterp)
+    kB_vec : list
+        list of Birks constants for which the quenched energy has been tabulated. (Default kB_vec = kB_e)
 
     Returns
     -------
     Float
         interpolated quenched energy in eV for electron and in keV for alpha
 
-    """
-    Et = 5000 # threshold to interpolated values above 5 keV
-    kB_vec = [0.006, 0.007, 0.008, 0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015] # in cm/MeV
-    
+    """    
     if E <= Et:
         # run the accurate quenching model
         r = E_quench_e(E,kB,nE)
@@ -902,7 +912,6 @@ def read_matrice(path,niveau):
             matrice[i][j] = float(data[i][j])
     return matrice
 
-
 Matrice10_p_1 = read_matrice(fp1,0)
 Matrice10_p_2 = read_matrice(fp2,1)
 Matrice10_p_3 = read_matrice(fp3,2)
@@ -910,6 +919,13 @@ Matrice16_p_1 = read_matrice(fp4,0)
 Matrice16_p_2 = read_matrice(fp5,1)
 Matrice16_p_3 = read_matrice(fp6,2)
 Matrice_e = read_matrice(fe,'e')
+
+Matrice10_e_1 = read_matrice(fe1,0)
+Matrice10_e_2 = read_matrice(fe2,1)
+Matrice10_e_3 = read_matrice(fe3,2)
+Matrice16_e_1 = read_matrice(fe4,0)
+Matrice16_e_2 = read_matrice(fe5,1)
+#Matrice_e = read_matrice(fe,'e')
 
 def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,ed=Matrice_e):
     """ This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
@@ -1053,13 +1069,6 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
     else: result = e[inde]*1e3*e_inci/matrice0
     if result  > e_inci: result = e_inci
     return result
-
-Matrice10_e_1 = read_matrice(fe1,0)
-Matrice10_e_2 = read_matrice(fe2,1)
-Matrice10_e_3 = read_matrice(fe3,2)
-Matrice16_e_1 = read_matrice(fe4,0)
-Matrice16_e_2 = read_matrice(fe4,1)
-#Matrice_e = read_matrice(fe,'e')
 
 def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,ed=Matrice_e):
     """ This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
