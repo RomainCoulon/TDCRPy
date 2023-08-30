@@ -65,7 +65,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
     kB : float
         Birks constant in cm/keV.
     V : float
-        volume of the scintillator in ml. run only for 10 ml
+        volume of the scintillator in ml.
     mode : string
         "res" to return the residual, "eff" to return efficiencies.
     mode2 : string

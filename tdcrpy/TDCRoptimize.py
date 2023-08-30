@@ -28,9 +28,9 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=1000, L=1):
     pmf_1 : string
         list of probability of each radionuclide..
     kB : float
-        Birks constant.
+        Birks constant in cm/keV.
     V : float
-        volume of the scintillator in ml. run only for 10 ml
+        volume of the scintillator in ml.
     mode2 : string
         "sym" for symetrical model, "asym" for symetrical model.
     N : interger, optional
