@@ -34,28 +34,82 @@ Profiling
 # stats.print_stats()
  
 
+"""
+for the quick start
+"""
+
+# import tdcrpy
+
+# L = (1.5, 1.2, 1.4)
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# Rad="Co-60"
+# pmf_1="1"
+# N = 100
+# kB =1.0e-5
+# V = 10
+# mode = "eff"
+# mode2 = "asym"
+
+
+# result = tdcrpy.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2)
+
+# print("R = ",result)
+
+# print("efficiency S = ", round(result[0],4), "+/-", round(result[1],4))
+# print("efficiency D = ", round(result[2],4), "+/-", round(result[3],4))
+# print("efficiency T = ", round(result[4],4), "+/-", round(result[5],4))
+
+
+import tdcrpy
+
+TD = 0.977667386529166
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+Rad="Co-60"
+pmf_1="1"
+N = 250
+kB =1.0e-5
+V = 10
+mode2 = "asym"
+
+result = tdcrpy.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=N)
+
+print("Global free parameter = \t", round(result[0],4), " keV-1")
+print("Free parameter (PMT A) = \t", round(result[1][0],4) , " keV-1")
+print("Free parameter (PMT B) = \t", round(result[1][1],4) , " keV-1")
+print("Free parameter (PMT C) = \t", round(result[1][2],4) , " keV-1")
+print("efficiency S = \t", round(result[2],4), "+/-", round(result[3],4))
+print("efficiency D = \t", round(result[4],4), "+/-", round(result[5],4))
+print("efficiency T = \t", round(result[6],4), "+/-", round(result[7],4))
+
+
+
 
 """
 Validation with standard solution for Co-60 (comparison 2023)
 """
 
-file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
-file = open(file_path, "w")
+# file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
+# file = open(file_path, "w")
 
-Rad="Co-60"    # list of radionuclides (Na-24)
-pmf_1="1"
-kB =1.0e-5       # Birks constant in cm/keV
-RHO = 0.98
-V = 10
-nE = 1000
-TD = 0.977667386529166        # Measured TDCR value
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-L = 1.5
-# N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 10000, 20000]
-# N = [7000, 8000, 9000, 30000, 40000, 60000, 70000, 80000, 90000]
-N = [100000]
+# Rad="Co-60"    # list of radionuclides (Na-24)
+# pmf_1="1"
+# kB =1.0e-5       # Birks constant in cm/keV
+# RHO = 0.98
+# V = 10
+# nE = 1000
+# TD = 0.977667386529166        # Measured TDCR value
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# L = 1.5
+# # N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 10000, 20000]
+# # N = [7000, 8000, 9000, 30000, 40000, 60000, 70000, 80000, 90000]
+# N = [100000]
 
 # # Symetrical model
 # for Ni in N:
@@ -67,13 +121,13 @@ N = [100000]
 #     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
 
 # Asymetrical model
-for Ni in N:
-    print("asymetrical model")
-    td.TDCR_model_lib.tic()
-    resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "asym", N=Ni)
-    a = td.TDCR_model_lib.toc()
-    print("\n",Ni,resuts_2,"\n\n")
-    file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+# for Ni in N:
+#     print("asymetrical model")
+#     td.TDCR_model_lib.tic()
+#     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "asym", N=Ni)
+#     a = td.TDCR_model_lib.toc()
+#     print("\n",Ni,resuts_2,"\n\n")
+#     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
 
 
 """
