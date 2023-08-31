@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: TDCRPy
-Version: 0.0.70
+Version: 0.0.78
 Summary: TDCR model
 Home-page: https://github.com/RomainCoulon/TDCRPy
 Author: RomainCoulon (Romain Coulon)
@@ -57,6 +57,21 @@ The module can be imported in your Python code such as.
 
 ```python
 import tdcrpy
+```
+
+## Test
+
+To run the unit tests of the package:
+
+```shell
+python -m unittest tdcrpy.test.test_tdcrpy
+```
+
+or (using the coverage package)
+
+```shell
+coverage run -m unittest tdcrpy.test.test_tdcrpy
+coverage report -m
 ```
 
 ## Documentation

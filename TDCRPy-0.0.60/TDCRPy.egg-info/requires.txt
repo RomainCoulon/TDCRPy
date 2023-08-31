@@ -1,6 +1,0 @@
-numpy
-tqdm
-setuptools
-scipy
-configparser
-importlib.resources

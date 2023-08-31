@@ -12,9 +12,10 @@ nE = 7000, 1000, 1000, 500, 2000, 50, 200, 500, 1000, 7000
 
 ## OTHER CASES
 # Number of bins to discretize the linear energy space for quenching calculation
-# and achieve a relative standard uncertainty below 1e-4.
-nE_electron = 20000
-nE_alpha = 50000
+# to achieve a relative standard uncertainty below 1e-4 on the estimated quenched energy: nE_electron = nE_alpha = 10000
+# to achieve a relative standard uncertainty below 1e-3 on the estimated quenched energy: nE_electron = nE_alpha = 1000
+nE_electron = 1000
+nE_alpha = 1000
 
 ## PROPERTIES OF THE SCINTILLATOR
 # density of the scintillator (LS cocktail + aqueous solution)
@@ -23,3 +24,9 @@ density = 0.96
 Z = 5.2
 # mean mass number of the scintillator (LS cocktail + aqueous solution)
 A = 11.04
+
+## INTERPOLATION TO ESTIMATE THE QUENCHED ENERGY
+# depth (number of indexes on each side of the energy point) on which the spline interpolation is done.
+depthSpline = 5
+# energy (in keV) above which interpolation is applied.
+Einterp = 1

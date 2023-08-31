@@ -42,6 +42,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
        --> If you would like to change the number of bins nE to discretize the linear energy space for quenching calculation, you can change nE_electron and nE_alpha parameters for respectively electrons and alpha particles.
        
        --> By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the density, the mean charge number Z and the mean mass number A of the scintillator.
+       
     
     Parameters
     ----------
@@ -64,7 +65,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
     kB : float
         Birks constant in cm/keV.
     V : float
-        volume of the scintillator in ml. run only for 10 ml
+        volume of the scintillator in ml.
     mode : string
         "res" to return the residual, "eff" to return efficiencies.
     mode2 : string
@@ -234,7 +235,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             I-1 Transition
             ==============
             '''  
-    
             if Display: print("\t Subsequent isomeric transition")                       # finish with the mother / now with the daughter
             while levelOftheDaughter > 0:                                                # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
                 i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])  # Find the position in the daughter level vector
@@ -386,10 +386,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             e_quenching=[]
             for i, p in enumerate(particle_vec):
                 if p == "alpha":
-                    energy_vec[i] = tl.E_quench_a(energy_vec[i],kB,nE_alpha)
+                    energy_vec[i] = tl.Em_a(energy_vec[i],kB,nE_alpha)
                     e_quenching.append(energy_vec[i])
                 elif p == "electron" or p == "positron":
-                    energy_vec[i] = tl.E_quench_e(energy_vec[i]*1e3,kB*1e3,nE_electron)*1e-3
+                    energy_vec[i] = tl.Em_e(energy_vec[i]*1e3,kB*1e3,nE_electron)*1e-3
                     e_quenching.append(energy_vec[i])
                 else:
                     e_quenching.append(0)
@@ -400,7 +400,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             V. LE MESURE TDCR
             ====================
             '''
-            
             if mode2=="sym":
                 p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
                 p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
@@ -426,8 +425,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 efficiency_D.append(efficiency_AB[-1]+efficiency_BC[-1]+efficiency_AC[-1]-2*efficiency_T[-1])
                 efficiency_S.append(pA_single+pB_single+pC_single-efficiency_D[-1]-efficiency_T[-1])
                 
-                
-    
         '''
         ====================
         VI. CALCULATION OF THE FINAL ESTIMATORS
@@ -485,4 +482,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         if mode == "res":
             return res
         if mode == "eff":
-            return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
+            if N<200:
+                print("Warning. too low number of MC trials - inaccurate estimation")
+                return mean_efficiency_S, 1, mean_efficiency_D, 1, mean_efficiency_T, 1
+            else:
+                return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
