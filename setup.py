@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "0.0.78"
+VERSION = "1.1.0"
 DESCRIPTION = "TDCR model"
 
 with open("README.md", "r") as f:
@@ -23,7 +23,7 @@ setup(
     install_requires = ["numpy","tqdm","setuptools","scipy","configparser","importlib.resources"],
     keywords = ["Python","TDCR","Monte-Carlo","radionuclide","scintillation","counting"],
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
@@ -44,7 +44,5 @@ setup(
 		'Quenching/QuenchEnergy*.txt',
 		'Quenching/inputVecteur*.txt',
 		'MCNP-MATRIX/matrice/fichier/*.txt',
-                'docs/_build/html/*.html',
-                'docs/_build/html/source/*.html'
 		]},
 )
