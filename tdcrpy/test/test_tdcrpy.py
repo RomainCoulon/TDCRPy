@@ -46,8 +46,12 @@ class TestMyModule(unittest.TestCase):
         self.assertEqual(result, 4.661876602564102)
         
     def test_E_quench_e(self):
-        result = np.mean(tdcrpy.TDCR_model_lib.E_quench_e(100*1e3,0.01,20000)*1e-3)
+        result = np.mean(tdcrpy.TDCR_model_lib.E_quench_e(100*1e3,100*1e3,0.01,20000)*1e-3)
         self.assertEqual(result, 91.24694728992633)
+        
+    def test_E_quench_e2(self):
+        result = np.mean(tdcrpy.TDCR_model_lib.E_quench_e(100*1e3,50*1e3,0.01,20000)*1e-3)
+        self.assertEqual(result, 47.97271731307207)
         
     def test_E_quench_a(self):
         result = np.mean(tdcrpy.TDCR_model_lib.E_quench_a(5000,1e-5,20000))
@@ -90,8 +94,12 @@ class TestMyModule(unittest.TestCase):
         self.assertLessEqual(result, 344.12105896)
     
     def test_Em_e(self):
-        result = tdcrpy.TDCR_model_lib.Em_e(50000, 1e-5, 10000)
+        result = tdcrpy.TDCR_model_lib.Em_e(50000, 50000, 1e-5, 10000)
         self.assertLessEqual(result, 48568.14392205286)
+        
+    def test_Em_e2(self):
+        result = tdcrpy.TDCR_model_lib.Em_e(50000, 25000, 1e-5, 10000)
+        self.assertLessEqual(result, 25000.754895953367)
     
     
     # relaxation_atom(daugther,rad,lacune='defaut')

@@ -15,65 +15,72 @@ sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
 
 
 """
+Test display
+"""
+# td.TDCRPy.TDCRPy(1, 0, 0, 0, 0, "Cd-109", "1", 1, 1e-5, 10, "eff", "sym", Display=True, barp=False)
+
+
+"""
 Compare with I2calc()
 """
-import tdcrpy
-from TDCRcalculation import I2calc
-# data HMI std 42
+# import tdcrpy
+# from TDCRcalculation import I2calc
+# # data HMI std 42
 
-AB =  1663.601
-BC =  1668.343
-AC =  1664.642
-D =  1974.418
-T =  1511.084
+# AB =  1663.601
+# BC =  1668.343
+# AC =  1664.642
+# D =  1974.418
+# T =  1511.084
 
-## version I2calc
-F1, FFF, effa, effb=I2calc(T/D,T/AB,T/BC,T/AC,"H-3",1e-2)
-FOM = F1*1e3
-FOMA = FFF[0]*1e3
-FOMB = FFF[1]*1e3
-FOMC = FFF[2]*1e3
-EFF1 = effa
-EFF2 = effb
-I2 = D/EFF2
-print("I2Calc,", FOM, EFF1, EFF2, I2)
+# ## version I2calc
+# F1, FFF, effa, effb=I2calc(T/D,T/AB,T/BC,T/AC,"H-3",1e-2)
+# FOM = F1*1e3
+# FOMA = FFF[0]*1e3
+# FOMB = FFF[1]*1e3
+# FOMC = FFF[2]*1e3
+# EFF1 = effa
+# EFF2 = effb
+# I2 = D/EFF2
+# print("I2Calc,", FOM, EFF1, EFF2, I2)
 
 
-F1, _, _, _, effa, _, _, _ = tdcrpy.TDCRoptimize.eff(T/D,T/AB,T/BC,T/AC,"H-3","1",1e-5,10,"sym",N=10)
-FOM = F1
-EFF1 = effa
-I2 = D/EFF1
-print("TDCRPy sym,", FOM, EFF1, I2)
+# F1, _, _, _, effa, _, _, _ = tdcrpy.TDCRoptimize.eff(T/D,T/AB,T/BC,T/AC,"H-3","1",1e-5,10,"sym",N=10)
+# FOM = F1
+# EFF1 = effa
+# I2 = D/EFF1
+# print("TDCRPy sym,", FOM, EFF1, I2)
 
-_, FFF, _, _, effb, _, _, _ = tdcrpy.TDCRoptimize.eff(T/D,T/AB,T/BC,T/AC,"H-3","1",1e-5,10,"asym",N=10)
-FOMA = FFF[0]
-FOMB = FFF[1]
-FOMC = FFF[2]
-EFF2 = effb
-I2 = D/EFF2
-print("TDCRPy asym,", FOMA, FOMB, FOMC, EFF2, I2)
+# _, FFF, _, _, effb, _, _, _ = tdcrpy.TDCRoptimize.eff(T/D,T/AB,T/BC,T/AC,"H-3","1",1e-5,10,"asym",N=10)
+# FOMA = FFF[0]
+# FOMB = FFF[1]
+# FOMC = FFF[2]
+# EFF2 = effb
+# I2 = D/EFF2
+# print("TDCRPy asym,", FOMA, FOMB, FOMC, EFF2, I2)
 
 """
 Profiling
 """
-# TD = 0.977667386529166        # Measured TDCR value
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# L = 1.0
+TD = 0.977667386529166        # Measured TDCR value
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+L = 1.0
 
-# def main():
-#     # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Co-60", "1", 1, 1.0e-5, 10, "eff", "sym")
-#     # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Am-241", "1", 1, 1.0e-5, 10, "eff", "sym")
-#     td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "H-3", "1", 1, 1.0e-5, 10, "eff", "sym")
+def main():
+    # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Sr-89", "1", 1, 1.0e-5, 10, "eff", "sym")
+    # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Co-60", "1", 1, 1.0e-5, 10, "eff", "sym")
+    # td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "Am-241", "1", 1, 1.0e-5, 10, "eff", "sym")
+    td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, "H-3", "1", 1, 1.0e-5, 10, "eff", "sym")
     
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
 
-# cProfile.run("main()", filename="profile_results.txt")
-# stats = pstats.Stats("profile_results.txt")
-# stats.sort_stats(pstats.SortKey.TIME)
-# stats.print_stats()
+cProfile.run("main()", filename="profile_results.txt")
+stats = pstats.Stats("profile_results.txt")
+stats.sort_stats(pstats.SortKey.TIME)
+stats.print_stats()
  
 
 """

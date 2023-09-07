@@ -629,22 +629,32 @@ def readBetaShape(rad,mode,level,z=z_betashape):
     for j in range(i+1,len(data)):
         e.append(float(data[j][0])) # convert to float
         dNdx.append(float(data[j][1])) # convert to float
-    dNdx /= sum(np.asarray(dNdx)) # normalization
-    dNdx = list(dNdx)
-    return e, dNdx
+    
+    p=[]
+    for k, p0 in enumerate(dNdx): # deal with the inhomogeneous energy space
+        if k==0:
+            p.append(p0 * (e[k+1])-e[k])
+        else:
+            p.append(p0 * (e[k]-e[k-1]))
+            
+    p /= sum(np.asarray(p)) # normalization
+    p = list(p)
+    return e, p
 
 #=======================================================================================
 
 #============================  Fonction quenching  =====================================
 
-def E_quench_e(e,kB,nE):
+def E_quench_e(ei,ed,kB,nE):
     """
     This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching
     
     Parameters
     ----------
-    e : float
-        energy of the electron in eV.
+    ei : float
+        inital energy of the electron in eV.
+    ed : float
+        deposited energy of the electron in eV.
     kB : float
         Birks constant in cm/MeV.
     nE : integer 
@@ -657,7 +667,7 @@ def E_quench_e(e,kB,nE):
     
     """
     
-    e_dis = np.linspace(0,e,nE)
+    e_dis = np.linspace(ei-ed,ei,nE)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
@@ -799,15 +809,17 @@ def Em_a(E, kB, nE, Et = Einterp, kB_vec = kB_a):
         r = run_interpolate(kB_vec, kB , Ei_alpha, Em_alpha, E)    
     return r
 
-def Em_e(E, kB, nE, Et = Einterp*1e3, kB_vec = kB_e):
+def Em_e(Ei, Ed, kB, nE, Et = Einterp*1e3, kB_vec = kB_e):
     """
     This fonction management the calculation of the quenched energy for electrons.
     A mixture between the accurate quenching model and the extrapolated model can be setup. 
 
     Parameters
     ----------
-    E : float
-        Input energy in eV
+    Ei : float
+        Initial energy in eV
+    Ed : float
+        Deposited energy in eV        
     kB : float
         Birks constant in cm/MeV
     nE : interger 
@@ -823,12 +835,12 @@ def Em_e(E, kB, nE, Et = Einterp*1e3, kB_vec = kB_e):
         interpolated quenched energy in eV for electron and in keV for alpha
 
     """    
-    if E <= Et:
+    if Ed <= Et or Ei != Ed:
         # run the accurate quenching model
-        r = E_quench_e(E,kB,nE)
+        r = E_quench_e(Ei,Ed,kB,nE)
     else:
         # run interpolation
-        r = run_interpolate(kB_vec, kB , Ei_electron, Em_electron, E)
+        r = run_interpolate(kB_vec, kB , Ei_electron, Em_electron, Ed)
     return r
 
 
@@ -1481,7 +1493,7 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
     em=np.empty(len(e))
     for i, ei in enumerate(e):
         ed = energie_dep_beta(ei)
-        em[i] = E_quench_e(ed*1e3,kB*1e3,ne)*1e-3
+        em[i] = E_quench_e(ed*1e3,ed*1e3,kB*1e3,ne)*1e-3
         
         
     if mode2=="sym":
