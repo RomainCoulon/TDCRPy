@@ -445,10 +445,10 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
         for i, p in enumerate(data):
             if info in p:
                 m=i
-                nombre.append(float(data[m][1]))
+                #nombre.append(float(data[m][1]))
                 break
-        #if data[m+7][0] == '2':
-        #    nombre.append(float(data[m+7][2]))
+        if data[m+7][0] == '2':
+            nombre.append(float(data[m+7][2]))
         #else:
             #print('bad position')
     return nombre
@@ -475,10 +475,10 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 #plt.xticks(np.arange(200,2002,200))
 #plt.yticks(np.linspace(0,0.6,13))
 #plt.xlim(200,2000)
-#plt.xlabel('énergie incidente/keV')
-#plt.ylabel("fraction d'electrons sort le flacon")
-#plt.title("fraction d'electrons sort le flacon")
-#plt.savefig('beta_sort_flacon.png')
+#plt.xlabel('énergie initiale/keV')
+#plt.ylabel("fraction d'electrons atteignant le flacon")
+#plt.title("fraction d'electrons atteignant le flacon")
+#plt.savefig('beta_atteind_flacon.png')
 
 #===================================
 #a = np.array(find_info(1,'b','bremsstrahlung'))
@@ -496,12 +496,12 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 
 
 #================ tracer la matrice ========================================
-e,matrice_p = creat_matrice(0,par='p')
+#e,matrice_p = creat_matrice(0,par='p')
 #print(len(e))
 #print(matrice_p[76:90,25])
 #print(matrice_p.shape,matrice_p[0,541:543])
 #ecri = ecrit_matrice(matrice_p,1,'b',16) 
-fig1 = matrice_fig(matrice_p,50,100,e,'p',10)
+#fig1 = matrice_fig(matrice_p,50,100,e,'p',10)
 #for i in range(1003):
   #  for j in range(901):
  #       matrice_p[i][j] = np.log(matrice_p[i][j]+1e-8)
