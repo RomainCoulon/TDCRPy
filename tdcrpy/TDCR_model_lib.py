@@ -71,6 +71,19 @@ with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fe5 = data_path / 'matrice/fichier/matrice_16ml-beta-_200_2000k.txt' # electron-16ml-1-200keV-niveau 1
     fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
 
+# import beta spectra calculated for the analytical model (BetaShape + MCNP6 calculation) 
+with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+    sH3 = data_path / 'Spectra_for_analytical_model/dep_spectrum_H-3.txt'
+    sC14 = data_path / 'Spectra_for_analytical_model/dep_spectrum_C-14.txt'
+    sS35 = data_path / 'Spectra_for_analytical_model/dep_spectrum_S-35.txt'
+    sCa45 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Ca-45.txt'
+    sNi63 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Ni-63.txt'
+    sSr89 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Sr-89.txt'
+    sSr90 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Sr-90.txt'
+    sTc99 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Tc-99.txt'
+    sPm147 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pm-147.txt'
+    sPu241 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pu-241.txt'
+
 # import stopping power data for electron
 with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     file_TanXia = open(data_path / "TandataUG.txt")
@@ -640,6 +653,48 @@ def readBetaShape(rad,mode,level,z=z_betashape):
     p /= sum(np.asarray(p)) # normalization
     p = list(p)
     return e, p
+
+
+def readBetaSpectra(rad):
+    """
+    This function reads the deposited energy distribution from beta particles.
+    The distribution is built from BetaShape emitted distribution and MCNP6 calculation
+
+    Parameters
+    ----------
+    rad : string
+        Radionuclide (e.g. "H-3").
+
+    Returns
+    -------
+    e : list
+        energy vector in keV.
+    p : list
+        probability density in keV-1.
+
+    """
+    e = []
+    p = []
+    
+    if rad == "H-3": file_path = sH3
+    elif rad == "C-14": file_path = sC14
+    elif rad == "S-35": file_path = sS35
+    elif rad == "Ca-45": file_path = sCa45
+    elif rad == "Ni-63": file_path = sNi63
+    elif rad == "Sr-89": file_path = sSr89
+    elif rad == "Sr-90": file_path = sSr90
+    elif rad == "Tc-99": file_path = sTc99
+    elif rad == "Pm-147": file_path = sPm147
+    elif rad == "Pu-241": file_path = sPu241
+
+    with open(file_path, "r") as file:
+        for line in file:
+            columns = line.strip().split('\t')
+            if len(columns) >= 2:
+                e.append(float(columns[0]))
+                p.append(float(columns[1]))
+    return e, p
+
 
 #=======================================================================================
 
@@ -1489,7 +1544,8 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
     
     """
     
-    e, p = readBetaShape(rad, 'beta-', 'tot')
+    # e, p = readBetaShape(rad, 'beta-', 'tot')
+    e, p = readBetaSpectra(rad)
     em=np.empty(len(e))
     for i, ei in enumerate(e):
         ed = energie_dep_beta(ei)
