@@ -369,7 +369,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
         meta_rad = ['Mn-52m','Y-90m','Nb-93m','Nb-95m','Tc-99m','Ag-108m','Ag-110m','Te-123m','Te-127m','Xe-131m','Xe-133m','Xe-135m','Ba-137m','Pr-144m','Pm-148m','Pa-234m','Am-242m']
         if rad in meta_rad:
             meta = True
-        
+        meta = True
         
         for i3 in range(len(posi_end_i)-1):
             start_p1 = posi_end_i[i3]
@@ -496,7 +496,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
         half_life_tot.append(half_life)
         uncertainty_tot.append(uncertainty)
         
-    out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,uncertainty_tot,tran_level_tot,tran_level_end_tot,level_energy_tot,prob_tran_tot,half_life_tot]
+    out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot,prob_tran_tot,half_life_tot,uncertainty_tot]
     return out
 
 

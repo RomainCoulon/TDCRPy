@@ -25,6 +25,10 @@ Z = 5.2
 # mean mass number of the scintillator (LS cocktail + aqueous solution)
 A = 11.04
 
+## PROPERTIES OF THE COUNTER
+# Coincidence resolving time (ns)
+tau = 50
+
 ## INTERPOLATION TO ESTIMATE THE QUENCHED ENERGY
 # depth (number of indexes on each side of the energy point) on which the spline interpolation is done.
 depthSpline = 5
