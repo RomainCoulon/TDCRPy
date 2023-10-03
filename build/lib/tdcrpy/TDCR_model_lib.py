@@ -231,15 +231,18 @@ def readPenNuc2(rad,z1=z_PenNuc):
         list of energy associated with transitions -- indice 9. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
     tran_prob_tot : list[list]
         list of probability associated with transitions -- indice 10. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    uncertainty_tot : list[list]
+        list of uncertainty of probability associated with transitions -- indice 11. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
     tran_level_tot : list[list]
-        list of corresponding branch levels -- indice 11. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level before the transition.
+        list of corresponding branch levels -- indice 12. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level before the transition.
     tran_level_end_tot : list[list]
-        list of level following given transitions -- indice 12. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level after the transition.
+        list of level following given transitions -- indice 13. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level after the transition.
     level_energy_tot : list[list]
-        list of energy levels -- indice 13. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+        list of energy levels -- indice 14. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
     prob_tran_tot : list[list]
-        list of sum of transition of each branches -- indice 14. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
-
+        list of sum of transition of each branches -- indice 15. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+    half_life : list
+        list of half_life of meta state -- indice 16.
     '''
     doc = rad + ".PenNuc.txt"
     with z1.open(doc) as file_P:
@@ -321,8 +324,10 @@ def readPenNuc2(rad,z1=z_PenNuc):
     desin_type_tot=[];desin_energy_tot=[];desin_prob_tot=[];desin_level_tot=[]
     tran_type_tot=[];tran_energy_tot=[];tran_prob_tot=[];tran_level_end_tot=[]; 
     tran_level_tot=[];level_energy_tot=[]
-    prob_branch_tot=[];prob_tran_tot=[] 
-
+    prob_branch_tot=[];prob_tran_tot=[]
+    uncertainty_tot = []
+    half_life_tot = []
+    
     '''
      =============
      LOOP DAUGHTER 
@@ -357,7 +362,15 @@ def readPenNuc2(rad,z1=z_PenNuc):
         tran_type_daug=[];tran_energy_daug=[];tran_prob_daug=[];tran_level_end_daug=[];
         tran_level_daug=[];level_energy_daug=[]
         prob_branch_daug=[];prob_tran_daug=[]
-
+        uncertainty = []
+        half_life = []
+        
+        meta = False
+        meta_rad = ['Mn-52m','Y-90m','Nb-93m','Nb-95m','Tc-99m','Ag-108m','Ag-110m','Te-123m','Te-127m','Xe-131m','Xe-133m','Xe-135m','Ba-137m','Pr-144m','Pm-148m','Pa-234m','Am-242m']
+        if rad in meta_rad:
+            meta = True
+        meta = True
+        
         for i3 in range(len(posi_end_i)-1):
             start_p1 = posi_end_i[i3]
             end_p1 = posi_end_i[i3+1]
@@ -376,7 +389,9 @@ def readPenNuc2(rad,z1=z_PenNuc):
             tran_type_b=[];tran_prob_b=[];tran_energy_b=[]; tran_level_end_b=[];
             tran_level_b=[];level_energy_b=[]
             desin_type_b=[];desin_energy_b=[];desin_prob_b=[];desin_level_b=[];
-             
+            uncertainty_b = []
+            half_life_b = []
+            
             for i4 in decayData[start_p1+1:end_p1]:
                 if start_p1+1 == end_p1:
                     break
@@ -414,10 +429,13 @@ def readPenNuc2(rad,z1=z_PenNuc):
                     if "LED" == i4[0]:
                         tran_level_b.append(int(i4[-1]))
                         level_energy_b.append(float(i4[1]))
+                        if meta:
+                            half_life_b.append(float(i4[4]))
                     if i4[0] == "GA" or i4[0] == "EK" or i4[0] == "EL" or i4[0] == "EL1" or i4[0] == "EL2" or i4[0] == "EL3" or i4[0] == "EM" or i4[0] == "EN":
                         #print(i4)
                         tran_type_b.append(i4[0])
                         tran_prob_b.append(float(i4[1]))
+                        uncertainty_b.append(float(i4[2]))
                         tran_energy_b.append(float(i4[3]))
                         tran_level_end_b.append(int(i4[5]))
             if branch:
@@ -428,12 +446,14 @@ def readPenNuc2(rad,z1=z_PenNuc):
              
             if transition:
                 tran_type_daug.append(tran_type_b)
+                uncertainty.append(uncertainty_b)
                 tran_energy_daug.append(tran_energy_b)
                 tran_prob_daug.append(tran_prob_b)
                 tran_level_end_daug.append(tran_level_end_b)
                 tran_level_daug.append(tran_level_b)
                 level_energy_daug.append(level_energy_b)
-
+                half_life.append(half_life_b)
+                
             if len(desin_prob_b)>0:
                 desin_prob_array = np.array(desin_prob_b)
                 prob_branch_i = np.sum(desin_prob_array)
@@ -473,8 +493,14 @@ def readPenNuc2(rad,z1=z_PenNuc):
         level_energy_tot.append(level_energy_daug)
         prob_branch_tot.append(prob_branch_daug)
         prob_tran_tot.append(prob_tran_daug)
-    out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot,prob_tran_tot]
+        half_life_tot.append(half_life)
+        uncertainty_tot.append(uncertainty)
+        
+    out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot,prob_tran_tot,half_life_tot,uncertainty_tot]
     return out
+
+
+
 
 #================================== StoppingPower for alpha particle ===========================================
 

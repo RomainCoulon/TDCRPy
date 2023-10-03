@@ -98,6 +98,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
     with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
         file_conf = data_path       
     config.read(file_conf)
+    tau=config["Inputs"].getfloat("tau")
     Y=config["Inputs"].getboolean("Y")
     radListPureBeta=config["Inputs"].get("radListPureBeta")
     radListPureBeta=radListPureBeta.replace(" ","")
@@ -252,8 +253,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             if Display: print("\t Subsequent isomeric transition(s)")                       # finish with the mother / now with the daughter
             while levelOftheDaughter > 0:                                                # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
                 i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])  # Find the position in the daughter level vector
-                                
-                tau = 50e-9
+                
+                # test whether the decay occurs within the coincidence resolving time or not
                 if np.random.exponential(trans_halfLife[index_rad][iDaughter][i_branch][i_level], size=1)[0] > tau: splitEvent = True
                 else: splitEvent = False
                                 
@@ -810,19 +811,4 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 return mean_efficiency_S, 1, mean_efficiency_D, 1, mean_efficiency_T, 1
             else:
                 return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
-
-L = (1.5, 1.2, 1.4)
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Cd-109"
-pmf_1="1"
-N = 10
-kB =1.0e-5
-V = 10
-mode = "eff"
-mode2 = "asym"
-
-TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False)
 
