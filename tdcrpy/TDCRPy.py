@@ -9,14 +9,15 @@ Bureau International des Poids et Mesures
 """
 
 ## IMPORT PYTHON MODULES
-# import tdcrpy.TDCR_model_lib as tl
-import TDCR_model_lib as tl
+import tdcrpy.TDCR_model_lib as tl
+# import TDCR_model_lib as tl
 import importlib.resources
 import configparser
 import numpy as np
 from tqdm import tqdm
+from importlib.resources import files
 
-def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False):
+def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False, uncData=False):
     """
     This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
     The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB. 
@@ -26,6 +27,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
        --> In mode="eff", it calculates the efficiency of the TDCR system as a function of a value (triplet) of free parameter(s) L, the measurement data is not used;
        
        --> In mode="res", it calculates the residual of the TDCR model parametrized by a value (or triplet) of free parameter(s) L and the measurement data TD, TAB, TBC, TAC.
+       
+       --> In mode="dis", the distributions of coincidence probability are retruned
     
     also, two configuration can be set:
        
@@ -68,13 +71,15 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
     V : float
         volume of the scintillator in ml.
     mode : string
-        "res" to return the residual, "eff" to return efficiencies.
+        "res" to return the residual, "eff" to return efficiencies, "dis" to resturn distributions.
     mode2 : string
         "sym" for symetrical model, "asym" for symetrical model.
     Display : Boolean, optional
         "True" to display details on the decay sampling. The default is False.
     barp : Boolean, optional
-        "True" to display the calculation progress. The default is True.
+        "True" to display the calculation progress. The default is False.
+    uncData : Boolean, optional
+        "True" to propagate uncertainty from decay data. The default is False.
     
     Returns
     -------
@@ -95,8 +100,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
     """
     if barp: tl.display_header()
     config = configparser.ConfigParser()
-    with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
-        file_conf = data_path       
+    with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
+        file_conf = data_path           
     config.read(file_conf)
     tau=config["Inputs"].getfloat("tau")
     Y=config["Inputs"].getboolean("Y")
@@ -253,7 +258,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             if Display: print("\t Subsequent isomeric transition(s)")                       # finish with the mother / now with the daughter
             while levelOftheDaughter > 0:                                                # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
                 i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])  # Find the position in the daughter level vector
-                
+                print(trans_halfLife)
                 # test whether the decay occurs within the coincidence resolving time or not
                 if np.random.exponential(trans_halfLife[index_rad][iDaughter][i_branch][i_level], size=1)[0] > tau: splitEvent = True
                 else: splitEvent = False
@@ -262,7 +267,15 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     #====================================================================
                     # Sampling of the transition in energy levels of the daughter nucleus
                     #====================================================================
-                    probability_tran = tl.normalise(prob_trans[index_rad][iDaughter][i_level])   # normaliser la proba de transition 
+                    if uncData:
+                        prob_trans_s=[]
+                        for ipt, xpt in enumerate(prob_trans[index_rad][iDaughter][i_level]):
+                            prob_trans_s.append(np.random.normal(xpt, u_prob_trans[index_rad][iDaughter][i_level][ipt], 1)[0])
+                            
+                        probability_tran = tl.normalise(prob_trans_s)   # normaliser la proba de transition
+                    else:
+                        probability_tran = tl.normalise(prob_trans[index_rad][iDaughter][i_level])   # normaliser la proba de transition 
+
                     index_t = tl.sampling(probability_tran)                                      # indice de la transition
                     if Display:
                         print("\t\t Energy of the level = ", levelEnergy[index_rad][iDaughter][i_level][0], " keV")
@@ -777,27 +790,12 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             TBCmodel = mean_efficiency_T/mean_efficiency_BC
             TACmodel = mean_efficiency_T/mean_efficiency_AC
             
-            
-        #    x = np.arange(np.mean(efficiency_T),1.001,0.001)
-        #    plt.figure("efficiency distribution")
-        #    plt.clf()
-        #    plt.hist(np.asarray(efficiency_D),bins=x,label="Efficiency of double coincidences")[0]
-        #    plt.hist(np.asarray(efficiency_T),bins=x,label="Efficiency of triple coincidences")[0]
-        #    plt.xlabel("Efficiency", fontsize = 14)
-        #    plt.ylabel(r"Number of counts", fontsize = 14)
-        #    plt.legend(fontsize = 12)
-        #    plt.savefig('Effdistribution.png')
         
-        #    x = np.arange(np.mean(tdcr),1.001,0.001)
-        #    plt.figure("TDCR distribution")
-        #    plt.clf()
-        #    plt.hist(np.asarray(tdcr),bins=x,label="Calculated TDCR")[0]
-        #    plt.plot(x,st.norm.pdf(x, TDCR_measure, u_TDCR_measure),label="measured TDCR")[0]
-        #    plt.xlabel("Efficiency", fontsize = 14)
-        #    plt.ylabel(r"Number of counts", fontsize = 14)
-        #    plt.legend(fontsize = 12)
-        #    plt.savefig('TDCRdistribution.png')
-        
+        '''
+        ======================
+        VI. RETURN THE RESULTS
+        ======================
+        '''
         if mode2=="sym":
             res=(TDCR_calcul-TD)**2
         elif mode2=="asym":
@@ -811,4 +809,24 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 return mean_efficiency_S, 1, mean_efficiency_D, 1, mean_efficiency_T, 1
             else:
                 return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
+        if mode =="dis":
+            return efficiency_S, efficiency_D, efficiency_T
 
+
+
+# L = (1, 1, 1)
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# Rad="Co-60"
+# pmf_1="1"
+# N = 10
+# kB =1.0e-5
+# V = 10
+# mode = "dis"
+# mode2 = "asym"
+
+
+# S,D,T = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=False)
+# # tl.display_distrib(S,D,T)

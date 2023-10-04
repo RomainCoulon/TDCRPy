@@ -22,6 +22,7 @@ import time
 import re
 import os
 import scipy.interpolate as  interp
+import matplotlib.pyplot as plt
 
 """
 ======= Import ressource data =======
@@ -1646,6 +1647,36 @@ distribution: https://pypi.org/project/TDCRPy \n\
 developement: https://github.com/RomainCoulon/TDCRPy \n\n\
 start calculation..."
  
- # Start Calculation
+    # Start Calculation
     print(header_text)
     print(header_text2)
+
+def display_distrib(S, D, T):
+    n=len(D)
+    x = np.arange(0,1.1,0.01)
+    D=np.asarray(D)
+    T=np.asarray(T)
+    meanD=np.mean(D)
+    meanT=np.mean(T)
+    # tdcr=T/D
+    plt.figure("efficiency distribution")
+    plt.clf()
+    plt.hist(np.asarray(D),bins=x,label="Double coincidences")[0]
+    plt.hist(np.asarray(T),bins=x,label="Triple coincidences")[0]
+    plt.scatter(meanD,n,marker='o',s=200,color='orange',label="mean value for Double coincidences")
+    plt.scatter(meanT,n,marker='o',s=200,color='blue',label="mean value for Triple coincidences")
+    plt.yscale("log")
+    plt.xlabel("Efficiency", fontsize = 14)
+    plt.ylabel(r"Number of counts", fontsize = 14)
+    plt.legend(fontsize = 12)
+    plt.show()
+    # plt.savefig('Effdistribution.png')
+
+    # plt.figure("TDCR distribution")
+    # plt.clf()
+    # plt.hist(np.asarray(tdcr),bins=x,label="calculated TDCR")[0]
+    # # plt.plot(x,st.norm.pdf(x, TDCR_measure, u_TDCR_measure),label="measured TDCR")[0]
+    # plt.xlabel("Efficiency", fontsize = 14)
+    # plt.ylabel(r"Number of counts", fontsize = 14)
+    # plt.legend(fontsize = 12)
+    # # plt.savefig('TDCRdistribution.png')
