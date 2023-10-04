@@ -13,6 +13,7 @@ Bureau International des Poids et Mesures
 """
 
 import importlib.resources
+from importlib.resources import files
 import pkg_resources
 import configparser
 import numpy as np
@@ -27,8 +28,9 @@ import scipy.interpolate as  interp
 """
 
 # import advanced configuration data
+
 config = configparser.ConfigParser()
-with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
     file_conf = data_path       
 config.read(file_conf)
 RHO = config["Inputs"].getfloat("density")
@@ -38,22 +40,26 @@ depthSpline = config["Inputs"].getint("depthSpline")
 Einterp = config["Inputs"].getfloat("Einterp")
 
 # import PenNuc data
-with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
+#with importlib.resources.path('tdcrpy', 'decayData') as data_path:
     file_pennuc = data_path / "All-nuclides_PenNuc.zip"
 z_PenNuc = zf.ZipFile(file_pennuc)
 
 # import BetaShape data
-with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
+#with importlib.resources.path('tdcrpy', 'decayData') as data_path:
     file_betashape = data_path / "All-nuclides_BetaShape.zip"
 z_betashape = zf.ZipFile(file_betashape)
 
 # import ENSDF data
-with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
+#with importlib.resources.path('tdcrpy', 'decayData') as data_path:
     file_ensdf = data_path / 'All-nuclides_Ensdf.zip'
 z_ensdf = zf.ZipFile(file_ensdf)
 
 # import photon interaction data (MCNP6 calculation) 
-with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as data_path:
+#with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fp1 = data_path / 'matrice/fichier/matrice_10ml-photon_1_200k.txt'          #gamma-10ml-1-200keV-niveau 0
     fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'       #gamma-10ml-200-2000keV-niveau 1
     fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt'     #gamma-10ml-2000-10000keV-niveau 2
@@ -63,7 +69,8 @@ with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fe = data_path / 'matrice/fichier/E_depose.txt'
 
 # import electron interaction data (MCNP6 calculation) 
-with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as data_path:
+#with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fe1 = data_path / 'matrice/fichier/matrice_10ml-beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
     fe2 = data_path / 'matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
     fe3 = data_path / 'matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
@@ -72,7 +79,8 @@ with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
 
 # import beta spectra calculated for the analytical model (BetaShape + MCNP6 calculation) 
-with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as data_path:
+#with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     sH3 = data_path / 'Spectra_for_analytical_model/dep_spectrum_H-3.txt'
     sC14 = data_path / 'Spectra_for_analytical_model/dep_spectrum_C-14.txt'
     sS35 = data_path / 'Spectra_for_analytical_model/dep_spectrum_S-35.txt'
@@ -85,7 +93,8 @@ with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     sPu241 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pu-241.txt'
 
 # import stopping power data for electron
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+#with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     file_TanXia = open(data_path / "TandataUG.txt")
 
 data_TanXia=file_TanXia.read(); file_TanXia.close()
@@ -94,7 +103,8 @@ for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
 # import stopping power data for electron for alpha particle (ASTAR data)
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+#with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     f_alpha = open(data_path / "alpha_toulene.txt")
     
 data_ASTAR = f_alpha.readlines()
@@ -110,7 +120,8 @@ for i in range(np.size(data_ASTAR)):
 
 # import pre-calculated quenched energy tables
 kB_a = [6e-6, 7e-6, 8e-6, 9e-6, 1e-5, 1.1e-5, 1.2e-5, 1.3e-5, 1.4e-5, 1.5e-5] # cm/MeV
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+#with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     Ei_alpha_fid = open(data_path / "inputVecteurAlpha.txt")
 Ei_alpha = Ei_alpha_fid.readlines()
 Ei_alpha = Ei_alpha[0].split(" ")
@@ -118,7 +129,8 @@ Ei_alpha = [float(x) for x in Ei_alpha[:-1]]
 
 Em_alpha = []
 for ikB in kB_a:
-    with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+    #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
         tamptxt = "QuenchEnergyAlpha_"+str(ikB)+".txt"
         fid = open(data_path / tamptxt)
     line = fid.readlines()
@@ -127,7 +139,8 @@ for ikB in kB_a:
     Em_alpha.append(line)
 
 kB_e = [0.006, 0.007, 0.008, 0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015] # cm/MeV
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+#with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     Ei_electron_fid = open(data_path / "inputVecteurElectron.txt")
 Ei_electron = Ei_electron_fid.readlines()
 Ei_electron = Ei_electron[0].split(" ")
@@ -135,13 +148,15 @@ Ei_electron = [float(x) for x in Ei_electron[:-1]]
 
 Em_electron = []
 for ikB in kB_e:
-    with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+    #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
         tamptxt = "QuenchEnergyElectron_"+str(ikB)+".txt"
         fid = open(data_path / tamptxt)
     line = fid.readlines()
     line = line[0].split(" ")
     line = [float(x) for x in line[:-1]]
     Em_electron.append(line)
+
 
 """
 ======= Library of functions =======
@@ -493,6 +508,7 @@ def readPenNuc2(rad,z1=z_PenNuc):
         
     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot,prob_tran_tot,half_life_tot,uncertainty_tot]
     return out
+
 
 
 #================================== StoppingPower for alpha particle ===========================================
