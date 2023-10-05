@@ -568,18 +568,18 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 
                 for i, p in enumerate(particle_vec):
                     if p == "electron":
-                        energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
+                        energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
         
                     if p == "beta+":
-                        energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
+                        energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
         
                     if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                        energy_vec[i] = tl.energie_dep_gamma(energy_vec[i],v=V)          # sampling energy free from photon
+                        energy_vec[i] = tl.energie_dep_gamma2(energy_vec[i],v=V)          # sampling energy free from photon
                         particle_vec[i] = "electron"
                         
                     if p == "Auger K" or p == "Auger L":
                         particle_vec[i] = "electron"
-                        energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
+                        energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
                         
                 if Display:
                     print("\n\t INTERACTION \n\t Summary of the energy deposited by charged particles from the prompt transitions")
@@ -588,18 +588,18 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 
                 for i, p in enumerate(particle_vec2):
                     if p == "electron":
-                        energy_vec2[i] = tl.energie_dep_beta(energy_vec2[i])
+                        energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
         
                     if p == "beta+":
-                        energy_vec2[i] = tl.energie_dep_beta(energy_vec2[i])
+                        energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
         
                     if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                        energy_vec2[i] = tl.energie_dep_gamma(energy_vec2[i],v=V)          # sampling energy free from photon
+                        energy_vec2[i] = tl.energie_dep_gamma2(energy_vec2[i],v=V)          # sampling energy free from photon
                         particle_vec2[i] = "electron"
                         
                     if p == "Auger K" or p == "Auger L":
                         particle_vec2[i] = "electron"
-                        energy_vec2[i] = tl.energie_dep_beta(energy_vec2[i])
+                        energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
                         
                 if Display:
                     print("\t Summary of the energy deposited by charged particles from the delayed transitions")
@@ -805,18 +805,18 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 
                 for i, p in enumerate(particle_vec):
                     if p == "electron":
-                        energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
+                        energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
         
                     if p == "beta+":
-                        energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
+                        energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
         
                     if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                        energy_vec[i] = tl.energie_dep_gamma(energy_vec[i],v=V)          # sampling energy free from photon
+                        energy_vec[i] = tl.energie_dep_gamma2(energy_vec[i],v=V)          # sampling energy free from photon
                         particle_vec[i] = "electron"
                         
                     if p == "Auger K" or p == "Auger L":
                         particle_vec[i] = "electron"
-                        energy_vec[i] = tl.energie_dep_beta(energy_vec[i])
+                        energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
                 
                 if Display:
                     print("\n\t INTERACTION \n\t Summary of the energy deposited by charged particles")
@@ -952,11 +952,11 @@ TD = 0.977667386529166
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
-Rad="Co-60"
+Rad="Tl-201"
 pmf_1="1"
 N = 10
 kB =1.0e-5
-V = 10
+V = 12
 mode = "dis"
 mode2 = "sym"
 
