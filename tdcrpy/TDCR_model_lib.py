@@ -1253,7 +1253,6 @@ def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
     return result
 
 
-
 def writeEffcurves(x,y,uy,rad,p,kB,SDT):
     """
     This function writes efficiency curves
