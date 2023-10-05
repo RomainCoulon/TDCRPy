@@ -1146,28 +1146,7 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
     if result  > e_inci: result = e_inci
     return result
 
-def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,ed=Matrice_e):
-    """ This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
-    
-    Parameters
-    ----------
-    e_inci : float
-        energy of the electron in keV.
-    matrice10_1 : list[list], optional
-        response matrix for electrons in the range [1-200] keV and for a scintillator volume of 10 ml.
-    matrice10_2 : list[list], optional
-        response matrix for electrons in the range [200-2000] keV and for a scintillator volume of 10 ml.
-    matrice10_3 : list[list], optional
-        response matrix for electrons in the range [2000-10000] keV and for a scintillator volume of 10 ml.
-    ed : list[list], optional
-        matrix of input energies. column 0: [1-200] keV; column 1: [200-2000] keV; column 2: [2000-10000] keV
-
-    Returns
-    -------
-    result : float
-        deposited energy in keV.
-
-    """
+def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,matrice16_2=Matrice16_e_2,ed=Matrice_e):
     ## sort keV / entrée : keV
     if e_inci <= 200:
         if e_inci < 1:
@@ -1199,7 +1178,7 @@ def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_
     return result
 
 
-def energie_dep_beta2(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,ed=Matrice_e):
+def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,matrice16_2=Matrice16_e_2,matrice16_3=Matrice16_e_3,ed=Matrice_e):
     """ This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
@@ -1227,25 +1206,44 @@ def energie_dep_beta2(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
             index = 0            # index de colonne de la matrice de l'énergie incidente la plus proche 
         else:
             index = int(e_inci)-1
-        matrice = matrice10_1[1:,index]
-        matrice0 = matrice10_1[0,index]
+            
+        if v == 10: 
+            matrice = matrice10_1[1:,index]
+            matrice0 = matrice10_1[0,index]
+        elif v == 16:
+            matrice = matrice16_1[1:,index]
+            matrice0 = matrice16_1[0,index]
+        else:
+            matrice = (matrice16_1[1:,index]-matrice10_1[1:,index])*v/6 + (matrice10_1[1:,index]-(matrice16_1[1:,index]-matrice10_1[1:,index])*10/6)
+            matrice0 = (matrice16_1[0,index]-matrice10_1[0,index])*v/6 + (matrice10_1[0,index]-(matrice16_1[0,index]-matrice10_1[0,index])*10/6)
         e = ed[:,0]
     
     elif e_inci <= 2000:
         index = int((e_inci-200)/2)
-        #doc = 'MCNP-MATRIX/matrice/matrice_p_200_2000k.txt'
-        matrice = matrice10_2[1:,index]
-        matrice0 = matrice10_2[0,index]
-        #taille_x = 901
+        if v == 10: 
+            matrice = matrice10_2[1:,index]
+            matrice0 = matrice10_2[0,index]
+        elif v == 16:
+            matrice = matrice16_2[1:,index]
+            matrice0 = matrice16_2[0,index]
+        else:
+            matrice = (matrice16_2[1:,index]-matrice10_2[1:,index])*v/6 + (matrice10_2[1:,index]-(matrice16_2[1:,index]-matrice10_2[1:,index])*10/6) 
+            matrice0 = (matrice16_2[0,index]-matrice10_2[0,index])*v/6 + (matrice10_2[0,index]-(matrice16_2[0,index]-matrice10_2[0,index])*10/6) 
         e = ed[:,1]
 
     else:
         index = (int(e_inci)-2000)//10
-        #doc = 'MCNP-MATRIX/matrice/matrice_p_2000_10000k.txt'
-        matrice = matrice10_3[1:,index]
-        matrice0 = matrice10_3[0,index]
-        #taille_x = 801
+        if v == 10: 
+            matrice = matrice10_3[1:,index]
+            matrice0 = matrice10_3[0,index]
+        elif v == 16:
+            matrice = matrice16_3[1:,index]
+            matrice0 = matrice16_3[0,index]
+        else:
+            matrice = (matrice16_3[1:,index]-matrice10_3[1:,index])*v/6 + (matrice10_3[1:,index]-(matrice16_3[1:,index]-matrice10_3[1:,index])*10/6) 
+            matrice0 = (matrice16_3[0,index]-matrice10_3[0,index])*v/6 + (matrice10_3[0,index]-(matrice16_3[0,index]-matrice10_3[0,index])*10/6)
         e = ed[:,2]
+
     
     inde = sampling(matrice)
     if inde == 1 : result = 0
@@ -1253,6 +1251,7 @@ def energie_dep_beta2(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
     else: result = e[inde]*1e3*e_inci/matrice0
     if result  > e_inci: result = e_inci
     return result
+
 
 
 def writeEffcurves(x,y,uy,rad,p,kB,SDT):
