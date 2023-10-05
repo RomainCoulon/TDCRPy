@@ -574,7 +574,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             '''
             
             daughter_relax = DaughterVec[index_rad][iDaughter]
-            efficiency_T,efficiency_D,efficiency_S,efficiency_AB,efficiency_AC,efficiency_BC = TDCR_relaxation(L,TD,TAB,TBC,TAC,daughter_relax,Rad[index_rad],kB,V,particle_vec,energy_vec,mode2,e_sum,level_before_trans,nE_alpha,nE_electron,uncData=uncData,Display=Display)
+            efficiency_T,efficiency_D,efficiency_S,efficiency_AB,efficiency_AC,efficiency_BC = TDCR_relaxation(L,TD,TAB,TBC,TAC,daughter_relax,Rad[index_rad],kB,V,particle_vec,energy_vec,mode2,e_sum,level_before_trans,nE_alpha,nE_electron,uncData=uncData,Display=Display,delay=False)
     
             
             ## evenement retarde
@@ -659,7 +659,7 @@ TD = 0.977667386529166
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
-Rad="H-3"
+Rad="Fe-55"
 pmf_1="1"
 N = 10
 kB =1.0e-5
