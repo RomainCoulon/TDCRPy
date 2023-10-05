@@ -8,6 +8,7 @@ TDCRPy.egg-info/dependency_links.txt
 TDCRPy.egg-info/requires.txt
 TDCRPy.egg-info/top_level.txt
 tdcrpy/TDCRPy.py
+tdcrpy/TDCRPy1.py
 tdcrpy/TDCR_model_lib.py
 tdcrpy/TDCRoptimize.py
 tdcrpy/__init__.py
