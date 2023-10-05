@@ -13,6 +13,7 @@ Bureau International des Poids et Mesures
 """
 
 import importlib.resources
+from importlib.resources import files
 import pkg_resources
 import configparser
 import numpy as np
@@ -21,14 +22,16 @@ import time
 import re
 import os
 import scipy.interpolate as  interp
+import matplotlib.pyplot as plt
 
 """
 ======= Import ressource data =======
 """
 
 # import advanced configuration data
+
 config = configparser.ConfigParser()
-with importlib.resources.path('tdcrpy', 'config.toml') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
     file_conf = data_path       
 config.read(file_conf)
 RHO = config["Inputs"].getfloat("density")
@@ -38,22 +41,26 @@ depthSpline = config["Inputs"].getint("depthSpline")
 Einterp = config["Inputs"].getfloat("Einterp")
 
 # import PenNuc data
-with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
+#with importlib.resources.path('tdcrpy', 'decayData') as data_path:
     file_pennuc = data_path / "All-nuclides_PenNuc.zip"
 z_PenNuc = zf.ZipFile(file_pennuc)
 
 # import BetaShape data
-with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
+#with importlib.resources.path('tdcrpy', 'decayData') as data_path:
     file_betashape = data_path / "All-nuclides_BetaShape.zip"
 z_betashape = zf.ZipFile(file_betashape)
 
 # import ENSDF data
-with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
+#with importlib.resources.path('tdcrpy', 'decayData') as data_path:
     file_ensdf = data_path / 'All-nuclides_Ensdf.zip'
 z_ensdf = zf.ZipFile(file_ensdf)
 
 # import photon interaction data (MCNP6 calculation) 
-with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as data_path:
+#with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fp1 = data_path / 'matrice/fichier/matrice_10ml-photon_1_200k.txt'          #gamma-10ml-1-200keV-niveau 0
     fp2 = data_path / 'matrice/fichier/matrice_10ml-photon_200_2000k.txt'       #gamma-10ml-200-2000keV-niveau 1
     fp3 = data_path / 'matrice/fichier/matrice_10ml-photon_2000_10000k.txt'     #gamma-10ml-2000-10000keV-niveau 2
@@ -63,7 +70,8 @@ with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fe = data_path / 'matrice/fichier/E_depose.txt'
 
 # import electron interaction data (MCNP6 calculation) 
-with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as data_path:
+#with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fe1 = data_path / 'matrice/fichier/matrice_10ml-beta-_1_200k.txt' # electron-10ml-1-200keV-niveau 0
     fe2 = data_path / 'matrice/fichier/matrice_10ml-beta-_200_2000k.txt' # electron-10ml-200-2000keV-niveau 1
     fe3 = data_path / 'matrice/fichier/matrice_10ml-beta-_2000_10000k.txt' # electron-10ml-2000-10000keV-niveau 2
@@ -72,7 +80,8 @@ with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
 
 # import beta spectra calculated for the analytical model (BetaShape + MCNP6 calculation) 
-with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as data_path:
+#with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     sH3 = data_path / 'Spectra_for_analytical_model/dep_spectrum_H-3.txt'
     sC14 = data_path / 'Spectra_for_analytical_model/dep_spectrum_C-14.txt'
     sS35 = data_path / 'Spectra_for_analytical_model/dep_spectrum_S-35.txt'
@@ -85,7 +94,8 @@ with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     sPu241 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pu-241.txt'
 
 # import stopping power data for electron
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+#with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     file_TanXia = open(data_path / "TandataUG.txt")
 
 data_TanXia=file_TanXia.read(); file_TanXia.close()
@@ -94,9 +104,10 @@ for i, x in enumerate(data_TanXia):
   if i<len(data_TanXia)-1: data_TanXia_f[i]=float(x)
 
 # import stopping power data for electron for alpha particle (ASTAR data)
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+#with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     f_alpha = open(data_path / "alpha_toulene.txt")
-
+    
 data_ASTAR = f_alpha.readlines()
 f_alpha.close()
 energy_alph = []
@@ -110,7 +121,8 @@ for i in range(np.size(data_ASTAR)):
 
 # import pre-calculated quenched energy tables
 kB_a = [6e-6, 7e-6, 8e-6, 9e-6, 1e-5, 1.1e-5, 1.2e-5, 1.3e-5, 1.4e-5, 1.5e-5] # cm/MeV
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+#with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     Ei_alpha_fid = open(data_path / "inputVecteurAlpha.txt")
 Ei_alpha = Ei_alpha_fid.readlines()
 Ei_alpha = Ei_alpha[0].split(" ")
@@ -118,7 +130,8 @@ Ei_alpha = [float(x) for x in Ei_alpha[:-1]]
 
 Em_alpha = []
 for ikB in kB_a:
-    with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+    #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
         tamptxt = "QuenchEnergyAlpha_"+str(ikB)+".txt"
         fid = open(data_path / tamptxt)
     line = fid.readlines()
@@ -127,7 +140,8 @@ for ikB in kB_a:
     Em_alpha.append(line)
 
 kB_e = [0.006, 0.007, 0.008, 0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015] # cm/MeV
-with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+#with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
     Ei_electron_fid = open(data_path / "inputVecteurElectron.txt")
 Ei_electron = Ei_electron_fid.readlines()
 Ei_electron = Ei_electron[0].split(" ")
@@ -135,13 +149,15 @@ Ei_electron = [float(x) for x in Ei_electron[:-1]]
 
 Em_electron = []
 for ikB in kB_e:
-    with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+    with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+    #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
         tamptxt = "QuenchEnergyElectron_"+str(ikB)+".txt"
         fid = open(data_path / tamptxt)
     line = fid.readlines()
     line = line[0].split(" ")
     line = [float(x) for x in line[:-1]]
     Em_electron.append(line)
+
 
 """
 ======= Library of functions =======
@@ -231,18 +247,18 @@ def readPenNuc2(rad,z1=z_PenNuc):
         list of energy associated with transitions -- indice 9. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
     tran_prob_tot : list[list]
         list of probability associated with transitions -- indice 10. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
-    uncertainty_tot : list[list]
-        list of uncertainty of probability associated with transitions -- indice 11. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
     tran_level_tot : list[list]
-        list of corresponding branch levels -- indice 12. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level before the transition.
+        list of corresponding branch levels -- indice 11. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level before the transition.
     tran_level_end_tot : list[list]
-        list of level following given transitions -- indice 13. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level after the transition.
+        list of level following given transitions -- indice 12. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to the level after the transition.
     level_energy_tot : list[list]
-        list of energy levels -- indice 14. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+        list of energy levels -- indice 13. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
     prob_tran_tot : list[list]
-        list of sum of transition of each branches -- indice 15. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
+        list of sum of transition of each branches -- indice 14. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
     half_life : list
-        list of half_life of meta state -- indice 16.
+        list of half_life of meta state -- indice 15.
+    uncertainty_tot : list[list]
+        list of uncertainty of probability associated with transitions -- indice 16. It contains a sub-list for all possible branches of a given daughter nucleus and a sub-sub list related to possible decay mode of each branch.
     '''
     doc = rad + ".PenNuc.txt"
     with z1.open(doc) as file_P:
@@ -365,11 +381,6 @@ def readPenNuc2(rad,z1=z_PenNuc):
         uncertainty = []
         half_life = []
         
-        meta = False
-        meta_rad = ['Mn-52m','Y-90m','Nb-93m','Nb-95m','Tc-99m','Ag-108m','Ag-110m','Te-123m','Te-127m','Xe-131m','Xe-133m','Xe-135m','Ba-137m','Pr-144m','Pm-148m','Pa-234m','Am-242m']
-        if rad in meta_rad:
-            meta = True
-        meta = True
         
         for i3 in range(len(posi_end_i)-1):
             start_p1 = posi_end_i[i3]
@@ -429,10 +440,8 @@ def readPenNuc2(rad,z1=z_PenNuc):
                     if "LED" == i4[0]:
                         tran_level_b.append(int(i4[-1]))
                         level_energy_b.append(float(i4[1]))
-                        if meta:
-                            half_life_b.append(float(i4[4]))
+                        half_life_b.append(float(i4[4]))
                     if i4[0] == "GA" or i4[0] == "EK" or i4[0] == "EL" or i4[0] == "EL1" or i4[0] == "EL2" or i4[0] == "EL3" or i4[0] == "EM" or i4[0] == "EN":
-                        #print(i4)
                         tran_type_b.append(i4[0])
                         tran_prob_b.append(float(i4[1]))
                         uncertainty_b.append(float(i4[2]))
@@ -474,11 +483,13 @@ def readPenNuc2(rad,z1=z_PenNuc):
 
         tran_type_daug.append([])
         tran_prob_daug.append([])
+        uncertainty.append([])
         tran_energy_daug.append([])
         tran_level_end_daug.append([])
         tran_level_daug.append([])
         level_energy_daug.append([])
         prob_tran_daug.append(0)
+        half_life.append([])
 
         desin_type_tot.append(desin_type_daug)
         desin_energy_tot.append(desin_energy_daug)
@@ -498,7 +509,6 @@ def readPenNuc2(rad,z1=z_PenNuc):
         
     out = [daughter,prob_daug,energy_Q,desin_type_tot,desin_energy_tot,desin_prob_tot,desin_level_tot,prob_branch_tot,tran_type_tot,tran_energy_tot,tran_prob_tot,tran_level_tot,tran_level_end_tot,level_energy_tot,prob_tran_tot,half_life_tot,uncertainty_tot]
     return out
-
 
 
 
@@ -1637,6 +1647,36 @@ distribution: https://pypi.org/project/TDCRPy \n\
 developement: https://github.com/RomainCoulon/TDCRPy \n\n\
 start calculation..."
  
- # Start Calculation
+    # Start Calculation
     print(header_text)
     print(header_text2)
+
+def display_distrib(S, D, T):
+    n=len(D)
+    x = np.arange(0,1.1,0.01)
+    D=np.asarray(D)
+    T=np.asarray(T)
+    meanD=np.mean(D)
+    meanT=np.mean(T)
+    # tdcr=T/D
+    plt.figure("efficiency distribution")
+    plt.clf()
+    plt.hist(np.asarray(D),bins=x,label="Double coincidences")[0]
+    plt.hist(np.asarray(T),bins=x,label="Triple coincidences")[0]
+    plt.scatter(meanD,n,marker='o',s=200,color='orange',label="mean value for Double coincidences")
+    plt.scatter(meanT,n,marker='o',s=200,color='blue',label="mean value for Triple coincidences")
+    plt.yscale("log")
+    plt.xlabel("Efficiency", fontsize = 14)
+    plt.ylabel(r"Number of counts", fontsize = 14)
+    plt.legend(fontsize = 12)
+    plt.show()
+    # plt.savefig('Effdistribution.png')
+
+    # plt.figure("TDCR distribution")
+    # plt.clf()
+    # plt.hist(np.asarray(tdcr),bins=x,label="calculated TDCR")[0]
+    # # plt.plot(x,st.norm.pdf(x, TDCR_measure, u_TDCR_measure),label="measured TDCR")[0]
+    # plt.xlabel("Efficiency", fontsize = 14)
+    # plt.ylabel(r"Number of counts", fontsize = 14)
+    # plt.legend(fontsize = 12)
+    # # plt.savefig('TDCRdistribution.png')

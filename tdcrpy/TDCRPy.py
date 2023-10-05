@@ -9,8 +9,8 @@ Bureau International des Poids et Mesures
 """
 
 ## IMPORT PYTHON MODULES
-import tdcrpy.TDCR_model_lib as tl
-# import TDCR_model_lib as tl
+# import tdcrpy.TDCR_model_lib as tl
+import TDCR_model_lib as tl
 import importlib.resources
 import configparser
 import numpy as np
@@ -814,19 +814,19 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 
 
 
-# L = (1, 1, 1)
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# Rad="Co-60"
-# pmf_1="1"
-# N = 10
-# kB =1.0e-5
-# V = 10
-# mode = "dis"
-# mode2 = "asym"
+L = (1, 1, 1)
+TD = 0.977667386529166
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+Rad="Co-60"
+pmf_1="1"
+N = 10
+kB =1.0e-5
+V = 10
+mode = "dis"
+mode2 = "asym"
 
 
-# S,D,T = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=False)
-# # tl.display_distrib(S,D,T)
+S,D,T = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=False)
+# tl.display_distrib(S,D,T)
