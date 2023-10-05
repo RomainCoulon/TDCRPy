@@ -118,6 +118,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         nE = nElist[inE]
         out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,mode2,nE)
         if mode == "res":
+            print(' ######## 1')
             return out
         if mode == "eff":
             return out[0], 0, out[1], 0, out[2], 0
@@ -823,14 +824,14 @@ TD = 0.977667386529166
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
-Rad="Co-60"
+Rad="Cd-109"
 pmf_1="1"
 N = 10
 kB =1.0e-5
 V = 10
-mode = "dis"
+mode = "eff"
 mode2 = "asym"
 
 
-S,D,T = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=False)
+S,q,w,e,r,t = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=False)
 # # tl.display_distrib(S,D,T)
