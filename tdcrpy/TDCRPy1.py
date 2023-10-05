@@ -581,7 +581,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             
             if evenement != 1:
                 delay = True
-                print()
+                if Display:print(" taitement de delayed emission")
                 efficiency_T2,efficiency_D2,efficiency_S2,efficiency_AB2,efficiency_AC2,efficiency_BC2 = TDCR_relaxation(L,TD,TAB,TBC,TAC,daughter_relax,Rad[index_rad],kB,V,particle_vec2,energy_vec2,mode2,e_sum2,level_before_trans,nE_alpha,nE_electron,uncData=uncData,Display=Display,delay=delay)
         
                 
@@ -654,17 +654,19 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             return efficiency_S, efficiency_D, efficiency_T    
 
 L = (1, 1, 1)
+#L = 1
 TD = 0.977667386529166
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
-Rad="Cd-109"
+Rad="H-3"
 pmf_1="1"
 N = 10
 kB =1.0e-5
 V = 10
-mode = "dis"
+mode = "eff"
 mode2 = "asym"
 
 
-S,D,T = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
+s,t,d,q,w,e = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
+#print(s,t,d,q,w,e)
