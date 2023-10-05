@@ -1146,7 +1146,7 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
     if result  > e_inci: result = e_inci
     return result
 
-def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,matrice16_2=Matrice16_e_2,ed=Matrice_e):
+def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,matrice16_2=Matrice16_e_2,matrice16_3=Matrice16_e_3,ed=Matrice_e):
     ## sort keV / entrée : keV
     if e_inci <= 200:
         if e_inci < 1:

@@ -31,6 +31,7 @@ tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_1_200k.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_2000_10000k.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_10ml-photon_200_2000k.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_16ml-beta-_1_200k.txt
+tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_16ml-beta-_2000_10000k.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_16ml-beta-_200_2000k.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_1_200k.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_2000_10000k.txt
