@@ -1369,7 +1369,11 @@ def readEShape(rad, *, z=z_ensdf):
     type_ = []            # enregistrer les résultats (type de transition) d'une fille
     Prob = []             # enregistrer les résultats (proba de transition) complètes
     prob = []             # enregistrer les résultats (proba de transition) d'une fille
-
+    incertitude = []
+    Incertitude = []
+    prob_str = []
+    Prob_str = []
+    
     for i in range(len(posi)-1):
         start = posi[i]+1
         end = posi[i+1]
@@ -1377,6 +1381,9 @@ def readEShape(rad, *, z=z_ensdf):
         e = []                # enregistrer les résultats (énergie) d'un bloc
         prob_b = []           # enregistrer les résultats (proba) d'un bloc
         type_b = []           # enregistrer les résultats (type) d'un bloc
+        incertitude_b = []
+        prob_str_b = []
+        
         if start==end:        # sauter les lignes blaches et continues
             continue
         if start-1 in index_end:   # sauter le bloc entre deux filles
@@ -1392,10 +1399,14 @@ def readEShape(rad, *, z=z_ensdf):
                     prob_b.append(float(p1[3]))
                     e.append(p1[2])
                     type_b.append(p1[-2])
+                    incertitude_b.append(int(p1[-3]))
+                    prob_str_b.append(p1[3])
                 continue 
             elif '|]' in p1:                # traiter un bloc qui comprend |]
                 if len(p1)>6:               # repérer la ligne qui comprend la proba
+                    prob_str_b.append(p1[4])
                     prob_b.append(float(p1[4]))
+                    incertitude_b.append(int(p1[5]))
                 e.append(float(p1[2]))      # enregistrer les valeurs d'énergie
                 if 'AUGER' in p1:           # traiter le cas d'auger et |] 
                     if 'K' in p1[-2]:       # Auger K
@@ -1412,6 +1423,8 @@ def readEShape(rad, *, z=z_ensdf):
                 else:                       # traiter le cas sans |] ni (total) mais complet
                     e.append(float(p1[2]))         # enregistrer énergie
                     prob_b.append(float(p1[3]))    # enregistrer proba
+                    prob_str_b.append(p1[3])
+                    incertitude_b.append(int(p1[4]))
                     if 'L' in p1:
                         type_b.append('Auger L')   # enregistrer type Auger L
                     else:
@@ -1421,19 +1434,52 @@ def readEShape(rad, *, z=z_ensdf):
             energy.append(np.mean(e))
             prob.append(prob_b[0])
             type_.append(type_b[0])
+            incertitude.append(incertitude_b[0])
+            prob_str.append(prob_str_b[0])
         elif len(e)==len(prob_b) and len(e)>=1:    # enregistrer les valeurs au cas où sans |] et valeurs complètes
             for i in range(len(e)):
                 energy.append(e[i])
                 prob.append(prob_b[i])
+                prob_str.append(prob_str_b[i])
                 type_.append(type_b[i])
+                incertitude.append(incertitude_b[i])
         if end in index_end or end+1 in index_end: # enregistrer les résultats à la fin d'une fille
             Energy.append(energy)
             Prob.append(prob)
             Type.append(type_)
+            Incertitude.append(incertitude)
+            Prob_str.append(prob_str)
             energy = []
             prob = []
-            type_ = []     
-    return  daug_name,Energy,Prob,Type        
+            type_ = []   
+            incertitude = []
+            prob_str = []
+    return  daug_name,Energy,Prob,Type,Incertitude,Prob_str        
+
+
+def incer(prob,incer):
+    if type(incer) == float or type(incer) == int:
+        incer_str = str(incer)    
+    len_prob = len(prob)
+    len_incer = len(incer_str)
+    
+    if '.' in prob:
+        index_pt = prob.index('.')
+        len_rest = len_prob - index_pt - 1
+        #print(len_rest,incer_str)
+        if len_rest >= len_incer:
+            #print('1')
+            incertitude = round(incer*(10**-len_rest),len_rest)
+        else:
+            incertitude = round(incer*(10**(len_rest-len_incer)),len_rest)
+    else:
+        incertitude = incer
+        
+    return incertitude    
+
+
+
+
 
 #============  traiter la relaxation ===============
 def relaxation_atom(daugther,rad,lacune='defaut'):
@@ -1454,7 +1500,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
     Energy : corresponding energy in keV.
 
     """
-    daug_name,Energy,Prob,Type = readEShape(rad)  # tirer les vecteurs de rad d'Ensdf 
+    daug_name,Energy,Prob,Type,Incertitude,f = readEShape(rad)  # tirer les vecteurs de rad d'Ensdf 
 
     index_daug = daug_name.index(daugther)        # repérer l'indice de fille correspondante
     

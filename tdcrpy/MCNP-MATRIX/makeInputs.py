@@ -76,6 +76,11 @@ def make_input(niveau,NPS,par,v):
             doc = 'template_e_16mL.txt'
         elif par == 'bp':
             doc = 'template16mL.txt'
+    elif v==13:
+        if par == 'p':
+            doc = 'template13mL.txt'
+        elif par == 'b':
+            doc = 'template_e_13mL.txt'
 
     name_bat = "script" + input_n + par +".bat"
 
@@ -100,5 +105,5 @@ def make_input(niveau,NPS,par,v):
             file2.write(contenu)
     return 1
 
-write = make_input(2,1e6,'b',16)   
+write = make_input(2,1e6,'p',13)   
  
