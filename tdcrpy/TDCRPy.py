@@ -10,7 +10,6 @@ Bureau International des Poids et Mesures
 
 ## IMPORT PYTHON MODULES
 import tdcrpy.TDCR_model_lib as tl
-# import TDCR_model_lib as tl
 import importlib.resources
 from importlib.resources import files
 import configparser
