@@ -1399,14 +1399,16 @@ def readEShape(rad, *, z=z_ensdf):
                     prob_b.append(float(p1[3]))
                     e.append(p1[2])
                     type_b.append(p1[-2])
-                    incertitude_b.append(int(p1[-3]))
+                    # incertitude_b.append(int(p1[-3]))
+                    incertitude_b.append(p1[-3])
                     prob_str_b.append(p1[3])
                 continue 
             elif '|]' in p1:                # traiter un bloc qui comprend |]
                 if len(p1)>6:               # repérer la ligne qui comprend la proba
                     prob_str_b.append(p1[4])
                     prob_b.append(float(p1[4]))
-                    incertitude_b.append(int(p1[5]))
+                    # incertitude_b.append(int(p1[5]))
+                    incertitude_b.append(p1[5])
                 e.append(float(p1[2]))      # enregistrer les valeurs d'énergie
                 if 'AUGER' in p1:           # traiter le cas d'auger et |] 
                     if 'K' in p1[-2]:       # Auger K
@@ -1424,7 +1426,8 @@ def readEShape(rad, *, z=z_ensdf):
                     e.append(float(p1[2]))         # enregistrer énergie
                     prob_b.append(float(p1[3]))    # enregistrer proba
                     prob_str_b.append(p1[3])
-                    incertitude_b.append(int(p1[4]))
+                    # incertitude_b.append(int(p1[4]))
+                    incertitude_b.append(p1[4])
                     if 'L' in p1:
                         type_b.append('Auger L')   # enregistrer type Auger L
                     else:
