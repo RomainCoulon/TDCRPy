@@ -15,38 +15,60 @@ import sys
 sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
 
 
+
 """
-Efficiency curves
+Tests decay data uncertainty propagation
 """
-L = np.arange(0.5,2,0.1)
+L = 1
 TD = 0.977667386529166
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
-Rad="Sr-89"
+Rad="Cd-109"
 pmf_1="1"
-N = 10000
+N = 100
 kB =1.0e-5
 V = 10
-mode = "eff"
+mode = "dis"
+mode ="eff"
 mode2 = "sym"
 
-out = td.TDCRoptimize.effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V)
-print("L")
-for i in L:
-    print(i)
-print("tdcr")
-for i in out[2]:
-    print(i)
-print("u(tdcr)")
-for i in out[3]:
-    print(i)
-print("Eff")
-for i in out[0]:
-    print(i)
-print("u(Eff)")
-for i in out[1]:
-    print(i)
+out = td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=True)
+if mode == "dis": td.TDCR_model_lib.display_distrib(out[0], out[1], out[2])
+else: print(out)
+
+"""
+Efficiency curves
+"""
+# L = np.arange(0.5,2,0.1)
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# Rad="Sr-89"
+# pmf_1="1"
+# N = 10000
+# kB =1.0e-5
+# V = 10
+# mode = "eff"
+# mode2 = "sym"
+
+# out = td.TDCRoptimize.effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V)
+# print("L")
+# for i in L:
+#     print(i)
+# print("tdcr")
+# for i in out[2]:
+#     print(i)
+# print("u(tdcr)")
+# for i in out[3]:
+#     print(i)
+# print("Eff")
+# for i in out[0]:
+#     print(i)
+# print("u(Eff)")
+# for i in out[1]:
+#     print(i)
 
 
 """

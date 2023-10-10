@@ -542,47 +542,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             if Display:
                 for i, p in enumerate(particle_vec):
                     if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", round(e_quenching[i],3), "keV")
-        
-                '''
-                ====================
-                V. LE MESURE TDCR
-                ====================
-                '''
-            if mode2=="sym":
-                p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
-                efficiency_S.append(p_single)
-                efficiency_T.append(p_single**3)
-                efficiency_D.append(3*(p_single)**2-2*efficiency_T[-1])
-                if Display: print(f"\n\t COUNTING \n\t\t Free parameter = {L} keV-1 \n\t Summary of TDCR measurement (promt)")
-                if Display: print("\t\t Efficiency of single events = ", round(efficiency_S[-1],5))
-                if Display: print("\t\t Efficiency of double events = ", round(efficiency_D[-1],5))
-                if Display: print("\t\t Efficiency of triple events = ", round(efficiency_T[-1],5))
-            elif mode2=="asym":
-                pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-                pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
-                pC_nosingle = np.exp(-L[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
-                    
-                efficiency_AB.append(pA_single*pB_single)
-                efficiency_BC.append(pB_single*pC_single)
-                efficiency_AC.append(pA_single*pC_single)
-                efficiency_T.append(pA_single*pB_single*pC_single)
-                efficiency_D.append(efficiency_AB[-1]+efficiency_BC[-1]+efficiency_AC[-1]-2*efficiency_T[-1])
-                efficiency_S.append(pA_single+pB_single+pC_single-efficiency_D[-1]-efficiency_T[-1])
-                if Display: print("\t Summary of TDCR measurement")
-                if Display: print("\t\t Free parameter PMT A: ", L[0], "keV-1")
-                if Display: print("\t\t Free parameter PMT B: ", L[1], "keV-1")
-                if Display: print("\t\t Free parameter PMT C: ", L[2], "keV-1")
-                if Display: print("\t\t Efficiency of single events: ", round(efficiency_S[-1],5))
-                if Display: print("\t\t Efficiency of double events: ", round(efficiency_D[-1],5))
-                if Display: print("\t\t Efficiency of triple events: ", round(efficiency_T[-1],5))
-                    
+                         
                              
             if evenement != 1:
-                print("\n\t Summary of the delayed emission")            
+                if Display: print("\n\t Summary of the delayed emission")            
                 for i_part in range(len(particle_vec2)):
                     relaxation = False
                     if "Atom_K" in particle_vec2[i_part] or "Atom_L" in particle_vec2[i_part] or "Atom_M" in particle_vec2[i_part]:
@@ -712,14 +675,13 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     for i, p in enumerate(particle_vec2):
                         if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", round(e_quenching2[i],3), "keV")
                 
-                '''
-                ====================
-                V. LE MESURE TDCR
-                ====================
-                '''
-                
-                if mode2=="sym":
-                    
+            '''
+            ====================
+            V. LE MESURE TDCR
+            ====================
+            '''            
+            if mode2=="sym":
+                if evenement !=1:
                     p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
                     p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
                     p_nosingle2 = np.exp(-L*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
@@ -730,14 +692,29 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     if Display: print(f"\n\t COUNTING \n\t\t Free parameter = {L} keV-1 \n\t Summary of TDCR measurement (promt)")
                     if Display: print("\t\t Free parameter = ", L, "keV-1")
                     if Display: print("\t\t Efficiency of single events = ", round(p_single,5))
-                    if Display: print("\t\t Efficiency of double events = ", round(p_single**3,5))
-                    if Display: print("\t\t Efficiency of triple events = ", round(3*(p_single)**2-2*p_single**3,5))
+                    if Display: print("\t\t Efficiency of double events = ", round(3*(p_single)**2-2*p_single**3,5))
+                    if Display: print("\t\t Efficiency of triple events = ", round(p_single**3,5))
                     if Display: print("\t Summary of TDCR measurement (delayed)")
                     if Display: print("\t\t Efficiency of single events = ", round(p_single2,5))
-                    if Display: print("\t\t Efficiency of double events = ", round(p_single2**3,5))
-                    if Display: print("\t\t Efficiency of triple events = ", round(3*(p_single2)**2-2*p_single2**3,5))
-                                        
-                elif mode2=="asym":
+                    if Display: print("\t\t Efficiency of double events = ", round(3*(p_single2)**2-2*p_single2**3,5))
+                    if Display: print("\t\t Efficiency of triple events = ", round(p_single2**3,5))
+                    if Display: print("\t Summary of TDCR measurement (prompt + delayed)")
+                    if Display: print("\t\t Efficiency of single events = ", round(p_single+p_single2,5))
+                    if Display: print("\t\t Efficiency of double events = ", round(3*(p_single)**2-2*p_single**3+(3*(p_single2)**2-2*p_single2**3),5))
+                    if Display: print("\t\t Efficiency of triple events = ", round(p_single**3+p_single2**3,5))
+                else:
+                    p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+                    p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
+                    efficiency_S.append(p_single)
+                    efficiency_T.append(p_single**3)
+                    efficiency_D.append(3*(p_single)**2-2*efficiency_T[-1])
+                    if Display: print(f"\n\t COUNTING \n\t\t Free parameter = {L} keV-1 \n\t Summary of TDCR measurement (promt)")
+                    if Display: print("\t\t Efficiency of single events = ", round(efficiency_S[-1],5))
+                    if Display: print("\t\t Efficiency of double events = ", round(efficiency_D[-1],5))
+                    if Display: print("\t\t Efficiency of triple events = ", round(efficiency_T[-1],5))                    
+                                    
+            elif mode2=="asym":
+                if evenement !=1:
                     pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
                     pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
                     pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
@@ -768,6 +745,27 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     if Display: print("\t\t Efficiency of single events: ", round(pA_single2+pB_single2+pC_single2-pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2-pA_single2*pB_single2*pC_single2,5))
                     if Display: print("\t\t Efficiency of double events: ", round(pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2,5))
                     if Display: print("\t\t Efficiency of triple events: ", round(pA_single2*pB_single2*pC_single2,5))
+                else:
+                    pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+                    pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
+                    pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+                    pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
+                    pC_nosingle = np.exp(-L[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+                    pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
+                        
+                    efficiency_AB.append(pA_single*pB_single)
+                    efficiency_BC.append(pB_single*pC_single)
+                    efficiency_AC.append(pA_single*pC_single)
+                    efficiency_T.append(pA_single*pB_single*pC_single)
+                    efficiency_D.append(efficiency_AB[-1]+efficiency_BC[-1]+efficiency_AC[-1]-2*efficiency_T[-1])
+                    efficiency_S.append(pA_single+pB_single+pC_single-efficiency_D[-1]-efficiency_T[-1])
+                    if Display: print("\t Summary of TDCR measurement")
+                    if Display: print("\t\t Free parameter PMT A: ", L[0], "keV-1")
+                    if Display: print("\t\t Free parameter PMT B: ", L[1], "keV-1")
+                    if Display: print("\t\t Free parameter PMT C: ", L[2], "keV-1")
+                    if Display: print("\t\t Efficiency of single events: ", round(efficiency_S[-1],5))
+                    if Display: print("\t\t Efficiency of double events: ", round(efficiency_D[-1],5))
+                    if Display: print("\t\t Efficiency of triple events: ", round(efficiency_T[-1],5))                    
 
                 
 
@@ -837,21 +835,3 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
         if mode =="dis":
             return efficiency_S, efficiency_D, efficiency_T    
-
-
-# L = 0.8
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# Rad="Sr-89"
-# pmf_1="1"
-# N = 10000
-# kB =1.0e-5
-# V = 10
-# mode = "eff"
-# mode2 = "sym"
-
-
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=True, uncData=False)
-# tl.display_distrib(out)
