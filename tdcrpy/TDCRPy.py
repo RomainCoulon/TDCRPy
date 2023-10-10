@@ -111,6 +111,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
     if X and Y:
         inE = radListPureBeta.index(Rad)
         nE = nElist[inE]
+        print(f"Analytical model used for {Rad}")
         out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,mode2,nE)
         if mode == "res":
             return out
@@ -936,7 +937,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 # TAB = 0.992232838598821
 # TBC = 0.992343419459002
 # TAC = 0.99275350064608
-# Rad="Co-60"
+# Rad="Sr-89"
 # pmf_1="1"
 # N = 10000
 # kB =1.0e-5
@@ -946,4 +947,4 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 
 
 # out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=True, uncData=False)
-# # tl.display_distrib(out)
+# tl.display_distrib(out)

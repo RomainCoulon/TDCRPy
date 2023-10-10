@@ -16,6 +16,40 @@ sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
 
 
 """
+Efficiency curves
+"""
+L = np.arange(0.5,2,0.1)
+TD = 0.977667386529166
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+Rad="Sr-89"
+pmf_1="1"
+N = 10000
+kB =1.0e-5
+V = 10
+mode = "eff"
+mode2 = "sym"
+
+out = td.TDCRoptimize.effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V)
+print("L")
+for i in L:
+    print(i)
+print("tdcr")
+for i in out[2]:
+    print(i)
+print("u(tdcr)")
+for i in out[3]:
+    print(i)
+print("Eff")
+for i in out[0]:
+    print(i)
+print("u(Eff)")
+for i in out[1]:
+    print(i)
+
+
+"""
 Test display
 """
 # td.TDCRPy.TDCRPy(1, 0, 0, 0, 0, "Cd-109", "1", 1, 1e-5, 10, "eff", "sym", Display=True, barp=False)
@@ -157,30 +191,30 @@ for the quick start
 Validation with standard solution for Co-60 (comparison 2023)
 """
 
-file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
-file = open(file_path, "w")
+# file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
+# file = open(file_path, "w")
 
-Rad="Co-60"    # list of radionuclides (Na-24)
-pmf_1="1"
-kB =1.0e-5       # Birks constant in cm/keV
-RHO = 0.98
-V = 10
-nE = 1000
-TD = 0.977667386529166        # Measured TDCR value
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-L = 1.5
-N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 7000, 8000, 9000, 10000, 20000, 30000, 40000, 60000, 70000, 80000, 90000, 100000]
+# Rad="Co-60"    # list of radionuclides (Na-24)
+# pmf_1="1"
+# kB =1.0e-5       # Birks constant in cm/keV
+# RHO = 0.98
+# V = 10
+# nE = 1000
+# TD = 0.977667386529166        # Measured TDCR value
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# L = 1.5
+# N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 7000, 8000, 9000, 10000, 20000, 30000, 40000, 60000, 70000, 80000, 90000, 100000]
 
-# Symetrical model
-for Ni in N:
-    print("symetrical model")
-    # td.TDCR_model_lib.tic()
-    resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
-    # a = td.TDCR_model_lib.toc()
-    print("/n",Ni,resuts_2,"/n/n")
-    file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+# # Symetrical model
+# for Ni in N:
+#     print("symetrical model")
+#     # td.TDCR_model_lib.tic()
+#     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
+#     # a = td.TDCR_model_lib.toc()
+#     print("/n",Ni,resuts_2,"/n/n")
+#     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
 
 # Asymetrical model
 # for Ni in N:
