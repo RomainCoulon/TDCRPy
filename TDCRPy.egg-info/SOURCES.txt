@@ -13,6 +13,7 @@ tdcrpy/TDCR_model_lib.py
 tdcrpy/TDCRoptimize.py
 tdcrpy/__init__.py
 tdcrpy/config.toml
+tdcrpy/test2.py
 tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_C-14.txt
 tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_Ca-45.txt
 tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_H-3.txt

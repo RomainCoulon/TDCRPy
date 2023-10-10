@@ -85,3 +85,13 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=10000, L=1):
     
     return L0, L, eff_S, u_eff_S, eff_D, u_eff_D, eff_T, u_eff_T
     
+def effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V):
+    effD = []; ueffD = []; tdcr = []; uTdcr = []
+    for l in L:
+        out=td.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "eff", "sym", Display=False, barp=True, uncData=False)  
+        effD.append(out[2])
+        ueffD.append(out[3])
+        tdcr.append(out[4]/out[2])
+        uTdcr.append(1/out[2]*np.sqrt(out[5]**2+out[4]**2*out[3]**2/out[2]**2))
+    return effD, ueffD, tdcr, uTdcr
+

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "1.5.1"
+VERSION = "1.5.4"
 DESCRIPTION = "TDCR model"
 
 with open("README.md", "r") as f:
@@ -36,6 +36,7 @@ setup(
     ],
     include_package_data = True,
     package_data = {'': [
+		'config.toml',
 	    	'decayData/All-nuclides_PenNuc.zip',
         	'decayData/All-nuclides_BetaShape.zip',
 		'decayData/All-nuclides_Ensdf.zip',
