@@ -8,15 +8,18 @@ Created on Fri Oct  6 14:49:40 2023
 import TDCR_model_lib as tl
 #import numpy as np
 
-a,b,c,d,e,f =  tl.readEShape('Fe-59')
-print(c,e)
-#'''
+a,b,c,d,e,f =  tl.readEShape('Mn-52m')
+#print(f,e)
+
+#print(tl.incer(f,e))
+
+'''
 if len(f[0]) == len(f[0]):
     for i in range(len(f[0])):
         print(tl.incer(f[0][i],e[0][i]))
 else:
     print('len pas bon')    
-#'''
+
 
 if len(f) == 2:
     print('### 2 fil')
@@ -26,3 +29,4 @@ if len(f) == 2:
     else:
         print('len pas bon')  
 
+'''
