@@ -577,10 +577,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
         
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                    p0 = particle_vec2[i]
+                    p0 = particle_vec[i]
                     energy_vec[i] = tl.energie_dep_gamma2(energy_vec[i],v=V)          # sampling energy free from photon
                     particle_vec[i] = "electron"
-                    if Display:print(f"\t\t {p0} give energy {energy_vec2[i]} keV to electron")
+                    if Display:print(f"\t\t {p0} give energy {energy_vec[i]} keV to electron")
                         
                 if p == "Auger K" or p == "Auger L":
                     particle_vec[i] = "electron"
@@ -636,7 +636,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             if Display: print("\t\t Birks constant = ", kB, ' cm/keV')
             if Display:
                 for i, p in enumerate(particle_vec):
-                    if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", round(e_quenching[i],3), "keV")
+                    #print(e_quenching[i])
+                    if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", np.round(e_quenching[i],3), "keV")
             
             if evenement!=1:
                 if Display: print(f"\n\t SCINTILLATION--Dealy \n\t\t Birks constant = {kB} cm/keV\n\t Summary of the estimation of quenched energies")
@@ -957,7 +958,7 @@ TD = 0.977667386529166
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
-Rad="Cd-109"
+Rad="Cm-245"
 pmf_1="1"
 N = 10
 kB =1.0e-5
