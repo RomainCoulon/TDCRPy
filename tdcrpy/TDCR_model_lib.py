@@ -1310,6 +1310,8 @@ def transf_name(rad):
     RAD = name_lis[2]+name_lis[1]
     return RAD
 
+
+
 def readEShape(rad, *, z=z_ensdf):
     """ This function reads the ENSDF zip files and format the data to be processed by TDCRPy. 
 
@@ -1399,16 +1401,16 @@ def readEShape(rad, *, z=z_ensdf):
                     prob_b.append(float(p1[3]))
                     e.append(p1[2])
                     type_b.append(p1[-2])
-                    # incertitude_b.append(int(p1[-3]))
-                    incertitude_b.append(p1[-3])
+                    incertitude_b.append(int(p1[-3]))
+                    #incertitude_b.append(p1[-3])
                     prob_str_b.append(p1[3])
                 continue 
             elif '|]' in p1:                # traiter un bloc qui comprend |]
                 if len(p1)>6:               # repérer la ligne qui comprend la proba
                     prob_str_b.append(p1[4])
                     prob_b.append(float(p1[4]))
-                    # incertitude_b.append(int(p1[5]))
-                    incertitude_b.append(p1[5])
+                    incertitude_b.append(int(p1[5]))
+                    #incertitude_b.append(p1[5])
                 e.append(float(p1[2]))      # enregistrer les valeurs d'énergie
                 if 'AUGER' in p1:           # traiter le cas d'auger et |] 
                     if 'K' in p1[-2]:       # Auger K
@@ -1426,8 +1428,8 @@ def readEShape(rad, *, z=z_ensdf):
                     e.append(float(p1[2]))         # enregistrer énergie
                     prob_b.append(float(p1[3]))    # enregistrer proba
                     prob_str_b.append(p1[3])
-                    # incertitude_b.append(int(p1[4]))
-                    incertitude_b.append(p1[4])
+                    incertitude_b.append(int(p1[4]))
+                    #incertitude_b.append(p1[4])
                     if 'L' in p1:
                         type_b.append('Auger L')   # enregistrer type Auger L
                     else:
@@ -1461,31 +1463,52 @@ def readEShape(rad, *, z=z_ensdf):
 
 
 def incer(prob,incer):
-    if type(incer) == float or type(incer) == int:
-        incer_str = str(incer)    
-    len_prob = len(prob)
-    len_incer = len(incer_str)
+    '''
+
+    Parameters
+    ----------
+    prob : list of str
+        probability (str) of rayon X and Auger electron.
+    incer : list of int
+        uncertainty of the probability.
+
+    Returns
+    -------
+    incertitude : list of float
+        DESCRIPTION.
+
+    '''
+    incertitude = []
     
-    if '.' in prob:
-        index_pt = prob.index('.')
-        len_rest = len_prob - index_pt - 1
-        #print(len_rest,incer_str)
-        if len_rest >= len_incer:
-            #print('1')
-            incertitude = round(incer*(10**-len_rest),len_rest)
-        else:
-            incertitude = round(incer*(10**(len_rest-len_incer)),len_rest)
-    else:
-        incertitude = incer
+    for i in range(len(incer)):
+        incertitude_b = []
+        #if type(p) == float or type(p) == int:
+        for n in range(len(incer[i])):
+            p = prob[i][n]
+            u = incer[i][n]
+            incer_str = str(u)    
+            len_prob = len(p)
+            len_incer = len(incer_str)
+        
+            if '.' in p:
+                index_pt = p.index('.')
+                len_rest = len_prob - index_pt - 1
+            #print(len_rest,incer_str)
+                if len_rest >= len_incer:
+                #print('1')
+                    incertitude_b.append(round(u*(10**-len_rest),len_rest))
+                else:
+                    incertitude_b.append(round(u*(10**(len_rest-len_incer)),len_rest))
+            else:
+                incertitude_b.append(float(u))
+        incertitude.append(incertitude_b)
         
     return incertitude    
 
 
 
-
-
 #============  traiter la relaxation ===============
-def relaxation_atom(daugther,rad,lacune='defaut'):
+def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
     """ This function simulates the atomic rearangement following a missing electron an inner shell of the daughter atom.
     
     Parameters
@@ -1496,7 +1519,9 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
         The mother nucleus (for exemple Am-241, C-11 etc.) 
     lacune  : string
         The shell where the electron is missing (for example 'Atom_K','Atom_L' etc.)
-
+    uncData : True/False
+        
+            
     Returns 
     -------
     Type : type of transition Auger L or K, or X Ray.
@@ -1504,6 +1529,7 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
 
     """
     daug_name,Energy,Prob,Type,Incertitude,f = readEShape(rad)  # tirer les vecteurs de rad d'Ensdf 
+    incertitude = incer(f,Incertitude)
 
     index_daug = daug_name.index(daugther)        # repérer l'indice de fille correspondante
     
@@ -1511,26 +1537,19 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
     probability = np.array(Prob[index_daug])                # tirer le vecteur de proba
     type_transi = Type[index_daug]                # tirer le vecteur de type
 
-
+    u_probability = np.array(incertitude[index_daug])
+    
     if len(probability) > 0:                      # le cas où le vecteur de proba/energie/type n'est pas vide
-        '''
-        posi_L = []
-        posi_K = []
-        
-        for i, p in enumerate(type_transi):       # repérer les indices de transition L ou K
-            if 'L' in p:
-                posi_L.append(i)                  # enregistrer la posotion de transition L
-
-            elif 'K' in p:
-                posi_K.append(i)                  # enregistrer la posotion de transition L
-        '''
         if 'L' in lacune:                         # traiter le transition de couche L
             prob_2 = []
             energy_2 = []
             type_2 = []
             for il, pl in enumerate(type_transi):
                 if 'L' in pl:
-                    prob_2.append(probability[il])    # enregistrer les proba de transition L
+                    if uncData:
+                        prob_2.append(np.random.normal(probability[il],u_probability[il],1)[0])    # enregistrer les proba de transition L
+                    else:
+                        prob_2.append(probability[il])    # enregistrer les proba de transition L
                     energy_2.append(Energie[il])      # enregistrer les energies de transition L
                     type_2.append(type_transi[il])    # enregistrer les types de transition L
 
@@ -1540,7 +1559,10 @@ def relaxation_atom(daugther,rad,lacune='defaut'):
             type_2 = []
             for ik, pk in enumerate(type_transi):     
                 if 'K' in pk:
-                    prob_2.append(probability[ik])    # enregistrer les proba de transition K
+                    if uncData:
+                        prob_2.append(np.random.normal(probability[ik],u_probability[ik],1)[0])
+                    else:
+                        prob_2.append(probability[ik])    # enregistrer les proba de transition K
                     energy_2.append(Energie[ik])      # enregistrer les energie de transition K
                     type_2.append(type_transi[ik])    # enregistrer les type de transition K
 
