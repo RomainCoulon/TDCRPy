@@ -177,15 +177,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         efficiency_S = []
         efficiency_D = []
         efficiency_T = []
-        efficiency_S2 = []
-        efficiency_D2 = []
-        efficiency_T2 = []
         efficiency_AB = []
         efficiency_BC = []
         efficiency_AC = []
-        efficiency_AB2 = []
-        efficiency_BC2 = []
-        efficiency_AC2 = []
+
         
         if barp and not Display: NN = tqdm(range(N), desc="Processing", unit=" decays")
         else: NN = range(N)
@@ -276,7 +271,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 
                 # test whether the decay occurs within the coincidence resolving time or not
                 if t1 > tau*1e-9: 
-                    #splitEvent = True
                     evenement = evenement + 1
                                 
                 if transitionType[index_rad][iDaughter][i_level] != []:
@@ -284,7 +278,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     # Sampling of the transition in energy levels of the daughter nucleus
                     #====================================================================
                     
-                    if uncData:
+                    if uncData:                                                           # uncertainty
                         prob_trans_s=[]
                         for ipt, xpt in enumerate(prob_trans[index_rad][iDaughter][i_level]):
                             prob_trans_s.append(np.random.normal(xpt, u_prob_trans[index_rad][iDaughter][i_level][ipt], 1)[0])
@@ -292,8 +286,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         probability_tran = tl.normalise(prob_trans_s)   # normaliser la proba de transition
                     else:
                         probability_tran = tl.normalise(prob_trans[index_rad][iDaughter][i_level])   # normaliser la proba de transition 
-                    #probability_tran = tl.normalise(prob_trans[index_rad][iDaughter][i_level])   # normaliser la proba de transition 
-                    index_t = tl.sampling(probability_tran)                                      # indice de la transition
+                
+                    index_t = tl.sampling(probability_tran)                                          # indice de la transition
                     if Display:
                         print("\t\t Energy of the level = ", levelEnergy[index_rad][iDaughter][i_level][0], " keV")
                         trans = transitionType[index_rad][iDaughter][i_level][index_t]
@@ -316,19 +310,21 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         elif trans == "EO":
                             print("\t\t Energy of the conversion electron from O shell = ", e_trans[index_rad][iDaughter][i_level][index_t], "keV")     
                         print("\t\t next level = ", next_level[index_rad][iDaughter][i_level][index_t])
+                   
                     #========
                     # Scoring
                     #========
                     
                     ## evenement retardé
+                    
                     if evenement != 1:
-                        if transitionType[index_rad][iDaughter][i_level][index_t] == "GA":            # if it is a gamma that has been emitted
+                        if transitionType[index_rad][iDaughter][i_level][index_t] == "GA":             # if it is a gamma that has been emitted
                             particle_vec2.append("gamma")                                              # Update of the particle vector
                             energy_vec2.append(e_trans[index_rad][iDaughter][i_level][index_t])        # Update the energy vector
-                        else:                                                                         # if not, it is a internal conversion, so an electron
+                        else:                                                                          # if not, it is a internal conversion, so an electron
                             particle_vec2.append("electron")                                           # !!!!!!!!! it is OK for our model? Does the electron leave with the kinetic enegy of the transition 
                             energy_vec2.append(e_trans[index_rad][iDaughter][i_level][index_t])        # Update the energy vector
-                            if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":        # record that an electron is missing on the K shell of the dughter nucleus
+                            if transitionType[index_rad][iDaughter][i_level][index_t] == "EK":         # record that an electron is missing on the K shell of the dughter nucleus
                                 particle_vec2.append("Atom_K")
                                 energy_vec2.append(0)
         
@@ -397,7 +393,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                             
                     
                     
-                    levelOftheDaughter = next_level[index_rad][iDaughter][i_level][index_t]       # set the next level
+                    levelOftheDaughter = next_level[index_rad][iDaughter][i_level][index_t]           # set the next level
                 
                 else:
                     i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])
@@ -417,6 +413,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         print(f'\t\t an electron of intern conversion from the {particle_vec[i][5:]} shell')
                     else:
                         print(f'\t\t emitted {particle_vec[i]} of energy = {energy_vec[i]}, keV')
+                        
                 if evenement != 1:
                     print("\t Summary of the delayed nuclear decay")
                     for i, p in enumerate(particle_vec2):
@@ -430,7 +427,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             II. LA RELAXATION ATOMIQUE
             ==========================
             '''
-            ## evenement retarde
+            ## evenement normal
+            
             if Display:
                 print("\n\t ATOMIC RECOMBINATION--Prompt\n\t Summary of the atomic relaxation")
             daughter_relax = DaughterVec[index_rad][iDaughter]
@@ -479,7 +477,9 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                             print(f"\t\t emitted {p} of energy = {round(energy_vec[i],3)} keV")
                     else:
                         print(f'\t\t an electron left the {p[5:]} shell')  
-                        
+            
+            
+            ## evenement retardee             
             if evenement != 1:
                 if Display:print("\n\t ATOMIC RECOMBINATION--Delay\n\t Summary of the atomic relaxation")
                 for i_part in range(len(particle_vec2)):
@@ -519,14 +519,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         e_sum2 += ef
                 
                 if Display:
-                # for i, p in enumerate(particle_vec):
-                #     if p[:4] != "Atom":
-                #         if p=="beta" or p=="beta+":
-                #             print(f'\t\t {p} transition of energy = {energy_vec[i]}, keV')
-                #         else:
-                #             print(f"\t\t emitted {p} of energy = {round(energy_vec[i],3)} keV")
-                #     else:
-                #         print(f'\t\t an electron left the {p[5:]} shell')
                     for i, p in enumerate(particle_vec2):
                         if p[:4] != "Atom":
                             if p=="beta" or p=="beta+":
@@ -592,14 +584,12 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     if p[:4] != "Atom" and energy_vec[i]!=0: print(f"\t\t {p} of energy = {round(energy_vec[i],3)} keV")
             
             if evenement!=1:
+                energy_vec_initial2 = energy_vec2.copy()
                 if Display:
                     print("\n\t INTERACTION--Delay \n\t Summary of the energy deposited by charged particles")
                 for i, p in enumerate(particle_vec2):
                     if p == "electron":
                         energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
-        
-                    #if p == "beta+":
-                        #energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
         
                     if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
                         p0 = particle_vec2[i]
@@ -611,8 +601,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     if p == "Auger K" or p == "Auger L":
                         particle_vec2[i] = "electron"
                         energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
+                
                 if Display:
-                    #print("\n\t INTERACTION--Delay \n\t Summary of the energy deposited by charged particles")
                     for i, p  in enumerate(particle_vec2):
                         if p[:4] != "Atom" and energy_vec2[i]!=0: print(f"\t\t {p} of energy = {round(energy_vec2[i],3)} keV")        
                         
@@ -647,7 +637,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         energy_vec2[i] = tl.Em_a(energy_vec2[i],kB,nE_alpha)
                         e_quenching2.append(energy_vec2[i])
                     elif p == "electron" or p == "positron":
-                        energy_vec2[i] = tl.Em_e(energy_vec2[i]*1e3,energy_vec2[i]*1e3,kB*1e3,nE_electron)*1e-3
+                        energy_vec2[i] = tl.Em_e(energy_vec_initial2[i]*1e3,energy_vec2[i]*1e3,kB*1e3,nE_electron)*1e-3
                         e_quenching2.append(energy_vec2[i])
                     else:
                         e_quenching2.append(0) 
@@ -947,23 +937,4 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         if mode =="dis":
             return efficiency_S, efficiency_D, efficiency_T    
         
-        
-        
-        
-        
-        
-#L = (1, 1, 1)
-L = 1
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Cm-245"
-pmf_1="1"
-N = 10
-kB =1.0e-5
-V = 10
-mode = "eff"
-mode2 = "sym"
-
-out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)        
+         
