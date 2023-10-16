@@ -333,7 +333,7 @@ def ecrit_matrice(matrice,niveau,par,v):
         bp: béta+ (positron)
     '''
     if par == 'p':
-        name1 = 'gamma_'
+        name1 = 'photon_'
     elif par == 'b':
         name1 = 'beta-_'
     elif par == 'bp':
@@ -355,7 +355,7 @@ def ecrit_matrice(matrice,niveau,par,v):
         taille_x = 801      #2M-10M où delta = 0.1M
 
     taille_y = 1003
-    name = 'matrice/matrice_' + str(v) + name1 + str(start_energy) + '_' + str(end_energy) + 'k.txt'
+    name = 'matrice/matrice_' + str(v) +'ml-'+ name1 + str(start_energy) + '_' + str(end_energy) + 'k.txt'
     with open(name,'w') as file:
     #file.write('# matrice energy\n')
         for i in range(taille_y):
@@ -496,16 +496,16 @@ def find_info(niveau,par,info,npas=1000,mode='N'):
 
 
 #================ tracer la matrice ========================================
-#e,matrice_p = creat_matrice(2,par='b')
+#e,matrice_p = creat_matrice(2,par='p')
 #print(len(e))
 #print(matrice_p[76:90,25])
 #print(matrice_p.shape,matrice_p[0,541:543])
-#ecri = ecrit_matrice(matrice_p,2,'b',16) 
-#fig1 = matrice_fig(matrice_p,2000,10000,e,'b',16)
-#for i in range(1003):
-   #for j in range(801):
-       #matrice_p[i][j] = np.log(matrice_p[i][j]+1e-8)
-#fig2 = matrice_fig(matrice_p,2000,10000,e,'b',v=16)
+#ecri = ecrit_matrice(matrice_p,2,'p',13) 
+#fig1 = matrice_fig(matrice_p,5000,10000,e,'p',13)
+# for i in range(1003):
+#    for j in range(200):
+#        matrice_p[i][j] = np.log(matrice_p[i][j]+1e-8)
+# fig2 = matrice_fig(matrice_p,1,200,e,'b',v=13)
 #print(fig2)
 
 #============= tracer la proba à Ei=Ed ====================================== 
