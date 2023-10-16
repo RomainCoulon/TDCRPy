@@ -62,7 +62,8 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=10000, L=1, maxiter=20):
     """
     # Estimation of the free parameter that minimize the residuals
     # r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='bounded', bounds=[0, 10000],options={'xatol': 1e-4, 'disp': True, 'maxiter':20})
-    r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='golden', options={'disp': False, 'maxiter':maxiter})
+    r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='bounded', bounds = (0.5, 2), options={'disp': True, 'maxiter':20})
+    # r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='golden', options={'disp': True, 'maxiter':maxiter})
     L=r.x
     print(r)
     
@@ -97,3 +98,15 @@ def effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V):
         uTdcr.append(1/out[2]*np.sqrt(out[5]**2+out[4]**2*out[3]**2/out[2]**2))
     return effD, ueffD, tdcr, uTdcr
 
+# L = 1
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+
+# # out = td.TDCRPy(L, TD, TAB, TBC, TAC, "Co-60","1", 1000, 1e-5, 10, "res", "sym",barp=True)
+# # out = opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, "Co-60","1", 100, 1e-5, 10, "res", "sym"), method='golden', options={'disp': True, 'maxiter':20})
+# # out = opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, "Co-60","1", 100, 1e-5, 10, "res", "sym"), method='bounded', bounds = (0.5, 2), options={'disp': True, 'maxiter':20})
+# out = eff(TD,TAB,TBC,TAC,"Co-60","1",1e-5,10,"sym",N=1000, L=3, maxiter=20)
+
+# print(out)
