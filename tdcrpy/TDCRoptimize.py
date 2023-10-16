@@ -9,7 +9,7 @@ import numpy as np
 import tdcrpy.TDCRPy as td
 import scipy.optimize as opt
 
-def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=10000, L=1):
+def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=10000, L=1, maxiter=20):
     """
     Caclulation of the efficiency of a TDCR system based on the model TDCRPy.
 
@@ -37,6 +37,8 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=10000, L=1):
         number of Monte-Carlo trials. The default is 1000.
     L : float, optional
         free parameter(s) as initial guess. The default is 1.
+    maxiter : interger, optional
+        maximum number of iterations of the optimization procedures
 
     Returns
     -------
@@ -60,15 +62,15 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=10000, L=1):
     """
     # Estimation of the free parameter that minimize the residuals
     # r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='bounded', bounds=[0, 10000],options={'xatol': 1e-4, 'disp': True, 'maxiter':20})
-    r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='golden', options={'disp': False, 'maxiter':20})
+    r=opt.minimize_scalar(td.TDCRPy, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "sym"), method='golden', options={'disp': False, 'maxiter':maxiter})
     L=r.x
-    # print(r)
+    print(r)
     
     if mode2 == "asym":
         L=(L, L, L)           # Free paramete in keV-1
-        r=opt.minimize(td.TDCRPy, L, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "asym"), method='nelder-mead',options={'xatol': 1e-5, 'disp': False, 'maxiter':20})
+        r=opt.minimize(td.TDCRPy, L, args=(TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "res", "asym"), method='nelder-mead',options={'xatol': 1e-5, 'disp': True, 'maxiter':maxiter})
         L=r.x
-        # print(r)
+        print(r)
         out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "eff", "asym")
     else:
         out=td.TDCRPy(L,TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "eff", "sym")

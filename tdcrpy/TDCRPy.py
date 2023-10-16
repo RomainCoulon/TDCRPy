@@ -455,11 +455,13 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         relaxation = False
                     elif tf == "Auger K":
                         particle_vec[i_part] = "Atom_L"
+                        particle_vec.append("Atom_L")
                         particle_vec.append(tf)
                         energy_vec.append(ef)
                         relaxation = True
                     elif tf == "Auger L":
                         particle_vec[i_part] = "Atom_M"
+                        particle_vec.append("Atom_M")
                         particle_vec.append(tf)
                         energy_vec.append(ef)
                         relaxation = False
