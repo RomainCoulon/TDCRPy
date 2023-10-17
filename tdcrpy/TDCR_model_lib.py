@@ -209,7 +209,7 @@ def sampling(p_x):
     """
 
     cf = np.cumsum(p_x) # Cummulative Density (or mass) Function (CDF or CMF)
-    trial = float(np.random.rand(1)) # trial ~ U(0,1)
+    trial = np.random.rand(1)[0] # trial ~ U(0,1)
     
     for i, p in enumerate(cf):
         if p> trial: break
@@ -1107,26 +1107,24 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
             index = int(e_inci)-1
             
         if v == 10: 
-            matrice = matrice10_1[1:,index]
-            matrice0 = matrice10_1[0,index]
+            matrice = matrice10_1[1:,index] # réponse 
+            matrice0 = matrice10_1[0,index] # énergie 
         elif v == 13:
             matrice = matrice13_1[1:,index]
-            matrice0 = matrice13_1[0,index]            
+            matrice0 = matrice13_1[0,index]          
         elif v == 16:
             matrice = matrice16_1[1:,index]
             matrice0 = matrice16_1[0,index]
-        else:
-            a = 0.05555556*matrice10_1[1:,index]-1.61111111*matrice13_1[1:,index]+11.55555556*matrice16_1[1:,index]
-            b = -0.11111111*matrice10_1[1:,index]+2.88888889*matrice13_1[1:,index]-17.77777778*matrice16_1[1:,index]
-            c = 0.05555556*matrice10_1[1:,index]-1.27777778*matrice13_1[1:,index]+7.22222222*matrice16_1[1:,index]
+        else:           
+            a = 0.05555556*matrice10_1[1:,index]-0.11111111*matrice13_1[1:,index]+0.05555556*matrice16_1[1:,index]
+            b = -1.61111111*matrice10_1[1:,index]+2.88888889*matrice13_1[1:,index]-1.27777778*matrice16_1[1:,index]
+            c = 11.55555556*matrice10_1[1:,index]-17.77777778*matrice13_1[1:,index]+7.22222222*matrice16_1[1:,index]
             matrice = a*v**2 + b*v + c
-            a0 = 0.05555556*matrice10_1[0,index]-1.61111111*matrice13_1[0,index]+11.55555556*matrice16_1[0,index]
-            b0 = -0.11111111*matrice10_1[0,index]+2.88888889*matrice13_1[0,index]-17.77777778*matrice16_1[0,index]
-            c0 = 0.05555556*matrice10_1[0,index]-1.27777778*matrice13_1[0,index]+7.22222222*matrice16_1[0,index]            
-            matrice0 = a0*v**2 + b0*v + c0
+            # matrice /= sum(matrice)
             # matrice = (matrice16_1[1:,index]-matrice10_1[1:,index])*v/6 + (matrice10_1[1:,index]-(matrice16_1[1:,index]-matrice10_1[1:,index])*10/6)
-            # matrice0 = (matrice16_1[0,index]-matrice10_1[0,index])*v/6 + (matrice10_1[0,index]-(matrice16_1[0,index]-matrice10_1[0,index])*10/6)
+            matrice0 = (matrice16_1[0,index]-matrice10_1[0,index])*v/6 + (matrice10_1[0,index]-(matrice16_1[0,index]-matrice10_1[0,index])*10/6)
         e = ed[:,0]
+        
     
     elif e_inci <= 2000:
         index = int((e_inci-200)/2)
@@ -1156,7 +1154,6 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
     
     inde = sampling(matrice)
     if inde == 1 : result = 0
-        #elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
     else: result = e[inde]*1e3*e_inci/matrice0
     if result  > e_inci: result = e_inci
     return result

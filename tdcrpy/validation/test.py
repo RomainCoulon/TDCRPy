@@ -18,29 +18,29 @@ sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
 """
 energie_dep_gamma2(e_inci,v)
 """
-# V=np.arange(0,21,1)
-# N=10000
-# E=15 # keV
-# for v in V:
-#     x=[]
-#     for i in range(N):
-#         out=td.TDCR_model_lib.energie_dep_gamma2(15,v)
-#         x.append(out)
-#     print(v, np.mean(x), np.std(x)/np.sqrt(N))
+V=np.arange(8,21,1)
+N=10000
+E=15 # keV
+for v in V:
+    x=[]
+    for i in range(N):
+        out=td.TDCR_model_lib.energie_dep_gamma2(15,v)
+        x.append(out)
+    print(v, np.mean(x), np.std(x)/np.sqrt(N))
 
 
 """
 energie_dep_beta2(e_inci,v)
 """
-V=np.arange(0,21,1)
-N=10000
-E=1500 # keV
-for v in V:
-    x=[]
-    for i in range(N):
-        out=td.TDCR_model_lib.energie_dep_beta2(E,v)
-        x.append(out)
-    print(v, np.mean(x), np.std(x)/np.sqrt(N))
+# V=np.arange(0,21,1)
+# N=10000
+# E=1500 # keV
+# for v in V:
+#     x=[]
+#     for i in range(N):
+#         out=td.TDCR_model_lib.energie_dep_beta2(E,v)
+#         x.append(out)
+#     print(v, np.mean(x), np.std(x)/np.sqrt(N))
 
 """
 Eff
