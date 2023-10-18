@@ -18,6 +18,47 @@ import configparser
 import numpy as np
 from tqdm import tqdm
 
+def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=False):
+    for i_part in range(len(particle_vec)):
+        relaxation = False
+        if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part] or "Atom_M" in particle_vec[i_part]:
+            relaxation = True
+        while relaxation:
+            tf,ef = tl.relaxation_atom(daughter_relax,rad,particle_vec[i_part],uncData=uncData)
+            if tf == "XKA":
+                particle_vec[i_part] = "Atom_L"
+                particle_vec.append(tf)
+                energy_vec.append(ef)
+                relaxation = True
+            elif tf == "XKB":
+                particle_vec[i_part] = "Atom_M"
+                particle_vec.append(tf)
+                energy_vec.append(ef)
+                relaxation = False
+            elif tf == "XL":
+                particle_vec[i_part] = "Atom_M"
+                particle_vec.append(tf)
+                energy_vec.append(ef)
+                relaxation = False
+            elif tf == "Auger K":
+                particle_vec[i_part] = "Atom_L"
+                particle_vec.append(tf)
+                energy_vec.append(ef)
+                particle_vec.append("Atom_L")
+                energy_vec.append(0)
+                relaxation = True
+            elif tf == "Auger L":
+                particle_vec[i_part] = "Atom_M"
+                particle_vec.append(tf)
+                energy_vec.append(ef)
+                particle_vec.append("Atom_M")
+                energy_vec.append(0)
+                relaxation = False
+            else:
+                if Display: print("\t\t untermined x or Auger")
+                relaxation = False
+    return particle_vec, energy_vec
+
 def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False,uncData=False):
     """
     This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
@@ -236,7 +277,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         if particle_branch=="Atom_O": print("\t\t Electron capture on O shell")
                     else:
                         print("\t\t Particle: ", particle_branch)
-                        print("\t\t Energy of the particle = ", energy_branch, " keV")
+                        print("\t\t Energy of the branch transition = ", energy_branch, " keV")
                     print("\t\t Level of the daughter nucleus: ", levelOftheDaughter)
                 #========
                 # Scoring
@@ -272,6 +313,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 # test whether the decay occurs within the coincidence resolving time or not
                 if t1 > tau*1e-9: 
                     evenement = evenement + 1
+                    if Display: print(f"\t\t Transition time from decay {round(t1*1e9,2)} ns > {tau} ns \n\t\t (half-life = {round(trans_halfLife[index_rad][iDaughter][i_level][0]*1e9,2)} ns)")
                                 
                 if transitionType[index_rad][iDaughter][i_level] != []:
                     #====================================================================
@@ -399,10 +441,9 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])
                     print("warning:pas de données de transition:daughter,niveau,niveau d'énergie",DaughterVec[index_rad][iDaughter],levelOftheDaughter,levelEnergy[index_rad][iDaughter][i_level] )
                     levelOftheDaughter = 0   # set the next level
-                    
+            
             if Display:
-                print("\n\t NUCLEAR DECAY")
-                print("\t Summary of the prompt nuclear decay")
+                print("\n\t NUCLEAR DECAY--Prompt")
                 if "Atom" in particle_vec[0]:
                     print(f'\t\t capture of an electron from the {particle_vec[0][5:]} shell')
                 else:
@@ -415,64 +456,24 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         print(f'\t\t emitted {particle_vec[i]} of energy = {energy_vec[i]}, keV')
                         
                 if evenement != 1:
-                    print("\t Summary of the delayed nuclear decay")
+                    print("\n\t NUCLEAR DECAY--Delayed")
                     for i, p in enumerate(particle_vec2):
                         if p[:4] != "Atom":
-                            print(f'\t\t {p} transition of energy = {energy_vec2[i]}, keV')
+                            print(f'\t\t\t {p} transition of energy = {energy_vec2[i]}, keV')
                         else:
-                            print(f'\t\t an electron of intern conversion from the {p[5:]} shell')
+                            print(f'\t\t\t an electron of intern conversion from the {p[5:]} shell')
     
             '''
             ==========================
             II. LA RELAXATION ATOMIQUE
             ==========================
             '''
-            ## evenement normal
-            
-            if Display:
-                print("\n\t ATOMIC RECOMBINATION--Prompt\n\t Summary of the atomic relaxation")
+
             daughter_relax = DaughterVec[index_rad][iDaughter]
-            for i_part in range(len(particle_vec)):
-                relaxation = False
-                if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part] or "Atom_M" in particle_vec[i_part]:
-                    relaxation = True
-                while relaxation:
-                    tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec[i_part],uncData=uncData)
-                    if tf == "XKA":
-                        particle_vec[i_part] = "Atom_L"
-                        particle_vec.append(tf)
-                        energy_vec.append(ef)
-                        relaxation = True
-                    elif tf == "XKB":
-                        particle_vec[i_part] = "Atom_M"
-                        particle_vec.append(tf)
-                        energy_vec.append(ef)
-                        relaxation = False
-                    elif tf == "XL":
-                        particle_vec[i_part] = "Atom_M"
-                        particle_vec.append(tf)
-                        energy_vec.append(ef)
-                        relaxation = False
-                    elif tf == "Auger K":
-                        particle_vec[i_part] = "Atom_L"
-                        particle_vec.append("Atom_L")
-                        particle_vec.append(tf)
-                        energy_vec.append(ef)
-                        energy_vec.append(0)
-                        relaxation = True
-                    elif tf == "Auger L":
-                        particle_vec[i_part] = "Atom_M"
-                        particle_vec.append("Atom_M")
-                        particle_vec.append(tf)
-                        energy_vec.append(ef)
-                        energy_vec.append(0)
-                        relaxation = False
-                    else:
-                        if Display: print("\t\t untermined x or Auger")
-                        relaxation = False
-                    e_sum += ef
-                    
+            particle_vec, energy_vec = relaxAtom(daughter_relax,particle_vec,energy_vec,Rad[index_rad],Display=Display,uncData=uncData)
+            ## evenement normal
             if Display:
+                print("\n\t ATOMIC RECOMBINATION--Prompt")
                 for i, p in enumerate(particle_vec):
                     if p[:4] != "Atom":
                         if p=="beta" or p=="beta+":
@@ -482,47 +483,11 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     else:
                         print(f'\t\t an electron left the {p[5:]} shell')  
             
-            
             ## evenement retardee             
             if evenement != 1:
-                if Display:print("\n\t ATOMIC RECOMBINATION--Delay\n\t Summary of the atomic relaxation")
-                for i_part in range(len(particle_vec2)):
-                    relaxation = False
-                    if "Atom_K" in particle_vec2[i_part] or "Atom_L" in particle_vec2[i_part] or "Atom_M" in particle_vec2[i_part]:
-                        relaxation = True
-                    while relaxation:
-                        tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec2[i_part],uncData=uncData)
-                        if tf == "XKA":
-                            particle_vec2[i_part] = "Atom_L"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
-                            relaxation = True
-                        elif tf == "XKB":
-                            particle_vec2[i_part] = "Atom_M"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
-                            relaxation = False
-                        elif tf == "XL":
-                            particle_vec2[i_part] = "Atom_M"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
-                            relaxation = False
-                        elif tf == "Auger K":
-                            particle_vec2[i_part] = "Atom_L"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
-                            relaxation = True
-                        elif tf == "Auger L":
-                            particle_vec2[i_part] = "Atom_M"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
-                            relaxation = False
-                        else:
-                            if Display: print("\t\t x ray or Auger electron from X shell")
-                            relaxation = False
-                        e_sum2 += ef
-                
+                particle_vec2, energy_vec2 = relaxAtom(daughter_relax,particle_vec2,energy_vec2,Rad[index_rad],Display=Display,uncData=uncData)
                 if Display:
+                    print("\n\t ATOMIC RECOMBINATION--Delay")
                     for i, p in enumerate(particle_vec2):
                         if p[:4] != "Atom":
                             if p=="beta" or p=="beta+":
@@ -574,9 +539,15 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
                     p0 = particle_vec[i]
-                    energy_vec[i] = tl.energie_dep_gamma2(energy_vec[i],v=V)          # sampling energy free from photon
+                    Ei = energy_vec[i]
+                    Ed = tl.energie_dep_gamma2(Ei,v=V)          # sampling energy free from photon
+                    if Ei == Ed: # effet photoelectrique
+                        # particle_vec.append("Atom_K")
+                        # particle_vec.append(0)
+                        energy_vec[i]=Ed
+                    else: # diffusion Compton
+                        energy_vec[i]=Ed
                     particle_vec[i] = "electron"
-                    if Display:print(f"\t\t {p0} give energy {energy_vec[i]} keV to electron")
                         
                 if p == "Auger K" or p == "Auger L":
                     particle_vec[i] = "electron"
@@ -585,12 +556,13 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             if Display:
                 print("\n\t INTERACTION--Prompt \n\t Summary of the energy deposited by charged particles")
                 for i, p  in enumerate(particle_vec):
-                    if p[:4] != "Atom" and energy_vec[i]!=0: print(f"\t\t {p} of energy = {round(energy_vec[i],3)} keV")
+                    if p[:4] != "Atom" and energy_vec[i]!=0:
+                        if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL": (f"\t\t the {p0} gives {energy_vec[i]} keV to a recoil electron")
+                        else: print(f"\t\t {p} of energy = {round(energy_vec[i],3)} keV")
+                        
             
             if evenement!=1:
                 energy_vec_initial2 = energy_vec2.copy()
-                if Display:
-                    print("\n\t INTERACTION--Delay \n\t Summary of the energy deposited by charged particles")
                 for i, p in enumerate(particle_vec2):
                     if p == "electron":
                         energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
@@ -599,7 +571,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         p0 = particle_vec2[i]
                         energy_vec2[i] = tl.energie_dep_gamma2(energy_vec2[i],v=V)          # sampling energy free from photon
                         particle_vec2[i] = "electron"
-                        if Display:print(f"\t\t {p0} give energy {energy_vec2[i]} keV to electron")
+                        if Display:
+                            print(f"\t\t {p0} give energy {energy_vec2[i]} keV to electron")
                             
                         
                     if p == "Auger K" or p == "Auger L":
@@ -607,9 +580,12 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
                 
                 if Display:
+                    print("\n\t INTERACTION--Delay \n\t Summary of the energy deposited by charged particles")
                     for i, p  in enumerate(particle_vec2):
-                        if p[:4] != "Atom" and energy_vec2[i]!=0: print(f"\t\t {p} of energy = {round(energy_vec2[i],3)} keV")        
-                        
+                        if p[:4] != "Atom" and energy_vec2[i]!=0:
+                            if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL": (f"\t\t the {p0} gives {energy_vec2[i]} keV to a recoil electron")
+                            else: print(f"\t\t {p} of energy = {round(energy_vec2[i],3)} keV")
+                
                 '''
                 ====================
                 IV. LA SCINTILLATION
@@ -634,7 +610,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", np.round(e_quenching[i],3), "keV")
             
             if evenement!=1:
-                if Display: print(f"\n\t SCINTILLATION--Dealy \n\t\t Birks constant = {kB} cm/keV\n\t Summary of the estimation of quenched energies")
+                if Display: print(f"\n\t SCINTILLATION--Delayed \n\t\t Birks constant = {kB} cm/keV\n\t Summary of the estimation of quenched energies")
                 e_quenching2=[]
                 for i, p in enumerate(particle_vec2):
                     if p == "alpha":
@@ -648,137 +624,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 if Display:
                     for i, p in enumerate(particle_vec2):
                         if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", round(e_quenching2[i],3), "keV")       
-                    
-            #if evenement != 1:
-                # if Display: print("\n\t Summary of the delayed emission")            
-                # for i_part in range(len(particle_vec2)):
-                #     relaxation = False
-                #     if "Atom_K" in particle_vec2[i_part] or "Atom_L" in particle_vec2[i_part] or "Atom_M" in particle_vec2[i_part]:
-                #         relaxation = True
-                #     while relaxation:
-                #         tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec2[i_part],uncData=uncData)
-                #         if tf == "XKA":
-                #             particle_vec2[i_part] = "Atom_L"
-                #             particle_vec2.append(tf)
-                #             energy_vec2.append(ef)
-                #             relaxation = True
-                #         elif tf == "XKB":
-                #             particle_vec2[i_part] = "Atom_M"
-                #             particle_vec2.append(tf)
-                #             energy_vec2.append(ef)
-                #             relaxation = False
-                #         elif tf == "XL":
-                #             particle_vec2[i_part] = "Atom_M"
-                #             particle_vec2.append(tf)
-                #             energy_vec2.append(ef)
-                #             relaxation = False
-                #         elif tf == "Auger K":
-                #             particle_vec2[i_part] = "Atom_L"
-                #             particle_vec2.append(tf)
-                #             energy_vec2.append(ef)
-                #             relaxation = True
-                #         elif tf == "Auger L":
-                #             particle_vec2[i_part] = "Atom_M"
-                #             particle_vec2.append(tf)
-                #             energy_vec2.append(ef)
-                #             relaxation = False
-                #         else:
-                #             if Display: print("\t\t x ray or Auger electron from X shell")
-                #             relaxation = False
-                #         e_sum2 += ef
-                
-                # if Display:
-                #     print("\n\t ATOMIC RECOMBINATION\n\t Summary of the atomic relaxation (prompt)")
-                # for i, p in enumerate(particle_vec):
-                #     if p[:4] != "Atom":
-                #         if p=="beta" or p=="beta+":
-                #             print(f'\t\t {p} transition of energy = {energy_vec[i]}, keV')
-                #         else:
-                #             print(f"\t\t emitted {p} of energy = {round(energy_vec[i],3)} keV")
-                #     else:
-                #         print(f'\t\t an electron left the {p[5:]} shell')
-                
-                '''
-                ==========================================================
-                III.a SPECTRES D'EMISSION
-                ==========================================================
-                '''
-                
-                # if ("beta" in particle_vec2) or ("beta+" in particle_vec2):
-                #     if Display: print("\t Summary of sampling of beta particles")
-                #     for i, p in enumerate(particle_vec2):
-                #         if p == "beta":
-                #             e_b,p_b = tl.readBetaShape(rad_i,"beta-",level_before_trans)   # read the data of BetaShape
-                #             index_beta_energy = tl.sampling(p_b)                           # sampling energy of beta
-                #             particle_vec2[i] = "electron"
-                #             energy_vec2[i] = e_b[index_beta_energy]
-                #             if Display: print(f"\t\t emitted {p} of energy = {round(energy_vec2[i],3)} keV")
-            
-                #         if p == "beta+":
-                #             e_b,p_b = tl.readBetaShape(rad_i,"beta+",level_before_trans)
-                #             index_beta_energy = tl.sampling(p_b)
-                #             particle_vec2[i] = "positron"
-                #             energy_vec2[i] = e_b[index_beta_energy]
-                #             particle_vec2.append("gamma")
-                #             particle_vec2.append("gamma")
-                #             energy_vec2.append(511)
-                #             energy_vec2.append(511)
-                #             if Display: print(f"\t\t emitted {p} of energy = {round(energy_vec2[i],3)} keV")                            
-                # energy_vec_initial2 = energy_vec2    
-
-                
-                '''
-                ==========================================================
-                III.b INTERACTION RAYONNEMENT/MATIERE
-                ==========================================================
-                '''
-                
-                # for i, p in enumerate(particle_vec2):
-                #     if p == "electron":
-                #         energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
-        
-                #     if p == "beta+":
-                #         energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
-        
-                #     if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                #         energy_vec2[i] = tl.energie_dep_gamma2(energy_vec2[i],v=V)          # sampling energy free from photon
-                #         particle_vec2[i] = "electron"
-                        
-                #     if p == "Auger K" or p == "Auger L":
-                #         particle_vec2[i] = "electron"
-                #         energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
-                        
-                # if Display:
-                #     print("\n\t INTERACTION \n\t Summary of the energy deposited by charged particles (delay)")
-                #     for i, p  in enumerate(particle_vec2):
-                #         if p[:4] != "Atom" and energy_vec2[i]!=0: print(f"\t\t {p} of energy = {round(energy_vec2[i],3)} keV")
-                
-                
-
-                
-                '''
-                ====================
-                IV. LA SCINTILLATION
-                Calculation of the scintillation quenching with the Birks Model
-                ====================
-                '''
-                
-                # changer l'intégration E_i - E_d à E_i
-                
-                # if Display: print(f"\n\t SCINTILLATION \n\t\t Birks constant = {kB} cm/keV\n\t Summary of the estimation of quenched energies (delay)")
-                # e_quenching2=[]
-                # for i, p in enumerate(particle_vec2):
-                #     if p == "alpha":
-                #         energy_vec2[i] = tl.Em_a(energy_vec2[i],kB,nE_alpha)
-                #         e_quenching2.append(energy_vec2[i])
-                #     elif p == "electron" or p == "positron":
-                #         energy_vec2[i] = tl.Em_e(energy_vec_initial2[i]*1e3,energy_vec2[i]*1e3,kB*1e3,nE_electron)*1e-3
-                #         e_quenching2.append(energy_vec2[i])
-                #     else:
-                #         e_quenching2.append(0)
-                # if Display:
-                #     for i, p in enumerate(particle_vec2):
-                #         if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", round(e_quenching2[i],3), "keV")
                 
             '''
             ====================
@@ -872,9 +717,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     if Display: print("\t\t Efficiency of double events: ", round(efficiency_D[-1],5))
                     if Display: print("\t\t Efficiency of triple events: ", round(efficiency_T[-1],5))                    
 
-                
 
-                
         '''
         ====================
         VI. CALCULATION OF THE FINAL ESTIMATORS
@@ -903,27 +746,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             TABmodel = mean_efficiency_T/mean_efficiency_AB
             TBCmodel = mean_efficiency_T/mean_efficiency_BC
             TACmodel = mean_efficiency_T/mean_efficiency_AC
-            
-            
-        #    x = np.arange(np.mean(efficiency_T),1.001,0.001)
-        #    plt.figure("efficiency distribution")
-        #    plt.clf()
-        #    plt.hist(np.asarray(efficiency_D),bins=x,label="Efficiency of double coincidences")[0]
-        #    plt.hist(np.asarray(efficiency_T),bins=x,label="Efficiency of triple coincidences")[0]
-        #    plt.xlabel("Efficiency", fontsize = 14)
-        #    plt.ylabel(r"Number of counts", fontsize = 14)
-        #    plt.legend(fontsize = 12)
-        #    plt.savefig('Effdistribution.png')
-        
-        #    x = np.arange(np.mean(tdcr),1.001,0.001)
-        #    plt.figure("TDCR distribution")
-        #    plt.clf()
-        #    plt.hist(np.asarray(tdcr),bins=x,label="Calculated TDCR")[0]
-        #    plt.plot(x,st.norm.pdf(x, TDCR_measure, u_TDCR_measure),label="measured TDCR")[0]
-        #    plt.xlabel("Efficiency", fontsize = 14)
-        #    plt.ylabel(r"Number of counts", fontsize = 14)
-        #    plt.legend(fontsize = 12)
-        #    plt.savefig('TDCRdistribution.png')
         
         if mode2=="sym":
             res=(TDCR_calcul-TD)**2
