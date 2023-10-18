@@ -15,30 +15,128 @@ import sys
 sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
 
 
+"""
+energie_dep_gamma2(e_inci,v)
+"""
+V=np.arange(8,21,1)
+N=10000
+E=15 # keV
+for v in V:
+    x=[]
+    for i in range(N):
+        out=td.TDCR_model_lib.energie_dep_gamma2(15,v)
+        x.append(out)
+    print(v, np.mean(x), np.std(x)/np.sqrt(N))
+
+
+"""
+energie_dep_beta2(e_inci,v)
+"""
+# V=np.arange(0,21,1)
+# N=10000
+# E=1500 # keV
+# for v in V:
+#     x=[]
+#     for i in range(N):
+#         out=td.TDCR_model_lib.energie_dep_beta2(E,v)
+#         x.append(out)
+#     print(v, np.mean(x), np.std(x)/np.sqrt(N))
+
+"""
+Eff
+"""
+# L = 1
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+
+# out = td.TDCRoptimize.eff(TD,TAB,TBC,TAC,"Co-60","1",1e-5,10,"sym",N=500)
+
+# print("TDCRPy sym,", out)
+
 
 """
 Tests decay data uncertainty propagation
 """
-L = 1
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Cd-109"
-pmf_1="1"
-N = 100
-kB =1.0e-5
-V = 10
-mode = "dis"
-mode ="eff"
-mode2 = "sym"
+# L = 1
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# Rad="Fe-55"
+# pmf_1="1"
+# N = 10
+# kB =1.0e-5
+# V = 10
+# # mode = "dis"
+# mode ="eff"
+# mode2 = "sym"
 
-out = td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=True)
-if mode == "dis": td.TDCR_model_lib.display_distrib(out[0], out[1], out[2])
-else: print(out)
+# out = td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=False)
+# if mode == "dis": td.TDCR_model_lib.display_distrib(out[0], out[1], out[2])
+# else: print(out)
 
 """
-Efficiency curves
+Efficiency curves analytical
+"""
+# L = np.arange(0.5,2,0.1)
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# Rad="S-35"
+# pmf_1="1"
+# N = 10000
+# kB =1.0e-5
+# V = 10
+# mode = "eff"
+# mode2 = "sym"
+
+# M = 5
+# tdcr=[]
+# utdcr=[]
+# eff=[]
+# ueff=[]
+# for i in range(M):
+#     print('progress',100*i/M,' %')
+#     out = td.TDCRoptimize.effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V)
+#     tdcr.append(out[2])
+#     utdcr.append(out[3])
+#     eff.append(out[0])
+#     ueff.append(out[1])
+    
+# print("L")
+# for i in L:
+#     print(i)
+# print("tdcr")
+# for i in range(len(L)):
+#     x=[]
+#     for j in tdcr:
+#         x.append(j[i])
+#     print(np.mean(x))
+# print("u(tdcr)")    
+# for i in range(len(L)):
+#     x=[]
+#     for j in tdcr:
+#         x.append(j[i])
+#     print(np.std(x))
+# print("Eff")
+# for i in range(len(L)):
+#     x=[]
+#     for j in eff:
+#         x.append(j[i])
+#     print(np.mean(x))
+# print("u(Eff)")
+# for i in range(len(L)):
+#     x=[]
+#     for j in eff:
+#         x.append(j[i])
+#     print(np.std(x))
+
+
+"""
+Efficiency curves MC
 """
 # L = np.arange(0.5,2,0.1)
 # TD = 0.977667386529166

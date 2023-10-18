@@ -67,6 +67,7 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as dat
     fp4 = data_path / 'matrice/fichier/matrice_16ml-photon_1_200k.txt'          #gamma-10ml-1-200keV-niveau 0
     fp5 = data_path / 'matrice/fichier/matrice_16ml-photon_200_2000k.txt'       #gamma-10ml-1-200keV-niveau 1
     fp6 = data_path / 'matrice/fichier/matrice_16ml-photon_2000_10000k.txt'     #gamma-10ml-1-200keV-niveau 2
+    fp7 = data_path / 'matrice/fichier/matrice_13ml-photon_1_200k.txt'          #gamma-10ml-1-200keV-niveau 0
     fe = data_path / 'matrice/fichier/E_depose.txt'
 
 # import electron interaction data (MCNP6 calculation) 
@@ -208,7 +209,7 @@ def sampling(p_x):
     """
 
     cf = np.cumsum(p_x) # Cummulative Density (or mass) Function (CDF or CMF)
-    trial = float(np.random.rand(1)) # trial ~ U(0,1)
+    trial = np.random.rand(1)[0] # trial ~ U(0,1)
     
     for i, p in enumerate(cf):
         if p> trial: break
@@ -993,6 +994,7 @@ Matrice10_p_3 = read_matrice(fp3,2)
 Matrice16_p_1 = read_matrice(fp4,0)
 Matrice16_p_2 = read_matrice(fp5,1)
 Matrice16_p_3 = read_matrice(fp6,2)
+Matrice13_p_1 = read_matrice(fp7,0)
 Matrice_e = read_matrice(fe,'e')
 
 Matrice10_e_1 = read_matrice(fe1,0)
@@ -1003,7 +1005,7 @@ Matrice16_e_2 = read_matrice(fe5,1)
 Matrice16_e_3 = read_matrice(fe6,2)
 #Matrice_e = read_matrice(fe,'e')
 
-def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,ed=Matrice_e):
+def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,matrice13_1=Matrice13_p_1,ed=Matrice_e):
     """ This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
@@ -1037,6 +1039,8 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
             
         if v == 10: 
             matrice = matrice10_1
+        elif v ==13:
+            matrice = matrice13_1
         elif v == 16:
             matrice = matrice16_1
         e = ed[:,0]
@@ -1064,7 +1068,7 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
     if result  > e_inci: result = e_inci
     return result
 
-def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,ed=Matrice_e):
+def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,matrice13_1=Matrice13_p_1, ed=Matrice_e):
     """ This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
@@ -1103,15 +1107,24 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
             index = int(e_inci)-1
             
         if v == 10: 
-            matrice = matrice10_1[1:,index]
-            matrice0 = matrice10_1[0,index]
+            matrice = matrice10_1[1:,index] # réponse 
+            matrice0 = matrice10_1[0,index] # énergie 
+        elif v == 13:
+            matrice = matrice13_1[1:,index]
+            matrice0 = matrice13_1[0,index]          
         elif v == 16:
             matrice = matrice16_1[1:,index]
             matrice0 = matrice16_1[0,index]
-        else:
-            matrice = (matrice16_1[1:,index]-matrice10_1[1:,index])*v/6 + (matrice10_1[1:,index]-(matrice16_1[1:,index]-matrice10_1[1:,index])*10/6)
+        else:           
+            a = 0.05555556*matrice10_1[1:,index]-0.11111111*matrice13_1[1:,index]+0.05555556*matrice16_1[1:,index]
+            b = -1.61111111*matrice10_1[1:,index]+2.88888889*matrice13_1[1:,index]-1.27777778*matrice16_1[1:,index]
+            c = 11.55555556*matrice10_1[1:,index]-17.77777778*matrice13_1[1:,index]+7.22222222*matrice16_1[1:,index]
+            matrice = a*v**2 + b*v + c
+            # matrice /= sum(matrice)
+            # matrice = (matrice16_1[1:,index]-matrice10_1[1:,index])*v/6 + (matrice10_1[1:,index]-(matrice16_1[1:,index]-matrice10_1[1:,index])*10/6)
             matrice0 = (matrice16_1[0,index]-matrice10_1[0,index])*v/6 + (matrice10_1[0,index]-(matrice16_1[0,index]-matrice10_1[0,index])*10/6)
         e = ed[:,0]
+        
     
     elif e_inci <= 2000:
         index = int((e_inci-200)/2)
@@ -1141,7 +1154,6 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
     
     inde = sampling(matrice)
     if inde == 1 : result = 0
-        #elif e_inci<25: result = e[inde-1]*1e3*e_inci/matrice[0][index]
     else: result = e[inde]*1e3*e_inci/matrice0
     if result  > e_inci: result = e_inci
     return result
