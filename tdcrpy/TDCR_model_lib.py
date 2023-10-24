@@ -996,13 +996,13 @@ Matrice10_p_3 = read_matrice(fp3,2)
 Matrice16_p_1 = read_matrice(fp4,0)
 Matrice16_p_2 = read_matrice(fp5,1)
 Matrice16_p_3 = read_matrice(fp6,2)
-<<<<<<< HEAD
+
 #Matrice13_p_1 = read_matrice(fp7,0)
-=======
+
 Matrice13_p_1 = read_matrice(fp7,0)
 Matrice13_p_2 = read_matrice(fp8,1)
 Matrice13_p_3 = read_matrice(fp9,2)
->>>>>>> ac4a1be4db23be7ba7ac34e6434aa1a0b78b196e
+
 Matrice_e = read_matrice(fe,'e')
 
 Matrice10_e_1 = read_matrice(fe1,0)

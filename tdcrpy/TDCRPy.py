@@ -470,7 +470,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             '''
 
             daughter_relax = DaughterVec[index_rad][iDaughter]
-<<<<<<< HEAD
+
             for i_part in range(len(particle_vec)):
                 relaxation = False
                 if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part] or "Atom_M" in particle_vec[i_part]:
@@ -525,10 +525,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         relaxation = False
                     e_sum += ef
                     
-=======
+
             particle_vec, energy_vec = relaxAtom(daughter_relax,particle_vec,energy_vec,Rad[index_rad],Display=Display,uncData=uncData)
             ## evenement normal
->>>>>>> ac4a1be4db23be7ba7ac34e6434aa1a0b78b196e
+
             if Display:
                 print("\n\t ATOMIC RECOMBINATION--Prompt")
                 for i, p in enumerate(particle_vec):
@@ -542,7 +542,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             
             ## evenement retardee             
             if evenement != 1:
-<<<<<<< HEAD
+
                 if Display:print("\n\t ATOMIC RECOMBINATION--Delay\n\t Summary of the atomic relaxation")
                 for i_part in range(len(particle_vec2)):
                     relaxation = False
@@ -596,9 +596,9 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                             relaxation = False
                         e_sum2 += ef
                 
-=======
+
                 particle_vec2, energy_vec2 = relaxAtom(daughter_relax,particle_vec2,energy_vec2,Rad[index_rad],Display=Display,uncData=uncData)
->>>>>>> ac4a1be4db23be7ba7ac34e6434aa1a0b78b196e
+
                 if Display:
                     print("\n\t ATOMIC RECOMBINATION--Delay")
                     for i, p in enumerate(particle_vec2):
