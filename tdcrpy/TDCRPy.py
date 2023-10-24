@@ -453,19 +453,33 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         particle_vec.append(tf)
                         energy_vec.append(ef)
                         relaxation = False
-                    elif tf == "Auger K":
+                    elif tf == "Auger KLL":
                         particle_vec[i_part] = "Atom_L"
                         particle_vec.append("Atom_L")
                         particle_vec.append(tf)
-                        energy_vec.append(ef)
                         energy_vec.append(0)
+                        energy_vec.append(ef)
                         relaxation = True
+                    elif tf == "Auger KLX":
+                        particle_vec[i_part] = "Atom_L"
+                        particle_vec.append("Atom_M")
+                        particle_vec.append(tf)
+                        energy_vec.append(0)
+                        energy_vec.append(ef)
+                        relaxation = True    
+                    elif tf == "Auger KXY":
+                        particle_vec[i_part] = "Atom_M"
+                        particle_vec.append("Atom_M")
+                        particle_vec.append(tf)
+                        energy_vec.append(0)
+                        energy_vec.append(ef)
+                        relaxation = False    
                     elif tf == "Auger L":
                         particle_vec[i_part] = "Atom_M"
                         particle_vec.append("Atom_M")
                         particle_vec.append(tf)
-                        energy_vec.append(ef)
                         energy_vec.append(0)
+                        energy_vec.append(ef)
                         relaxation = False
                     else:
                         if Display: print("\t\t untermined x or Auger")
@@ -507,11 +521,27 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                             particle_vec2.append(tf)
                             energy_vec2.append(ef)
                             relaxation = False
-                        elif tf == "Auger K":
-                            particle_vec2[i_part] = "Atom_L"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
+                        elif tf == "Auger KLL":
+                            particle_vec[i_part] = "Atom_L"
+                            particle_vec.append("Atom_L")
+                            particle_vec.append(tf)
+                            energy_vec.append(0)
+                            energy_vec.append(ef)
                             relaxation = True
+                        elif tf == "Auger KLX":
+                            particle_vec[i_part] = "Atom_L"
+                            particle_vec.append("Atom_M")
+                            particle_vec.append(tf)
+                            energy_vec.append(0)
+                            energy_vec.append(ef)
+                            relaxation = True 
+                        elif tf == "Auger KXY":
+                            particle_vec[i_part] = "Atom_M"
+                            particle_vec.append("Atom_M")
+                            particle_vec.append(tf)
+                            energy_vec.append(0)
+                            energy_vec.append(ef)
+                            relaxation = False         
                         elif tf == "Auger L":
                             particle_vec2[i_part] = "Atom_M"
                             particle_vec2.append(tf)

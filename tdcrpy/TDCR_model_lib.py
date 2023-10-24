@@ -994,7 +994,7 @@ Matrice10_p_3 = read_matrice(fp3,2)
 Matrice16_p_1 = read_matrice(fp4,0)
 Matrice16_p_2 = read_matrice(fp5,1)
 Matrice16_p_3 = read_matrice(fp6,2)
-Matrice13_p_1 = read_matrice(fp7,0)
+#Matrice13_p_1 = read_matrice(fp7,0)
 Matrice_e = read_matrice(fe,'e')
 
 Matrice10_e_1 = read_matrice(fe1,0)
@@ -1005,7 +1005,7 @@ Matrice16_e_2 = read_matrice(fe5,1)
 Matrice16_e_3 = read_matrice(fe6,2)
 #Matrice_e = read_matrice(fe,'e')
 
-def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,matrice13_1=Matrice13_p_1,ed=Matrice_e):
+def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,matrice13_1=Matrice16_p_1,ed=Matrice_e):
     """ This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
@@ -1068,7 +1068,7 @@ def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p
     if result  > e_inci: result = e_inci
     return result
 
-def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,matrice13_1=Matrice13_p_1, ed=Matrice_e):
+def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,matrice13_1=Matrice16_p_1, ed=Matrice_e):
     """ This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
@@ -1344,7 +1344,10 @@ def readEShape(rad, *, z=z_ensdf):
         comprise all transtion probabilities of the daughter nucleus.
     Type : list
         comprise all type of transition of the daughter nucleus.
-
+    Prob_augerK :list
+        comprise all probabilities of electron Auger KLL, KLM, KXY. 
+    Type_augerK : list
+        comprise all types of electron Auger KLL, KLM, KXY.
     """
        
     name = rad + '.txt'
@@ -1376,17 +1379,21 @@ def readEShape(rad, *, z=z_ensdf):
         if 'P' in p:
             index_end.append(i)
             posi.append(i)
-
+        
     Energy = []           # enregistrer les résultats (énergie) complètes
     energy = []           # enregistrer les résultats (énergie) d'une fille
     Type = []             # enregistrer les résultats (type de transition) complètes
     type_ = []            # enregistrer les résultats (type de transition) d'une fille
     Prob = []             # enregistrer les résultats (proba de transition) complètes
     prob = []             # enregistrer les résultats (proba de transition) d'une fille
-    incertitude = []
-    Incertitude = []
-    prob_str = []
-    Prob_str = []
+    incertitude = []      # enregistrer les résultats (incertitude) d'une fille 
+    Incertitude = []      # enregistrer les résultats (incertitude) complètes
+    prob_str = []         # enregistrer les résultats (proba en str) d'une fille
+    Prob_str = []         # enregistrer les résultats (proba en str) complètes
+    Prob_augerK= []       # enregistrer les résultats (prob d'électron auger K) complètes
+    prob_augerK = []      # enregistrer les résultats (prob d'électron auger K) d'une fille
+    Type_augerK = []
+    type_augerK = []
     
     for i in range(len(posi)-1):
         start = posi[i]+1
@@ -1395,8 +1402,10 @@ def readEShape(rad, *, z=z_ensdf):
         e = []                # enregistrer les résultats (énergie) d'un bloc
         prob_b = []           # enregistrer les résultats (proba) d'un bloc
         type_b = []           # enregistrer les résultats (type) d'un bloc
-        incertitude_b = []
-        prob_str_b = []
+        incertitude_b = []    # enregistrer les résultats (incertitude) d'un bloc
+        prob_str_b = []       # enregistrer les résultats (proba en str) d'un bloc
+        prob_augerK_b = []    # enregistrer les résultats (prob d'électron auger K) d'un bloc
+        type_augerK_b = []
         
         if start==end:        # sauter les lignes blaches et continues
             continue
@@ -1414,45 +1423,52 @@ def readEShape(rad, *, z=z_ensdf):
                     e.append(p1[2])
                     type_b.append(p1[-2])
                     incertitude_b.append(int(p1[-3]))
-                    #incertitude_b.append(p1[-3])
                     prob_str_b.append(p1[3])
                 continue 
-            elif '|]' in p1:                # traiter un bloc qui comprend |]
-                if len(p1)>6:               # repérer la ligne qui comprend la proba
-                    prob_str_b.append(p1[4])
-                    prob_b.append(float(p1[4]))
-                    incertitude_b.append(int(p1[5]))
-                    #incertitude_b.append(p1[5])
-                e.append(float(p1[2]))      # enregistrer les valeurs d'énergie
-                if 'AUGER' in p1:           # traiter le cas d'auger et |] 
-                    if 'K' in p1[-2]:       # Auger K
-                        type_b.append('Auger K')
-                    else:
-                        print('erreur')
-                elif 'X' in p1[-1]:         # Rayon X
-                    type_b.append(p1[-1][0:3])
+            elif '|]' in p1:                   # traiter un bloc qui comprend |]
+                if 'AUGER' in p1:              # block of electron Auger 
+                    type_b.append('Auger K')   # for electron Auger, only the block of electron Auger K has |] 
+                    if len(p1)>7:               # repérer la ligne qui comprend la proba totale et l'incertitude
+                        prob_str_b.append(p1[5])
+                        prob_b.append(float(p1[5]))        # enregistrer la proba totale du bloc
+                        incertitude_b.append(int(p1[6]))   # enregistrer l'incertitude pour la proba totale
+                        prob_augerK_b.append(float(p1[4])) # enregistrer la proba d'un type d'électron auger associé cette ligne 
+                        type_augerK_b.append(p1[-2])
+                    elif len(p1)>6 and 'K' in p1[-2]:      # la ligne sans proba totale mais ayant une proba pour un type d'électron Auger K (KLL,KLM ou KXY)
+                        prob_augerK_b.append(float(p1[4]))
+                        type_augerK_b.append(p1[-2])
+                elif 'X' in p1[-1]:        # le bloc pour rayon X
+                    if len(p1)>6:          # la ligne  avec la proba totale
+                        prob_str_b.append(p1[4])   
+                        prob_b.append(float(p1[4]))      # enregistrer la proba totale
+                        incertitude_b.append(int(p1[5])) # enregistrer l'incetitude pour la proba totale
+                        type_b.append(p1[-1][0:3])       # enregistrer le type de rayon X
+                else:print('erreur')   
+                e.append(float(p1[2]))      # enregistrer les valeurs d'énergie  
             else:                           # traiter le cas sans |] ni (total)
                 if len(p1)==4 and 'X' in p1[-1]:   # le cas de rayon X sans |] ni (total) ni proba
                     continue                       # sauter cette ligne
                 elif len(p1)==5 and 'L' in p1:     # le cas de Auger L sans |] ni (total) ni proba
                     continue                       # sauter cette ligne
-                else:                       # traiter le cas sans |] ni (total) mais complet
+                else:                         # traiter le cas sans |] ni (total) mais complet
                     e.append(float(p1[2]))         # enregistrer énergie
                     prob_b.append(float(p1[3]))    # enregistrer proba
                     prob_str_b.append(p1[3])
-                    incertitude_b.append(int(p1[4]))
-                    #incertitude_b.append(p1[4])
+                    incertitude_b.append(int(p1[4])) # enregistrer l'incertitude
                     if 'L' in p1:
                         type_b.append('Auger L')   # enregistrer type Auger L
                     else:
                         type_b.append(p1[-1][0:3]) # enregistrer type Rayon X
-
+        
         if len(prob_b)==1 and len(e)>1:            # calculer la valeur moyenne et l'enregistrer au cas où |] compris et valeurs complètes
             energy.append(np.mean(e))
             prob.append(prob_b[0])
             type_.append(type_b[0])
             incertitude.append(incertitude_b[0])
             prob_str.append(prob_str_b[0])
+            if len(prob_augerK_b)!=0:              # si l'électron Auger K, enregistrer les proba dans la liste pour un noyau fils
+                prob_augerK = prob_augerK_b
+                type_augerK = type_augerK_b
         elif len(e)==len(prob_b) and len(e)>=1:    # enregistrer les valeurs au cas où sans |] et valeurs complètes
             for i in range(len(e)):
                 energy.append(e[i])
@@ -1460,18 +1476,27 @@ def readEShape(rad, *, z=z_ensdf):
                 prob_str.append(prob_str_b[i])
                 type_.append(type_b[i])
                 incertitude.append(incertitude_b[i])
-        if end in index_end or end+1 in index_end: # enregistrer les résultats à la fin d'une fille
+            if len(prob_augerK_b)!=0:               # si l'électron Auger, enregistrer les proba dans la liste pour un noyau fils 
+                prob_augerK = prob_augerK_b         # pour certains cas spécifiques qui n'ont qu'un seul type d'électron Auger
+                type_augerK = type_augerK_b
+        if end in index_end or end+1 in index_end:  # enregistrer les résultats à la fin d'une fille   
             Energy.append(energy)
             Prob.append(prob)
             Type.append(type_)
-            Incertitude.append(incertitude)
+            Incertitude.append(incertitude)        
             Prob_str.append(prob_str)
+            Prob_augerK.append(prob_augerK)
+            Type_augerK.append(type_augerK)
             energy = []
             prob = []
             type_ = []   
             incertitude = []
             prob_str = []
-    return  daug_name,Energy,Prob,Type,Incertitude,Prob_str        
+            prob_augerK = []
+            type_augerK = []
+            
+    return  daug_name,Energy,Prob,Type,Incertitude,Prob_str,Prob_augerK,Type_augerK  
+
 
 
 def incer(prob,incer):
@@ -1482,12 +1507,12 @@ def incer(prob,incer):
     prob : list of str
         probability (str) of rayon X and Auger electron.
     incer : list of int
-        uncertainty of the probability.
+        standard uncertainty of the probability.
 
     Returns
     -------
     incertitude : list of float
-        DESCRIPTION.
+        absolute uncertainty of proba
 
     '''
     incertitude = []
@@ -1540,15 +1565,16 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
     Energy : corresponding energy in keV.
 
     """
-    daug_name,Energy,Prob,Type,Incertitude,f = readEShape(rad)  # tirer les vecteurs de rad d'Ensdf 
-    incertitude = incer(f,Incertitude)
+    daug_name,Energy,Prob,Type,Incertitude,prob_str,Prob_K,Type_K = readEShape(rad)  # tirer les vecteurs de rad d'Ensdf 
+    incertitude = incer(prob_str,Incertitude)
 
     index_daug = daug_name.index(daugther)        # repérer l'indice de fille correspondante
     
     Energie = np.array(Energy[index_daug])                  # tirer le vecteur d'énergie
     probability = np.array(Prob[index_daug])                # tirer le vecteur de proba
     type_transi = Type[index_daug]                # tirer le vecteur de type
-
+    prob_augerK = Prob_K[index_daug]    # tirer le vecteur de prob 'électron auger K
+    type_augerK = Type_K[index_daug]
     u_probability = np.array(incertitude[index_daug])
     
     if len(probability) > 0:                      # le cas où le vecteur de proba/energie/type n'est pas vide
@@ -1606,6 +1632,12 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
                 index_fin = sampling(prob_2)        # sample in probability of transition
                 type_fin = type_2[index_fin]        # type of transition     
                 energie_fin = energy_2[index_fin]   # energy of the transition
+                if 'Auger K' == type_fin:
+                    prob_AugerK = normalise(prob_augerK)
+                    index_K = sampling(prob_AugerK)
+                    type_K = type_augerK[index_K]
+                    type_fin = 'Auger K' + type_K[1:]
+                
             else:
                 # print("pas de transition de rayon X ni d'électron Auger pour cette lacune: ",lacune)
                 type_fin = 'NON'
