@@ -1340,7 +1340,7 @@ def transf_name(rad):
 
 
 
-def readEShape(rad, *, z=z_ensdf):
+def read_ENSDF(rad, *, z=z_ensdf):
     """ This function reads the ENSDF zip files and format the data to be processed by TDCRPy. 
 
     Parameters
@@ -1581,7 +1581,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
     Energy : corresponding energy in keV.
 
     """
-    daug_name,Energy,Prob,Type,Incertitude,prob_str,Prob_K,Type_K = readEShape(rad)  # tirer les vecteurs de rad d'Ensdf 
+    daug_name,Energy,Prob,Type,Incertitude,prob_str,Prob_K,Type_K = read_ENSDF(rad)  # tirer les vecteurs de rad d'Ensdf 
     incertitude = incer(prob_str,Incertitude)
 
     index_daug = daug_name.index(daugther)        # repérer l'indice de fille correspondante
