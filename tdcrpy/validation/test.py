@@ -137,41 +137,41 @@ Efficiency curves analytical
 """
 Efficiency curves MC
 """
-# L = np.arange(0.5,2,0.1)
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# Rad="Sr-89"
-# pmf_1="1"
-# N = 10000
-# kB =1.0e-5
-# V = 10
-# mode = "eff"
-# mode2 = "sym"
+L = np.arange(0.5,2,0.1)
+TD = 0.977667386529166
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+Rad="Sr-89"
+pmf_1="1"
+N = 10000
+kB =1.0e-5
+V = 10
+mode = "eff"
+mode2 = "sym"
 
-# out = td.TDCRoptimize.effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V)
-# print("L")
-# for i in L:
-#     print(i)
-# print("tdcr")
-# for i in out[2]:
-#     print(i)
-# print("u(tdcr)")
-# for i in out[3]:
-#     print(i)
-# print("Eff")
-# for i in out[0]:
-#     print(i)
-# print("u(Eff)")
-# for i in out[1]:
-#     print(i)
+out = td.TDCRoptimize.effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V)
+print("L")
+for i in L:
+    print(i)
+print("tdcr")
+for i in out[2]:
+    print(i)
+print("u(tdcr)")
+for i in out[3]:
+    print(i)
+print("Eff")
+for i in out[0]:
+    print(i)
+print("u(Eff)")
+for i in out[1]:
+    print(i)
 
 
 """
 Test display
 """
-# td.TDCRPy.TDCRPy(1, 0, 0, 0, 0, "Cd-109", "1", 1, 1e-5, 10, "eff", "sym", Display=True, barp=False)
+# td.TDCRPy.TDCRPy(1, 0, 0, 0, 0, "Fe-55", "1", 1, 1e-5, 10, "eff", "sym", Display=True, barp=False)
 
 
 """
