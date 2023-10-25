@@ -46,8 +46,10 @@ def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=F
                 tf1,ef1 = tl.relaxation_atom(daughter_relax,rad,'Atom_L',uncData=uncData)
                 particle_vec.append(tf)
                 particle_vec.append(tf1)
+                particle_vec.append("Atom_M")
                 energy_vec.append(ef)
                 energy_vec.append(ef1)
+                energy_vec.append(0)
                 relaxation = True
             elif tf == "Auger KLX":
                 particle_vec[i_part] = "Atom_L"

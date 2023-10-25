@@ -1410,6 +1410,8 @@ def read_ENSDF(rad, *, z=z_ensdf):
     prob_augerK = []      # enregistrer les résultats (prob d'électron auger K) d'une fille
     Type_augerK = []
     type_augerK = []
+    energie_augerK = []
+    Energie_augerK = []
     
     for i in range(len(posi)-1):
         start = posi[i]+1
@@ -1422,6 +1424,7 @@ def read_ENSDF(rad, *, z=z_ensdf):
         prob_str_b = []       # enregistrer les résultats (proba en str) d'un bloc
         prob_augerK_b = []    # enregistrer les résultats (prob d'électron auger K) d'un bloc
         type_augerK_b = []
+        energie_augerK_b = []
         
         if start==end:        # sauter les lignes blaches et continues
             continue
@@ -1442,7 +1445,8 @@ def read_ENSDF(rad, *, z=z_ensdf):
                     prob_str_b.append(p1[3])
                 continue 
             elif '|]' in p1:                   # traiter un bloc qui comprend |]
-                if 'AUGER' in p1:              # block of electron Auger 
+                if 'AUGER' in p1:              # block of electron Auger
+                    energie_augerK_b.append(float(p1[2]))
                     type_b.append('Auger K')   # for electron Auger, only the block of electron Auger K has |] 
                     if len(p1)>7:               # repérer la ligne qui comprend la proba totale et l'incertitude
                         prob_str_b.append(p1[5])
@@ -1485,6 +1489,7 @@ def read_ENSDF(rad, *, z=z_ensdf):
             if len(prob_augerK_b)!=0:              # si l'électron Auger K, enregistrer les proba dans la liste pour un noyau fils
                 prob_augerK = prob_augerK_b
                 type_augerK = type_augerK_b
+                energie_augerK = energie_augerK_b
         elif len(e)==len(prob_b) and len(e)>=1:    # enregistrer les valeurs au cas où sans |] et valeurs complètes
             for i in range(len(e)):
                 energy.append(e[i])
@@ -1495,6 +1500,7 @@ def read_ENSDF(rad, *, z=z_ensdf):
             if len(prob_augerK_b)!=0:               # si l'électron Auger, enregistrer les proba dans la liste pour un noyau fils 
                 prob_augerK = prob_augerK_b         # pour certains cas spécifiques qui n'ont qu'un seul type d'électron Auger
                 type_augerK = type_augerK_b
+                energie_augerK = energie_augerK_b
         if end in index_end or end+1 in index_end:  # enregistrer les résultats à la fin d'une fille   
             Energy.append(energy)
             Prob.append(prob)
@@ -1503,6 +1509,7 @@ def read_ENSDF(rad, *, z=z_ensdf):
             Prob_str.append(prob_str)
             Prob_augerK.append(prob_augerK)
             Type_augerK.append(type_augerK)
+            Energie_augerK.append(energie_augerK)
             energy = []
             prob = []
             type_ = []   
@@ -1510,8 +1517,9 @@ def read_ENSDF(rad, *, z=z_ensdf):
             prob_str = []
             prob_augerK = []
             type_augerK = []
+            energie_augerK = []
             
-    return  daug_name,Energy,Prob,Type,Incertitude,Prob_str,Prob_augerK,Type_augerK  
+    return  daug_name,Energy,Prob,Type,Incertitude,Prob_str,Prob_augerK,Type_augerK,Energie_augerK  
 
 
 
@@ -1581,7 +1589,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
     Energy : corresponding energy in keV.
 
     """
-    daug_name,Energy,Prob,Type,Incertitude,prob_str,Prob_K,Type_K = read_ENSDF(rad)  # tirer les vecteurs de rad d'Ensdf 
+    daug_name,Energy,Prob,Type,Incertitude,prob_str,Prob_K,Type_K,Energie_augerK = read_ENSDF(rad)  # tirer les vecteurs de rad d'Ensdf 
     incertitude = incer(prob_str,Incertitude)
 
     index_daug = daug_name.index(daugther)        # repérer l'indice de fille correspondante
@@ -1592,6 +1600,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
     prob_augerK = Prob_K[index_daug]    # tirer le vecteur de prob 'électron auger K
     type_augerK = Type_K[index_daug]
     u_probability = np.array(incertitude[index_daug])
+    energie_augerK = np.array(Energie_augerK[index_daug])
     
     if len(probability) > 0:                      # le cas où le vecteur de proba/energie/type n'est pas vide
         if 'L' in lacune:                         # traiter le transition de couche L
@@ -1653,6 +1662,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
                     index_K = sampling(prob_AugerK)
                     type_K = type_augerK[index_K]
                     type_fin = 'Auger K' + type_K[1:]
+                    energie_fin = energie_augerK[index_K]
                 
             else:
                 # print("pas de transition de rayon X ni d'électron Auger pour cette lacune: ",lacune)
