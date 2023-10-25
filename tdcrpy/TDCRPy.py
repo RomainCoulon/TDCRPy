@@ -10,8 +10,8 @@ Bureau International des Poids et Mesures
 
 ## IMPORT PYTHON MODULES
 #import tdcrpy.TDCR_model_lib as tl
-# import TDCR_model_lib as tl
-import tdcrpy.TDCR_model_lib as tl
+import TDCR_model_lib as tl
+#import tdcrpy.TDCR_model_lib as tl
 import importlib.resources
 from importlib.resources import files
 import configparser
@@ -45,11 +45,17 @@ def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=F
                 particle_vec[i_part] = "Atom_L"
                 tf1,ef1 = tl.relaxation_atom(daughter_relax,rad,'Atom_L',uncData=uncData)
                 particle_vec.append(tf)
-                particle_vec.append(tf1)
-                particle_vec.append("Atom_M")
                 energy_vec.append(ef)
+                particle_vec.append(tf1)
                 energy_vec.append(ef1)
-                energy_vec.append(0)
+                if tf1 == 'Auger L':
+                    particle_vec.append("Atom_M")
+                    particle_vec.append("Atom_M")
+                    energy_vec.append(0)
+                    energy_vec.append(0)
+                else:
+                    particle_vec.append("Atom_M")
+                    energy_vec.append(0)
                 relaxation = True
             elif tf == "Auger KLX":
                 particle_vec[i_part] = "Atom_L"
@@ -902,17 +908,17 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
         if mode =="dis":
             return efficiency_S, efficiency_D, efficiency_T    
-# L = 1
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# Rad="Fe-55"
-# pmf_1="1"
-# N = 10
-# kB =1.0e-5
-# V = 10
-# mode = "eff"
-# mode2 = "sym"
+L = 1
+TD = 0.977667386529166
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+Rad="Fe-55"
+pmf_1="1"
+N = 10
+kB =1.0e-5
+V = 10
+mode = "eff"
+mode2 = "sym"
 
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
+out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)

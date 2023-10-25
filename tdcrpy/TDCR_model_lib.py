@@ -1522,7 +1522,6 @@ def read_ENSDF(rad, *, z=z_ensdf):
     return  daug_name,Energy,Prob,Type,Incertitude,Prob_str,Prob_augerK,Type_augerK,Energie_augerK  
 
 
-
 def incer(prob,incer):
     '''
 
