@@ -19,6 +19,7 @@ import numpy as np
 from tqdm import tqdm
 
 def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=False):
+         
     for i_part in range(len(particle_vec)):
         relaxation = False
         if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part] or "Atom_M" in particle_vec[i_part]:
@@ -40,22 +41,37 @@ def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=F
                 particle_vec.append(tf)
                 energy_vec.append(ef)
                 relaxation = False
-            elif tf == "Auger K":
+            elif tf == "Auger KLL":
                 particle_vec[i_part] = "Atom_L"
+                tf1,ef1 = tl.relaxation_atom(daughter_relax,rad,'Atom_L',uncData=uncData)
                 particle_vec.append(tf)
+                particle_vec.append(tf1)
                 energy_vec.append(ef)
-                particle_vec.append("Atom_L")
-                energy_vec.append(0)
+                energy_vec.append(ef1)
                 relaxation = True
+            elif tf == "Auger KLX":
+                particle_vec[i_part] = "Atom_L"
+                particle_vec.append("Atom_M")
+                particle_vec.append(tf)
+                energy_vec.append(0)
+                energy_vec.append(ef)
+                relaxation = True    
+            elif tf == "Auger KXY":
+                particle_vec[i_part] = "Atom_M"
+                particle_vec.append("Atom_M")
+                particle_vec.append(tf)
+                energy_vec.append(0)
+                energy_vec.append(ef)
+                relaxation = False    
             elif tf == "Auger L":
                 particle_vec[i_part] = "Atom_M"
-                particle_vec.append(tf)
-                energy_vec.append(ef)
                 particle_vec.append("Atom_M")
+                particle_vec.append(tf)
                 energy_vec.append(0)
+                energy_vec.append(ef)
                 relaxation = False
             else:
-                if Display: print("\t\t untermined x or Auger")
+                if Display: print(f"\t\t untermined x or Auger = {tf}")
                 relaxation = False
     return particle_vec, energy_vec
 
@@ -470,65 +486,66 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             '''
 
             daughter_relax = DaughterVec[index_rad][iDaughter]
+            particle_vec, energy_vec = relaxAtom(daughter_relax,particle_vec,energy_vec,Rad[index_rad],Display=Display,uncData=uncData)
             
-            for i_part in range(len(particle_vec)):
-                relaxation = False
-                if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part] or "Atom_M" in particle_vec[i_part]:
-                    relaxation = True
-                while relaxation:
-                    tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec[i_part],uncData=uncData)
+            # for i_part in range(len(particle_vec)):
+            #     relaxation = False
+            #     if "Atom_K" in particle_vec[i_part] or "Atom_L" in particle_vec[i_part] or "Atom_M" in particle_vec[i_part]:
+            #         relaxation = True
+            #     while relaxation:
+            #         tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec[i_part],uncData=uncData)
                     
-                    if tf == "XKA":
-                        particle_vec[i_part] = "Atom_L"
-                        particle_vec.append(tf)
-                        energy_vec.append(ef)
-                        relaxation = True
-                    elif tf == "XKB":
-                        particle_vec[i_part] = "Atom_M"
-                        particle_vec.append(tf)
-                        energy_vec.append(ef)
-                        relaxation = False
-                    elif tf == "XL":
-                        particle_vec[i_part] = "Atom_M"
-                        particle_vec.append(tf)
-                        energy_vec.append(ef)
-                        relaxation = False
-                    elif tf == "Auger KLL":
-                        particle_vec[i_part] = "Atom_L"
-                        tf1,ef1 = tl.relaxation_atom(daughter_relax,Rad[index_rad],'Atom_L',uncData=uncData)
-                        particle_vec.append(tf)
-                        particle_vec.append(tf1)
-                        energy_vec.append(ef)
-                        energy_vec.append(ef1)
-                        relaxation = True
-                    elif tf == "Auger KLX":
-                        particle_vec[i_part] = "Atom_L"
-                        particle_vec.append("Atom_M")
-                        particle_vec.append(tf)
-                        energy_vec.append(0)
-                        energy_vec.append(ef)
-                        relaxation = True    
-                    elif tf == "Auger KXY":
-                        particle_vec[i_part] = "Atom_M"
-                        particle_vec.append("Atom_M")
-                        particle_vec.append(tf)
-                        energy_vec.append(0)
-                        energy_vec.append(ef)
-                        relaxation = False    
-                    elif tf == "Auger L":
-                        particle_vec[i_part] = "Atom_M"
-                        particle_vec.append("Atom_M")
-                        particle_vec.append(tf)
-                        energy_vec.append(0)
-                        energy_vec.append(ef)
-                        relaxation = False
-                    else:
-                        if Display: print("\t\t untermined x or Auger")
-                        relaxation = False
-                    e_sum += ef
+            #         if tf == "XKA":
+            #             particle_vec[i_part] = "Atom_L"
+            #             particle_vec.append(tf)
+            #             energy_vec.append(ef)
+            #             relaxation = True
+            #         elif tf == "XKB":
+            #             particle_vec[i_part] = "Atom_M"
+            #             particle_vec.append(tf)
+            #             energy_vec.append(ef)
+            #             relaxation = False
+            #         elif tf == "XL":
+            #             particle_vec[i_part] = "Atom_M"
+            #             particle_vec.append(tf)
+            #             energy_vec.append(ef)
+            #             relaxation = False
+            #         elif tf == "Auger KLL":
+            #             particle_vec[i_part] = "Atom_L"
+            #             tf1,ef1 = tl.relaxation_atom(daughter_relax,Rad[index_rad],'Atom_L',uncData=uncData)
+            #             particle_vec.append(tf)
+            #             particle_vec.append(tf1)
+            #             energy_vec.append(ef)
+            #             energy_vec.append(ef1)
+            #             relaxation = True
+            #         elif tf == "Auger KLX":
+            #             particle_vec[i_part] = "Atom_L"
+            #             particle_vec.append("Atom_M")
+            #             particle_vec.append(tf)
+            #             energy_vec.append(0)
+            #             energy_vec.append(ef)
+            #             relaxation = True    
+            #         elif tf == "Auger KXY":
+            #             particle_vec[i_part] = "Atom_M"
+            #             particle_vec.append("Atom_M")
+            #             particle_vec.append(tf)
+            #             energy_vec.append(0)
+            #             energy_vec.append(ef)
+            #             relaxation = False    
+            #         elif tf == "Auger L":
+            #             particle_vec[i_part] = "Atom_M"
+            #             particle_vec.append("Atom_M")
+            #             particle_vec.append(tf)
+            #             energy_vec.append(0)
+            #             energy_vec.append(ef)
+            #             relaxation = False
+            #         else:
+            #             if Display: print("\t\t untermined x or Auger")
+            #             relaxation = False
+            #         e_sum += ef
                     
 
-            particle_vec, energy_vec = relaxAtom(daughter_relax,particle_vec,energy_vec,Rad[index_rad],Display=Display,uncData=uncData)
+
             ## evenement normal
 
             if Display:
@@ -546,62 +563,66 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             if evenement != 1:
                 
                 if Display:print("\n\t ATOMIC RECOMBINATION--Delay\n\t Summary of the atomic relaxation")
-                for i_part in range(len(particle_vec2)):
-                    relaxation = False
-                    if "Atom_K" in particle_vec2[i_part] or "Atom_L" in particle_vec2[i_part] or "Atom_M" in particle_vec2[i_part]:
-                        relaxation = True
-                    while relaxation:
-                        tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec2[i_part],uncData=uncData)
+                
+                particle_vec2, energy_vec2 = relaxAtom(daughter_relax,particle_vec2,energy_vec2,Rad[index_rad],Display=Display,uncData=uncData)
+                
+                
+                # for i_part in range(len(particle_vec2)):
+                #     relaxation = False
+                #     if "Atom_K" in particle_vec2[i_part] or "Atom_L" in particle_vec2[i_part] or "Atom_M" in particle_vec2[i_part]:
+                #         relaxation = True
+                #     while relaxation:
+                #         tf,ef = tl.relaxation_atom(daughter_relax,Rad[index_rad],particle_vec2[i_part],uncData=uncData)
                         
-                        if tf == "XKA":
-                            particle_vec2[i_part] = "Atom_L"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
-                            relaxation = True
-                        elif tf == "XKB":
-                            particle_vec2[i_part] = "Atom_M"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
-                            relaxation = False
-                        elif tf == "XL":
-                            particle_vec2[i_part] = "Atom_M"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
-                            relaxation = False
-                        elif tf == "Auger KLL":
-                            particle_vec2[i_part] = "Atom_L"
-                            tf1,ef1 = tl.relaxation_atom(daughter_relax,Rad[index_rad],'Atom_L',uncData=uncData)
-                            particle_vec2.append(tf)
-                            particle_vec2.append(tf1)
-                            energy_vec2.append(ef)
-                            energy_vec2.append(ef1)
-                            relaxation = True
-                        elif tf == "Auger KLX":
-                            particle_vec2[i_part] = "Atom_L"
-                            particle_vec2.append("Atom_M")
-                            particle_vec2.append(tf)
-                            energy_vec2.append(0)
-                            energy_vec2.append(ef)
-                            relaxation = True 
-                        elif tf == "Auger KXY":
-                            particle_vec2[i_part] = "Atom_M"
-                            particle_vec2.append("Atom_M")
-                            particle_vec2.append(tf)
-                            energy_vec2.append(0)
-                            energy_vec2.append(ef)
-                            relaxation = False         
-                        elif tf == "Auger L":
-                            particle_vec2[i_part] = "Atom_M"
-                            particle_vec2.append(tf)
-                            energy_vec2.append(ef)
-                            relaxation = False
-                        else:
-                            if Display: print("\t\t x ray or Auger electron from X shell")
-                            relaxation = False
-                        e_sum2 += ef
+                #         if tf == "XKA":
+                #             particle_vec2[i_part] = "Atom_L"
+                #             particle_vec2.append(tf)
+                #             energy_vec2.append(ef)
+                #             relaxation = True
+                #         elif tf == "XKB":
+                #             particle_vec2[i_part] = "Atom_M"
+                #             particle_vec2.append(tf)
+                #             energy_vec2.append(ef)
+                #             relaxation = False
+                #         elif tf == "XL":
+                #             particle_vec2[i_part] = "Atom_M"
+                #             particle_vec2.append(tf)
+                #             energy_vec2.append(ef)
+                #             relaxation = False
+                #         elif tf == "Auger KLL":
+                #             particle_vec2[i_part] = "Atom_L"
+                #             tf1,ef1 = tl.relaxation_atom(daughter_relax,Rad[index_rad],'Atom_L',uncData=uncData)
+                #             particle_vec2.append(tf)
+                #             particle_vec2.append(tf1)
+                #             energy_vec2.append(ef)
+                #             energy_vec2.append(ef1)
+                #             relaxation = True
+                #         elif tf == "Auger KLX":
+                #             particle_vec2[i_part] = "Atom_L"
+                #             particle_vec2.append("Atom_M")
+                #             particle_vec2.append(tf)
+                #             energy_vec2.append(0)
+                #             energy_vec2.append(ef)
+                #             relaxation = True 
+                #         elif tf == "Auger KXY":
+                #             particle_vec2[i_part] = "Atom_M"
+                #             particle_vec2.append("Atom_M")
+                #             particle_vec2.append(tf)
+                #             energy_vec2.append(0)
+                #             energy_vec2.append(ef)
+                #             relaxation = False         
+                #         elif tf == "Auger L":
+                #             particle_vec2[i_part] = "Atom_M"
+                #             particle_vec2.append(tf)
+                #             energy_vec2.append(ef)
+                #             relaxation = False
+                #         else:
+                #             if Display: print("\t\t x ray or Auger electron from X shell")
+                #             relaxation = False
+                #         e_sum2 += ef
                 
 
-                particle_vec2, energy_vec2 = relaxAtom(daughter_relax,particle_vec2,energy_vec2,Rad[index_rad],Display=Display,uncData=uncData)
+                
 
                 if Display:
                     print("\n\t ATOMIC RECOMBINATION--Delay")
@@ -879,17 +900,17 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
         if mode =="dis":
             return efficiency_S, efficiency_D, efficiency_T    
-L = 1
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Cd-109"
-pmf_1="1"
-N = 10
-kB =1.0e-5
-V = 10
-mode = "eff"
-mode2 = "sym"
+# L = 1
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# Rad="Fe-55"
+# pmf_1="1"
+# N = 10
+# kB =1.0e-5
+# V = 10
+# mode = "eff"
+# mode2 = "sym"
 
-out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
+# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
