@@ -58,6 +58,14 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_
     file_ensdf = data_path / 'All-nuclides_Ensdf.zip'
 z_ensdf = zf.ZipFile(file_ensdf)
 
+# import ENDF photonelectric effet data
+with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
+#with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+    file_endf_ph = data_path / 'photo-ENDF.zip'
+z_endf_ph = zf.ZipFile(file_endf_ph)
+
+
+
 # import photon interaction data (MCNP6 calculation) 
 with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as data_path:
 #with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
@@ -1675,6 +1683,243 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
         type_fin = 'NON'
         energie_fin = 0
     return type_fin,energie_fin
+
+
+def format_modif(nombre):
+    if '-' in nombre:
+        index_ = nombre.index('-')
+    elif '+' in nombre:
+        index_ = nombre.index('+')
+    nombre_mod = nombre[:index_]+'E'+nombre[index_:]
+    return nombre_mod
+
+
+
+
+def reperer_energie_index(e,energie_vec):
+    for i in range(len(energie_vec)):
+        if e < energie_vec[i]:
+            index_ = i
+            break
+    return index_-1
+
+
+
+
+def read_ENDF_photon(atom,z=z_endf_ph):
+    
+    if atom == 'H':
+        name = "photoat-001_H_000.txt"
+    elif atom == 'C':
+        name = "photoat-006_C_000.txt"
+    elif atom == 'O':
+        name = "photoat-008_O_000.txt"
+    elif atom == 'N':
+        name = "photoat-007_N_000.txt"
+    elif atom == 'P':
+        name = "photoat-015_P_000.txt"    
+    elif atom == 'Cl':
+        name = "photoat-017_Cl_000.txt"
+        
+    with z.open(name) as file:
+        data = file.readlines()
+        taille = np.size(data)
+        for i in range(taille):
+                data[i] = str(data[i])
+                data[i] = data[i].replace("b'","")
+                data[i] = data[i].replace("\\n'","")
+                data[i] = data[i].replace("\\r","")
+        for i in range(taille):
+            data[i] = data[i].split()
+            
+    # print(data)        
+    section = []
+    Energie = []
+    Cross_section = []
+    Binding_e = []
+    
+    for i in range(len(data)):
+        if data[i][-1] == '1': 
+            if data[i][-2][-3:] == '522':
+                section.append(i)
+            elif data[i][-2][-3:] == '534':
+                section.append(i)
+            elif data[i][-2][-3:] == '535':
+                section.append(i)
+            elif data[i][-2][-3:] == '536':
+                section.append(i)
+            elif data[i][-2][-3:] == '537':
+                section.append(i)
+            elif data[i][-2][-3:] == '538':
+                section.append(i)
+            elif data[i][-2][-3:] == '539':
+                section.append(i)
+            elif data[i][-2][-3:] == '540':
+                section.append(i)
+            elif data[i][-2][-5:] == '27502':
+                section.append(i-1)    
+    
+            
+    
+    for i in range(len(section)-1):
+        start = section[i]+3 
+        end = section[i+1]-1
+        # print(data[start])
+        # print(data[end])
+        if i!=0:
+            bind_e = format_modif(data[start][0])
+            Binding_e.append(round(float(bind_e)/1000,5))
+        energie = []
+        cross_section = []
+        for j in range(start,end):
+            energie_str_1 = format_modif(data[j][0])
+            energie.append(round(float(energie_str_1)/1000,5))
+            cross_sec_str_1 = format_modif(data[j][1])
+            cross_section.append(float(cross_sec_str_1))
+            if len(data[j]) == 6:
+                energie_str_2 = format_modif(data[j][2])
+                energie.append(round(float(energie_str_2)/1000,5))
+                cross_sec_str_2 = format_modif(data[j][3])
+                cross_section.append(float(cross_sec_str_2))
+            elif len(data[j]) == 8:
+                energie_str_2 = format_modif(data[j][2])
+                energie.append(round(float(energie_str_2)/1000,5))
+                energie_str_3 = format_modif(data[j][4])
+                energie.append(round(float(energie_str_3)/1000,5))
+                cross_sec_str_2 = format_modif(data[j][3])
+                cross_section.append(float(cross_sec_str_2))
+                cross_sec_str_3 = format_modif(data[j][5])
+                cross_section.append(float(cross_sec_str_3))
+        
+        
+        Energie.append(energie)
+        Cross_section.append(cross_section)
+            
+    return  Binding_e, Energie, Cross_section
+
+
+
+
+def interaction_scintillation(e_p):
+    p_atom = np.array([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071])
+    atom = ['H','C','N','O','P','Cl']
+    # sampling atom 
+    
+    binding_H, energie_H, cross_section_H = read_ENDF_photon('H')
+    binding_C, energie_C, cross_section_C = read_ENDF_photon('C')
+    binding_N, energie_N, cross_section_N = read_ENDF_photon('N')
+    binding_O, energie_O, cross_section_O = read_ENDF_photon('O')
+    binding_P, energie_P, cross_section_P = read_ENDF_photon('P')
+    binding_Cl, energie_Cl, cross_section_Cl = read_ENDF_photon('Cl')
+    binding_T = [binding_H,binding_C,binding_N,binding_O,binding_P,binding_Cl]
+    
+    ###  probability of atoms
+    cross_t = []
+    proba_element = []
+    ## H 
+    index_H_t = reperer_energie_index(e_p,energie_H[0])
+    cross_t.append(cross_section_H[0][index_H_t])
+    
+    ## C
+    index_C_t = reperer_energie_index(e_p,energie_C[0])
+    cross_t.append(cross_section_C[0][index_C_t])  
+    
+    ## N
+    index_N_t = reperer_energie_index(e_p,energie_N[0])
+    cross_t.append(cross_section_N[0][index_N_t])
+    
+    ## O
+    index_O_t = reperer_energie_index(e_p,energie_O[0])
+    cross_t.append(cross_section_O[0][index_O_t])
+    
+    ## P
+    index_P_t = reperer_energie_index(e_p,energie_P[0])
+    cross_t.append(cross_section_P[0][index_P_t])
+    
+    ## Cl
+    index_Cl_t = reperer_energie_index(e_p,energie_Cl[0])
+    cross_t.append(cross_section_Cl[0][index_Cl_t])
+    
+    cross_t = np.array(cross_t)
+    p_t_somme = np.sum(p_atom*cross_t)
+    
+    p_H = cross_t[0]*p_atom[0]/p_t_somme
+    p_C = cross_t[1]*p_atom[1]/p_t_somme
+    p_N = cross_t[2]*p_atom[2]/p_t_somme 
+    p_O = cross_t[3]*p_atom[3]/p_t_somme
+    p_P = cross_t[4]*p_atom[4]/p_t_somme
+    p_Cl = cross_t[5]*p_atom[5]/p_t_somme
+
+    p_T = [p_H,p_C,p_N,p_O,p_P,p_Cl]
+    
+    ## definir l'element
+    index_element = sampling(p_T)
+    
+    element = atom[index_element]
+    
+    ### probability of couche
+    for i in range(len(binding_T[index_element])):
+        if e_p > binding_T[index_element][i]:
+            index_couche = i
+            break
+        elif e_p < binding_T[index_element][-1]:
+            print("pas de l'effet photonelectrique")
+            
+            
+    if index_element == 0:
+        cross_section = cross_section_H
+        energie = energie_H
+        binding_e = binding_H
+    elif  index_element == 1:
+        cross_section = cross_section_C
+        energie = energie_C
+        binding_e = binding_C
+    elif  index_element == 2:
+        cross_section = cross_section_N
+        energie = energie_N
+        binding_e = binding_N
+    elif  index_element == 3:
+        cross_section = cross_section_O
+        energie = energie_O
+        binding_e = binding_O
+    elif  index_element == 4:
+        cross_section = cross_section_P
+        energie = energie_P
+        binding_e = binding_P
+    elif  index_element == 5:
+        cross_section = cross_section_Cl
+        energie = energie_Cl
+        binding_e = binding_Cl              
+    
+    cross_couche = []    
+    if index_couche+1 != len(energie)-1:
+        for i in range(index_couche+1,len(energie)):
+            index_cross = reperer_energie_index(e_p, energie[i])
+            cross_couche.append(cross_section[i][index_cross])
+            
+    elif index_couche+1 == len(energie)-1:
+        index_cross = reperer_energie_index(e_p, energie[-1])
+        cross_couche.append(cross_section[-1][index_cross])   
+        
+    cross_couche = np.array(cross_couche)    
+    cross_sec_T = np.sum(cross_couche)
+    p_couche = cross_couche/cross_sec_T
+
+    index_couche_ph = sampling(p_couche)
+    couche_ph =  index_couche + index_couche_ph + 1
+    
+    e_ele_emis = e_p - binding_e[index_couche+index_couche_ph]
+    
+    if couche_ph == 1:
+        lacune = 'Atom_K'
+    elif couche_ph == 2 or couche_ph == 3 or couche_ph == 4:
+        lacune = 'Atom_L'
+    else:
+        lacune = 'Atom_M'
+   
+    return e_ele_emis,lacune,element
+
+
 
 
 def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
