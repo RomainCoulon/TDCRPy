@@ -64,7 +64,11 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_
     file_endf_ph = data_path / 'photo-ENDF.zip'
 z_endf_ph = zf.ZipFile(file_endf_ph)
 
-
+# import ENDF atomic relax data
+with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
+#with importlib.resources.path('tdcrpy', 'decayData') as data_path:
+    file_endf_ar = data_path / 'atom-ENDF-VII0.zip'
+z_endf_ar = zf.ZipFile(file_endf_ar)
 
 # import photon interaction data (MCNP6 calculation) 
 with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as data_path:
@@ -1817,7 +1821,7 @@ def interaction_scintillation(e_p):
     
     ###  probability of atoms
     cross_t = []
-    proba_element = []
+    #proba_element = []
     ## H 
     index_H_t = reperer_energie_index(e_p,energie_H[0])
     cross_t.append(cross_section_H[0][index_H_t])
@@ -1914,12 +1918,260 @@ def interaction_scintillation(e_p):
     
     if couche_ph == 1:
         lacune = 'Atom_K'
-    elif couche_ph == 2 or couche_ph == 3 or couche_ph == 4:
-        lacune = 'Atom_L'
+    elif couche_ph == 2:
+        lacune = 'Atom_L1'
+    elif couche_ph == 3:
+        lacune = 'Atom_L2'
+    elif couche_ph == 4:
+        lacune = 'Atom_L3'    
     else:
         lacune = 'Atom_M'
    
     return e_ele_emis,lacune,element
+
+
+
+def read_ENDF_RA(atom,z=z_endf_ar):
+    if atom == 'H':
+        name = "atom-001_H_000.endf"
+    if atom == 'C':
+        name = "atom-006_C_000.endf"
+    elif atom == 'N':
+        name = "atom-007_N_000.endf"
+    elif atom == 'O':
+        name = "atom-008_O_000.endf"
+    elif atom == 'P':
+        name = "atom-015_P_000.endf"
+    elif atom == 'Cl':
+        name = "atom-017_Cl_000.endf"   
+        
+        
+    with z.open(name) as file:
+        data = file.readlines()
+        taille = np.size(data)
+        for i in range(taille):
+            data[i] = str(data[i])
+            data[i] = data[i].replace("b'","")
+            data[i] = data[i].replace("\\n'","")    
+        for i in range(taille):
+            data[i] = data[i].split()
+            
+    section = []
+    Type = []
+    Energie = []
+    Prob = []        
+    couche = []
+    # binding_e = []
+    
+    for i,p in enumerate(data):
+        if p[-1] == '099999':section.append(i)
+        
+    for i in range(section[0],section[1]):
+           if data[i][4] != '0' and data[i][4] != '0.000000+0':
+               if data[i][0] == '1.000000+0' or data[i][0] == '2.000000+0' or data[i][0] == '3.000000+0' or data[i][0] == '4.000000+0' or data[i][0] == '5.000000+0':
+                   couche.append(i)
+               # elif data[i][0] == '2.000000+0' or data[i][0] == '3.000000+0' or data[i][0] == '4.000000+0' or data[i][0] == '5.000000+0' or data[i][0] == '6.000000+0' or data[i][0] == '7.000000+0':
+               #     couche.append(i)
+
+    
+    for j in range(len(couche)):
+        type_ = []
+        energie = []
+        prob = []
+        # n = couche[j]
+        # b_e = format_modif(data[n+1][0])
+        # binding_e.append(round(float(b_e)/1000,5))
+        
+        if j == len(couche)-1:
+            break
+        else: 
+            for i in range(couche[j]+2,couche[j+1]):
+                #energy = data[i][2][:8]+'E'+data[i][2][-2:]
+                energy = format_modif(data[i][2])
+                energie.append(round(float(energy)/1000,5))
+                #probability = data[i][3][:8]+'E'+data[i][3][-2:]
+                probability = format_modif(data[i][3])
+                prob.append(float(probability))
+                if j == 0: 
+                    name_s = 'K'
+                elif j == 1:
+                    name_s = 'L1'
+                elif j == 2:
+                    name_s = 'L2'
+                elif j == 3:
+                    name_s = 'L3'    
+                
+                if data[i][0] == '2.000000+0':
+                    name_m = 'L1'
+                elif data[i][0] == '3.000000+0':
+                    name_m = 'L2'
+                elif data[i][0] == '4.000000+0':
+                    name_m = 'L3'
+                elif data[i][0] == '5.000000+0':
+                    name_m = 'M1'
+                elif data[i][0] == '6.000000+0':
+                    name_m = 'M2'
+                elif data[i][0] == '7.000000+0':
+                    name_m = 'M3'
+                # elif data[i][0] == '8.000000+0':
+                #     name_m = 'M4'
+                # elif data[i][0] == '9.000000+0':
+                #     name_m = 'M5' 
+                
+                if data[i][1] == '2.000000+0':
+                    name_e = 'L1'
+                elif data[i][1] == '3.000000+0':
+                    name_e = 'L2'
+                elif data[i][1] == '4.000000+0':
+                    name_e = 'L3'
+                elif data[i][1] == '5.000000+0':
+                    name_e = 'M1'
+                elif data[i][1] == '6.000000+0':
+                    name_e = 'M2'
+                elif data[i][1] == '7.000000+0':
+                    name_e = 'M3'
+                # elif data[i][1] == '8.000000+0':
+                #     name_e = 'M4'
+                # elif data[i][1] == '9.000000+0':
+                #     name_e = 'M5'    
+                    
+                if data[i][1] == '0.000000+0':    # rayon X
+                    type_.append('X'+name_s+name_m)
+                else:
+                    type_.append('Auger '+name_s+name_m+name_e)
+                       
+            Type.append(type_)
+            Energie.append(energie)
+            Prob.append(prob)                    
+                
+    return Type, Energie, Prob           
+
+
+def relaxation_atom_ph(lacune,element):
+    Type_,Energie,Prob = read_ENDF_RA(element)
+    relax = False
+    posi_lacune = []
+    posi_lacune.append(lacune)
+    particule_emise = []
+    energie_par_emise = []
+    
+    if element == 'H':
+        print("pas de relaxation")
+    else:
+        for i,p in enumerate(posi_lacune):
+            relax = False
+            if p == 'Atom_K' or 'Atom_L' in p :
+                relax = True
+                
+            while relax: 
+                if posi_lacune[i] == 'Atom_K':
+                    type_ = Type_[0]
+                    prob = Prob[0]
+                    energie_ = Energie[0]
+                    
+                if element == 'P' or element == 'Cl':    
+                    if posi_lacune[i] == 'Atom_L1':
+                        type_ = Type_[1]
+                        prob = Prob[1]
+                        energie_ = Energie[1]
+                    elif posi_lacune[i] == 'Atom_L2':
+                        type_ = Type_[2]
+                        prob = Prob[2] 
+                        energie_ = Energie[2]
+                    elif posi_lacune[i] == 'Atom_L3':
+                        type_ = Type_[3]
+                        prob = Prob[3]
+                        energie_ = Energie[3]
+                else:
+                    if posi_lacune[i] != 'Atom_K':
+                        break
+                #print(type_,prob)
+                index_ = sampling(prob)
+                particule = type_[index_]
+                particule_emise.append(particule)
+                energie_par_emise.append(energie_[index_])
+                
+                if 'X' in particule:
+                    if particule[-2:] == 'L1':
+                        posi_lacune[i] = 'Atom_L1'
+                        relax = True
+                    elif particule[-2:] == 'L2':
+                        posi_lacune[i] = 'Atom_L2'
+                        relax = True
+                    elif particule[-2:] == 'L3':
+                        posi_lacune[i] = 'Atom_L3'
+                        relax = True 
+                    elif 'M' in particule :
+                        posi_lacune[i] = 'Atom_M'
+                        relax = False 
+                        
+                elif 'Auger' in particule:
+                    if 'K' in particule:
+                        if particule[-4:-2] == 'L1':
+                            posi_lacune[i] = 'Atom_L1'
+                            relax = True
+                            if particule[-2:] == 'L1':
+                                posi_lacune.append('Atom_L1')
+                            elif particule[-2:] == 'L2':
+                                posi_lacune.append('Atom_L2')
+                            elif particule[-2:] == 'L3':
+                                posi_lacune.append('Atom_L3')
+                            elif 'M' in particule[-2:]:
+                                posi_lacune.append('Atom_M')
+                        elif particule[-4:-2] == 'L2':
+                            posi_lacune[i] = 'Atom_L2'
+                            relax = True
+                            if particule[-2:] == 'L2':
+                                posi_lacune.append('Atom_L2')
+                            elif particule[-2:] == 'L3':
+                                posi_lacune.append('Atom_L3')
+                            elif 'M' in particule[-2:]:
+                                posi_lacune.append('Atom_M') 
+                        elif particule[-4:-2] == 'L3':
+                            posi_lacune[i] = 'Atom_L3'
+                            relax = True
+                            if particule[-2:] == 'L3':
+                                posi_lacune.append('Atom_L3')
+                            elif 'M' in particule[-2:]:
+                                posi_lacune.append('Atom_M')        
+                        elif 'M' in particule[-4:-2]:
+                            posi_lacune[i] = 'Atom_M'
+                            posi_lacune.append('Atom_M')
+                            relax = False
+                    elif particule[-6:-4] == 'L1':
+                        if particule[-4:-2] == 'L2':
+                            posi_lacune[i] = 'Atom_L2'
+                            posi_lacune.append('Atom_M')
+                            relax = True
+                        elif particule[-4:-2] == 'L3':
+                            posi_lacune[i] = 'Atom_L3'
+                            posi_lacune.append('Atom_M')
+                            relax = True   
+                        elif 'M' in particule[-4:-2]:
+                            posi_lacune[i] = 'Atom_M'
+                            posi_lacune.append('Atom_M')
+                            relax = False
+                    elif particule[-6:-4] == 'L2':   
+                        if particule[-4:-2] == 'L3':
+                            posi_lacune[i] = 'Atom_L3'
+                            posi_lacune.append('Atom_M')
+                            relax = True
+                        elif 'M' in particule[-4:-2]:
+                            posi_lacune[i] = 'Atom_M'
+                            posi_lacune.append('Atom_M')
+                            relax = False
+                    elif particule[-6:-4] == 'L3': 
+                        posi_lacune[i] = 'Atom_M'
+                        posi_lacune.append('Atom_M')
+                        relax = False
+    par_emise = []
+    for i in range(len(particule_emise)):
+        if 'Auger' in particule_emise[i]:
+            par_emise.append('electron')
+        elif 'X' in particule_emise[i]:
+            par_emise.append('photon')
+    
+    return particule_emise,energie_par_emise,posi_lacune,par_emise  
 
 
 

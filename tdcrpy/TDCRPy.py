@@ -690,7 +690,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     if Ei == Ed: # effet photoelectrique
                         # particle_vec.append("Atom_K")
                         # particle_vec.append(0)
-                        energy_vec[i]=Ed
+                        energie_ele_emis,lacune_ph,element_ph = tl.interaction_scintillation(Ed)
+                        particule_emise_ph,energie_par_emise_ph,posi_lacune_ph = tl.relaxation_atom_ph(lacune_ph,element_ph)
+                        energy_vec[i]=energie_ele_emis
+                        energy_vec = energy_vec + energie_par_emise_ph
                     else: # diffusion Compton
                         energy_vec[i]=Ed
                     particle_vec[i] = "electron"
