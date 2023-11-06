@@ -91,6 +91,7 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as dat
     fe6 = data_path / 'matrice/fichier/matrice_16ml-beta-_2000_10000k.txt' # electron-16ml-2000-10000keV-niveau 2
     fe7 = data_path / 'matrice/fichier/matrice_13ml-beta-_1_200k.txt' # electron-13ml-1-200keV-niveau 0
     fe8 = data_path / 'matrice/fichier/matrice_13ml-beta-_200_2000k.txt' # electron-13ml-200-2000keV-niveau 1
+    fe9 = data_path / 'matrice/fichier/matrice_13ml-beta-_2000_10000k.txt' # electron-13ml-200-2000keV-niveau 1
     fe = data_path / 'matrice/fichier/E_depose.txt' # electron-10ml-énergie-niveau 'e'   
 
 # import beta spectra calculated for the analytical model (BetaShape + MCNP6 calculation) 
@@ -1014,6 +1015,7 @@ Matrice13_p_2 = read_matrice(fp8,1)
 Matrice13_p_3 = read_matrice(fp9,2)
 Matrice13_e_1 = read_matrice(fe7,0)
 Matrice13_e_2 = read_matrice(fe8,1)
+Matrice13_e_3 = read_matrice(fe9,2)
 
 Matrice_e = read_matrice(fe,'e')
 
@@ -1214,7 +1216,7 @@ def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_
     return result
 
 
-def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,matrice16_2=Matrice16_e_2,matrice16_3=Matrice16_e_3,ed=Matrice_e):
+def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,matrice16_2=Matrice16_e_2,matrice16_3=Matrice16_e_3, matrice13_1=Matrice13_e_1, matrice13_2=Matrice13_e_2, matrice13_3=Matrice13_e_3, ed=Matrice_e):
     """ This function samples the energy deposited by an electron in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
