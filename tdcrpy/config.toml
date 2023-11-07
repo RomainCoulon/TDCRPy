@@ -18,12 +18,20 @@ nE_electron = 1000
 nE_alpha = 1000
 
 ## PROPERTIES OF THE SCINTILLATOR
+## Ultima Gold
 # density of the scintillator (LS cocktail + aqueous solution)
 density = 0.96
 # mean charge number of the scintillator (LS cocktail + aqueous solution)
 Z = 5.2
 # mean mass number of the scintillator (LS cocktail + aqueous solution)
 A = 11.04
+# atomic probability
+pH = 0.578772
+pC = 0.338741
+pN = 0.000302
+pO = 0.082022
+pP = 0.000092
+pCl = 0.000071
 
 ## PROPERTIES OF THE COUNTER
 # Coincidence resolving time (ns)

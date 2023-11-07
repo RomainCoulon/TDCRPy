@@ -71,6 +71,8 @@ tdcrpy/Quenching/inputVecteurElectron.txt
 tdcrpy/decayData/All-nuclides_BetaShape.zip
 tdcrpy/decayData/All-nuclides_Ensdf.zip
 tdcrpy/decayData/All-nuclides_PenNuc.zip
+tdcrpy/decayData/atom-ENDF-VII0.zip
+tdcrpy/decayData/photo-ENDF.zip
 tdcrpy/docs/_build/html/genindex.html
 tdcrpy/docs/_build/html/index.html
 tdcrpy/docs/_build/html/search.html

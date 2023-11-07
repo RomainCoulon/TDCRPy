@@ -1161,6 +1161,9 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
         if v == 10: 
             matrice = matrice10_2[1:,index]
             matrice0 = matrice10_2[0,index]
+        elif v == 13:
+            matrice = matrice13_2[1:,index]
+            matrice0 = matrice13_2[0,index]         
         elif v == 16:
             matrice = matrice16_2[1:,index]
             matrice0 = matrice16_2[0,index]
@@ -1174,6 +1177,9 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
         if v == 10: 
             matrice = matrice10_3[1:,index]
             matrice0 = matrice10_3[0,index]
+        elif v == 13:
+            matrice = matrice13_3[1:,index]
+            matrice0 = matrice13_3[0,index]   
         elif v == 16:
             matrice = matrice16_3[1:,index]
             matrice0 = matrice16_3[0,index]
@@ -1252,6 +1258,9 @@ def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
         if v == 10: 
             matrice = matrice10_1[1:,index]
             matrice0 = matrice10_1[0,index]
+        if v == 13: 
+            matrice = matrice13_1[1:,index]
+            matrice0 = matrice13_1[0,index]        
         elif v == 16:
             matrice = matrice16_1[1:,index]
             matrice0 = matrice16_1[0,index]
@@ -1265,6 +1274,9 @@ def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
         if v == 10: 
             matrice = matrice10_2[1:,index]
             matrice0 = matrice10_2[0,index]
+        if v == 13: 
+            matrice = matrice13_2[1:,index]
+            matrice0 = matrice13_2[0,index]  
         elif v == 16:
             matrice = matrice16_2[1:,index]
             matrice0 = matrice16_2[0,index]
@@ -1278,6 +1290,9 @@ def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
         if v == 10: 
             matrice = matrice10_3[1:,index]
             matrice0 = matrice10_3[0,index]
+        if v == 13: 
+            matrice = matrice13_3[1:,index]
+            matrice0 = matrice13_3[0,index]  
         elif v == 16:
             matrice = matrice16_3[1:,index]
             matrice0 = matrice16_3[0,index]
@@ -1713,6 +1728,26 @@ def reperer_energie_index(e,energie_vec):
 
 
 def read_ENDF_photon(atom,z=z_endf_ph):
+    """
+    Read ENDF files to get photoelectric cross-sections on eneergies
+
+    Parameters
+    ----------
+    atom : string
+        atom ('H', 'C', ...) of the scintillator.
+    z : string, optional
+        database. The default is z_endf_ph.
+
+    Returns
+    -------
+    Binding_e : list of floats
+        Binding energies (keV).
+    Energie : list of floats
+        Energies of the incident photons (keV).
+    Cross_section : list of floats
+        cross_sections (barn)
+
+    """
     
     if atom == 'H':
         name = "photoat-001_H_000.txt"
@@ -1739,30 +1774,30 @@ def read_ENDF_photon(atom,z=z_endf_ph):
             data[i] = data[i].split()
             
     # print(data)        
-    section = []
+    section = [] # position of different parts (total, K, L1 L2 L3, M1, M2, M3 shells)
     Energie = []
     Cross_section = []
     Binding_e = []
     
     for i in range(len(data)):
-        if data[i][-1] == '1': 
-            if data[i][-2][-3:] == '522':
+        if data[i][-1] == '1': # 1st line of each part
+            if data[i][-2][-3:] == '522': # total cross section
                 section.append(i)
-            elif data[i][-2][-3:] == '534':
+            elif data[i][-2][-3:] == '534': # K
                 section.append(i)
-            elif data[i][-2][-3:] == '535':
+            elif data[i][-2][-3:] == '535': # L1
                 section.append(i)
-            elif data[i][-2][-3:] == '536':
+            elif data[i][-2][-3:] == '536': # L2
                 section.append(i)
-            elif data[i][-2][-3:] == '537':
+            elif data[i][-2][-3:] == '537': # L3
+                section.append(i) 
+            elif data[i][-2][-3:] == '538': # M1
                 section.append(i)
-            elif data[i][-2][-3:] == '538':
+            elif data[i][-2][-3:] == '539': # M2
                 section.append(i)
-            elif data[i][-2][-3:] == '539':
+            elif data[i][-2][-3:] == '540': # M3
                 section.append(i)
-            elif data[i][-2][-3:] == '540':
-                section.append(i)
-            elif data[i][-2][-5:] == '27502':
+            elif data[i][-2][-5:] == '27502': # end of M3
                 section.append(i-1)    
     
             
@@ -1773,8 +1808,8 @@ def read_ENDF_photon(atom,z=z_endf_ph):
         # print(data[start])
         # print(data[end])
         if i!=0:
-            bind_e = format_modif(data[start][0])
-            Binding_e.append(round(float(bind_e)/1000,5))
+            bind_e = format_modif(data[start][0]) # to format exponent
+            Binding_e.append(round(float(bind_e)/1000,5)) # convert in keV
         energie = []
         cross_section = []
         for j in range(start,end):
@@ -1807,7 +1842,25 @@ def read_ENDF_photon(atom,z=z_endf_ph):
 
 
 def interaction_scintillation(e_p):
-    p_atom = np.array([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071])
+    """
+    Simulation of the photoelectric interaction
+
+    Parameters
+    ----------
+    e_p : float
+        energy of the photons that have porduced a photoelectric event (keV).
+
+    Returns
+    -------
+    e_ele_emis : float
+        energy of the photelectron (keV).
+    lacune : string
+        shell of the missing electron ('Atom_K', ...).
+    element : string
+        target atom ('H', ...).
+
+    """
+    p_atom = np.array([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071]) # atom abondance in the scintillator
     atom = ['H','C','N','O','P','Cl']
     # sampling atom 
     
@@ -1821,7 +1874,7 @@ def interaction_scintillation(e_p):
     
     ###  probability of atoms
     cross_t = []
-    #proba_element = []
+    #proba_element = [] get the corresponding total cross section
     ## H 
     index_H_t = reperer_energie_index(e_p,energie_H[0])
     cross_t.append(cross_section_H[0][index_H_t])
@@ -1856,7 +1909,7 @@ def interaction_scintillation(e_p):
     p_P = cross_t[4]*p_atom[4]/p_t_somme
     p_Cl = cross_t[5]*p_atom[5]/p_t_somme
 
-    p_T = [p_H,p_C,p_N,p_O,p_P,p_Cl]
+    p_T = [p_H,p_C,p_N,p_O,p_P,p_Cl] # probability distribution of possible targets
     
     ## definir l'element
     index_element = sampling(p_T)
@@ -1871,7 +1924,7 @@ def interaction_scintillation(e_p):
         elif e_p < binding_T[index_element][-1]:
             print("pas de l'effet photonelectrique")
             
-            
+    # get the data for each the selected element        
     if index_element == 0:
         cross_section = cross_section_H
         energie = energie_H
@@ -1897,11 +1950,12 @@ def interaction_scintillation(e_p):
         energie = energie_Cl
         binding_e = binding_Cl              
     
+    
     cross_couche = []    
     if index_couche+1 != len(energie)-1:
         for i in range(index_couche+1,len(energie)):
             index_cross = reperer_energie_index(e_p, energie[i])
-            cross_couche.append(cross_section[i][index_cross])
+            cross_couche.append(cross_section[i][index_cross]) # all possible bub-shells
             
     elif index_couche+1 == len(energie)-1:
         index_cross = reperer_energie_index(e_p, energie[-1])
@@ -1909,12 +1963,12 @@ def interaction_scintillation(e_p):
         
     cross_couche = np.array(cross_couche)    
     cross_sec_T = np.sum(cross_couche)
-    p_couche = cross_couche/cross_sec_T
+    p_couche = cross_couche/cross_sec_T # probability density of sub-shells
 
-    index_couche_ph = sampling(p_couche)
-    couche_ph =  index_couche + index_couche_ph + 1
+    index_couche_ph = sampling(p_couche) # sample the sub-shell
+    couche_ph =  index_couche + index_couche_ph + 1 # index of the shell in the energy vector
     
-    e_ele_emis = e_p - binding_e[index_couche+index_couche_ph]
+    e_ele_emis = e_p - binding_e[index_couche+index_couche_ph] # energy of the photoelectron
     
     if couche_ph == 1:
         lacune = 'Atom_K'
@@ -1930,8 +1984,27 @@ def interaction_scintillation(e_p):
     return e_ele_emis,lacune,element
 
 
-
 def read_ENDF_RA(atom,z=z_endf_ar):
+    """
+    Read ENDF data atom relaxation  
+
+    Parameters
+    ----------
+    atom : string
+        atom ("H").
+    z : sting, optional
+        Ddatabase path. The default is z_endf_ar.
+
+    Returns
+    -------
+    Type : list of strings
+        list of type of atomic transition (x or Auger).
+    Energie : list of floats
+        list of energies of the emitted particles (x or Auger) in keV.
+    Prob : list of strings
+        list of probabilities of each transition.
+
+    """
     if atom == 'H':
         name = "atom-001_H_000.endf"
     if atom == 'C':
@@ -1963,10 +2036,10 @@ def read_ENDF_RA(atom,z=z_endf_ar):
     couche = []
     # binding_e = []
     
-    for i,p in enumerate(data):
+    for i,p in enumerate(data): # end of each parts
         if p[-1] == '099999':section.append(i)
         
-    for i in range(section[0],section[1]):
+    for i in range(section[0],section[1]): # get the data of each shells
            if data[i][4] != '0' and data[i][4] != '0.000000+0':
                if data[i][0] == '1.000000+0' or data[i][0] == '2.000000+0' or data[i][0] == '3.000000+0' or data[i][0] == '4.000000+0' or data[i][0] == '5.000000+0':
                    couche.append(i)
@@ -2000,7 +2073,7 @@ def read_ENDF_RA(atom,z=z_endf_ar):
                     name_s = 'L2'
                 elif j == 3:
                     name_s = 'L3'    
-                
+                # electron that have filled the hole
                 if data[i][0] == '2.000000+0':
                     name_m = 'L1'
                 elif data[i][0] == '3.000000+0':
@@ -2018,6 +2091,7 @@ def read_ENDF_RA(atom,z=z_endf_ar):
                 # elif data[i][0] == '9.000000+0':
                 #     name_m = 'M5' 
                 
+                # electron emitted Auger  
                 if data[i][1] == '2.000000+0':
                     name_e = 'L1'
                 elif data[i][1] == '3.000000+0':
@@ -2048,6 +2122,30 @@ def read_ENDF_RA(atom,z=z_endf_ar):
 
 
 def relaxation_atom_ph(lacune,element,v):
+    """
+    Simulation of the atomic relaxation
+
+    Parameters
+    ----------
+    lacune : sting
+        Shell of the missing electron ("Atom_K", ...).
+    element : string
+        atom ("H", ...).
+    v : float
+        volume of the scintillator (mL).
+
+    Returns
+    -------
+    particule_emise : list of strings
+        list of emited particles.
+    energie_par_emise : list of floats
+        list of the energies related to emitted particles.
+    posi_lacune : list of strings
+        list of remaining missing electrons.
+    par_emise : list of strings
+        format of emitted particles not specific to their origine (only 'electron', 'photon').
+
+    """
     Type_,Energie,Prob = read_ENDF_RA(element)
     relax = False
     posi_lacune = []

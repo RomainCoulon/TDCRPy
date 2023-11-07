@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "1.6.3"
+VERSION = "1.7.2"
 DESCRIPTION = "TDCR model"
 
 with open("README.md", "r") as f:
@@ -40,6 +40,8 @@ setup(
 	    	'decayData/All-nuclides_PenNuc.zip',
         	'decayData/All-nuclides_BetaShape.zip',
 		'decayData/All-nuclides_Ensdf.zip',
+		'decayData/photo-ENDF.zip',
+		'decayData/atom-ENDF-VII0.zip',
         	'Quenching/alpha_toulene.txt',
 		'Quenching/TandataUG.txt',
 		'Quenching/QuenchEnergy*.txt',
