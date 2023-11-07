@@ -691,9 +691,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         # particle_vec.append("Atom_K")
                         # particle_vec.append(0)
                         energie_ele_emis,lacune_ph,element_ph = tl.interaction_scintillation(Ed)
-                        particule_emise_ph,energie_par_emise_ph,posi_lacune_ph = tl.relaxation_atom_ph(lacune_ph,element_ph)
+                        particule_emise_ph,energie_par_emise_ph,posi_lacune_ph,par_emise_ph = tl.relaxation_atom_ph(lacune_ph,element_ph,v=V)
                         energy_vec[i]=energie_ele_emis
                         energy_vec = energy_vec + energie_par_emise_ph
+                        particle_vec = particle_vec + par_emise_ph
                     else: # diffusion Compton
                         energy_vec[i]=Ed
                     particle_vec[i] = "electron"
@@ -718,7 +719,16 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         
                     if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
                         p0 = particle_vec2[i]
-                        energy_vec2[i] = tl.energie_dep_gamma2(energy_vec2[i],v=V)          # sampling energy free from photon
+                        Ei_2 = energy_vec2[i]
+                        Ed_2 = tl.energie_dep_gamma2(Ei,v=V)          # sampling energy free from photon
+                        if Ei_2 == Ed_2:
+                            energie_ele_emis2,lacune_ph2,element_ph2 = tl.interaction_scintillation(Ed_2)
+                            particule_emise_ph2,energie_par_emise_ph2,posi_lacune_ph2,par_emise_ph2 = tl.relaxation_atom_ph(lacune_ph2,element_ph2,v=V)
+                            energy_vec2[i]=energie_ele_emis2
+                            energy_vec2 = energy_vec2 + energie_par_emise_ph2
+                            particle_vec2 = particle_vec2 + par_emise_ph2
+                        else: # diffusion Compton
+                            energy_vec2[i]=Ed_2    
                         particle_vec2[i] = "electron"
                         if Display:
                             print(f"\t\t {p0} give energy {energy_vec2[i]} keV to electron")

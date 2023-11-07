@@ -2047,7 +2047,7 @@ def read_ENDF_RA(atom,z=z_endf_ar):
     return Type, Energie, Prob           
 
 
-def relaxation_atom_ph(lacune,element):
+def relaxation_atom_ph(lacune,element,v):
     Type_,Energie,Prob = read_ENDF_RA(element)
     relax = False
     posi_lacune = []
@@ -2169,6 +2169,7 @@ def relaxation_atom_ph(lacune,element):
         if 'Auger' in particule_emise[i]:
             par_emise.append('electron')
         elif 'X' in particule_emise[i]:
+            energie_par_emise[i] = energie_dep_gamma2(energie_par_emise[i],v)
             par_emise.append('photon')
     
     return particule_emise,energie_par_emise,posi_lacune,par_emise  
