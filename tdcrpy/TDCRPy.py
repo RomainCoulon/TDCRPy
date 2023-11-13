@@ -10,8 +10,8 @@ Bureau International des Poids et Mesures
 
 ## IMPORT PYTHON MODULES
 #import tdcrpy.TDCR_model_lib as tl
-# import TDCR_model_lib as tl
-import tdcrpy.TDCR_model_lib as tl
+import TDCR_model_lib as tl
+# import tdcrpy.TDCR_model_lib as tl
 import importlib.resources
 from importlib.resources import files
 import configparser
@@ -684,7 +684,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
         
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                    # p0 = particle_vec[i]
+                    p0 = particle_vec[i]
                     Ei = energy_vec[i]
                     Ed = tl.energie_dep_gamma2(Ei,v=V)          # sampling energy free from photon
                     if Ei == Ed: # effet photoelectrique
@@ -923,17 +923,17 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
         if mode =="dis":
             return efficiency_S, efficiency_D, efficiency_T    
-# L = 1
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# Rad="Sm-153"
-# pmf_1="1"
-# N = 10
-# kB =1.0e-5
-# V = 10
-# mode = "eff"
-# mode2 = "sym"
+L = 1
+TD = 0.977667386529166
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+Rad="Cd-109"
+pmf_1="1"
+N = 10000
+kB =1.0e-5
+V = 10
+mode = "eff"
+mode2 = "sym"
 
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False,uncData=False)
+out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=True,uncData=False)

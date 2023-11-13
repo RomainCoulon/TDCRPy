@@ -1984,6 +1984,10 @@ def interaction_scintillation(e_p):
     return e_ele_emis,lacune,element
 
 
+
+
+
+
 def read_ENDF_RA(atom,z=z_endf_ar):
     """
     Read ENDF data atom relaxation  
@@ -2154,7 +2158,10 @@ def relaxation_atom_ph(lacune,element,v):
     energie_par_emise = []
     
     if element == 'H':
-        print("pas de relaxation")
+        posi_lacune = ["Atom_K"]
+        # particule_emise = []
+        # energie_par_emise = []
+        #print("H -- pas de relaxation")
     else:
         for i,p in enumerate(posi_lacune):
             relax = False
@@ -2271,7 +2278,6 @@ def relaxation_atom_ph(lacune,element,v):
             par_emise.append('photon')
     
     return particule_emise,energie_par_emise,posi_lacune,par_emise  
-
 
 
 
