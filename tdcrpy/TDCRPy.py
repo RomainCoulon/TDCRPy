@@ -923,17 +923,17 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
         if mode =="dis":
             return efficiency_S, efficiency_D, efficiency_T    
-L = 1
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Cd-109"
-pmf_1="1"
-N = 10000
-kB =1.0e-5
-V = 10
-mode = "eff"
-mode2 = "sym"
+# L = 1
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# Rad="Fe-55"
+# pmf_1="1"
+# N = 10
+# kB =1.0e-5
+# V = 10
+# mode = "eff"
+# mode2 = "sym"
 
-out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=True,uncData=False)
+# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
