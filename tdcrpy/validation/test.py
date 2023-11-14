@@ -58,35 +58,36 @@ Eff
 """
 Tests decay data uncertainty propagation
 """
-L = 1
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Fe-55"
-pmf_1="1"
-N = 10
-kB =1.0e-5
-V = 10
-# mode = "dis"
-mode ="eff"
-mode2 = "sym"
+# L = 1
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# Rad="Fe-55"
+# pmf_1="1"
+# N = 10
+# kB =1.0e-5
+# V = 10
+# # mode = "dis"
+# mode ="eff"
+# mode2 = "sym"
 
-out = td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=False)
-if mode == "dis": td.TDCR_model_lib.display_distrib(out[0], out[1], out[2])
-else: print(out)
+# out = td.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False, uncData=False)
+# if mode == "dis": td.TDCR_model_lib.display_distrib(out[0], out[1], out[2])
+# else: print(out)
 
 """
 Efficiency curves analytical
 """
 # L = np.arange(0.5,2,0.1)
+# L = np.arange(1.0,1.2,0.1)
 # TD = 0.977667386529166
 # TAB = 0.992232838598821
 # TBC = 0.992343419459002
 # TAC = 0.99275350064608
-# Rad="S-35"
+# Rad="Fe-55"
 # pmf_1="1"
-# N = 10000
+# N = 1000
 # kB =1.0e-5
 # V = 10
 # mode = "eff"
@@ -171,7 +172,7 @@ Efficiency curves MC
 """
 Test display
 """
-# td.TDCRPy.TDCRPy(1, 0, 0, 0, 0, "Fe-55", "1", 1, 1e-5, 10, "eff", "sym", Display=True, barp=False)
+td.TDCRPy.TDCRPy(1, 0, 0, 0, 0, "Fe-55", "1", 1, 1e-5, 10, "eff", "sym", Display=True, barp=False)
 
 
 """
