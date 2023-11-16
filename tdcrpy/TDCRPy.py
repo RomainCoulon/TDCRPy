@@ -582,7 +582,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         energy_vec_initial = energy_vec_initial + energie_par_emise_ph
                         energy_vec = energy_vec + energie_par_emise_ph
                     elif Ed == Ei - 1022:           # creation de paire
-                        particle_vec[i] = 'electron'
+                        #particle_vec[i] = 'electron'
                         E_e = (Ei-1022)/2
                         energy_vec[i] =  tl.energie_dep_beta2(E_e,v=V)
                     else: # diffusion Compton
@@ -620,7 +620,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                             energy_vec_initial2 = energy_vec_initial2 + energie_par_emise_ph2
                             particle_vec2 = particle_vec2 + par_emise_ph2
                         elif Ed_2 == Ei_2 - 1022:   # creation de paire
-                            particle_vec2[i] = 'electron'
+                            #particle_vec2[i] = 'electron'
                             E_e_2 = (Ei_2 - 1022)/2
                             energy_vec2[i] =  tl.energie_dep_beta2(E_e_2,v=V)    
                         else: # diffusion Compton
