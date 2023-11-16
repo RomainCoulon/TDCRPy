@@ -581,6 +581,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         energy_vec[i]=energie_ele_emis # energie du photoélectron primaire
                         energy_vec_initial = energy_vec_initial + energie_par_emise_ph
                         energy_vec = energy_vec + energie_par_emise_ph
+                    elif Ed == Ei - 1022:           # creation de paire
+                        particle_vec[i] = 'electron'
+                        E_e = (Ei-1022)/2
+                        energy_vec[i] =  tl.energie_dep_beta2(E_e,v=V)
                     else: # diffusion Compton
                         energy_vec[i]=Ed
                     particle_vec[i] = "electron"
@@ -607,7 +611,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         p0 = particle_vec2[i]
                         Ei_2 = energy_vec2[i]
                         Ed_2 = tl.energie_dep_gamma2(Ei_2,v=V)          # sampling energy free from photon
-                        if Ei_2 == Ed_2:
+                        if Ei_2 == Ed_2:        # effet photon-electrique
                             energie_ele_emis2,lacune_ph2,element_ph2 = tl.interaction_scintillation(Ed_2)
                             particule_emise_ph2,energie_par_emise_ph2,posi_lacune_ph2,par_emise_ph2 = tl.relaxation_atom_ph(lacune_ph2,element_ph2,v=V)
                             energy_vec2[i]=energie_ele_emis2
@@ -615,6 +619,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                             energy_vec2 = energy_vec2 + energie_par_emise_ph2
                             energy_vec_initial2 = energy_vec_initial2 + energie_par_emise_ph2
                             particle_vec2 = particle_vec2 + par_emise_ph2
+                        elif Ed_2 == Ei_2 - 1022:   # creation de paire
+                            particle_vec2[i] = 'electron'
+                            E_e_2 = (Ei_2 - 1022)/2
+                            energy_vec2[i] =  tl.energie_dep_beta2(E_e_2,v=V)    
                         else: # diffusion Compton
                             energy_vec2[i]=Ed_2    
                         particle_vec2[i] = "electron"
