@@ -42,17 +42,121 @@ energie_dep_beta2(e_inci,v)
 #     print(v, np.mean(x), np.std(x)/np.sqrt(N))
 
 """
-Eff
+simple Eff
 """
 # L = 1
-# TD = 0.977667386529166
+# TD = 0.854
 # TAB = 0.992232838598821
 # TBC = 0.992343419459002
 # TAC = 0.99275350064608
 
-# out = td.TDCRoptimize.eff(TD,TAB,TBC,TAC,"Co-60","1",1e-5,10,"sym",N=500)
+# out = td.TDCRoptimize.eff(TD,TAB,TBC,TAC,"Cd-109","1",1e-5,10,"sym",N=500)
 
 # print("TDCRPy sym,", out)
+
+"""
+Write efficency curves
+"""
+
+def writeEffcurves(tdcr, uTdcr, effD, ueffD, rad, p, kB, V):
+    file = open("../EfficiencyCurves/"+''.join(rad)+"/Eff_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+'_'+str(V)+".txt","w")
+    for i, ti in enumerate(tdcr):
+        file.write(str(ti)+" "+str(uTdcr[i])+" "+str(effD[i])+" "+str(ueffD[i])+"\n")
+    file.close()
+
+L = np.arange(0.2,2,0.1)
+# L = np.arange(0.1,0.5,0.1)
+TD = 0.854
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+Rad="Cd-109"
+pmf_1="1"
+N = 10000
+kB = 1.2e-5
+V = 10
+mode = "eff"
+mode2 = "sym"
+
+tdcr_v = []
+utcrv_v = []
+eff_v = []
+ueff_v = []
+for l in L:
+    print(f"free parameter = {round(l,3)} keV-1")
+    out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp=True)
+    tdcr_v.append(out[4]/out[2])
+    utcrv_v.append(tdcr_v[-1]*np.sqrt((out[3]/out[2])**2+(out[5]/out[4])**2))
+    eff_v.append(out[2])
+    ueff_v.append(out[3])
+
+writeEffcurves(tdcr_v,utcrv_v,eff_v,ueff_v,Rad, pmf_1, kB, V)
+
+plt.figure("Efficiency curve")
+plt.clf()
+plt.errorbar(tdcr_v, eff_v, xerr=utcrv_v, yerr=ueff_v)
+plt.xlabel('TDCR')
+plt.ylabel('Efficiency')
+plt.show()
+
+
+# def readEffcurves(rad, p, kB, V):
+#     with open("../EfficiencyCurves/"+''.join(rad)+"/Eff_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+'_'+str(V)+".txt","r") as file:
+#         tdcr=[];utdcr=[];eff=[];ueff=[] 
+#         for line in file:
+#             line = line.replace("\n","")
+#             line = line.split(" ")
+#             tdcr.append(float(line[0]))
+#             utdcr.append(float(line[1]))
+#             eff.append(float(line[2]))
+#             ueff.append(float(line[3]))        
+#     return tdcr, utdcr, eff, ueff
+
+# tdcr, utdcr, effD, ueffD = td.TDCRoptimize.readEffcurves(Rad, pmf_1, kB, V)
+# td.TDCRoptimize.plotEffcurves(tdcr, utdcr, effD, ueffD, Rad, pmf_1, kB, V)
+# result=td.TDCRoptimize.readEfficiency(0.91334, Rad, pmf_1, kB, V)
+
+# print(result)
+
+# def plotEffcurves(tdcr, utdcr, effD, ueffD, rad, p, kB, V):
+#     plt.figure("Efficiency curve")
+#     plt.clf()
+#     plt.errorbar(tdcr, effD, xerr=utdcr, yerr=ueffD)
+#     plt.xlabel('TDCR')
+#     plt.ylabel('Efficiency')
+#     plt.show()
+
+# plotEffcurves(tdcr, utdcr, effD, ueffD, Rad, pmf_1, kB, V)
+
+# def readEfficiency(tdcr_i, rad, p, kB, V):
+#     tdcr, utdcr, eff, ueff = readEffcurves(rad, p, kB, V)    
+#     tdcr=np.asarray(tdcr); eff=np.asarray(eff)
+#     if all(tdcr[i] < tdcr[i+1] for i in range(len(tdcr)-1)) or all(tdcr[i] > tdcr[i+1] for i in range(len(tdcr)-1)):
+#         eff_i = np.interp(tdcr_i, tdcr, eff)
+#     else:
+#         print("non-bijective curve")
+#         eff_i=[]
+#         segmt = np.sort([np.argwhere(tdcr>tdcr_i)[0][0],np.argwhere(tdcr>tdcr_i)[-1][0],np.argwhere(tdcr<tdcr_i)[0][0],np.argwhere(tdcr<tdcr_i)[-1][0]])
+#         for si, s in enumerate(segmt):
+#             if si > 0:
+#                 if len(np.argwhere(tdcr[segmt[si-1]:s]>tdcr_i))!=0:
+#                     i = np.argwhere(tdcr[segmt[si-1]:s]>tdcr_i)[0][0]
+#                     if (tdcr[segmt[si-1]+1] - tdcr[segmt[si-1]]) >= 0:
+#                         eff_i.append(np.interp(tdcr_i, tdcr[segmt[si-1]:s], eff[segmt[si-1]:s]))
+#                     else:
+#                         print(tdcr_i, np.flip(tdcr[segmt[si-1]:s]), np.flip(eff[segmt[si-1]:s]), np.interp(tdcr_i, np.flip(tdcr[segmt[si-1]:s]), np.flip(eff[segmt[si-1]:s])))
+#                         eff_i.append(np.interp(tdcr_i, np.flip(tdcr[segmt[si-1]:s]), np.flip(eff[segmt[si-1]:s])))                    
+#     return eff_i
+
+# eff = readEfficiency(0.87, Rad, pmf_1, kB, V)
+# print(eff)
+#     file.close()
+
+
+"""
+Read efficency curves
+"""
+
 
 
 """
@@ -80,12 +184,12 @@ Tests decay data uncertainty propagation
 Efficiency curves analytical
 """
 # L = np.arange(0.5,2,0.1)
-# L = np.arange(1.0,1.2,0.1)
+# L = np.arange(0.1,0.5,0.1)
 # TD = 0.977667386529166
 # TAB = 0.992232838598821
 # TBC = 0.992343419459002
 # TAC = 0.99275350064608
-# Rad="Fe-55"
+# Rad="Cd-109"
 # pmf_1="1"
 # N = 1000
 # kB =1.0e-5
@@ -172,7 +276,7 @@ Efficiency curves MC
 """
 Test display
 """
-td.TDCRPy.TDCRPy(1, 0, 0, 0, 0, "Fe-55", "1", 1, 1e-5, 10, "eff", "sym", Display=True, barp=False)
+# td.TDCRPy.TDCRPy(1, 0, 0, 0, 0, "Fe-55", "1", 1, 1e-5, 10, "eff", "sym", Display=True, barp=False)
 
 
 """

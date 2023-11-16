@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "1.7.4"
+VERSION = "1.8.3"
 DESCRIPTION = "TDCR model"
 
 with open("README.md", "r") as f:
@@ -48,5 +48,6 @@ setup(
 		'Quenching/inputVecteur*.txt',
 		'MCNP-MATRIX/matrice/fichier/*.txt',
 		'MCNP-MATRIX/Spectra_for_analytical_model/*.txt',
+		'EfficiencyCurves/*/*.txt',
 		]},
 )

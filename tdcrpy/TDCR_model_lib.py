@@ -1310,43 +1310,43 @@ def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
     return result
 
 
-def writeEffcurves(x,y,uy,rad,p,kB,SDT):
-    """
-    This function writes efficiency curves
+# def writeEffcurves(x,y,uy,rad,p,kB,SDT):
+#     """
+#     This function writes efficiency curves
 
-    Parameters
-    ----------
-    x : TYPE
-        DESCRIPTION.
-    y : TYPE
-        DESCRIPTION.
-    uy : TYPE
-        DESCRIPTION.
-    rad : TYPE
-        DESCRIPTION.
-    p : TYPE
-        DESCRIPTION.
-    kB : TYPE
-        DESCRIPTION.
-    SDT : TYPE
-        DESCRIPTION.
+#     Parameters
+#     ----------
+#     x : list of floats
+#         Free parameters in keV-1.
+#     y : list of floats
+#         Efficiencies.
+#     uy : list of floats
+#         Standard uncertainties.
+#     rad : string
+#         Radionuclide "Ra-223".
+#     p : string
+#         relative fractions of a mixture.
+#     kB : float
+#         Birks constant in cm/keV.
+#     SDT : string
+#         Type of efficiency ('S', 'D' or 'T').
 
-    Returns
-    -------
-    None.
+#     Returns
+#     -------
+#     None.
 
-    """
-    if SDT == "S":
-        file = open("EfficiencyCurves/"+''.join(rad)+"/EffS_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
-    elif SDT == "D":
-        file = open("EfficiencyCurves/"+''.join(rad)+"/EffD_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
-    elif SDT == "T":
-        file = open("EfficiencyCurves/"+''.join(rad)+"/EffT_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
-    else:
-        print("Warning: unknown profil type")
-    for i, xi in enumerate(x):
-        file.write(str(xi)+" "+str(y[i])+" "+str(uy[i])+"\n")
-    file.close()
+#     """
+#     if SDT == "S":
+#         file = open("EfficiencyCurves/"+''.join(rad)+"/EffS_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
+#     elif SDT == "D":
+#         file = open("EfficiencyCurves/"+''.join(rad)+"/EffD_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
+#     elif SDT == "T":
+#         file = open("EfficiencyCurves/"+''.join(rad)+"/EffT_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
+#     else:
+#         print("Warning: unknown profil type")
+#     for i, xi in enumerate(x):
+#         file.write(str(xi)+" "+str(y[i])+" "+str(uy[i])+"\n")
+#     file.close()
 
 #======================== read ENSDF ============================================
 def transf_name(rad):

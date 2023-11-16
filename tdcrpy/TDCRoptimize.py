@@ -8,6 +8,9 @@ Created on Wed Jul  5 10:04:53 2023
 import numpy as np
 import tdcrpy.TDCRPy as td
 import scipy.optimize as opt
+import matplotlib.pyplot as plt
+import importlib.resources
+from importlib.resources import files
 
 def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=10000, L=1, maxiter=20):
     """
@@ -88,15 +91,72 @@ def eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=10000, L=1, maxiter=20):
     
     return L0, L, eff_S, u_eff_S, eff_D, u_eff_D, eff_T, u_eff_T
     
-def effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V):
-    effD = []; ueffD = []; tdcr = []; uTdcr = []
-    for l in L:
-        out=td.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, "eff", "sym", Display=False, barp=True, uncData=False)  
-        effD.append(out[2])
-        ueffD.append(out[3])
-        tdcr.append(out[4]/out[2])
-        uTdcr.append(1/out[2]*np.sqrt(out[5]**2+out[4]**2*out[3]**2/out[2]**2))
-    return effD, ueffD, tdcr, uTdcr
+def readEffcurves(rad, p, kB, V):
+    """
+    Read efficiency curves from recorded results
+
+    Parameters
+    ----------
+    rad : string
+        Radionuclide(s) ("Cd-109").
+    p : string
+        Relative factions 
+    kB : float
+        Birks constant in cm/keV.
+    V : float
+        volume of scintillator in mL.
+
+    Returns
+    -------
+    tdcr : list
+        TDCR values.
+    utdcr : list
+        standard uncertainties of TDCR values.
+    eff : list
+        efficiencies of double coincidence count rates.
+    ueff : list
+        standard uncertainties of efficiencies of double coincidence count rates.
+
+    """
+    with importlib.resources.as_file(files('tdcrpy').joinpath('EfficiencyCurves')) as data_path:
+        subPath = rad+"/Eff_"+rad+"_"+p+"_"+str(kB)+"_"+str(V)+".txt"
+        file_conf = data_path / subPath
+    with open(file_conf,"r") as file:
+        tdcr=[];utdcr=[];eff=[];ueff=[]
+        for line in file:
+            line = line.replace("\n","")
+            line = line.split(" ")
+            tdcr.append(float(line[0]))
+            utdcr.append(float(line[1]))
+            eff.append(float(line[2]))
+            ueff.append(float(line[3]))        
+    return tdcr, utdcr, eff, ueff
+
+def plotEffcurves(tdcr, utdcr, effD, ueffD, rad, p, kB, V):
+    plt.figure("Efficiency curve")
+    plt.clf()
+    plt.errorbar(tdcr, effD, xerr=utdcr, yerr=ueffD)
+    plt.xlabel('TDCR')
+    plt.ylabel('Efficiency')
+    plt.show()
+
+def readEfficiency(tdcr_i, rad, p, kB, V):
+    tdcr, utdcr, eff, ueff = readEffcurves(rad, p, kB, V)    
+    tdcr=np.asarray(tdcr); eff=np.asarray(eff)
+    if all(tdcr[i] < tdcr[i+1] for i in range(len(tdcr)-1)) or all(tdcr[i] > tdcr[i+1] for i in range(len(tdcr)-1)):
+        eff_i = np.interp(tdcr_i, tdcr, eff)
+    else:
+        eff_i=[]
+        segmt = np.sort([np.argwhere(tdcr>tdcr_i)[0][0],np.argwhere(tdcr>tdcr_i)[-1][0],np.argwhere(tdcr<tdcr_i)[0][0],np.argwhere(tdcr<tdcr_i)[-1][0]])
+        for si, s in enumerate(segmt):
+            if si > 0:
+                if len(np.argwhere(tdcr[segmt[si-1]:s]>tdcr_i))!=0:
+                    if (tdcr[segmt[si-1]+1] - tdcr[segmt[si-1]]) >= 0:
+                        eff_i.append(np.interp(tdcr_i, tdcr[segmt[si-1]:s], eff[segmt[si-1]:s]))
+                    else:
+                        eff_i.append(np.interp(tdcr_i, np.flip(tdcr[segmt[si-1]:s]), np.flip(eff[segmt[si-1]:s])))                    
+    return eff_i
+
 
 # L = 1
 # TD = 0.977667386529166
