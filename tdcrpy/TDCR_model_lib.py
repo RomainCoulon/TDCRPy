@@ -805,7 +805,7 @@ def E_quench_a(e,kB,nE):
     
     """
     
-    e_dis = np.linspace(1,e,nE)
+    e_dis = np.linspace(0,e,nE)
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
