@@ -1,6 +1,7 @@
 LICENCE.md
 MANIFEST.in
 README.md
+setup.cfg
 setup.py
 TDCRPy.egg-info/PKG-INFO
 TDCRPy.egg-info/SOURCES.txt
