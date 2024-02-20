@@ -48,7 +48,7 @@ jobs:
       name: pypi
       url: https://pypi.org/p/TDCRPy  # Replace <package-name> with your PyPI project name
     permissions:
-      id-token: 938520  # IMPORTANT: mandatory for trusted publishing
+      id-token: RomainCoulon  # IMPORTANT: mandatory for trusted publishing
 
     steps:
     - name: Download all the dists
