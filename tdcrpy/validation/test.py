@@ -139,7 +139,7 @@ Plot stopping power
 plt.clf()
 
 # E = np.logspace(0, 6, 100) # for electron
-E = np.logspace(3, 3.9, 100) # for alpha
+E = np.logspace(3.2, 3.5, 100) # for alpha
 w = []
 for Ei in E:
     # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000)) #  for electron
@@ -154,6 +154,7 @@ print(popt)
 
 
 plt.plot(E, w)
+plt.plot(E, popt[0]*E**2+popt[1]*E+popt[2],label='fit')
 # plt.colorbar()
 plt.xticks(fontsize=16)
 plt.yticks(fontsize=16)
