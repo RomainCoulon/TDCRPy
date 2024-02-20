@@ -101,7 +101,7 @@ jobs:
 
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/TDCRPy
+      url: https://test.pypi.org/p/RomainCoulonTest
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
