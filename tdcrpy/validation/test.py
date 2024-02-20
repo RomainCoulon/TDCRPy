@@ -139,7 +139,9 @@ Plot stopping power
 plt.clf()
 
 # E = np.logspace(0, 6, 100) # for electron
-E = np.logspace(3.2, 3.5, 100) # for alpha
+# E = np.logspace(-3, 4, 100) # for alpha
+E = np.linspace(2900, 3000, 100) # for alpha
+
 w = []
 for Ei in E:
     # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000)) #  for electron
@@ -161,7 +163,7 @@ plt.yticks(fontsize=16)
 plt.legend(fontsize=16)
 plt.xlabel(r"$E$ /keV", fontsize=18)
 plt.ylabel(r"w/(keV.cm2/g)", fontsize=18)
-plt.xscale("log")
+# plt.xscale("log")
 # plt.yscale("log")
 plt.show()
 

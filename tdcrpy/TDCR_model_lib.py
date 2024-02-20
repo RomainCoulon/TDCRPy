@@ -562,9 +562,9 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     energy_alpha = np.array(energy_alpha)
     dEdx_alpha = np.array(dEdx_alpha)
     if e<1:
-        dEdx = -2193.06485518*e**2+34562.87620684*e+377421.92600337
+        dEdx = -1.14904489e-02*e**2+3.05280288e+04*e+3.79007982e+05
     elif e>3.15e3:
-        dEdx = 1.13671311e-01*e**2-9.43769761e+02*e+3.04956913e+06
+        dEdx = -9.79419960e-08*e**2-2.95679422e+02*e+2.12735915e+06
     else:
         dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
     return dEdx*rho                        #unit keV.cm-1
