@@ -133,31 +133,34 @@ Plot stopping power
 
 
 
-plt.clf()
+# plt.clf()
 
-kB = np.linspace(0.6e-5, 1.5e-5, 2)
-print(kB)
-for kBi in kB:
-    E = np.logspace(0, 6, 10)
-    Em = []
-    for Ei in E:
-        # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000))
-        Em.append(td.TDCR_model_lib.Em_a(Ei*1e-3, kBi, 1000))
+# kB = np.linspace(0.6e-5, 1.5e-5, 2)
+# print(kB)
+# for kBi in kB:
+#     # E = np.logspace(0, 6, 100) # for electron
+#     E = np.logspace(0, 7, 100) # for alpha
+#     Em = []
+#     for Ei in E:
+#         # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000)) #  for electron
+#         Em.append(td.TDCR_model_lib.Em_a(Ei*1e-3, kBi, 10000)) # for alpha
     
     
-    plt.plot(E*1e-3, Em/(E*1e-3), label = str(round(kBi*1e3,3))+" cm/MeV")
-    # plt.colorbar()
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
-    plt.legend(fontsize=16)
-    plt.xlabel(r"$E$ /keV", fontsize=18)
-    plt.ylabel(r"Em($E$)/E", fontsize=18)
-    plt.xscale("log")
-    # plt.yscale("log")
+#     plt.plot(E*1e-3, Em/(E*1e-3), label = str(round(kBi*1e3,3))+" cm/MeV")
+#     # plt.colorbar()
+#     plt.xticks(fontsize=16)
+#     plt.yticks(fontsize=16)
+#     plt.legend(fontsize=16)
+#     plt.xlabel(r"$E$ /keV", fontsize=18)
+#     plt.ylabel(r"Em($E$)/E", fontsize=18)
+#     plt.xscale("log")
+#     # plt.yscale("log")
     # plt.show()
 
-td.TDCR_model_lib.stoppingpowerA(0.01)
-td.TDCR_model_lib.E_quench_a(1,1e-5,1000)
+A = td.TDCR_model_lib.stoppingpowerA(1.1)
+B = td.TDCR_model_lib.E_quench_a(1,1e-5,1000)
+print(A, B)
+
 """
 Read response matrixes
 """
