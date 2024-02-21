@@ -38,7 +38,8 @@ RHO = config["Inputs"].getfloat("density")
 Z = config["Inputs"].getfloat("Z")
 A = config["Inputs"].getfloat("A")
 depthSpline = config["Inputs"].getint("depthSpline")
-Einterp = config["Inputs"].getfloat("Einterp")
+Einterp = config["Inputs"].getfloat("Einterp_a")
+Einterp = config["Inputs"].getfloat("Einterp_e")
 
 # import PenNuc data
 with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
@@ -894,7 +895,7 @@ def run_interpolate(kB_vec, kB , Ev, Emv, E, m = depthSpline):
         r = f2(E)+(f1(E) - f2(E))/(kB_vec[ind_k]-kB_vec[ind_k-1])*(kB-kB_vec[ind_k-1])
     return r
 
-def Em_a(E, kB, nE, Et = Einterp, kB_vec = kB_a):
+def Em_a(E, kB, nE, Et = Einterp_a, kB_vec = kB_a):
     """
     This fonction management the calculation of the quenched energy for alpha particles.
     A mixture between the accurate quenching model and the extrapolated model can be setup. 
@@ -918,6 +919,7 @@ def Em_a(E, kB, nE, Et = Einterp, kB_vec = kB_a):
         interpolated quenched energy in keV
 
     """
+    
     if E <= Et:
         # run the accurate quenching model
         r = E_quench_a(E,kB,nE)
@@ -926,7 +928,7 @@ def Em_a(E, kB, nE, Et = Einterp, kB_vec = kB_a):
         r = run_interpolate(kB_vec, kB , Ei_alpha, Em_alpha, E)    
     return r
 
-def Em_e(Ei, Ed, kB, nE, Et = Einterp*1e3, kB_vec = kB_e):
+def Em_e(Ei, Ed, kB, nE, Et = Einterp_e*1e3, kB_vec = kB_e):
     """
     This fonction management the calculation of the quenched energy for electrons.
     A mixture between the accurate quenching model and the extrapolated model can be setup. 

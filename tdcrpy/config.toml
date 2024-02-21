@@ -41,4 +41,5 @@ tau = 50
 # depth (number of indexes on each side of the energy point) on which the spline interpolation is done.
 depthSpline = 5
 # energy (in keV) above which interpolation is applied.
-Einterp = 1
+Einterp_a = 100
+Einterp_e = 1

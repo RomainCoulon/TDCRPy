@@ -131,138 +131,138 @@ Read efficency curves
 """
 Plot stopping power
 """
-import importlib.resources
-from importlib.resources import files
-import configparser
-config = configparser.ConfigParser()
-with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
-    file_conf = data_path       
-config.read(file_conf)
-RHO = config["Inputs"].getfloat("density")
-Z = config["Inputs"].getfloat("Z")
-A = config["Inputs"].getfloat("A")
-depthSpline = config["Inputs"].getint("depthSpline")
-Einterp = config["Inputs"].getfloat("Einterp")
+# import importlib.resources
+# from importlib.resources import files
+# import configparser
+# config = configparser.ConfigParser()
+# with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
+#     file_conf = data_path       
+# config.read(file_conf)
+# RHO = config["Inputs"].getfloat("density")
+# Z = config["Inputs"].getfloat("Z")
+# A = config["Inputs"].getfloat("A")
+# depthSpline = config["Inputs"].getint("depthSpline")
+# Einterp = config["Inputs"].getfloat("Einterp")
 
-# import stopping power data for electron for alpha particle (ASTAR data)
-with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
-#with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-    f_alpha = open(data_path / "alpha_toulene.txt")
+# # import stopping power data for electron for alpha particle (ASTAR data)
+# with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
+# #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
+#     f_alpha = open(data_path / "alpha_toulene.txt")
     
-data_ASTAR = f_alpha.readlines()
-f_alpha.close()
-energy_alph = []
-dEdx_alph = []
-for i in range(np.size(data_ASTAR)):
-    data_ASTAR[i] = data_ASTAR[i].split()
-    for j in range(2):
-        data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
-    energy_alph.append(data_ASTAR[i][0])
-    dEdx_alph.append(data_ASTAR[i][1])
+# data_ASTAR = f_alpha.readlines()
+# f_alpha.close()
+# energy_alph = []
+# dEdx_alph = []
+# for i in range(np.size(data_ASTAR)):
+#     data_ASTAR[i] = data_ASTAR[i].split()
+#     for j in range(2):
+#         data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
+#     energy_alph.append(data_ASTAR[i][0])
+#     dEdx_alph.append(data_ASTAR[i][1])
     
-def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
-    """
-    Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code
+# def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
+#     """
+#     Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code
     
-    ref:
+#     ref:
      
-        https://dx.doi.org/10.18434/T4NC7P
+#         https://dx.doi.org/10.18434/T4NC7P
     
-    Parameters
-    ----------
-    e : float
-        energy of the alpha particle in keV.
-    rho : float, optional
-        density of the source in g.cm-3. The default is 0.96.
-    energy_alpha : list, optional
-        the list of energy (in keV) for which the stopping power was calculated with ASTAR. The default is energy_alph.
-    dEdx_alpha : list, optional
-        the list of stopping powers (in keV.cm2/g) associated with the energy vector. The default is dEdx_alph.
+#     Parameters
+#     ----------
+#     e : float
+#         energy of the alpha particle in keV.
+#     rho : float, optional
+#         density of the source in g.cm-3. The default is 0.96.
+#     energy_alpha : list, optional
+#         the list of energy (in keV) for which the stopping power was calculated with ASTAR. The default is energy_alph.
+#     dEdx_alpha : list, optional
+#         the list of stopping powers (in keV.cm2/g) associated with the energy vector. The default is dEdx_alph.
 
-    Returns
-    -------
-    float
-        Interpolated ASTAR estimation of the stopping power.
+#     Returns
+#     -------
+#     float
+#         Interpolated ASTAR estimation of the stopping power.
 
-    """
+#     """
 
-    energy_alpha = np.array(energy_alpha)
-    dEdx_alpha = np.array(dEdx_alpha)
-    if e<=1:
-        dEdx=409536.0
-    #     dEdx = -1.14904489e-02*e**2+3.05280288e+04*e+3.79007982e+05
-    elif e>8e3:
-        dEdx=619200.0
-    #     dEdx = -9.79419960e-08*e**2-2.95679422e+02*e+2.12735915e+06
-    else:
-        dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
-    return dEdx*rho                        #unit keV.cm-1
-
-
-plt.clf()
-
-# E = np.logspace(0, 6, 100) # for electron
-E = np.logspace(-3, 4, 100) # for alpha
-# E = np.linspace(2900, 3000, 100) # for alpha
-
-w = []
-for Ei in E:
-    # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000)) #  for electron
-    # w.append(td.TDCR_model_lib.stoppingpowerA(Ei)) # for alpha
-    w.append(stoppingpowerA(Ei)) # for alpha
-
-def second_order_poly(x, a, b, c):
-    return a * x**2 + b * x + c
-
-popt, pcov = curve_fit(second_order_poly, E, w)
-print(popt)
-
-
-
-plt.plot(E, w)
-# plt.plot(E, popt[0]*E**2+popt[1]*E+popt[2],label='fit')
-# plt.colorbar()
-plt.xticks(fontsize=16)
-plt.yticks(fontsize=16)
-plt.legend(fontsize=16)
-plt.xlabel(r"$E$ /keV", fontsize=18)
-plt.ylabel(r"w/(keV.cm2/g)", fontsize=18)
-plt.xscale("log")
-# plt.yscale("log")
-plt.show()
-
-
-
-
+#     energy_alpha = np.array(energy_alpha)
+#     dEdx_alpha = np.array(dEdx_alpha)
+#     if e<=1:
+#         dEdx=409536.0
+#     #     dEdx = -1.14904489e-02*e**2+3.05280288e+04*e+3.79007982e+05
+#     elif e>8e3:
+#         dEdx=619200.0
+#     #     dEdx = -9.79419960e-08*e**2-2.95679422e+02*e+2.12735915e+06
+#     else:
+#         dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
+#     return dEdx*rho                        #unit keV.cm-1
 
 
 # plt.clf()
 
-# kB = np.linspace(0.6e-5, 1.5e-5, 2)
-# print(kB)
-# for kBi in kB:
-#     # E = np.logspace(0, 6, 100) # for electron
-#     E = np.logspace(0, 7, 100) # for alpha
-#     Em = []
-#     for Ei in E:
-#         # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000)) #  for electron
-#         Em.append(td.TDCR_model_lib.Em_a(Ei*1e-3, kBi, 10000)) # for alpha
-    
-    
-#     plt.plot(E*1e-3, Em/(E*1e-3), label = str(round(kBi*1e3,3))+" cm/MeV")
-#     # plt.colorbar()
-#     plt.xticks(fontsize=16)
-#     plt.yticks(fontsize=16)
-#     plt.legend(fontsize=16)
-#     plt.xlabel(r"$E$ /keV", fontsize=18)
-#     plt.ylabel(r"Em($E$)/E", fontsize=18)
-#     plt.xscale("log")
-#     # plt.yscale("log")
-#     plt.show()
+# # E = np.logspace(0, 6, 100) # for electron
+# E = np.logspace(-3, 4, 100) # for alpha
+# # E = np.linspace(2900, 3000, 100) # for alpha
 
-# A = td.TDCR_model_lib.stoppingpowerA(0.008)
-# B = td.TDCR_model_lib.E_quench_a(1,1e-5,1000)
-# print(A, B)
+# w = []
+# for Ei in E:
+#     # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000)) #  for electron
+#     w.append(td.TDCR_model_lib.stoppingpowerA(Ei)) # for alpha
+#     # w.append(stoppingpowerA(Ei)) # for alpha
+
+# def second_order_poly(x, a, b, c):
+#     return a * x**2 + b * x + c
+
+# popt, pcov = curve_fit(second_order_poly, E, w)
+# print(popt)
+
+
+
+# plt.plot(E, w)
+# # plt.plot(E, popt[0]*E**2+popt[1]*E+popt[2],label='fit')
+# # plt.colorbar()
+# plt.xticks(fontsize=16)
+# plt.yticks(fontsize=16)
+# plt.legend(fontsize=16)
+# plt.xlabel(r"$E$ /keV", fontsize=18)
+# plt.ylabel(r"w/(keV.cm2/g)", fontsize=18)
+# plt.xscale("log")
+# # plt.yscale("log")
+# plt.show()
+
+
+
+
+
+
+plt.clf()
+
+kB = np.linspace(0.6e-5, 1.5e-5, 3)
+print(kB)
+for kBi in kB:
+    # E = np.logspace(0, 6, 100) # for electron
+    E = np.logspace(0, 4, 100) # for alpha
+    Em = []
+    for Ei in E:
+        # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000)) #  for electron
+        Em.append(td.TDCR_model_lib.Em_a(Ei, kBi, 10000, Et=100)) # for alpha
+    
+    
+    plt.plot(E, Em/E, label = str(round(kBi*1e3,3))+" cm/MeV")
+    # plt.colorbar()
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.legend(fontsize=16)
+    plt.xlabel(r"$E$ /keV", fontsize=18)
+    plt.ylabel(r"Em($E$)/E", fontsize=18)
+    plt.xscale("log")
+    # plt.yscale("log")
+    plt.show()
+
+A = td.TDCR_model_lib.stoppingpowerA(0.008)
+B = td.TDCR_model_lib.E_quench_a(1,1e-5,1000)
+print(A, B)
 
 """
 Read response matrixes
