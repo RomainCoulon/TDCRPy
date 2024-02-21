@@ -38,8 +38,8 @@ RHO = config["Inputs"].getfloat("density")
 Z = config["Inputs"].getfloat("Z")
 A = config["Inputs"].getfloat("A")
 depthSpline = config["Inputs"].getint("depthSpline")
-Einterp = config["Inputs"].getfloat("Einterp_a")
-Einterp = config["Inputs"].getfloat("Einterp_e")
+Einterp_a = config["Inputs"].getfloat("Einterp_a")
+Einterp_e = config["Inputs"].getfloat("Einterp_e")
 
 # import PenNuc data
 with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:

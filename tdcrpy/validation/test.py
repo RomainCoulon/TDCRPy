@@ -238,7 +238,7 @@ Plot stopping power
 
 plt.clf()
 
-kB = np.linspace(0.6e-5, 1.5e-5, 3)
+kB = np.linspace(0.6e-5, 1.5e-5, 4)
 print(kB)
 for kBi in kB:
     # E = np.logspace(0, 6, 100) # for electron
@@ -246,7 +246,7 @@ for kBi in kB:
     Em = []
     for Ei in E:
         # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000)) #  for electron
-        Em.append(td.TDCR_model_lib.Em_a(Ei, kBi, 10000, Et=100)) # for alpha
+        Em.append(td.TDCR_model_lib.Em_a(Ei, kBi, 10000)) # for alpha
     
     
     plt.plot(E, Em/E, label = str(round(kBi*1e3,3))+" cm/MeV")
