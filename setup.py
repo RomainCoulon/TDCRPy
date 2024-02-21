@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "1.8.11"
+VERSION = "1.8.12"
 DESCRIPTION = "TDCR model"
 
 with open("README.md", "r") as f:
