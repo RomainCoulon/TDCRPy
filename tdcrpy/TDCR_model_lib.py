@@ -712,9 +712,11 @@ def readBetaShape(rad,mode,level,z=z_betashape):
             p.append(p0 * (e[k+1])-e[k])
         else:
             p.append(p0 * (e[k]-e[k-1]))
-            
+
+    e=(np.asarray(e[:-1])+np.asarray(e[1:]))/2
+    p.pop(-1)
     p /= sum(np.asarray(p)) # normalization
-    p = list(p)
+    p = list(p); e = list(e)
     return e, p
 
 
@@ -2333,12 +2335,13 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
     
     """
     
-    # e, p = readBetaShape(rad, 'beta-', 'tot')
-    e, p = readBetaSpectra(rad)
+    e, p = readBetaShape(rad, 'beta-', 'tot')
+    # e, p = readBetaSpectra(rad)
     em=np.empty(len(e))
     for i, ei in enumerate(e):
-        ed = energie_dep_beta(ei)
-        em[i] = E_quench_e(ed*1e3,ed*1e3,kB*1e3,ne)*1e-3
+        # ed = energie_dep_beta2(ei,V)
+        # em[i] = E_quench_e(ei*1e3,ed*1e3,kB*1e3,ne)*1e-3
+        em[i] = Em_e(ei*1e3,ed*1e3,kB*1e3,ne)*1e-3
         
         
     if mode2=="sym":

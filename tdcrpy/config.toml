@@ -42,4 +42,4 @@ tau = 50
 depthSpline = 5
 # energy (in keV) above which interpolation is applied.
 Einterp_a = 100
-Einterp_e = 1
+Einterp_e = 1.5

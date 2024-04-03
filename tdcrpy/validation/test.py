@@ -17,17 +17,64 @@ sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
 
 
 """
+Quenching
+"""
+
+# E=15 # keV
+# nE=1000
+# kB_vec = np.linspace(0.6e-2, 1.5e-2, 20)
+
+# Em = []
+# for kBi in kB_vec:
+#     out = td.TDCR_model_lib.Em_e(E*1e3, E*1e3, kBi, nE)*1e-3
+#     print(out)
+#     Em.append(out)
+    
+# plt.figure(r"Em($E$) vs kB")
+# plt.clf()
+# plt.plot(kB_vec, Em, "-k", label=r'$E_i$ = 15 keV')
+# # plt.colorbar()
+# plt.xticks(fontsize=16)
+# plt.yticks(fontsize=16)
+# plt.legend(fontsize=16)
+# plt.xlabel(r"$kB$ / (cm/MeV)", fontsize=18)
+# plt.ylabel(r"Em($E$) / keV", fontsize=18)
+# # plt.xscale("log")
+# # plt.yscale("log")
+# plt.show()
+
+
+
+"""
 energie_dep_gamma2(e_inci,v)
 """
-# V=np.arange(8,21,1)
-# N=10000
-# E=15 # keV
-# for v in V:
-#     x=[]
-#     for i in range(N):
-#         out=td.TDCR_model_lib.energie_dep_gamma2(15,v)
-#         x.append(out)
-#     print(v, np.mean(x), np.std(x)/np.sqrt(N))
+V=np.arange(8,21,0.1)
+N=10000
+E=15 # keV
+e_vec = []
+ue_vec = []
+for v in V:
+    x=[]
+    for i in range(N):
+        out=td.TDCR_model_lib.energie_dep_gamma2(15,v)
+        x.append(out)
+    e_vec.append(np.mean(x))
+    ue_vec.append(np.std(x)/np.sqrt(N))
+    print(v, e_vec[-1], ue_vec[-1])
+
+plt.figure(r"mean($E_d$) vs volume")
+plt.clf()
+plt.errorbar(V, e_vec, yerr=ue_vec, fmt="-k", label=r'$E_i$ = 15 keV')
+# plt.colorbar()
+plt.xticks(fontsize=16)
+plt.yticks(fontsize=16)
+plt.legend(fontsize=16)
+plt.xlabel(r"$v$ /mL", fontsize=18)
+plt.ylabel(r"mean($E_d$)/(keV)", fontsize=18)
+# plt.xscale("log")
+# plt.yscale("log")
+plt.show()
+
 
 """
 energie_dep_beta2(e_inci,v)
@@ -117,86 +164,17 @@ Write efficency curves
 Read efficency curves
 """
 
-# A=td.TDCR_model_lib.interaction_scintillation(10)
-# print(A)
 
-# A=td.TDCR_model_lib.readBetaShape("Co-60","beta-","tot")
-# B=td.TDCR_model_lib.sampling(A[1])
+# rad = "H-3"
+# L = 1
 
-# print(A[0][B])
 
-# td.TDCRPy.TDCRPy(1, 0.7, 0.7, 0.7, 0.7, "Cd-109", "1", 10, 1e-5, 10, "sym", "eff", Display=True)
+# td.TDCRPy.TDCRPy(1, 0.7, 0.7, 0.7, 0.7, "Fe-55", "1", 10, 1e-5, 10, "sym", "eff", Display=True)
 
 
 """
 Plot stopping power
 """
-# import importlib.resources
-# from importlib.resources import files
-# import configparser
-# config = configparser.ConfigParser()
-# with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
-#     file_conf = data_path       
-# config.read(file_conf)
-# RHO = config["Inputs"].getfloat("density")
-# Z = config["Inputs"].getfloat("Z")
-# A = config["Inputs"].getfloat("A")
-# depthSpline = config["Inputs"].getint("depthSpline")
-# Einterp = config["Inputs"].getfloat("Einterp")
-
-# # import stopping power data for electron for alpha particle (ASTAR data)
-# with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
-# #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-#     f_alpha = open(data_path / "alpha_toulene.txt")
-    
-# data_ASTAR = f_alpha.readlines()
-# f_alpha.close()
-# energy_alph = []
-# dEdx_alph = []
-# for i in range(np.size(data_ASTAR)):
-#     data_ASTAR[i] = data_ASTAR[i].split()
-#     for j in range(2):
-#         data_ASTAR[i][j] = float(data_ASTAR[i][j])*1e3  # dEdx from MeV.cm2/g to keV.cm2/g; energy from MeV to keV
-#     energy_alph.append(data_ASTAR[i][0])
-#     dEdx_alph.append(data_ASTAR[i][1])
-    
-# def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
-#     """
-#     Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code
-    
-#     ref:
-     
-#         https://dx.doi.org/10.18434/T4NC7P
-    
-#     Parameters
-#     ----------
-#     e : float
-#         energy of the alpha particle in keV.
-#     rho : float, optional
-#         density of the source in g.cm-3. The default is 0.96.
-#     energy_alpha : list, optional
-#         the list of energy (in keV) for which the stopping power was calculated with ASTAR. The default is energy_alph.
-#     dEdx_alpha : list, optional
-#         the list of stopping powers (in keV.cm2/g) associated with the energy vector. The default is dEdx_alph.
-
-#     Returns
-#     -------
-#     float
-#         Interpolated ASTAR estimation of the stopping power.
-
-#     """
-
-#     energy_alpha = np.array(energy_alpha)
-#     dEdx_alpha = np.array(dEdx_alpha)
-#     if e<=1:
-#         dEdx=409536.0
-#     #     dEdx = -1.14904489e-02*e**2+3.05280288e+04*e+3.79007982e+05
-#     elif e>8e3:
-#         dEdx=619200.0
-#     #     dEdx = -9.79419960e-08*e**2-2.95679422e+02*e+2.12735915e+06
-#     else:
-#         dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
-#     return dEdx*rho                        #unit keV.cm-1
 
 
 # plt.clf()
@@ -236,33 +214,34 @@ Plot stopping power
 
 
 
-plt.clf()
+# plt.clf()
 
-kB = np.linspace(0.6e-5, 1.5e-5, 4)
-print(kB)
-for kBi in kB:
-    # E = np.logspace(0, 6, 100) # for electron
-    E = np.logspace(0, 4, 100) # for alpha
-    Em = []
-    for Ei in E:
-        # Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 10000)) #  for electron
-        Em.append(td.TDCR_model_lib.Em_a(Ei, kBi, 10000)) # for alpha
+# kB = np.linspace(0.6e-5, 1.5e-5, 3)
+# print(kB)
+# for kBi in kB:
+#     E = np.logspace(0, 6.5, 100) # for electron
+#     # E = np.logspace(0, 4, 100) # for alpha
+#     Em = []
+#     for Ei in E:
+#         Em.append(td.TDCR_model_lib.Em_e(Ei, Ei, kBi*1e3, 1000, Et=1500)) #  for electron
+#         # Em.append(td.TDCR_model_lib.Em_a(Ei, kBi, 10000)) # for alpha
     
     
-    plt.plot(E, Em/E, label = str(round(kBi*1e3,3))+" cm/MeV")
-    # plt.colorbar()
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
-    plt.legend(fontsize=16)
-    plt.xlabel(r"$E$ /keV", fontsize=18)
-    plt.ylabel(r"Em($E$)/E", fontsize=18)
-    plt.xscale("log")
-    # plt.yscale("log")
-    plt.show()
+#     # plt.plot(E, Em/E, label = str(round(kBi*1e3,3))+" cm/MeV")
+#     plt.plot(E*1e-3, Em/E, label = str(round(kBi*1e3,3))+" cm/MeV")
+#     # plt.colorbar()
+#     plt.xticks(fontsize=16)
+#     plt.yticks(fontsize=16)
+#     plt.legend(fontsize=16)
+#     plt.xlabel(r"$E$ /keV", fontsize=18)
+#     plt.ylabel(r"Em($E$)/E", fontsize=18)
+#     plt.xscale("log")
+#     # plt.yscale("log")
+#     plt.show()
 
-A = td.TDCR_model_lib.stoppingpowerA(0.008)
-B = td.TDCR_model_lib.E_quench_a(1,1e-5,1000)
-print(A, B)
+# A = td.TDCR_model_lib.stoppingpowerA(0.008)
+# B = td.TDCR_model_lib.E_quench_a(1,1e-5,1000)
+# print(A, B)
 
 """
 Read response matrixes
@@ -323,67 +302,137 @@ Tests decay data uncertainty propagation
 # else: print(out)
 
 """
-Efficiency curves analytical
+Efficiency curves analytical vs MC
 """
-# L = np.arange(0.5,2,0.1)
-# L = np.arange(0.1,0.5,0.1)
+
+# L = np.logspace(-3,2,100) # H-3
+# L = np.logspace(-3,2,100) # C-14
+# L = np.logspace(-3,2,10) # Sr-89
+# L = np.logspace(-3,2,10) # Fe-55
+# L = np.arange(0.1,10,0.1) # Fe-55
 # TD = 0.977667386529166
 # TAB = 0.992232838598821
 # TBC = 0.992343419459002
 # TAC = 0.99275350064608
-# Rad="Cd-109"
+# rad_v = ["C-14"]
 # pmf_1="1"
-# N = 1000
-# kB =1.0e-5
 # V = 10
 # mode = "eff"
 # mode2 = "sym"
+# N = 10000
+# kB = [0.6e-5, 1.0e-5, 1.5e-5]
+# kBtxt = [6, 10, 15]
 
-# M = 5
-# tdcr=[]
-# utdcr=[]
-# eff=[]
-# ueff=[]
-# for i in range(M):
-#     print('progress',100*i/M,' %')
-#     out = td.TDCRoptimize.effCurves(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V)
-#     tdcr.append(out[2])
-#     utdcr.append(out[3])
-#     eff.append(out[0])
-#     ueff.append(out[1])
+# plt.figure("visu")
+# for Rad in rad_v:
+#     for i, kBi in enumerate(kB):
+#         plt.clf()
+#         f = open("result_A_"+Rad+"_"+str(kBtxt[i])+".txt", "w") # analystical
+#         effD = []
+#         for x, l in enumerate(L):
+#             print('progress',100*x/len(L),' %')
+#             out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+#             f.write(str(l)+" "+str(out[0])+" "+str(out[1])+" "+str(out[2])+" "+str(out[3])+" "+str(out[4])+" "+str(out[5])+" \n")
+#             effD.append(out[2])
+#         f.close()
+#         plt.plot(L,effD,label=str(kBi))
+#         plt.xscale("log")
+
+# l = 1
+# kBi = 1.0e-5
+# f = open("result_AN_.txt", "w") # analystical
+# for Rad in rad_v:
+#     R = []
+#     print(Rad)
+#     for j in range(5):
+#         out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2, barp=False)
+#         R.append(out[2])
+#     f.write(Rad+" "+str(np.median(R))+" "+str(np.std(R))+" \n")
+# f.close()
+
+
+# A=td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, "Tc-99", "1", 10000, kBi, V, mode, mode2, barp=True,Display= False) # MC 0.9771859524255478
+# print(A) # TDCR17 0.9724
+# e, p = td.TDCR_model_lib.readBetaShape("Tc-99", 'beta-', 'tot')    # no Ed 0.9690042889831171 - Ed 0.9690042792604032
+# e2, p2 = td.TDCR_model_lib.readBetaSpectra("Tc-99")                # no Ed 0.9712517070635934
+
+# A=td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, "S-35", "1", 10000, kBi, V, mode, mode2, barp=False, Display= False) # MC 0.9357931563925717 0.9404170688549414 0.9404404083209962
+# print(A) # TDCR17 0.9443
+# e, p = td.TDCR_model_lib.readBetaShape("S-35", 'beta-', 'tot')     # no Ed  0.9394876324351543 - Ed 0.9394854546918996 E_quench 0.9360969563486823
+# e2, p2 = td.TDCR_model_lib.readBetaSpectra("S-35")                # no Ed 0.9432625905405294
+
+#A=td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, "Ni-63", "1", 10, kBi, V, mode, mode2, barp=False, Display= True) # MC 0.8314873609197219 0.8291652424879523 0.8328369624432058
+# print(A) # TDCR17 
+# e, p = td.TDCR_model_lib.readBetaShape("Ni-63", 'beta-', 'tot')     # no Ed  0.820637703 
+# e2, p2 = td.TDCR_model_lib.readBetaSpectra("Ni-63")                # no Ed 
+
+# A=td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, "Pu-241", "1", 10000, kBi, V, mode, mode2, barp=False, Display= False) # MC 0.5281756667545862 0.520045761411465 0.5308791207244081
+# print(A) # TDCR17 
+# e, p = td.TDCR_model_lib.readBetaShape("Pu-241", 'beta-', 'tot')     # no Ed  0.514531626, 0.5200989957785515
+# e2, p2 = td.TDCR_model_lib.readBetaSpectra("Pu-241")                # no Ed 
+
+
+# rad = "S-35"
+# e, p = td.TDCR_model_lib.readBetaShape(rad , 'beta-', 'tot')    
+# e2, p2 = td.TDCR_model_lib.readBetaSpectra(rad) 
+# e=np.asarray(e); e2=np.asarray(e2); p=np.asarray(p); p2=np.asarray(p2)
+
+
+
+# Nb = 100000
+# Ev = []
+# Ed = []
+# Em = []
+# for i in range(Nb):
     
-# print("L")
-# for i in L:
-#     print(i)
-# print("tdcr")
-# for i in range(len(L)):
-#     x=[]
-#     for j in tdcr:
-#         x.append(j[i])
-#     print(np.mean(x))
-# print("u(tdcr)")    
-# for i in range(len(L)):
-#     x=[]
-#     for j in tdcr:
-#         x.append(j[i])
-#     print(np.std(x))
-# print("Eff")
-# for i in range(len(L)):
-#     x=[]
-#     for j in eff:
-#         x.append(j[i])
-#     print(np.mean(x))
-# print("u(Eff)")
-# for i in range(len(L)):
-#     x=[]
-#     for j in eff:
-#         x.append(j[i])
-#     print(np.std(x))
+    
+#     index_beta_energy = td.TDCR_model_lib.sampling(p)                           # sampling energy of beta
+#     Ev.append(e[index_beta_energy])
+    
+#     # Ev.append(random.choices(e, weights=p, k=1)[0])
 
+    
+    
+#     Ed.append(td.TDCR_model_lib.energie_dep_beta2(Ev[-1],v=V))
+#     Em.append(td.TDCR_model_lib.Em_e(Ev[-1]*1e3, Ed[-1]*1e3, kBi*1e3, 1000)*1e-3)
+
+# em2 = []
+# for i, ei in enumerate(e2):
+#     em2.append(td.TDCR_model_lib.Em_e(ei*1e3,ei*1e3,kBi*1e3,1000)*1e-3)
+
+
+# print("Mean of the distribution (emission) ",sum(e*p),np.mean(Ev),np.std(Ev)/np.sqrt(Nb))
+# print("Mean of the distribution (interaction) ",sum(e2*p2),np.mean(Ed),np.std(Ed)/np.sqrt(Nb))
+# print("Mean of the distribution (quenched) ",sum(em2*p2),np.mean(Em),np.std(Em)/np.sqrt(Nb))
+# # print(sum(e*p),sum(e2*p2))
+
+
+# plt.figure("beta")
+# plt.clf()
+# # plt.plot(e,p,"+k",label='BetaShape')
+# # plt.plot(e2,p2,"+r",label='Beta spectrum')
+# plt.hist(Ev,bins=e,label='Sample (emission)',density=True)
+# plt.hist(Ed,bins=e,label='Sample (deposition)',density=True, alpha = 0.5)
+# plt.hist(Em,bins=e,label='Sample (quenched)',density=True, alpha=0.5)
+# plt.legend()
+
+
+
+
+
+
+
+# A=[]; B=[]
+# for j in range(10000):
+#     A.append(td.TDCR_model_lib.energie_dep_beta2(5000, 10))
+#     B.append(td.TDCR_model_lib.energie_dep_beta(5000))
+
+# print(np.mean(A), np.mean(B))
 
 """
 Efficiency curves MC
 """
+
 # L = np.arange(0.5,2,0.1)
 # TD = 0.977667386529166
 # TAB = 0.992232838598821
