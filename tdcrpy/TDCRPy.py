@@ -167,6 +167,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
     config.read(file_conf)
     tau=config["Inputs"].getfloat("tau")
     Y=config["Inputs"].getboolean("Y")
+    micCorr=config["Inputs"].getboolean("micCorr")
     radListPureBeta=config["Inputs"].get("radListPureBeta")
     radListPureBeta=radListPureBeta.replace(" ","")
     radListPureBeta=radListPureBeta.split(',')
@@ -659,6 +660,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     e_quenching.append(energy_vec[i])
                 elif p == "electron" or p == "positron":
                     energy_vec[i] = tl.Em_e(energy_vec_initial[i]*1e3,energy_vec[i]*1e3,kB*1e3,nE_electron)*1e-3
+                    if micCorr: energy_vec[i] = energy_vec[i]*tl.micelleLoss(energy_vec_initial[i])
                     e_quenching.append(energy_vec[i])
                 else:
                     e_quenching.append(0)
@@ -677,6 +679,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                         e_quenching2.append(energy_vec2[i])
                     elif p == "electron" or p == "positron":
                         energy_vec2[i] = tl.Em_e(energy_vec_initial2[i]*1e3,energy_vec2[i]*1e3,kB*1e3,nE_electron)*1e-3
+                        if micCorr: energy_vec2[i] = energy_vec2[i]*tl.micelleLoss(energy_vec_initial2[i])
                         e_quenching2.append(energy_vec2[i])
                     else:
                         e_quenching2.append(0) 

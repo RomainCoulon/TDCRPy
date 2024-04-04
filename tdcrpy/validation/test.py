@@ -44,36 +44,57 @@ Quenching
 # plt.show()
 
 
+"""
+Micelle
+"""
+
+l = 1
+TD =0.89465
+Rad = "Cd-109"
+pmf_1 = "1"
+N=1000
+kB = 1e-5
+V=10
+mode="eff"
+mode2="sym"
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+
+out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp= True, Display = False)
+print(out)
+
+
 
 """
 energie_dep_gamma2(e_inci,v)
 """
-V=np.arange(8,21,0.1)
-N=10000
-E=15 # keV
-e_vec = []
-ue_vec = []
-for v in V:
-    x=[]
-    for i in range(N):
-        out=td.TDCR_model_lib.energie_dep_gamma2(15,v)
-        x.append(out)
-    e_vec.append(np.mean(x))
-    ue_vec.append(np.std(x)/np.sqrt(N))
-    print(v, e_vec[-1], ue_vec[-1])
+# V=np.arange(8,21,0.1)
+# N=10000
+# E=15 # keV
+# e_vec = []
+# ue_vec = []
+# for v in V:
+#     x=[]
+#     for i in range(N):
+#         out=td.TDCR_model_lib.energie_dep_gamma2(15,v)
+#         x.append(out)
+#     e_vec.append(np.mean(x))
+#     ue_vec.append(np.std(x)/np.sqrt(N))
+#     print(v, e_vec[-1], ue_vec[-1])
 
-plt.figure(r"mean($E_d$) vs volume")
-plt.clf()
-plt.errorbar(V, e_vec, yerr=ue_vec, fmt="-k", label=r'$E_i$ = 15 keV')
-# plt.colorbar()
-plt.xticks(fontsize=16)
-plt.yticks(fontsize=16)
-plt.legend(fontsize=16)
-plt.xlabel(r"$v$ /mL", fontsize=18)
-plt.ylabel(r"mean($E_d$)/(keV)", fontsize=18)
-# plt.xscale("log")
-# plt.yscale("log")
-plt.show()
+# plt.figure(r"mean($E_d$) vs volume")
+# plt.clf()
+# plt.errorbar(V, e_vec, yerr=ue_vec, fmt="-k", label=r'$E_i$ = 15 keV')
+# # plt.colorbar()
+# plt.xticks(fontsize=16)
+# plt.yticks(fontsize=16)
+# plt.legend(fontsize=16)
+# plt.xlabel(r"$v$ /mL", fontsize=18)
+# plt.ylabel(r"mean($E_d$)/(keV)", fontsize=18)
+# # plt.xscale("log")
+# # plt.yscale("log")
+# plt.show()
 
 
 """

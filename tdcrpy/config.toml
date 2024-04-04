@@ -32,6 +32,13 @@ pN = 0.000302
 pO = 0.082022
 pP = 0.000092
 pCl = 0.000071
+# properties on reverse micelles
+# applied reverse micelle correction
+micCorr = True
+# diameter of the micelles in nm (possible values: 0.5, 1.0, 2.0, 3.0, 4.0)
+diam_micelle = 2
+# acqueous fraction of the scintillator
+fAq = 0.1
 
 ## PROPERTIES OF THE COUNTER
 # Coincidence resolving time (ns)

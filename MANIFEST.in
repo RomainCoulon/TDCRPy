@@ -7,5 +7,6 @@ include tdrcpy/Quenching/alpha_toulene.txt
 include tdrcpy/Quenching/TandataUG.txt
 include tdrcpy/EfficiencyCurves/*/*.txt
 include tdrcpy/MCNP-MATRIX/matrice/fichier/*.txt
+include tdrcpy/Micelle/*.csv
 include ../*.html
 include ../docs/_build/html/*.html

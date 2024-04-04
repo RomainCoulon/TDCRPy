@@ -40,6 +40,8 @@ A = config["Inputs"].getfloat("A")
 depthSpline = config["Inputs"].getint("depthSpline")
 Einterp_a = config["Inputs"].getfloat("Einterp_a")
 Einterp_e = config["Inputs"].getfloat("Einterp_e")
+diam_micelle = config["Inputs"].getfloat("diam_micelle")
+fAq = config["Inputs"].getfloat("fAq")
 
 # import PenNuc data
 with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
@@ -178,6 +180,17 @@ for ikB in kB_e:
     line = [float(x) for x in line[:-1]]
     Em_electron.append(line)
 
+
+micelle_E = []; micelle_S = []
+with importlib.resources.as_file(files('tdcrpy').joinpath('Micelle')) as data_path:
+    tamptxt = "faq01.csv"
+    fid = open(data_path / tamptxt)
+line = fid.readlines()
+for iline in line:
+    iline=iline.replace("\n","").split(";")
+    micelle_E.append(float(iline[0]))
+    micelle_S.append([float(x) for x in iline[1:]])
+micelle_S = np.asarray(micelle_S)
 
 """
 ======= Library of functions =======
@@ -965,9 +978,40 @@ def Em_e(Ei, Ed, kB, nE, Et = Einterp_e*1e3, kB_vec = kB_e):
     return r
 
 
+#============================================================================================
 
+#============================================================================================
 
+#========================= Reverse micelle treatment ========================================
 
+def micelleLoss(E,*, fAq=fAq, diam_micelle=diam_micelle, e_vec=micelle_E, data=micelle_S):
+    """
+    Estimation of the energy deposited ratio due to loss in reversed micelles.
+    The function carries out interpolation in values estimated with GENAT4-DNA
+    in: Nedjadi et al. Applied Radiation and Isotopes, Volume 125, 2017, Pages 94-107,
+    https://doi.org/10.1016/j.apradiso.2017.04.020
+    
+    Parameters
+    ----------
+    E : float
+        Initial energy of the electron. (in keV)
+    fAq : float, optional
+        Aqueous fraction. The default is fAq.    
+    diam_micelle : float, optional
+        Diameter of micelles (in nm). The default is diam_micelle.    
+    e_vec : list, optional
+        Tabulated data of considered energies (in eV). The default is micelle_E.    
+    data : list, optional
+        Tabulated data of energy deposited ratio. The default is micelle_S.
+
+    Returns
+    -------
+    S : float
+        energy deposited ratio (keV)
+    """
+    micDiam = np.array([0.5, 1.0, 2.0, 3.0, 4.0]) #nm
+    S=np.interp(E*1e3, e_vec, micelle_S[:,np.argwhere(micDiam==diam_micelle)[0][0]])*(1-fAq)/0.9
+    return S
 
 
 #============================================================================================
