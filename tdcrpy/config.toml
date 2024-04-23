@@ -1,16 +1,7 @@
 ## This is the configuration file of the TDCRPy code
 
 [Inputs]
-## CASE OF PURE BETA PARTICLE EMITTING RADIONUCLIDES
-# Analytical model for pure beta emitting radionuclides (True or False)
-Y = True
-# List of radionuclides for which the analytical model is applied
-radListPureBeta = H-3, C-14, S-35, Ca-45, Ni-63, Sr-89, Sr-90, Tc-99, Pm-147, Pu-241
-# Number of bins to discretize the linear energy space for quenching calculation
-# and achieve a relative standard uncertainty below 1e-4.
-nE = 7000, 1000, 1000, 500, 2000, 500, 200, 500, 1000, 7000
-
-## OTHER CASES
+## QUENCHING
 # Number of bins to discretize the linear energy space for quenching calculation
 # to achieve a relative standard uncertainty below 1e-4 on the estimated quenched energy: nE_electron = nE_alpha = 10000
 # to achieve a relative standard uncertainty below 1e-3 on the estimated quenched energy: nE_electron = nE_alpha = 1000

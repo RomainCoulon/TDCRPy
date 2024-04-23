@@ -10,8 +10,6 @@ Bureau International des Poids et Mesures
 
 ## IMPORT PYTHON MODULES
 import tdcrpy.TDCR_model_lib as tl
-# import TDCR_model_lib as tl
-# import tdcrpy.TDCR_model_lib as tl
 import importlib.resources
 from importlib.resources import files
 import configparser
@@ -83,7 +81,7 @@ def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=F
                 relaxation = False
     return particle_vec, energy_vec
 
-def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False,uncData=False):
+def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False, Smodel=True, uncData=False):
     """
     This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
     The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB. 
@@ -142,6 +140,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         "True" to display details on the decay sampling. The default is False.
     barp : Boolean, optional
         "True" to display the calculation progress. The default is True.
+    Smodel : Boolean, optional
+        "True" to run the stochastic TDCR model. False to run the analytical caclulation (available only for pure beta emitters).
     
     Returns
     -------
@@ -166,17 +166,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         file_conf = data_path       
     config.read(file_conf)
     tau=config["Inputs"].getfloat("tau")
-    Y=config["Inputs"].getboolean("Y")
     micCorr=config["Inputs"].getboolean("micCorr")
-    radListPureBeta=config["Inputs"].get("radListPureBeta")
-    radListPureBeta=radListPureBeta.replace(" ","")
-    radListPureBeta=radListPureBeta.split(',')
-    X = Rad in radListPureBeta
-    if X:
-        nElist=config["Inputs"].get("nE")
-        nElist=nElist.split(',')
-        nElist = [int(i) for i in nElist]
-    if X and Y:
+    radListPureBeta = ["H-3", "C-14", "S-35", "Ca-45", "Ni-63", "Sr-89", "Sr-90", "Tc-99", "Pm-147", "Pu-241"]
+    if (Rad in radListPureBeta) and (not Smodel):
+        nElist = [7000, 1000, 1000, 500, 2000, 500, 200, 500, 1000, 7000] # discretization
         inE = radListPureBeta.index(Rad)
         nE = nElist[inE]
         print(f"Analytical model used for {Rad}")
@@ -185,6 +178,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             return out
         if mode == "eff":
             return out[0], 0, out[1], 0, out[2], 0
+    elif (not Smodel) and (not Rad in radListPureBeta):
+        print("cannot be processed by the analytical model.")
     else:
         nE_electron = config["Inputs"].getint("nE_electron")
         nE_alpha = config["Inputs"].getint("nE_alpha")
@@ -830,16 +825,17 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 # TAB = 0.992232838598821
 # TBC = 0.992343419459002
 # TAC = 0.99275350064608
-# Rad="Fe-55"
+# Rad="H-3"
 # pmf_1="1"
-# N = 10
+# N = 100
 # kB =1.0e-5
 # V = 10
 # mode = "eff"
 # mode2 = "sym"
 
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
+# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False, Smodel=False, uncData=False)
 
+# print(out)
 
 # L = 1
 # TD = 0.977667386529166
