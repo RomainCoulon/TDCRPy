@@ -172,7 +172,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         nElist = [7000, 1000, 1000, 500, 2000, 500, 200, 500, 1000, 7000] # discretization
         inE = radListPureBeta.index(Rad)
         nE = nElist[inE]
-        print(f"Analytical model used for {Rad}")
+        # print(f"Analytical model used for {Rad}")
         out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,mode2,nE)
         if mode == "res":
             return out

@@ -50,18 +50,19 @@ Micelle
 
 l = 1
 TD =0.89465
-Rad = "Cd-109"
+Rad = "C-14"
 pmf_1 = "1"
-N=1000
+N=100
 kB = 1e-5
-V=10
-mode="eff"
+V=16
+mode="res"
 mode2="sym"
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
 
-out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp= True, Display = False)
+out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp= False, Display = False, Smodel=False)
+# out = td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2)
 print(out)
 
 
