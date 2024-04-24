@@ -11,9 +11,10 @@ import cProfile
 import pstats
 import random
 from scipy.optimize import curve_fit
-
+from tqdm import tqdm
 import sys
 sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
+import TDCRcalculation as cl
 
 
 """
@@ -48,22 +49,73 @@ Quenching
 Micelle
 """
 
-l = 1
+# l = 1
+# TD =0.89465
+# Rad = "C-14"
+# pmf_1 = "1"
+# N=100
+# kB = 1e-5
+# V=16
+# mode="res"
+# mode2="sym"
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+
+# out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp= False, Display = False, Smodel=False)
+# # out = td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2)
+# print(out)
+
+
+"""
+Build procedure
+"""
+Lstart = 0.1
+Lend = 5
+Lstep = 0.1
 TD =0.89465
-Rad = "C-14"
+rad = "C-14"
 pmf_1 = "1"
-N=100
+N=1000
 kB = 1e-5
-V=16
+V=10
 mode="res"
 mode2="sym"
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
 
-out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp= False, Display = False, Smodel=False)
-# out = td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2)
-print(out)
+nE=50000
+Nstep=4
+span=Lstep
+Smodel0=True
+for j in range(Nstep):
+    if j==0:
+        L = np.arange(Lstart,Lend,span)
+        res =[]
+        for l in tqdm(L, desc="Processing", unit=" trail"):
+            out = td.TDCR_model_lib.modelAnalytical(l, TD,TAB,TBC,TAC, rad, kB*1e-3, V, "res", "sym", nE)
+            # out = td.TDCRPy.TDCRPy(l, TD,TAB,TBC,TAC, rad, "1", N, kB*1e-3, V, "res", "sym", Smodel=Smodel0)
+            res.append(out)
+        L0=L[np.argmin(res)]
+    else:
+        span/=10
+        L1 = np.arange(L0-10*span,L0+10*span,span)
+        res =[]
+        for l in tqdm(L1, desc="Processing", unit=" trail"):
+            out = td.TDCR_model_lib.modelAnalytical(l, TD,TAB,TBC,TAC, rad, kB*1e-3, V, "res", "sym", nE)
+            # out = td.TDCRPy.TDCRPy(l, TD,TAB,TBC,TAC, rad, "1", N, kB*1e-3, V, "res", "sym", Smodel=Smodel0)
+            res.append(out)
+        L0=L1[np.argmin(res)]
+out = td.TDCRPy.TDCRPy(L0, TD,TAB,TBC,TAC, rad, "1", N, kB*1e-3, V, "eff", "sym", Smodel=Smodel0); eff=out[2]
+eff1 = td.TDCRPy.TDCRPy(L0-span, TD,TAB,TBC,TAC, rad, "1", N, kB*1e-3, V, "eff", "sym", Smodel=Smodel0)[2]
+eff2 = td.TDCRPy.TDCRPy(L0+span, TD,TAB,TBC,TAC, rad, "1", N, kB*1e-3, V, "eff", "sym", Smodel=Smodel0)[2]
+ureff = abs(eff2-eff1)/(2*eff)
+
+print("\nTDCRPy",L0,eff,ureff)
+
+out=cl.I2calc(TD, TAB, TBC, TAC, rad, kB)
+print("I2calc",out[0]*1e3,out[2])
 
 
 

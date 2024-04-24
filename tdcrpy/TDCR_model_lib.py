@@ -2384,8 +2384,8 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
     em=np.empty(len(e))
     for i, ei in enumerate(e):
         # ed = energie_dep_beta2(ei,V)
-        # em[i] = E_quench_e(ei*1e3,ed*1e3,kB*1e3,ne)*1e-3
-        em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
+        em[i] = E_quench_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
+        # em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
         
         
     if mode2=="sym":
