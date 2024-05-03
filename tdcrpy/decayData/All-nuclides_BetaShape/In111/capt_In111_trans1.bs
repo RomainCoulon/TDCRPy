@@ -1,0 +1,84 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 49-In-111 [9/2+] g.s.  -->  Daughter nucleus: 48-Cd-111 [7/2+] 416.6 keV
+Calculation of the allowed transition from the electron capture decay of In-111
+
+Transition energy: 445.2 (46) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.13333 (32)
+PL2/PK =  0.00290 (10)
+PM1/PK =  0.02844 (16)
+PM2/PK =  6.56E-4 (24)
+PN1/PK =  0.00637 (6)
+PN2/PK =  1.35E-4 (6)
+PO1/PK =  0.001016 (28)
+
+L/K =  0.13623 (42)
+M/K =  0.02910 (18)
+N/K =  0.00650 (7)
+O/K =  0.001016 (28)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.8526 (5)
+PL1 =  0.11368 (21)
+PL2 =  0.00247 (8)
+PM1 =  0.02425 (12)
+PM2 =  5.59E-4 (20)
+PN1 =  0.005429 (48)
+PN2 =  1.154E-4 (47)
+PO1 =  8.66E-4 (24)
+
+K =  0.8526 (5)
+L =  0.11615 (29)
+M =  0.02481 (14)
+N =  0.00554 (5)
+O =  8.66E-4 (24)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   99.995 (5) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.8526 (5)
+PL1  =  0.11368 (21)
+PL2  =  0.00247 (8)
+PM1  =  0.02425 (12)
+PM2  =  5.59E-4 (20)
+PN1  =  0.005429 (48)
+PN2  =  1.154E-4 (47)
+PO1  =  8.66E-4 (24)
+
+K =  0.8526 (5)
+L =  0.11615 (29)
+M =  0.02481 (14)
+N =  0.00554 (5)
+O =  8.66E-4 (24)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 5.
+
+Log ft value (ec)    =  5.040 (22)
+with log f           =  -0.344 (22)
+and log partial T1/2 =  5.38445 (7)
+

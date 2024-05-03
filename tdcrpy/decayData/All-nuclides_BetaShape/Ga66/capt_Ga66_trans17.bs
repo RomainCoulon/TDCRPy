@@ -1,0 +1,75 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 31-Ga-66 [0+] g.s.  -->  Daughter nucleus: 30-Zn-66 [1+] 4849.930 (30) keV
+Calculation of the allowed transition from the electron capture decay of Ga-66
+
+Transition energy: 325.1 (30) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.11605 (22)
+PL2/PK =  8.57E-4 (32)
+PM1/PK =  0.01931 (8)
+PM2/PK =  1.40E-4 (6)
+PN1/PK =  0.001549 (34)
+
+L/K =  0.11691 (26)
+M/K =  0.01945 (9)
+N/K =  0.001549 (34)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.87881 (29)
+PL1 =  0.10199 (16)
+PL2 =  7.53E-4 (28)
+PM1 =  0.01697 (7)
+PM2 =  1.23E-4 (5)
+PN1 =  0.001362 (30)
+
+K =  0.87881 (29)
+L =  0.10274 (19)
+M =  0.01709 (7)
+N =  0.001362 (30)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.0330 (40) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.87881 (29)
+PL1  =  0.10199 (16)
+PL2  =  7.53E-4 (28)
+PM1  =  0.01697 (7)
+PM2  =  1.23E-4 (5)
+PN1  =  0.001362 (30)
+
+K =  0.87881 (29)
+L =  0.10274 (19)
+M =  0.01709 (7)
+N =  0.001362 (30)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 6.62
+
+Log ft value (ec)    =  6.63 (6)
+with log f           =  -1.388 (21)
+and log partial T1/2 =  8.02 (5)
+

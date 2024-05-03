@@ -1,0 +1,75 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 30-Zn-63 [3/2-] g.s.  -->  Daughter nucleus: 29-Cu-63 [3/2-] 2716.47 (9) keV
+Calculation of the allowed transition from the electron capture decay of Zn-63
+
+Transition energy: 649.7 (15) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.11637 (22)
+PL2/PK =  8.15E-4 (22)
+PM1/PK =  0.01845 (8)
+PM2/PK =  1.243E-4 (37)
+PN1/PK =  0.001026 (17)
+
+L/K =  0.11718 (25)
+M/K =  0.01857 (8)
+N/K =  0.001026 (17)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.87968 (27)
+PL1 =  0.10236 (17)
+PL2 =  7.17E-4 (19)
+PM1 =  0.01623 (6)
+PM2 =  1.094E-4 (32)
+PN1 =  9.03E-4 (15)
+
+K =  0.87968 (27)
+L =  0.10308 (19)
+M =  0.01634 (7)
+N =  9.03E-4 (15)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.082 (7) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.87968 (27)
+PL1  =  0.10236 (17)
+PL2  =  7.17E-4 (19)
+PM1  =  0.01623 (6)
+PM2  =  1.094E-4 (32)
+PN1  =  9.03E-4 (15)
+
+K =  0.87968 (27)
+L =  0.10308 (19)
+M =  0.01634 (7)
+N =  9.03E-4 (15)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 5.62
+
+Log ft value (ec)    =  5.618 (38)
+with log f           =  -0.830 (10)
+and log partial T1/2 =  6.448 (37)
+

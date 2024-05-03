@@ -1,0 +1,112 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 53-I-123 [5/2+] g.s.  -->  Daughter nucleus: 52-Te-123 [3/2+] 158.990 (30) keV
+Calculation of the allowed transition from the electron capture decay of I-123
+
+Transition energy: 1075.0 (30) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.13329 (21)
+PL2/PK =  0.003456 (9)
+PM1/PK =  0.02916 (15)
+PM2/PK =  8.326E-4 (11)
+PN1/PK =  0.00655 (7)
+PN2/PK =  1.756E-4 (11)
+PO1/PK =  0.001077 (18)
+PO2/PK =  1.800E-5 (27)
+
+L/K =  0.13675 (20)
+M/K =  0.02999 (15)
+N/K =  0.00673 (7)
+O/K =  0.001095 (19)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.85138 (31)
+PL1 =  0.11348 (13)
+PL2 =  0.002943 (8)
+PM1 =  0.02483 (12)
+PM2 =  7.088E-4 (6)
+PN1 =  0.00558 (5)
+PN2 =  1.495E-4 (9)
+PO1 =  9.17E-4 (15)
+PO2 =  1.532E-5 (22)
+
+K =  0.85138 (31)
+L =  0.11642 (13)
+M =  0.02553 (12)
+N =  0.00573 (5)
+O =  9.33E-4 (16)
+
+
+--------------------------
+Capture-to-positron ratios
+
+K/b+ =  3.1E6 (11)
+L1/b+ =  4.1E5 (15)
+L2/b+ =  1.06E4 (40)
+M1/b+ =  8.9E4 (33)
+M2/b+ =  2.5E3 (10)
+N1/b+ =  2.0E4 (7)
+N2/b+ =  5.4E2 (20)
+O1/b+ =  3.3E3 (13)
+O2/b+ =  55 (21)
+
+K/b+ =  3.1E6 (11)
+L/b+ =  4.2E5 (16)
+M/b+ =  9.2E4 (34)
+N/b+ =  2.1E4 (8)
+O/b+ =  3.3E3 (13)
+
+EC/b+ =  3.6E6 (13)
+
+
+------------------------------------------------------------
+Splitting of the branch between capture and beta plus decays
+
+Input data: Iec tot. =   97.18 (32) %   Iec =   97.18 (32) %   Ib+ =   0. %
+Iec      =   97.18 (32) % (input data kept)
+Ib+      =   0. % (input data kept)
+Iec tot. =   97.18 (32) % (input data kept)
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.85138 (31)
+PL1  =  0.11348 (13)
+PL2  =  0.002943 (8)
+PM1  =  0.02483 (12)
+PM2  =  7.088E-4 (6)
+PN1  =  0.00558 (5)
+PN2  =  1.495E-4 (9)
+PO1  =  9.17E-4 (15)
+PO2  =  1.532E-5 (22)
+
+K =  0.85138 (31)
+L =  0.11642 (13)
+M =  0.02553 (12)
+N =  0.00573 (5)
+O =  9.33E-4 (16)
+
+
+------------------------------------------------------------
+Input log ft value (ec & beta +): 5.26
+
+Log ft value (ec)    =  5.290 (6)
+with log f           =  0.600 (6)
+and log partial T1/2 =  4.6901 (14)
+

@@ -1,0 +1,90 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 34-Se-75 [5/2+] g.s.  -->  Daughter nucleus: 33-As-75 [1/2-] 617.70 (40) keV
+Calculation of the 1st forbidden unique transition from the electron capture decay of Se-75
+
+Transition energy: 245.9 (9) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.12846 (23)
+PL2/PK =  0.001217 (6)
+PL3/PK =  0.01611 (20)
+PM1/PK =  0.02123 (7)
+PM2/PK =  1.892E-4 (6)
+PM3/PK =  0.002199 (22)
+PN1/PK =  0.003098 (30)
+PM4/PK =  8.21E-7 (17)
+PN2/PK =  1.502E-5 (11)
+PN3/PK =  6.28E-5 (12)
+
+L/K =  0.14579 (28)
+M/K =  0.02362 (8)
+N/K =  0.003176 (32)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.85282 (29)
+PL1 =  0.10956 (16)
+PL2 =  0.0010379 (49)
+PL3 =  0.01374 (17)
+PM1 =  0.01810 (5)
+PM2 =  1.6135E-4 (47)
+PM3 =  0.001875 (19)
+PN1 =  0.002642 (25)
+PM4 =  7.00E-7 (14)
+PN2 =  1.281E-5 (9)
+PN3 =  5.35E-5 (10)
+
+K =  0.85282 (29)
+L =  0.12433 (20)
+M =  0.02014 (6)
+N =  0.002708 (26)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.0126 (6) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.85282 (29)
+PL1  =  0.10956 (16)
+PL2  =  0.0010379 (49)
+PL3  =  0.01374 (17)
+PM1  =  0.01810 (5)
+PM2  =  1.6135E-4 (47)
+PM3  =  0.001875 (19)
+PN1  =  0.002642 (25)
+PM4  =  7.00E-7 (14)
+PN2  =  1.281E-5 (9)
+PN3  =  5.35E-5 (10)
+
+K =  0.85282 (29)
+L =  0.12433 (20)
+M =  0.02014 (6)
+N =  0.002708 (26)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 8.8
+
+Log ft value (ec)    =  8.760 (23)
+with log f           =  -2.154 (10)
+and log partial T1/2 =  10.915 (21)
+

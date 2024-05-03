@@ -1,0 +1,80 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 11-Na-22 [3+] g.s.  -->  Daughter nucleus: 10-Ne-22 [0+] g.s.
+Calculation of the 2nd forbidden unique transition from the electron capture decay of Na-22
+
+Transition energy: 2843.02 (21) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.06792 (20)
+PL2/PK =  2.631E-5 (6)
+PL3/PK =  1.085E-5 (7)
+
+L/K =  0.06795 (20)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.93637 (17)
+PL1 =  0.06359 (17)
+PL2 =  2.464E-5 (5)
+PL3 =  1.016E-5 (6)
+
+K =  0.93637 (17)
+L =  0.06363 (17)
+
+
+--------------------------
+Capture-to-positron ratios
+
+K/b+ =  0.01670 (12)
+L1/b+ =  0.001134 (5)
+L2/b+ =  4.391E-7 (22)
+L3/b+ =  1.8100E-7 (21)
+
+K/b+ =  0.01670 (12)
+L/b+ =  0.001135 (5)
+
+EC/b+ =  0.01783 (13)
+
+
+------------------------------------------------------------
+Splitting of the branch between capture and beta plus decays
+
+Input data: Iec tot. =   0.056 (14) %   Iec =   9.8E-4 (25) %   Ib+ =   0.055 (14) %
+Iec      =   9.8E-4 (25) % (input data kept)
+Ib+      =   0.055 (14) % (input data kept)
+Iec tot. =   0.056 (14) % (input data kept)
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.01641 (12)
+PL1  =  0.001114 (8)
+PL2  =  4.317E-7 (32)
+PL3  =  1.779E-7 (17)
+
+K =  0.01641 (12)
+L =  0.001115 (8)
+
+
+------------------------------------------------------------
+Input log ft value (ec & beta +): 14.91
+
+Log ft value (ec)    =  14.92 (11)
+with log f           =  1.9977 (31)
+and log partial T1/2 =  12.92 (11)
+

@@ -1,0 +1,93 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 81-Tl-201 [1/2+] g.s.  -->  Daughter nucleus: 80-Hg-201 [1/2-] 167.45 keV
+The 1st forbidden non-unique transition from the electron capture decay of Tl-201 is calculated as allowed
+
+Transition energy: 316 (15) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.260 (8)
+PL2/PK =  0.0198 (11)
+PM1/PK =  0.0645 (24)
+PM2/PK =  0.00535 (31)
+PN1/PK =  0.0186 (7)
+PN2/PK =  0.00150 (9)
+PO1/PK =  0.00458 (19)
+PO2/PK =  3.39E-4 (22)
+PP1/PK =  4.34E-4 (23)
+
+L/K =  0.280 (9)
+M/K =  0.0698 (27)
+N/K =  0.0201 (8)
+O/K =  0.00492 (22)
+P/K =  4.34E-4 (23)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.727 (7)
+PL1 =  0.1893 (42)
+PL2 =  0.0144 (6)
+PM1 =  0.0469 (13)
+PM2 =  0.00389 (19)
+PN1 =  0.01352 (40)
+PN2 =  0.00109 (5)
+PO1 =  0.00333 (11)
+PO2 =  2.46E-4 (13)
+PP1 =  3.15E-4 (14)
+
+K =  0.727 (7)
+L =  0.2037 (48)
+M =  0.0508 (15)
+N =  0.01461 (45)
+O =  0.00358 (12)
+P =  3.15E-4 (14)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   40.9 (9) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.727 (7)
+PL1  =  0.1893 (42)
+PL2  =  0.0144 (6)
+PM1  =  0.0469 (13)
+PM2  =  0.00389 (19)
+PN1  =  0.01352 (40)
+PN2  =  0.00109 (5)
+PO1  =  0.00333 (11)
+PO2  =  2.46E-4 (13)
+PP1  =  3.15E-4 (14)
+
+K =  0.727 (7)
+L =  0.2037 (48)
+M =  0.0508 (15)
+N =  0.01461 (45)
+O =  0.00358 (12)
+P =  3.15E-4 (14)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 6.1
+
+Log ft value (ec)    =  6.16 (6)
+with log f           =  0.35 (6)
+and log partial T1/2 =  5.808 (10)
+

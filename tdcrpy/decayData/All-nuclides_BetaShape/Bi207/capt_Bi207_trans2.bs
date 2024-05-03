@@ -1,0 +1,91 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 83-Bi-207 [9/2-] g.s.  -->  Daughter nucleus: 82-Pb-207 [7/2-] 2339.948 (11) keV
+Calculation of the allowed transition from the electron capture decay of Bi-207
+
+Transition energy: 57.6 (21) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL2/PL1 =  0.0832 (12)
+PM1/PL1 =  0.385 (10)
+PM2/PL1 =  0.0344 (12)
+PN1/PL1 =  0.1214 (40)
+PN2/PL1 =  0.01062 (38)
+PO1/PL1 =  0.0310 (12)
+PO2/PL1 =  0.00248 (8)
+PP1/PL1 =  0.00413 (18)
+PP2/PL1 =  1.80E-4 (7)
+
+L/L1 =  0.0832 (12)
+M/L1 =  0.420 (10)
+N/L1 =  0.1320 (42)
+O/L1 =  0.0335 (12)
+P/L1 =  0.00431 (19)
+
+
+------------------------------
+Relative capture probabilities
+
+PL1  =  0.598 (5)
+PL2 =  0.0497 (10)
+PM1 =  0.2304 (38)
+PM2 =  0.0206 (5)
+PN1 =  0.0726 (17)
+PN2 =  0.00635 (17)
+PO1 =  0.0185 (5)
+PO2 =  0.001480 (35)
+PP1 =  0.00247 (9)
+PP2 =  1.075E-4 (31)
+
+L =  0.648 (6)
+M =  0.2509 (38)
+N =  0.0789 (18)
+O =  0.0200 (6)
+P =  0.00258 (9)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   7.03 (23) %
+
+
+---------------------
+Capture probabilities
+
+PL1  =  0.598 (5)
+PL2  =  0.0497 (10)
+PM1  =  0.2304 (38)
+PM2  =  0.0206 (5)
+PN1  =  0.0726 (17)
+PN2  =  0.00635 (17)
+PO1  =  0.0185 (5)
+PO2  =  0.001480 (35)
+PP1  =  0.00247 (9)
+PP2  =  1.075E-4 (31)
+
+L =  0.648 (6)
+M =  0.2509 (38)
+N =  0.0789 (18)
+O =  0.0200 (6)
+P =  0.00258 (9)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 8.3
+
+Log ft value (ec)    =  8.39 (5)
+with log f           =  -1.779 (47)
+and log partial T1/2 =  10.169 (23)
+

@@ -1,0 +1,84 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 43-Tc-94m [2+] 76.0 (30) keV  -->  Daughter nucleus: 42-Mo-94 [2+] 3892.16 (7) keV
+Calculation of the allowed transition from the electron capture decay of Tc-94
+
+Transition energy: 440 (7) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.12498 (34)
+PL2/PK =  0.001994 (43)
+PM1/PK =  0.02534 (17)
+PM2/PK =  4.22E-4 (11)
+PN1/PK =  0.00510 (6)
+PN2/PK =  7.49E-5 (24)
+PO1/PK =  4.35E-4 (10)
+
+L/K =  0.12697 (39)
+M/K =  0.02576 (18)
+N/K =  0.00517 (6)
+O/K =  4.35E-4 (10)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.86331 (47)
+PL1 =  0.10789 (24)
+PL2 =  0.001722 (36)
+PM1 =  0.02187 (13)
+PM2 =  3.64E-4 (9)
+PN1 =  0.004402 (47)
+PN2 =  6.47E-5 (20)
+PO1 =  3.76E-4 (8)
+
+K =  0.86331 (47)
+L =  0.10962 (27)
+M =  0.02224 (14)
+N =  0.004466 (49)
+O =  3.76E-4 (8)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.212 (13) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.86331 (47)
+PL1  =  0.10789 (24)
+PL2  =  0.001722 (36)
+PM1  =  0.02187 (13)
+PM2  =  3.64E-4 (9)
+PN1  =  0.004402 (47)
+PN2  =  6.47E-5 (20)
+PO1  =  3.76E-4 (8)
+
+K =  0.86331 (47)
+L =  0.10962 (27)
+M =  0.02224 (14)
+N =  0.004466 (49)
+O =  3.76E-4 (8)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 5.6
+
+Log ft value (ec)    =  5.576 (34)
+with log f           =  -0.590 (20)
+and log partial T1/2 =  6.166 (28)
+

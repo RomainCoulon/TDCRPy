@@ -1,0 +1,97 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 93-Np-236 [6-] g.s.  -->  Daughter nucleus: 92-U-236 [5-] 848.1 (8) keV
+Calculation of the allowed transition from the electron capture decay of Np-236
+
+Transition energy: 8E1 (5) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL2/PL1 =  0.11 (22)
+PM1/PL1 =  0.4 (12)
+PM2/PL1 =  0.05 (16)
+PN1/PL1 =  0.1 (5)
+PN2/PL1 =  0.02 (7)
+PO1/PL1 =  0.04 (16)
+PO2/PL1 =  0.005 (20)
+PP1/PL1 =  0.011 (46)
+PP2/PL1 =  0.0011 (49)
+PQ1/PL1 =  0.8E-3 (34)
+
+L/L1 =  0.11 (22)
+M/L1 =  0.5 (14)
+N/L1 =  0.1 (6)
+O/L1 =  0.04 (18)
+P/L1 =  0.01 (5)
+Q/L1 =  0.8E-3 (34)
+
+
+------------------------------
+Relative capture probabilities
+
+PL1  =  0.57 (31)
+PL2 =  0.06 (11)
+PM1 =  0.23 (18)
+PM2 =  0.028 (25)
+PN1 =  0.07 (9)
+PN2 =  0.009 (12)
+PO1 =  0.022 (27)
+PO2 =  0.0026 (35)
+PP1 =  0.006 (8)
+PP2 =  6E-4 (9)
+PQ1 =  5E-4 (6)
+
+L =  0.63 (34)
+M =  0.26 (21)
+N =  0.08 (10)
+O =  0.024 (31)
+P =  0.007 (9)
+Q =  5E-4 (6)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.096 %
+
+
+---------------------
+Capture probabilities
+
+PL1  =  0.57 (31)
+PL2  =  0.06 (11)
+PM1  =  0.23 (18)
+PM2  =  0.028 (25)
+PN1  =  0.07 (9)
+PN2  =  0.009 (12)
+PO1  =  0.022 (27)
+PO2  =  0.0026 (35)
+PP1  =  0.006 (8)
+PP2  =  6E-4 (9)
+PQ1  =  5E-4 (6)
+
+L =  0.63 (34)
+M =  0.26 (21)
+N =  0.08 (10)
+O =  0.024 (31)
+P =  0.007 (9)
+Q =  5E-4 (6)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 14.6
+
+Log ft value (ec)    =  14.6 (10)
+with log f           =  -1.1 (10)
+and log partial T1/2 =  15.707 (22)
+

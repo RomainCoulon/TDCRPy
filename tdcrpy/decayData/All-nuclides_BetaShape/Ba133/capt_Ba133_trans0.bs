@@ -1,0 +1,117 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 56-Ba-133 [1/2+] g.s.  -->  Daughter nucleus: 55-Cs-133 [7/2+] g.s.
+Calculation of the 2nd forbidden unique transition from the electron capture decay of Ba-133
+
+Transition energy: 517.3 (10) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.18111 (34)
+PL2/PK =  0.0053 (7)
+PL3/PK =  0.0372 (49)
+PM1/PK =  0.04312 (23)
+PM2/PK =  0.00137 (18)
+PM3/PK =  0.0091 (13)
+PN1/PK =  0.01082 (11)
+PM4/PK =  2.64E-5 (41)
+PM5/PK =  2.23E-5 (36)
+PN2/PK =  3.34E-4 (47)
+PN3/PK =  0.00200 (29)
+PO1/PK =  0.001939 (31)
+PN4/PK =  6.0E-6 (10)
+PN5/PK =  5.3E-6 (9)
+PO2/PK =  4.9E-5 (8)
+PO3/PK =  2.43E-4 (39)
+PP1/PK =  2.49E-4 (21)
+
+L/K =  0.224 (6)
+M/K =  0.0537 (17)
+N/K =  0.01317 (45)
+O/K =  0.00223 (8)
+P/K =  2.49E-4 (21)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.7734 (48)
+PL1 =  0.1401 (7)
+PL2 =  0.0041 (5)
+PL3 =  0.0288 (36)
+PM1 =  0.03335 (6)
+PM2 =  0.00106 (13)
+PM3 =  0.0071 (9)
+PN1 =  0.008372 (32)
+PM4 =  2.04E-5 (30)
+PM5 =  1.73E-5 (26)
+PN2 =  2.58E-4 (34)
+PN3 =  0.00154 (21)
+PO1 =  0.001499 (15)
+PN4 =  4.6E-6 (7)
+PN5 =  4.1E-6 (7)
+PO2 =  3.8E-5 (5)
+PO3 =  1.88E-4 (29)
+PP1 =  1.92E-4 (15)
+
+K =  0.7734 (48)
+L =  0.1730 (35)
+M =  0.0415 (10)
+N =  0.01018 (28)
+O =  0.001725 (49)
+P =  1.92E-4 (15)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   5.0000E-4 %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.7734 (48)
+PL1  =  0.1401 (7)
+PL2  =  0.0041 (5)
+PL3  =  0.0288 (36)
+PM1  =  0.03335 (6)
+PM2  =  0.00106 (13)
+PM3  =  0.0071 (9)
+PN1  =  0.008372 (32)
+PM4  =  2.04E-5 (30)
+PM5  =  1.73E-5 (26)
+PN2  =  2.58E-4 (34)
+PN3  =  0.00154 (21)
+PO1  =  0.001499 (15)
+PN4  =  4.6E-6 (7)
+PN5  =  4.1E-6 (7)
+PO2  =  3.8E-5 (5)
+PO3  =  1.88E-4 (29)
+PP1  =  1.92E-4 (15)
+
+K =  0.7734 (48)
+L =  0.1730 (35)
+M =  0.0415 (10)
+N =  0.01018 (28)
+O =  0.001725 (49)
+P =  1.92E-4 (15)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 13.9
+
+Log ft value (ec)    =  13.773 (44)
+with log f           =  -0.050 (44)
+and log partial T1/2 =  13.82293 (25)
+

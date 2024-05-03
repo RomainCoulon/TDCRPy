@@ -1,0 +1,76 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 7-N-13 [1/2-] g.s.  -->  Daughter nucleus: 6-C-13 [1/2-] g.s.
+Calculation of the allowed transition from the electron capture decay of N-13
+
+Transition energy: 2220.45 (27) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.0806 (7)
+PL2/PK =  7.40E-6 (14)
+
+L/K =  0.0806 (7)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.9254 (6)
+PL1 =  0.0746 (6)
+PL2 =  6.85E-6 (12)
+
+K =  0.9254 (6)
+L =  0.0746 (6)
+
+
+--------------------------
+Capture-to-positron ratios
+
+K/b+ =  0.00182 (5)
+L1/b+ =  1.469E-4 (30)
+L2/b+ =  1.347E-8 (15)
+
+K/b+ =  0.00182 (5)
+L/b+ =  1.469E-4 (30)
+
+EC/b+ =  0.00197 (5)
+
+
+------------------------------------------------------------
+Splitting of the branch between capture and beta plus decays
+
+Input data: Iec tot. =   100.000 (18) %   Iec =   0.182 (12) %   Ib+ =   99.818 (13) %
+Iec      =   0.182 (12) % (input data kept)
+Ib+      =   99.818 (13) % (input data kept)
+Iec tot. =   100. % (input data kept)
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.00182 (5)
+PL1  =  1.466E-4 (42)
+PL2  =  1.345E-8 (44)
+
+K =  0.00182 (5)
+L =  1.466E-4 (42)
+
+
+------------------------------------------------------------
+Input log ft value not given.
+
+Log ft value (ec)    =  3.697 (31)
+with log f           =  -1.820 (12)
+and log partial T1/2 =  5.517 (29)
+

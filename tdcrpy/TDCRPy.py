@@ -180,6 +180,12 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             return out[0], 0, out[1], 0, out[2], 0
     elif (not Smodel) and (not Rad in radListPureBeta):
         print("cannot be processed by the analytical model.")
+        # print(f"Analytical model used for {Rad}")
+        out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,mode2,10000)
+        if mode == "res":
+            return out
+        if mode == "eff":
+            return out[0], 0, out[1], 0, out[2], 0
     else:
         nE_electron = config["Inputs"].getint("nE_electron")
         nE_alpha = config["Inputs"].getint("nE_alpha")

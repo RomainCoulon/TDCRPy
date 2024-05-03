@@ -1,0 +1,96 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 82-Pb-203 [5/2-] g.s.  -->  Daughter nucleus: 81-Tl-203 [5/2+] 680.5164 (22) keV
+The 1st forbidden non-unique transition from the electron capture decay of Pb-203 is calculated as allowed
+
+Transition energy: 294 (6) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.2796 (44)
+PL2/PK =  0.0219 (11)
+PM1/PK =  0.0707 (14)
+PM2/PK =  0.00605 (31)
+PN1/PK =  0.02037 (47)
+PN2/PK =  0.00172 (8)
+PO1/PK =  0.00503 (13)
+PO2/PK =  3.86E-4 (18)
+PP1/PK =  5.86E-4 (20)
+PP2/PK =  2.061E-5 (40)
+
+L/K =  0.302 (5)
+M/K =  0.0767 (13)
+N/K =  0.02209 (44)
+O/K =  0.00541 (13)
+P/K =  6.06E-4 (21)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.7110 (34)
+PL1 =  0.1988 (23)
+PL2 =  0.0156 (7)
+PM1 =  0.0502 (8)
+PM2 =  0.00430 (20)
+PN1 =  0.01449 (27)
+PN2 =  0.00122 (5)
+PO1 =  0.00358 (8)
+PO2 =  2.74E-4 (11)
+PP1 =  4.16E-4 (13)
+PP2 =  1.466E-5 (21)
+
+K =  0.7110 (34)
+L =  0.2144 (26)
+M =  0.0545 (7)
+N =  0.01571 (25)
+O =  0.00385 (8)
+P =  4.31E-4 (13)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   4.80 (8) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.7110 (34)
+PL1  =  0.1988 (23)
+PL2  =  0.0156 (7)
+PM1  =  0.0502 (8)
+PM2  =  0.00430 (20)
+PN1  =  0.01449 (27)
+PN2  =  0.00122 (5)
+PO1  =  0.00358 (8)
+PO2  =  2.74E-4 (11)
+PP1  =  4.16E-4 (13)
+PP2  =  1.466E-5 (21)
+
+K =  0.7110 (34)
+L =  0.2144 (26)
+M =  0.0545 (7)
+N =  0.01571 (25)
+O =  0.00385 (8)
+P =  4.31E-4 (13)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 6.812
+
+Log ft value (ec)    =  6.886 (27)
+with log f           =  0.296 (26)
+and log partial T1/2 =  6.590 (7)
+

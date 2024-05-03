@@ -1,0 +1,93 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 70-Yb-169 [7/2+] g.s.  -->  Daughter nucleus: 69-Tm-169 [9/2+] 332.12 keV
+Calculation of the allowed transition from the electron capture decay of Yb-169
+
+Transition energy: 576.9 (40) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.16918 (39)
+PL2/PK =  0.008566 (26)
+PM1/PK =  0.04177 (19)
+PM2/PK =  0.002349 (12)
+PN1/PK =  0.01100 (8)
+PN2/PK =  6.08E-4 (5)
+PO1/PK =  0.001776 (17)
+PO2/PK =  7.46E-5 (7)
+PP1/PK =  1.487E-4 (14)
+
+L/K =  0.17774 (42)
+M/K =  0.04412 (20)
+N/K =  0.01161 (9)
+O/K =  0.001851 (17)
+P/K =  1.487E-4 (14)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.80941 (48)
+PL1 =  0.13693 (24)
+PL2 =  0.006933 (17)
+PM1 =  0.03381 (13)
+PM2 =  0.001902 (9)
+PN1 =  0.00890 (6)
+PN2 =  4.922E-4 (38)
+PO1 =  0.001437 (12)
+PO2 =  6.04E-5 (6)
+PP1 =  1.204E-4 (10)
+
+K =  0.80941 (48)
+L =  0.14387 (25)
+M =  0.03571 (14)
+N =  0.00939 (7)
+O =  0.001498 (13)
+P =  1.204E-4 (10)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.0142 (16) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.80941 (48)
+PL1  =  0.13693 (24)
+PL2  =  0.006933 (17)
+PM1  =  0.03381 (13)
+PM2  =  0.001902 (9)
+PN1  =  0.00890 (6)
+PN2  =  4.922E-4 (38)
+PO1  =  0.001437 (12)
+PO2  =  6.04E-5 (6)
+PP1  =  1.204E-4 (10)
+
+K =  0.80941 (48)
+L =  0.14387 (25)
+M =  0.03571 (14)
+N =  0.00939 (7)
+O =  0.001498 (13)
+P =  1.204E-4 (10)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 10.9
+
+Log ft value (ec)    =  10.91 (5)
+with log f           =  0.621 (8)
+and log partial T1/2 =  10.290 (49)
+

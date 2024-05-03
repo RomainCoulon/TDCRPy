@@ -1,0 +1,78 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 35-Br-76 [1-] g.s.  -->  Daughter nucleus: 34-Se-76 [1+] 4173.1 (9) keV
+The 1st forbidden non-unique transition from the electron capture decay of Br-76 is calculated as allowed
+
+Transition energy: 790 (9) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.11204 (23)
+PL2/PK =  0.0011403 (18)
+PM1/PK =  0.01884 (12)
+PM2/PK =  1.841E-4 (6)
+PN1/PK =  0.002852 (35)
+PN2/PK =  1.634E-5 (18)
+
+L/K =  0.11318 (23)
+M/K =  0.01903 (12)
+N/K =  0.002868 (35)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.88100 (30)
+PL1 =  0.09871 (17)
+PL2 =  0.0010046 (19)
+PM1 =  0.01660 (10)
+PM2 =  1.6221E-4 (49)
+PN1 =  0.002513 (30)
+PN2 =  1.440E-5 (15)
+
+K =  0.88100 (30)
+L =  0.09971 (17)
+M =  0.01676 (10)
+N =  0.002527 (30)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.200 (15) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.88100 (30)
+PL1  =  0.09871 (17)
+PL2  =  0.0010046 (19)
+PM1  =  0.01660 (10)
+PM2  =  1.6221E-4 (49)
+PN1  =  0.002513 (30)
+PN2  =  1.440E-5 (15)
+
+K =  0.88100 (30)
+L =  0.09971 (17)
+M =  0.01676 (10)
+N =  0.002527 (30)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 7.1
+
+Log ft value (ec)    =  7.059 (36)
+with log f           =  -0.403 (14)
+and log partial T1/2 =  7.462 (33)
+

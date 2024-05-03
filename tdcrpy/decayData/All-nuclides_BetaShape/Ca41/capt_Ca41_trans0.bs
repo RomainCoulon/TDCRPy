@@ -1,0 +1,81 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 20-Ca-41 [7/2-] g.s.  -->  Daughter nucleus: 19-K-41 [3/2+] g.s.
+Calculation of the 1st forbidden unique transition from the electron capture decay of Ca-41
+
+Transition energy: 421.63 (14) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.09651 (19)
+PL2/PK =  2.45E-4 (34)
+PL3/PK =  0.00125 (17)
+PM1/PK =  0.01449 (11)
+PM2/PK =  3.24E-5 (49)
+PM3/PK =  1.35E-4 (21)
+PN1/PK =  0.00166 (13)
+
+L/K =  0.09800 (40)
+M/K =  0.01466 (14)
+N/K =  0.00166 (13)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.8974 (5)
+PL1 =  0.08661 (12)
+PL2 =  2.20E-4 (30)
+PL3 =  0.00112 (15)
+PM1 =  0.01301 (9)
+PM2 =  2.91E-5 (43)
+PM3 =  1.22E-4 (19)
+PN1 =  0.00149 (11)
+
+K =  0.8974 (5)
+L =  0.08795 (30)
+M =  0.01316 (12)
+N =  0.00149 (11)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   100. %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.8974 (5)
+PL1  =  0.08661 (12)
+PL2  =  2.20E-4 (30)
+PL3  =  0.00112 (15)
+PM1  =  0.01301 (9)
+PM2  =  2.91E-5 (43)
+PM3  =  1.22E-4 (19)
+PN1  =  0.00149 (11)
+
+K =  0.8974 (5)
+L =  0.08795 (30)
+M =  0.01316 (12)
+N =  0.00149 (11)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 10.53
+
+Log ft value (ec)    =  10.503 (44)
+with log f           =  -1.996 (43)
+and log partial T1/2 =  12.500 (7)
+

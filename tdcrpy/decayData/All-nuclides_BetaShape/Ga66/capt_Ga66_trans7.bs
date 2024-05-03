@@ -1,0 +1,96 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 31-Ga-66 [0+] g.s.  -->  Daughter nucleus: 30-Zn-66 [**] 3738.207 (21) keV
+Calculation of the allowed transition from the electron capture decay of Ga-66
+
+Transition energy: 1436.8 (30) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.11146 (16)
+PL2/PK =  8.36E-4 (31)
+PM1/PK =  0.01845 (7)
+PM2/PK =  1.36E-4 (5)
+PN1/PK =  0.001480 (32)
+
+L/K =  0.11229 (19)
+M/K =  0.01859 (7)
+N/K =  0.001480 (32)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.88311 (23)
+PL1 =  0.09843 (12)
+PL2 =  7.39E-4 (27)
+PM1 =  0.01630 (6)
+PM2 =  1.197E-4 (47)
+PN1 =  0.001307 (28)
+
+K =  0.88311 (23)
+L =  0.09917 (14)
+M =  0.01642 (6)
+N =  0.001307 (28)
+
+
+--------------------------
+Capture-to-positron ratios
+
+K/b+ =  14.7 (8)
+L1/b+ =  1.64 (9)
+L2/b+ =  0.01227 (41)
+M1/b+ =  0.271 (14)
+M2/b+ =  0.00199 (7)
+N1/b+ =  0.0217 (8)
+
+K/b+ =  14.7 (8)
+L/b+ =  1.65 (9)
+M/b+ =  0.273 (14)
+N/b+ =  0.0217 (8)
+
+EC/b+ =  16.6 (9)
+
+
+------------------------------------------------------------
+Splitting of the branch between capture and beta plus decays
+
+Input data: Iec tot. =   0.016 (6) %   Iec =   0.015 (6) %   Ib+ =   9.0E-4 (30) %
+Iec      =   0.015 (6) % (input data kept)
+Ib+      =   9.0E-4 (30) % (input data kept)
+Iec tot. =   0.016 (6) % (input data kept)
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.8330 (26)
+PL1  =  0.09284 (31)
+PL2  =  6.97E-4 (25)
+PM1  =  0.01537 (7)
+PM2  =  1.129E-4 (45)
+PN1  =  0.001233 (27)
+
+K =  0.8330 (26)
+L =  0.09354 (32)
+M =  0.01548 (8)
+N =  0.001233 (27)
+
+
+------------------------------------------------------------
+Input log ft value (ec & beta +): 8.27
+
+Log ft value (ec)    =  8.28 (17)
+with log f           =  -0.079 (14)
+and log partial T1/2 =  8.36 (17)
+

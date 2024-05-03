@@ -1,0 +1,75 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 29-Cu-61 [3/2-] g.s.  -->  Daughter nucleus: 28-Ni-61 [5/2-] 1997.7 (9) keV
+Calculation of the allowed transition from the electron capture decay of Cu-61
+
+Transition energy: 239.8 (13) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.11817 (25)
+PL2/PK =  7.46E-4 (11)
+PM1/PK =  0.01910 (9)
+PM2/PK =  1.156E-4 (20)
+PN1/PK =  3.614E-4 (40)
+
+L/K =  0.11892 (26)
+M/K =  0.01921 (9)
+N/K =  3.614E-4 (40)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.87835 (27)
+PL1 =  0.10380 (18)
+PL2 =  6.55E-4 (9)
+PM1 =  0.01677 (7)
+PM2 =  1.015E-4 (18)
+PN1 =  3.174E-4 (34)
+
+K =  0.87835 (27)
+L =  0.10445 (19)
+M =  0.01688 (8)
+N =  3.174E-4 (34)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.0043 (14) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.87835 (27)
+PL1  =  0.10380 (18)
+PL2  =  6.55E-4 (9)
+PM1  =  0.01677 (7)
+PM2  =  1.015E-4 (18)
+PN1  =  3.174E-4 (34)
+
+K =  0.87835 (27)
+L =  0.10445 (19)
+M =  0.01688 (8)
+N =  3.174E-4 (34)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 6.7
+
+Log ft value (ec)    =  6.69 (14)
+with log f           =  -1.758 (10)
+and log partial T1/2 =  8.45 (14)
+

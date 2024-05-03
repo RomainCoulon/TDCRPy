@@ -1,0 +1,78 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 34-Se-73 [9/2+] g.s.  -->  Daughter nucleus: 33-As-73 [7/2+] 1975.41 (11) keV
+Calculation of the allowed transition from the electron capture decay of Se-73
+
+Transition energy: 750 (7) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.11138 (15)
+PL2/PK =  0.0010639 (46)
+PM1/PK =  0.01808 (5)
+PM2/PK =  1.6273E-4 (39)
+PN1/PK =  0.002633 (25)
+PN2/PK =  1.290E-5 (9)
+
+L/K =  0.11244 (15)
+M/K =  0.01825 (5)
+N/K =  0.002646 (25)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.88235 (18)
+PL1 =  0.09828 (12)
+PL2 =  9.387E-4 (42)
+PM1 =  0.015955 (42)
+PM2 =  1.4358E-4 (37)
+PN1 =  0.002323 (21)
+PN2 =  1.138E-5 (8)
+
+K =  0.88235 (18)
+L =  0.09921 (11)
+M =  0.016099 (42)
+N =  0.002334 (21)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.0940 (30) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.88235 (18)
+PL1  =  0.09828 (12)
+PL2  =  9.387E-4 (42)
+PM1  =  0.015955 (42)
+PM2  =  1.4358E-4 (37)
+PN1  =  0.002323 (21)
+PN2  =  1.138E-5 (8)
+
+K =  0.88235 (18)
+L =  0.09921 (11)
+M =  0.016099 (42)
+N =  0.002334 (21)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 6.9
+
+Log ft value (ec)    =  6.940 (19)
+with log f           =  -0.495 (12)
+and log partial T1/2 =  7.434 (15)
+

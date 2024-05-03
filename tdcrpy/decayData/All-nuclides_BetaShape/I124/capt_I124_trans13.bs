@@ -1,0 +1,87 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 53-I-124 [2-] g.s.  -->  Daughter nucleus: 52-Te-124 [2+] 2454.069 (21) keV
+The 1st forbidden non-unique transition from the electron capture decay of I-124 is calculated as allowed
+
+Transition energy: 705.5 (19) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.13694 (22)
+PL2/PK =  0.003538 (9)
+PM1/PK =  0.03007 (15)
+PM2/PK =  8.552E-4 (12)
+PN1/PK =  0.00676 (7)
+PN2/PK =  1.805E-4 (12)
+PO1/PK =  0.001112 (19)
+PO2/PK =  1.850E-5 (28)
+
+L/K =  0.14048 (21)
+M/K =  0.03093 (16)
+N/K =  0.00694 (7)
+O/K =  0.001131 (19)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.84783 (33)
+PL1 =  0.11611 (14)
+PL2 =  0.002999 (9)
+PM1 =  0.02550 (12)
+PM2 =  7.251E-4 (7)
+PN1 =  0.00573 (6)
+PN2 =  1.531E-4 (9)
+PO1 =  9.43E-4 (16)
+PO2 =  1.569E-5 (23)
+
+K =  0.84783 (33)
+L =  0.11910 (14)
+M =  0.02622 (12)
+N =  0.00589 (6)
+O =  9.59E-4 (16)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.311 (29) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.84783 (33)
+PL1  =  0.11611 (14)
+PL2  =  0.002999 (9)
+PM1  =  0.02550 (12)
+PM2  =  7.251E-4 (7)
+PN1  =  0.00573 (6)
+PN2  =  1.531E-4 (9)
+PO1  =  9.43E-4 (16)
+PO2  =  1.569E-5 (23)
+
+K =  0.84783 (33)
+L =  0.11910 (14)
+M =  0.02622 (12)
+N =  0.00589 (6)
+O =  9.59E-4 (16)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 8.286
+
+Log ft value (ec)    =  8.286 (41)
+with log f           =  0.222 (6)
+and log partial T1/2 =  8.065 (40)
+

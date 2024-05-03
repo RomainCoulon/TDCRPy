@@ -1,0 +1,93 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 70-Yb-169 [7/2+] g.s.  -->  Daughter nucleus: 69-Tm-169 [7/2+] 718.79 keV
+Calculation of the allowed transition from the electron capture decay of Yb-169
+
+Transition energy: 190.2 (40) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.2659 (48)
+PL2/PK =  0.01347 (26)
+PM1/PK =  0.0695 (15)
+PM2/PK =  0.00390 (9)
+PN1/PK =  0.01853 (48)
+PN2/PK =  0.001022 (27)
+PO1/PK =  0.00300 (8)
+PO2/PK =  1.257E-4 (35)
+PP1/PK =  2.51E-4 (7)
+
+L/K =  0.279 (5)
+M/K =  0.0734 (16)
+N/K =  0.0196 (5)
+O/K =  0.00313 (9)
+P/K =  2.51E-4 (7)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.7269 (38)
+PL1 =  0.1933 (25)
+PL2 =  0.00979 (13)
+PM1 =  0.0505 (8)
+PM2 =  0.00284 (5)
+PN1 =  0.01347 (27)
+PN2 =  7.43E-4 (16)
+PO1 =  0.002181 (48)
+PO2 =  9.14E-5 (21)
+PP1 =  1.827E-4 (40)
+
+K =  0.7269 (38)
+L =  0.2031 (26)
+M =  0.0534 (9)
+N =  0.01421 (29)
+O =  0.00227 (5)
+P =  1.827E-4 (40)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.00370 (20) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.7269 (38)
+PL1  =  0.1933 (25)
+PL2  =  0.00979 (13)
+PM1  =  0.0505 (8)
+PM2  =  0.00284 (5)
+PN1  =  0.01347 (27)
+PN2  =  7.43E-4 (16)
+PO1  =  0.002181 (48)
+PO2  =  9.14E-5 (21)
+PP1  =  1.827E-4 (40)
+
+K =  0.7269 (38)
+L =  0.2031 (26)
+M =  0.0534 (9)
+N =  0.01421 (29)
+O =  0.00227 (5)
+P =  1.827E-4 (40)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 10.3
+
+Log ft value (ec)    =  10.349 (35)
+with log f           =  -0.524 (26)
+and log partial T1/2 =  10.874 (23)
+

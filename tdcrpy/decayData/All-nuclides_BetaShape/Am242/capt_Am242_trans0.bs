@@ -1,0 +1,102 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 95-Am-242 [1-] g.s.  -->  Daughter nucleus: 94-Pu-242 [0+] g.s.
+The 1st forbidden non-unique transition from the electron capture decay of Am-242 is calculated as allowed
+
+Transition energy: 751.3 (7) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.24212 (34)
+PL2/PK =  0.02870 (9)
+PM1/PK =  0.06372 (21)
+PM2/PK =  0.008467 (43)
+PN1/PK =  0.01902 (13)
+PN2/PK =  0.002541 (22)
+PO1/PK =  0.00551 (6)
+PO2/PK =  7.14E-4 (10)
+PP1/PK =  0.001548 (23)
+PP2/PK =  1.568E-4 (25)
+PQ1/PK =  8.91E-5 (13)
+
+L/K =  0.27083 (42)
+M/K =  0.07219 (26)
+N/K =  0.02156 (15)
+O/K =  0.00622 (7)
+P/K =  0.001705 (25)
+Q/K =  8.91E-5 (13)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.7285 (5)
+PL1 =  0.17640 (12)
+PL2 =  0.02091 (5)
+PM1 =  0.04642 (12)
+PM2 =  0.006168 (27)
+PN1 =  0.01385 (8)
+PN2 =  0.001852 (15)
+PO1 =  0.004013 (44)
+PO2 =  5.20E-4 (7)
+PP1 =  0.001128 (16)
+PP2 =  1.142E-4 (18)
+PQ1 =  6.49E-5 (9)
+
+K =  0.7285 (5)
+L =  0.19731 (17)
+M =  0.05259 (15)
+N =  0.01571 (10)
+O =  0.00453 (5)
+P =  0.001242 (18)
+Q =  6.49E-5 (9)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   6.3 (6) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.7285 (5)
+PL1  =  0.17640 (12)
+PL2  =  0.02091 (5)
+PM1  =  0.04642 (12)
+PM2  =  0.006168 (27)
+PN1  =  0.01385 (8)
+PN2  =  0.001852 (15)
+PO1  =  0.004013 (44)
+PO2  =  5.20E-4 (7)
+PP1  =  0.001128 (16)
+PP2  =  1.142E-4 (18)
+PQ1  =  6.49E-5 (9)
+
+K =  0.7285 (5)
+L =  0.19731 (17)
+M =  0.05259 (15)
+N =  0.01571 (10)
+O =  0.00453 (5)
+P =  0.001242 (18)
+Q =  6.49E-5 (9)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 7.55
+
+Log ft value (ec)    =  7.655 (41)
+with log f           =  1.6941 (28)
+and log partial T1/2 =  5.961 (41)
+

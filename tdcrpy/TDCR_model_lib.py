@@ -23,6 +23,7 @@ import re
 import os
 import scipy.interpolate as  interp
 import matplotlib.pyplot as plt
+import toml
 
 """
 ======= Import ressource data =======
@@ -34,6 +35,10 @@ config = configparser.ConfigParser()
 with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
     file_conf = data_path       
 config.read(file_conf)
+
+nE_electron = config["Inputs"].getint("nE_electron")
+nE_alpha = config["Inputs"].getint("nE_alpha")
+tau = config["Inputs"].getint("tau")
 RHO = config["Inputs"].getfloat("density")
 Z = config["Inputs"].getfloat("Z")
 A = config["Inputs"].getfloat("A")
@@ -42,6 +47,96 @@ Einterp_a = config["Inputs"].getfloat("Einterp_a")
 Einterp_e = config["Inputs"].getfloat("Einterp_e")
 diam_micelle = config["Inputs"].getfloat("diam_micelle")
 fAq = config["Inputs"].getfloat("fAq")
+
+def readParameters():
+    print(f"number of integration bins for electrons = {nE_electron}")
+    print(f"number of integration bins for alpha = {nE_alpha}")
+    print(f"density = {RHO} g/cm3")
+    print(f"Z = {Z}")
+    print(f"A = {A}")
+    print(f"depth of spline interp. = {depthSpline}")
+    print(f"energy above which interp. in implemented (for alpha) = {Einterp_a} keV")
+    print(f"energy above which interp. in implemented (for electron) = {Einterp_e} keV")
+    print(f"diameter of micelle = {diam_micelle} nm")
+    print(f"acqueous fraction = {fAq}")
+    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau
+
+def readConfigAsstr():
+    path2config = str(config.read(file_conf)[0])
+    with open(path2config, 'r') as file:
+        data0 = file.read()
+    return data0
+
+def writeConfifAsstr(data):
+    path2config = str(config.read(file_conf)[0])
+    with open(path2config, 'w') as file:
+        file.write(data)    
+
+def modifynE_electron(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[0]
+    data1 = data0.replace(f"nE_electron = {x0}",f"nE_electron = {x}")
+    writeConfifAsstr(data1)
+
+def modifynE_alpha(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[1]
+    data1 = data0.replace(f"nE_alpha = {x0}",f"nE_alpha = {x}")
+    writeConfifAsstr(data1)
+
+def modifyDensity(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[2]
+    data1 = data0.replace(f"density = {x0}",f"density = {x}")
+    writeConfifAsstr(data1)
+
+def modifyZ(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[3]
+    data1 = data0.replace(f"Z = {x0}",f"Z = {x}")
+    writeConfifAsstr(data1)
+    
+def modifyA(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[4]
+    data1 = data0.replace(f"A = {x0}",f"A = {x}")
+    writeConfifAsstr(data1)
+
+def modifyDepthSpline(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[5]
+    data1 = data0.replace(f"depthSpline = {x0}",f"depthSpline = {x}")
+    writeConfifAsstr(data1)
+
+def modifyEinterp_a(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[6]
+    data1 = data0.replace(f"Einterp_a = {int(x0)}",f"Einterp_a = {int(x)}")
+    writeConfifAsstr(data1)
+
+def modifyEinterp_e(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[7]
+    data1 = data0.replace(f"Einterp_e = {x0}",f"Einterp_e = {x}")
+    writeConfifAsstr(data1)
+
+def modifyDiam_micelle(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[8]
+    data1 = data0.replace(f"diam_micelle = {int(x0)}",f"diam_micelle = {int(x)}")
+    writeConfifAsstr(data1)    
+
+def modifyfAq(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[9]
+    data1 = data0.replace(f"fAq = {x0}",f"fAq = {x}")
+    writeConfifAsstr(data1)
+
+def modifyTau(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[10]
+    data1 = data0.replace(f"tau = {x0}",f"tau = {x}")
+    writeConfifAsstr(data1)
 
 # import PenNuc data
 with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:

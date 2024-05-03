@@ -1,0 +1,93 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 63-Eu-152 [3-] g.s.  -->  Daughter nucleus: 62-Sm-152 [2+] 1757.151 (13) keV
+The 1st forbidden non-unique transition from the electron capture decay of Eu-152 is calculated as allowed
+
+Transition energy: 117.1 (7) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.3188 (26)
+PL2/PK =  0.01247 (11)
+PM1/PK =  0.0827 (10)
+PM2/PK =  0.003546 (45)
+PN1/PK =  0.02184 (35)
+PN2/PK =  9.16E-4 (15)
+PO1/PK =  0.00373 (7)
+PO2/PK =  1.229E-4 (23)
+PP1/PK =  3.61E-4 (7)
+
+L/K =  0.3313 (27)
+M/K =  0.0863 (10)
+N/K =  0.02275 (36)
+O/K =  0.00386 (7)
+P/K =  3.61E-4 (7)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.6923 (20)
+PL1 =  0.2207 (12)
+PL2 =  0.00864 (5)
+PM1 =  0.0573 (5)
+PM2 =  0.002455 (24)
+PN1 =  0.01512 (20)
+PN2 =  6.34E-4 (9)
+PO1 =  0.002584 (39)
+PO2 =  8.51E-5 (14)
+PP1 =  2.501E-4 (38)
+
+K =  0.6923 (20)
+L =  0.2293 (12)
+M =  0.0597 (5)
+N =  0.01575 (20)
+O =  0.002670 (41)
+P =  2.501E-4 (38)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.0410 (30) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.6923 (20)
+PL1  =  0.2207 (12)
+PL2  =  0.00864 (5)
+PM1  =  0.0573 (5)
+PM2  =  0.002455 (24)
+PN1  =  0.01512 (20)
+PN2  =  6.34E-4 (9)
+PO1  =  0.002584 (39)
+PO2  =  8.51E-5 (14)
+PP1  =  2.501E-4 (38)
+
+K =  0.6923 (20)
+L =  0.2293 (12)
+M =  0.0597 (5)
+N =  0.01575 (20)
+O =  0.002670 (41)
+P =  2.501E-4 (38)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 10.7
+
+Log ft value (ec)    =  10.734 (33)
+with log f           =  -1.283 (9)
+and log partial T1/2 =  12.017 (32)
+

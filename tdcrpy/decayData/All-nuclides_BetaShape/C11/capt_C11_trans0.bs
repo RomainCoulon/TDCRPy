@@ -1,0 +1,76 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 6-C-11 [3/2-] g.s.  -->  Daughter nucleus: 5-B-11 [3/2-] g.s.
+Calculation of the allowed transition from the electron capture decay of C-11
+
+Transition energy: 1982.5 (9) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.0856 (12)
+PL2/PK =  4.12E-6 (9)
+
+L/K =  0.0856 (12)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.9211 (10)
+PL1 =  0.0789 (10)
+PL2 =  3.79E-6 (8)
+
+K =  0.9211 (10)
+L =  0.0789 (10)
+
+
+--------------------------
+Capture-to-positron ratios
+
+K/b+ =  0.00209 (7)
+L1/b+ =  1.789E-4 (37)
+L2/b+ =  8.60E-9 (11)
+
+K/b+ =  0.00209 (7)
+L/b+ =  1.789E-4 (37)
+
+EC/b+ =  0.00227 (7)
+
+
+------------------------------------------------------------
+Splitting of the branch between capture and beta plus decays
+
+Input data: Iec tot. =   100.000 (18) %   Iec =   0.250 (13) %   Ib+ =   99.750 (13) %
+Iec      =   0.250 (13) % (input data kept)
+Ib+      =   99.750 (13) % (input data kept)
+Iec tot. =   100. % (input data kept)
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.00209 (7)
+PL1  =  1.79E-4 (6)
+PL2  =  8.58E-9 (34)
+
+K =  0.00209 (7)
+L =  1.79E-4 (6)
+
+
+------------------------------------------------------------
+Input log ft value not given.
+
+Log ft value (ec)    =  3.548 (26)
+with log f           =  -2.141 (14)
+and log partial T1/2 =  5.689 (23)
+

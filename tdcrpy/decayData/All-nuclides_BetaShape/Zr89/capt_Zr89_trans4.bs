@@ -1,0 +1,84 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 40-Zr-89 [9/2+] g.s.  -->  Daughter nucleus: 39-Y-89 [9/2+] 2622.10 (30) keV
+Calculation of the allowed transition from the electron capture decay of Zr-89
+
+Transition energy: 210.7 (28) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.13273 (49)
+PL2/PK =  0.001769 (15)
+PM1/PK =  0.02629 (20)
+PM2/PK =  3.677E-4 (46)
+PN1/PK =  0.00466 (6)
+PN2/PK =  5.49E-5 (11)
+PO1/PK =  4.81E-4 (9)
+
+L/K =  0.1345 (5)
+M/K =  0.02665 (21)
+N/K =  0.00471 (6)
+O/K =  4.81E-4 (9)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.8574 (6)
+PL1 =  0.11380 (34)
+PL2 =  0.001517 (12)
+PM1 =  0.02254 (16)
+PM2 =  3.152E-4 (37)
+PN1 =  0.00399 (5)
+PN2 =  4.71E-5 (9)
+PO1 =  4.12E-4 (7)
+
+K =  0.8574 (6)
+L =  0.11532 (36)
+M =  0.02285 (16)
+N =  0.00404 (5)
+O =  4.12E-4 (7)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.745 (10) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.8574 (6)
+PL1  =  0.11380 (34)
+PL2  =  0.001517 (12)
+PM1  =  0.02254 (16)
+PM2  =  3.152E-4 (37)
+PN1  =  0.00399 (5)
+PN2  =  4.71E-5 (9)
+PO1  =  4.12E-4 (7)
+
+K =  0.8574 (6)
+L =  0.11532 (36)
+M =  0.02285 (16)
+N =  0.00404 (5)
+O =  4.12E-4 (7)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 6.18
+
+Log ft value (ec)    =  6.200 (17)
+with log f           =  -1.379 (16)
+and log partial T1/2 =  7.579 (6)
+

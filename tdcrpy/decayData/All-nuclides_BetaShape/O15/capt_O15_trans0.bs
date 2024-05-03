@@ -1,0 +1,76 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 8-O-15 [1/2-] g.s.  -->  Daughter nucleus: 7-N-15 [1/2-] g.s.
+Calculation of the allowed transition from the electron capture decay of O-15
+
+Transition energy: 2757.0 (13) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.07711 (47)
+PL2/PK =  1.184E-5 (17)
+
+L/K =  0.07712 (47)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.92840 (40)
+PL1 =  0.07159 (40)
+PL2 =  1.099E-5 (15)
+
+K =  0.92840 (40)
+L =  0.07160 (40)
+
+
+--------------------------
+Capture-to-positron ratios
+
+K/b+ =  9.24E-4 (18)
+L1/b+ =  7.12E-5 (9)
+L2/b+ =  1.093E-8 (6)
+
+K/b+ =  9.24E-4 (18)
+L/b+ =  7.13E-5 (9)
+
+EC/b+ =  9.95E-4 (19)
+
+
+------------------------------------------------------------
+Splitting of the branch between capture and beta plus decays
+
+Input data: Iec tot. =   100.000 (8) %   Iec =   0.115 (6) %   Ib+ =   99.885 (6) %
+Iec      =   0.115 (6) % (input data kept)
+Ib+      =   99.885 (6) % (input data kept)
+Iec tot. =   100. % (input data kept)
+
+
+---------------------
+Capture probabilities
+
+PK  =  9.23E-4 (17)
+PL1  =  7.12E-5 (14)
+PL2  =  1.092E-8 (25)
+
+K =  9.23E-4 (17)
+L =  7.12E-5 (14)
+
+
+------------------------------------------------------------
+Input log ft value not given.
+
+Log ft value (ec)    =  3.576 (24)
+with log f           =  -1.451 (8)
+and log partial T1/2 =  5.027 (23)
+

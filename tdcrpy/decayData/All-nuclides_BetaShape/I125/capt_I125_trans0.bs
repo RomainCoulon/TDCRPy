@@ -1,0 +1,87 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 53-I-125 [5/2+] g.s.  -->  Daughter nucleus: 52-Te-125 [3/2+] 35.4922 (5) keV
+Calculation of the allowed transition from the electron capture decay of I-125
+
+Transition energy: 150.28 (6) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.18981 (30)
+PL2/PK =  0.004889 (13)
+PM1/PK =  0.04344 (22)
+PM2/PK =  0.0012295 (16)
+PN1/PK =  0.00985 (10)
+PN2/PK =  2.615E-4 (17)
+PO1/PK =  0.001623 (28)
+PO2/PK =  2.683E-5 (40)
+
+L/K =  0.19470 (29)
+M/K =  0.04467 (22)
+N/K =  0.01012 (10)
+O/K =  0.001650 (28)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.79927 (41)
+PL1 =  0.15171 (16)
+PL2 =  0.003908 (12)
+PM1 =  0.03472 (16)
+PM2 =  9.827E-4 (8)
+PN1 =  0.00788 (8)
+PN2 =  2.090E-4 (12)
+PO1 =  0.001297 (21)
+PO2 =  2.145E-5 (31)
+
+K =  0.79927 (41)
+L =  0.15562 (15)
+M =  0.03571 (16)
+N =  0.00808 (8)
+O =  0.001318 (22)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   100. %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.79927 (41)
+PL1  =  0.15171 (16)
+PL2  =  0.003908 (12)
+PM1  =  0.03472 (16)
+PM2  =  9.827E-4 (8)
+PN1  =  0.00788 (8)
+PN2  =  2.090E-4 (12)
+PO1  =  0.001297 (21)
+PO2  =  2.145E-5 (31)
+
+K =  0.79927 (41)
+L =  0.15562 (15)
+M =  0.03571 (16)
+N =  0.00808 (8)
+O =  0.001318 (22)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 5.4
+
+Log ft value (ec)    =  5.4502 (38)
+with log f           =  -1.2601 (38)
+and log partial T1/2 =  6.71021 (20)
+

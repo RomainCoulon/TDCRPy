@@ -1,0 +1,88 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 70-Yb-169 [7/2+] g.s.  -->  Daughter nucleus: 69-Tm-169 [7/2+] 878.35 keV
+Calculation of the allowed transition from the electron capture decay of Yb-169
+
+Transition energy: 30.6 (40) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL2/PL1 =  0.0526 (6)
+PM1/PL1 =  0.45 (6)
+PM2/PL1 =  0.0257 (36)
+PN1/PL1 =  0.134 (22)
+PN2/PL1 =  0.0074 (12)
+PO1/PL1 =  0.0221 (37)
+PO2/PL1 =  9.3E-4 (16)
+PP1/PL1 =  0.00186 (32)
+
+L/L1 =  0.0526 (6)
+M/L1 =  0.48 (7)
+N/L1 =  0.141 (23)
+O/L1 =  0.0230 (39)
+P/L1 =  0.00186 (32)
+
+
+------------------------------
+Relative capture probabilities
+
+PL1  =  0.589 (31)
+PL2 =  0.0310 (13)
+PM1 =  0.267 (21)
+PM2 =  0.0151 (12)
+PN1 =  0.079 (8)
+PN2 =  0.00436 (45)
+PO1 =  0.0130 (14)
+PO2 =  5.5E-4 (6)
+PP1 =  0.00110 (12)
+
+L =  0.620 (32)
+M =  0.282 (22)
+N =  0.083 (8)
+O =  0.0136 (15)
+P =  0.00110 (12)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   4.0E-6 (10) %
+
+
+---------------------
+Capture probabilities
+
+PL1  =  0.589 (31)
+PL2  =  0.0310 (13)
+PM1  =  0.267 (21)
+PM2  =  0.0151 (12)
+PN1  =  0.079 (8)
+PN2  =  0.00436 (45)
+PO1  =  0.0130 (14)
+PO2  =  5.5E-4 (6)
+PP1  =  0.00110 (12)
+
+L =  0.620 (32)
+M =  0.282 (22)
+N =  0.083 (8)
+O =  0.0136 (15)
+P =  0.00110 (12)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 10.8
+
+Log ft value (ec)    =  10.95 (20)
+with log f           =  -2.89 (16)
+and log partial T1/2 =  13.84 (11)
+

@@ -1,0 +1,93 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 63-Eu-152 [3-] g.s.  -->  Daughter nucleus: 62-Sm-152 [2-] 1649.910 (8) keV
+Calculation of the allowed transition from the electron capture decay of Eu-152
+
+Transition energy: 224.4 (7) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.1974 (5)
+PL2/PK =  0.007706 (26)
+PM1/PK =  0.04867 (27)
+PM2/PK =  0.002085 (13)
+PN1/PK =  0.01271 (12)
+PN2/PK =  5.33E-4 (6)
+PO1/PK =  0.002167 (25)
+PO2/PK =  7.14E-5 (9)
+PP1/PK =  2.097E-4 (24)
+
+L/K =  0.2052 (5)
+M/K =  0.05076 (28)
+N/K =  0.01324 (13)
+O/K =  0.002239 (26)
+P/K =  2.097E-4 (24)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.7864 (6)
+PL1 =  0.15528 (28)
+PL2 =  0.006060 (16)
+PM1 =  0.03827 (18)
+PM2 =  0.001640 (9)
+PN1 =  0.00999 (9)
+PN2 =  4.192E-4 (40)
+PO1 =  0.001704 (19)
+PO2 =  5.61E-5 (7)
+PP1 =  1.649E-4 (18)
+
+K =  0.7864 (6)
+L =  0.16134 (29)
+M =  0.03991 (19)
+N =  0.01041 (9)
+O =  0.001760 (19)
+P =  1.649E-4 (18)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.889 (14) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.7864 (6)
+PL1  =  0.15528 (28)
+PL2  =  0.006060 (16)
+PM1  =  0.03827 (18)
+PM2  =  0.001640 (9)
+PN1  =  0.00999 (9)
+PN2  =  4.192E-4 (40)
+PO1  =  0.001704 (19)
+PO2  =  5.61E-5 (7)
+PP1  =  1.649E-4 (18)
+
+K =  0.7864 (6)
+L =  0.16134 (29)
+M =  0.03991 (19)
+N =  0.01041 (9)
+O =  0.001760 (19)
+P =  1.649E-4 (18)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 10.1
+
+Log ft value (ec)    =  10.143 (8)
+with log f           =  -0.5379 (47)
+and log partial T1/2 =  10.681 (7)
+

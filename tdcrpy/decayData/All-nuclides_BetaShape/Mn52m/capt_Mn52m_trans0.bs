@@ -1,0 +1,96 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 25-Mn-52m [2+] 377.749 (5) keV  -->  Daughter nucleus: 24-Cr-52 [2+] 1434.083 (10) keV
+Calculation of the allowed transition from the electron capture decay of Mn-52
+
+Transition energy: 3655.7 (19) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.10987 (28)
+PL2/PK =  5.18E-4 (14)
+PM1/PK =  0.01708 (10)
+PM2/PK =  7.55E-5 (24)
+PN1/PK =  0.001303 (25)
+
+L/K =  0.11039 (30)
+M/K =  0.01715 (10)
+N/K =  0.001303 (25)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.88586 (33)
+PL1 =  0.09733 (22)
+PL2 =  4.59E-4 (12)
+PM1 =  0.01513 (8)
+PM2 =  6.68E-5 (21)
+PN1 =  0.001154 (22)
+
+K =  0.88586 (33)
+L =  0.09779 (23)
+M =  0.01519 (9)
+N =  0.001154 (22)
+
+
+--------------------------
+Capture-to-positron ratios
+
+K/b+ =  0.01346 (9)
+L1/b+ =  0.001479 (14)
+L2/b+ =  6.97E-6 (24)
+M1/b+ =  2.299E-4 (30)
+M2/b+ =  1.015E-6 (39)
+N1/b+ =  1.754E-5 (47)
+
+K/b+ =  0.01346 (9)
+L/b+ =  0.001486 (14)
+M/b+ =  2.309E-4 (30)
+N/b+ =  1.754E-5 (47)
+
+EC/b+ =  0.01520 (11)
+
+
+------------------------------------------------------------
+Splitting of the branch between capture and beta plus decays
+
+Input data: Iec tot. =   97.940 (46) %   Iec =   1.466 (11) %   Ib+ =   96.474 (45) %
+Iec      =   1.466 (11) % (input data kept)
+Ib+      =   96.474 (45) % (input data kept)
+Iec tot. =   97.940 (46) % (input data kept)
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.01326 (10)
+PL1  =  0.001457 (11)
+PL2  =  6.87E-6 (19)
+PM1  =  2.264E-4 (21)
+PM2  =  1.001E-6 (32)
+PN1  =  1.728E-5 (35)
+
+K =  0.01326 (10)
+L =  0.001464 (11)
+M =  2.274E-4 (21)
+N =  1.728E-5 (35)
+
+
+------------------------------------------------------------
+Input log ft value (ec & beta +): 5.3288
+
+Log ft value (ec)    =  5.318 (6)
+with log f           =  0.3816 (27)
+and log partial T1/2 =  4.936 (5)
+

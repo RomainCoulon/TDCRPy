@@ -1,0 +1,82 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 50-Sn-113 [1/2+] g.s.  -->  Daughter nucleus: 49-In-113 [1/2+] 1029.73 (8) keV
+Calculation of the allowed transition from the electron capture decay of Sn-113
+
+Transition energy: 6.3 (28) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL2/PL1 =  0.0287 (49)
+PM1/PL1 =  1.4 (8)
+PM2/PL1 =  0.035 (22)
+PN1/PL1 =  0.40 (25)
+PN2/PL1 =  0.009 (6)
+PO1/PL1 =  0.047 (30)
+PO2/PL1 =  4.5E-4 (28)
+
+L/L1 =  0.0287 (49)
+M/L1 =  1.4 (8)
+N/L1 =  0.40 (25)
+O/L1 =  0.047 (30)
+
+
+------------------------------
+Relative capture probabilities
+
+PL1  =  0.34 (21)
+PL2 =  0.0098 (44)
+PM1 =  0.48 (15)
+PM2 =  0.0121 (41)
+PN1 =  0.14 (5)
+PN2 =  0.0031 (11)
+PO1 =  0.016 (6)
+PO2 =  1.5E-4 (6)
+
+L =  0.35 (21)
+M =  0.49 (16)
+N =  0.14 (5)
+O =  0.016 (6)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.001030 (40) %
+
+
+---------------------
+Capture probabilities
+
+PL1  =  0.34 (21)
+PL2  =  0.0098 (44)
+PM1  =  0.48 (15)
+PM2  =  0.0121 (41)
+PN1  =  0.14 (5)
+PN2  =  0.0031 (11)
+PO1  =  0.016 (6)
+PO2  =  1.5E-4 (6)
+
+L =  0.35 (21)
+M =  0.49 (16)
+N =  0.14 (5)
+O =  0.016 (6)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 6.5
+
+Log ft value (ec)    =  6.6 (10)
+with log f           =  -5.4 (10)
+and log partial T1/2 =  11.985 (17)
+

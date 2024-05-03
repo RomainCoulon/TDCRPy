@@ -1,0 +1,88 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 96-Cm-243 [5/2+] g.s.  -->  Daughter nucleus: 95-Am-243 [5/2-] g.s.
+The 1st forbidden non-unique transition from the electron capture decay of Cm-243 is calculated as allowed
+
+Transition energy: 7.5 (17) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PM2/PM1 =  0.215 (46)
+PN1/PM1 =  4.9 (32)
+PN2/PM1 =  0.70 (47)
+PO1/PM1 =  2.0 (14)
+PO2/PM1 =  0.28 (20)
+PP1/PM1 =  0.63 (44)
+PP2/PM1 =  0.068 (49)
+PQ1/PM1 =  0.045 (32)
+
+M/M1 =  0.215 (46)
+N/M1 =  5.6 (36)
+O/M1 =  2.3 (16)
+P/M1 =  0.70 (49)
+Q/M1 =  0.045 (32)
+
+
+------------------------------
+Relative capture probabilities
+
+PM1  =  0.10 (14)
+PM2 =  0.022 (20)
+PN1 =  0.49 (8)
+PN2 =  0.071 (12)
+PO1 =  0.208 (46)
+PO2 =  0.028 (7)
+PP1 =  0.064 (15)
+PP2 =  0.0069 (17)
+PQ1 =  0.0046 (11)
+
+M =  0.12 (16)
+N =  0.57 (9)
+O =  0.24 (5)
+P =  0.071 (17)
+Q =  0.0046 (11)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.290 (30) %
+
+
+---------------------
+Capture probabilities
+
+PM1  =  0.10 (14)
+PM2  =  0.022 (20)
+PN1  =  0.49 (8)
+PN2  =  0.071 (12)
+PO1  =  0.208 (46)
+PO2  =  0.028 (7)
+PP1  =  0.064 (15)
+PP2  =  0.0069 (17)
+PQ1  =  0.0046 (11)
+
+M =  0.12 (16)
+N =  0.57 (9)
+O =  0.24 (5)
+P =  0.071 (17)
+Q =  0.0046 (11)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 7.2
+
+Log ft value (ec)    =  7.48 (42)
+with log f           =  -4.02 (42)
+and log partial T1/2 =  11.498 (45)
+

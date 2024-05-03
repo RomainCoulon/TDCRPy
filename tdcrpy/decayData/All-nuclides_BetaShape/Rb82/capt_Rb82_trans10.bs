@@ -1,0 +1,120 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 37-Rb-82 [1+] g.s.  -->  Daughter nucleus: 36-Kr-82 [4+] 2556.3 (7) keV
+Calculation of the 2nd forbidden unique transition from the electron capture decay of Rb-82
+
+Transition energy: 1846.7 (31) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.11620 (21)
+PL2/PK =  0.001304 (12)
+PL3/PK =  9.68E-4 (14)
+PM1/PK =  0.02253 (18)
+PM2/PK =  2.603E-4 (7)
+PM3/PK =  1.762E-4 (9)
+PN1/PK =  0.003227 (38)
+PM4/PK =  1.496E-7 (32)
+PM5/PK =  1.226E-8 (32)
+PN2/PK =  2.597E-5 (15)
+PN3/PK =  1.392E-5 (19)
+
+L/K =  0.11848 (19)
+M/K =  0.02296 (18)
+N/K =  0.003267 (38)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.87359 (31)
+PL1 =  0.10151 (15)
+PL2 =  0.001139 (11)
+PL3 =  8.46E-4 (12)
+PM1 =  0.01968 (15)
+PM2 =  2.274E-4 (7)
+PM3 =  1.539E-4 (9)
+PN1 =  0.002819 (32)
+PM4 =  1.307E-7 (27)
+PM5 =  1.071E-8 (27)
+PN2 =  2.269E-5 (13)
+PN3 =  1.216E-5 (16)
+
+K =  0.87359 (31)
+L =  0.10350 (13)
+M =  0.02006 (15)
+N =  0.002854 (32)
+
+
+--------------------------
+Capture-to-positron ratios
+
+K/b+ =  47.1 (11)
+L1/b+ =  5.47 (12)
+L2/b+ =  0.0614 (20)
+L3/b+ =  0.0456 (17)
+M1/b+ =  1.061 (20)
+M2/b+ =  0.01226 (32)
+M3/b+ =  0.00830 (24)
+N1/b+ =  0.1521 (35)
+M4/b+ =  7.05E-6 (23)
+M5/b+ =  5.78E-7 (22)
+N2/b+ =  0.001224 (22)
+N3/b+ =  6.56E-4 (16)
+
+K/b+ =  47.1 (11)
+L/b+ =  5.58 (12)
+M/b+ =  1.082 (20)
+N/b+ =  0.1539 (35)
+
+EC/b+ =  53.9 (13)
+
+
+------------------------------------------------------------
+Splitting of the branch between capture and beta plus decays
+
+Input data: Iec tot. =   3.0E-4 (12) %   Iec =   2.3E-4 (11) %   Ib+ =   7.0E-5 (40) %
+Iec      =   2.3E-4 (11) % (input data kept)
+Ib+      =   7.0E-5 (40) % (input data kept)
+Iec tot. =   3.0E-4 (12) % (input data kept)
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.85768 (48)
+PL1  =  0.09967 (15)
+PL2  =  0.001119 (11)
+PL3  =  8.31E-4 (12)
+PM1  =  0.01932 (14)
+PM2  =  2.233E-4 (7)
+PM3  =  1.511E-4 (9)
+PN1  =  0.002768 (32)
+PM4  =  1.283E-7 (27)
+PM5  =  1.052E-8 (27)
+PN2  =  2.228E-5 (13)
+PN3  =  1.194E-5 (16)
+
+K =  0.85768 (48)
+L =  0.10162 (14)
+M =  0.01970 (14)
+N =  0.002802 (32)
+
+
+------------------------------------------------------------
+Input log ft value (ec & beta +): 10.
+
+Log ft value (ec)    =  10.16 (21)
+with log f           =  2.646 (7)
+and log partial T1/2 =  7.52 (21)
+

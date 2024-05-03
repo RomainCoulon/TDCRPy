@@ -1,0 +1,75 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 27-Co-56 [4+] g.s.  -->  Daughter nucleus: 26-Fe-56 [3+] 4119.8490 (40) keV
+Calculation of the allowed transition from the electron capture decay of Co-56
+
+Transition energy: 446.2 (20) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL1/PK =  0.11409 (29)
+PL2/PK =  6.166E-4 (31)
+PM1/PK =  0.01797 (11)
+PM2/PK =  9.22E-5 (8)
+PN1/PK =  0.001171 (8)
+
+L/K =  0.11470 (29)
+M/K =  0.01807 (11)
+N/K =  0.001171 (8)
+
+
+------------------------------
+Relative capture probabilities
+
+PK  =  0.88188 (32)
+PL1 =  0.10061 (22)
+PL2 =  5.438E-4 (26)
+PM1 =  0.01585 (9)
+PM2 =  8.13E-5 (7)
+PN1 =  0.001033 (7)
+
+K =  0.88188 (32)
+L =  0.10116 (22)
+M =  0.01593 (9)
+N =  0.001033 (7)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   9.940 (18) %
+
+
+---------------------
+Capture probabilities
+
+PK  =  0.88188 (32)
+PL1  =  0.10061 (22)
+PL2  =  5.438E-4 (26)
+PM1  =  0.01585 (9)
+PM2  =  8.13E-5 (7)
+PN1  =  0.001033 (7)
+
+K =  0.88188 (32)
+L =  0.10116 (22)
+M =  0.01593 (9)
+N =  0.001033 (7)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 6.51
+
+Log ft value (ec)    =  6.514 (6)
+with log f           =  -1.313 (6)
+and log partial T1/2 =  7.8269 (8)
+

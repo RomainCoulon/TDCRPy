@@ -1,0 +1,88 @@
+--------------------------------------------------------------------------------------
+
+BetaShape
+Version: 2.2 (05/2021)
+Author: X. Mougeot (xavier.mougeot@cea.fr)
+CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
+Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+
+--------------------------------------------------------------------------------------
+
+Parent nucleus: 79-Au-195 [3/2+] g.s.  -->  Daughter nucleus: 78-Pt-195 [3/2-] 199.526 (12) keV
+The 1st forbidden non-unique transition from the electron capture decay of Au-195 is calculated as allowed
+
+Transition energy: 27.3 (10) keV
+
+
+----------------------------------------
+Ratios of relative capture probabilities
+
+PL2/PL1 =  0.0764 (5)
+PM1/PL1 =  0.73 (5)
+PM2/PL1 =  0.0571 (42)
+PN1/PL1 =  0.247 (21)
+PN2/PL1 =  0.0189 (16)
+PO1/PL1 =  0.060 (5)
+PO2/PL1 =  0.00399 (36)
+PP1/PL1 =  0.00177 (16)
+
+L/L1 =  0.0764 (5)
+M/L1 =  0.78 (6)
+N/L1 =  0.266 (22)
+O/L1 =  0.064 (6)
+P/L1 =  0.00177 (16)
+
+
+------------------------------
+Relative capture probabilities
+
+PL1  =  0.456 (17)
+PL2 =  0.0349 (11)
+PM1 =  0.332 (11)
+PM2 =  0.0261 (9)
+PN1 =  0.1128 (49)
+PN2 =  0.00862 (38)
+PO1 =  0.0272 (13)
+PO2 =  0.00182 (9)
+PP1 =  8.07E-4 (39)
+
+L =  0.491 (18)
+M =  0.358 (11)
+N =  0.121 (5)
+O =  0.0290 (14)
+P =  8.07E-4 (39)
+
+
+------------------------------
+Capture branch from input data
+
+Iec =   0.0149 (14) %
+
+
+---------------------
+Capture probabilities
+
+PL1  =  0.456 (17)
+PL2  =  0.0349 (11)
+PM1  =  0.332 (11)
+PM2  =  0.0261 (9)
+PN1  =  0.1128 (49)
+PN2  =  0.00862 (38)
+PO1  =  0.0272 (13)
+PO2  =  0.00182 (9)
+PP1  =  8.07E-4 (39)
+
+L =  0.491 (18)
+M =  0.358 (11)
+N =  0.121 (5)
+O =  0.0290 (14)
+P =  8.07E-4 (39)
+
+
+------------------------------------------------------------
+Input log ft value (ec): 8.1
+
+Log ft value (ec)    =  8.23 (7)
+with log f           =  -2.80 (5)
+and log partial T1/2 =  11.030 (41)
+
