@@ -827,6 +827,48 @@ def readBetaShape(rad,mode,level,z=z_betashape):
     p = list(p); e = list(e)
     return e, p
 
+def readBetaShapeInfo(rad,mode,level,z=z_betashape):
+    """
+    Read information about how the spectrum was built
+
+    Parameters
+    ----------
+    rad : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    Rad = rad.replace('-','')
+    if level == 'tot':
+        name_doc = Rad+'/'+mode+'_'+Rad+'_tot.bs'
+    else:
+        name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
+    with z.open(name_doc) as file_trans:
+        data = file_trans.readlines()
+
+    for i in range(np.size(data)):
+        data[i] = str(data[i])
+        data[i] = data[i].replace("b'",'')
+        data[i] = data[i].replace("\\r\\n",'')
+        data[i] = data[i].replace("'",'')
+    for i in range(np.size(data)):
+        data[i] = data[i].split()
+    
+    while [] in data:
+        data.remove([])
+    out = ""
+    for i in range(len(data)):    
+        if "Total" in data[i][0] : break
+        out += str(np.ravel(data[i]))
+    out = out.replace('--','')
+    out = out.replace('[','')
+    out = out.replace(']','')
+    out = out.replace('\'','')
+    return out
+
 
 def readBetaSpectra(rad):
     """
@@ -2474,8 +2516,8 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
     
     """
     
-    e, p = readBetaShape(rad, 'beta-', 'tot')
-    # e, p = readBetaSpectra(rad)
+    # e, p = readBetaShape(rad, 'beta-', 'tot')
+    e, p = readBetaSpectra(rad)
     em=np.empty(len(e))
     for i, ei in enumerate(e):
         # ed = energie_dep_beta2(ei,V)
@@ -2575,3 +2617,60 @@ def display_distrib(S, D, T):
     # plt.ylabel(r"Number of counts", fontsize = 14)
     # plt.legend(fontsize = 12)
     # # plt.savefig('TDCRdistribution.png')
+
+def buildBetaSpectra(rad, V, N, prt=False):
+    """
+    Build beta spectra to be used in the analitical model
+
+    Returns
+    -------
+    None.
+
+    """
+    e, p = readBetaShape(rad,"beta-",'tot')
+    N = int(N)
+    ev=[]
+    for i in range(N):
+        ind = sampling(p)
+        ev.append(energie_dep_beta2(e[ind],V))
+    counts, bins = np.histogram(ev, bins=e, density=True)
+    p2=counts/sum(counts)
+    
+    bin_centers = (bins[:-1] + bins[1:]) / 2
+    plt.figure(rad)
+    plt.clf()
+    plt.bar(bin_centers, p2, width=(bins[1] - bins[0]), color='g', alpha=0.6, label="deposited")
+    plt.plot(e, p,'-r', alpha=0.6, label="betaShape")
+    plt.legend()
+    plt.xlabel("$E$ /keV")
+    plt.ylabel(r"$p$ /keV$^{-1}$")
+    
+    if rad == "H-3": file_path = sH3
+    elif rad == "C-14": file_path = sC14
+    elif rad == "S-35": file_path = sS35
+    elif rad == "Ca-45": file_path = sCa45
+    elif rad == "Ni-63": file_path = sNi63
+    elif rad == "Sr-89": file_path = sSr89
+    elif rad == "Sr-90": file_path = sSr90
+    elif rad == "Tc-99": file_path = sTc99
+    elif rad == "Pm-147": file_path = sPm147
+    elif rad == "Pu-241": file_path = sPu241
+    
+    if prt:
+        with open(file_path, "w") as file:
+            for i, b in enumerate(bin_centers):
+                file.write(f"{b}\t{p2[i]}\n")
+                
+                
+# N = 1e6
+# buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
+# buildBetaSpectra('C-14', 16, N, prt=True); print('C-14 - done')
+# buildBetaSpectra('S-35', 16, N, prt=True); print('S-35 - done')
+# buildBetaSpectra('Ca-45', 16, N, prt=True); print('Ca-45 - done')
+# buildBetaSpectra('Ni-63', 16, N, prt=True); print('Ni-63 - done')
+# buildBetaSpectra('Sr-89', 16, N, prt=True); print('Sr-89 - done')
+# buildBetaSpectra('Sr-90', 16, N, prt=True); print('Sr-90 - done')
+# buildBetaSpectra('Tc-99', 16, N, prt=True); print('Tc-99 - done')
+# buildBetaSpectra('Pm-147', 16, N, prt=True); print('Pm-147 - done')
+# buildBetaSpectra('Pu-241', 16, N, prt=True); print('Pu-241 - done')
+
