@@ -181,7 +181,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
     elif (not Smodel) and (not Rad in radListPureBeta):
         print("cannot be processed by the analytical model.")
         # print(f"Analytical model used for {Rad}")
-        out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,mode2,10000)
+        out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,mode2,1000)
         if mode == "res":
             return out
         if mode == "eff":
