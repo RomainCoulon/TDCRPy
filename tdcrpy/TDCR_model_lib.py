@@ -209,7 +209,8 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as dat
     sTc99 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Tc-99.txt'
     sPm147 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pm-147.txt'
     sPu241 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pu-241.txt'
-
+    sCo60 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Co-60.txt'
+    
 # import stopping power data for electron
 with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
 #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
@@ -788,6 +789,8 @@ def readBetaShape(rad,mode,level,z=z_betashape):
     Rad = rad.replace('-','')
     if level == 'tot':
         name_doc = Rad+'/'+mode+'_'+Rad+'_tot.bs'
+    elif level == 'tot_myEstep':
+        name_doc = Rad+'/'+mode+'_'+Rad+'_tot_myEstep.bs'
     else:
         name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
     with z.open(name_doc) as file_trans:
@@ -901,6 +904,7 @@ def readBetaSpectra(rad):
     elif rad == "Tc-99": file_path = sTc99
     elif rad == "Pm-147": file_path = sPm147
     elif rad == "Pu-241": file_path = sPu241
+    elif rad == "Co-60": file_path = sCo60
 
     with open(file_path, "r") as file:
         for line in file:
@@ -2627,7 +2631,11 @@ def buildBetaSpectra(rad, V, N, prt=False):
     None.
 
     """
-    e, p = readBetaShape(rad,"beta-",'tot')
+    # e, p = readBetaShape(rad,"beta-",'tot')
+    if rad=="Co-60":
+        e, p = readBetaShape(rad,"beta-",'tot_myEstep')
+    else:
+        e, p = readBetaShape(rad,"beta-",'tot')
     N = int(N)
     ev=[]
     for i in range(N):
@@ -2655,6 +2663,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
     elif rad == "Tc-99": file_path = sTc99
     elif rad == "Pm-147": file_path = sPm147
     elif rad == "Pu-241": file_path = sPu241
+    elif rad == "Co-60": file_path = sCo60
     
     if prt:
         with open(file_path, "w") as file:
@@ -2662,7 +2671,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
                 file.write(f"{b}\t{p2[i]}\n")
                 
                 
-# N = 1e6
+N = 1e7
 # buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
 # buildBetaSpectra('C-14', 16, N, prt=True); print('C-14 - done')
 # buildBetaSpectra('S-35', 16, N, prt=True); print('S-35 - done')
@@ -2673,4 +2682,5 @@ def buildBetaSpectra(rad, V, N, prt=False):
 # buildBetaSpectra('Tc-99', 16, N, prt=True); print('Tc-99 - done')
 # buildBetaSpectra('Pm-147', 16, N, prt=True); print('Pm-147 - done')
 # buildBetaSpectra('Pu-241', 16, N, prt=True); print('Pu-241 - done')
+buildBetaSpectra('Co-60', 16, N, prt=True); print('Co-60 - done')
 
