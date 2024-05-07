@@ -48,14 +48,14 @@ Quenching
 """
 Micelle
 """
-l = 0.1
+l = 1
 TD =0.9782008792186575
 Rad = "Co-60"
 pmf_1 = "1"
 N=1
 kB = 1e-5
 V=16
-mode="res"
+mode="eff"
 mode2="sym"
 TAB = 0.9926063247051856
 TBC = 0.992839996182854

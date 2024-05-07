@@ -824,7 +824,7 @@ def readBetaShape(rad,mode,level,z=z_betashape):
         else:
             p.append(p0 * (e[k]-e[k-1]))
 
-    e=(np.asarray(e[:-1])+np.asarray(e[1:]))/2
+    e=(np.asarray(e[:-1])+np.asarray(e[1:]))/2 # deal with the continuity hypothesis
     p.pop(-1)
     p /= sum(np.asarray(p)) # normalization
     p = list(p); e = list(e)
