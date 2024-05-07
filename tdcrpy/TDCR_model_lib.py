@@ -18,12 +18,11 @@ import pkg_resources
 import configparser
 import numpy as np
 import zipfile as zf
-import time
 import re
 import os
 import scipy.interpolate as  interp
 import matplotlib.pyplot as plt
-import toml
+from tqdm import tqdm
 
 """
 ======= Import ressource data =======
@@ -2637,7 +2636,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
         e, p = readBetaShape(rad,"beta-",'tot')
     N = int(N)
     ev=[]
-    for i in range(N):
+    for i in tqdm(range(N), desc="Processing", unit=" bins"):
         ind = sampling(p)
         ev.append(energie_dep_beta2(e[ind],V))
     counts, bins = np.histogram(ev, bins=e, density=True)
@@ -2670,7 +2669,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
                 file.write(f"{b}\t{p2[i]}\n")
                 
                 
-# N = 1e7
+N = 1e7
 # buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
 # buildBetaSpectra('C-14', 16, N, prt=True); print('C-14 - done')
 # buildBetaSpectra('S-35', 16, N, prt=True); print('S-35 - done')
@@ -2681,5 +2680,5 @@ def buildBetaSpectra(rad, V, N, prt=False):
 # buildBetaSpectra('Tc-99', 16, N, prt=True); print('Tc-99 - done')
 # buildBetaSpectra('Pm-147', 16, N, prt=True); print('Pm-147 - done')
 # buildBetaSpectra('Pu-241', 16, N, prt=True); print('Pu-241 - done')
-# buildBetaSpectra('Co-60', 16, N, prt=True); print('Co-60 - done')
+buildBetaSpectra('Co-60', 16, N, prt=True); print('Co-60 - done')
 
