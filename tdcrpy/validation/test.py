@@ -48,11 +48,25 @@ Quenching
 Spectrum sampling and suming
 """
 
-e_b,p_b = td.TDCR_model_lib.readBetaShape("H-3","beta-","tot")   # read the data of BetaShape
-index_beta_energy = td.TDCR_model_lib.sampling(p_b)                           # sampling energy of beta
-e_out = e_b[index_beta_energy]
+# 3H em = 
 
-print(e_out)
+e_b,p_b = td.TDCR_model_lib.readBetaShape("H-3","beta-","tot",contH=False)   # read the data of BetaShape
+e_b = np.asarray(e_b)
+p_b = np.asarray(p_b)
+
+
+# integration
+em =0
+for i, pi in enumerate(p_b):
+   em += pi*(e_b[i+1]-e_b[i])
+
+# em = sum(e_b*p_b)
+print("integration ", em)
+
+# index_beta_energy = td.TDCR_model_lib.sampling(p_b)                           # sampling energy of beta
+# e_out = e_b[index_beta_energy]
+
+# print(e_out)
 
 
 
