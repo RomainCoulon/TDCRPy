@@ -331,7 +331,7 @@ def sampling(p_x):
     Returns
     -------
     i : integer
-        index in x pointing the sampled value of the random variable X.
+        index in x pointing the sampled value of the random variable X. in case of pdf use i+1
     """
 
     cf = np.cumsum(p_x) # Cummulative Density (or mass) Function (CDF or CMF)
@@ -758,7 +758,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
 
 #====================  Fonction pour lire BetaShape   ========================================
 
-def readBetaShape(rad,mode,level,z=z_betashape,contH=True):
+def readBetaShape(rad,mode,level,z=z_betashape,contH=False):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
     
@@ -825,7 +825,7 @@ def readBetaShape(rad,mode,level,z=z_betashape,contH=True):
 
     if contH: e=(np.asarray(e[:-1])+np.asarray(e[1:]))/2 # deal with the continuity hypothesis
     p.pop(-1)
-    if contH: p /= sum(np.asarray(p)) # normalization
+    p /= sum(np.asarray(p)) # normalization
     p = list(p); e = list(e)
     return e, p
 
@@ -1227,7 +1227,9 @@ Matrice16_e_3 = read_matrice(fe6,2)
 #Matrice_e = read_matrice(fe,'e')
 
 def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,matrice13_1=Matrice13_p_1,matrice13_2=Matrice13_p_2,matrice13_3=Matrice13_p_3,ed=Matrice_e):
-    """ This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
+    """
+    Deprecated!
+    This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
     ----------
@@ -1390,6 +1392,10 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
     return result
 
 def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,matrice16_2=Matrice16_e_2,matrice16_3=Matrice16_e_3,ed=Matrice_e):
+    """
+    Deprecated
+    """
+    
     ## sort keV / entrée : keV
     if e_inci <= 200:
         if e_inci < 1:
@@ -2637,19 +2643,26 @@ def buildBetaSpectra(rad, V, N, prt=False):
     N = int(N)
     ev=[]
     for i in tqdm(range(N), desc="Processing", unit=" bins"):
-        ind = sampling(p)
+        ind = sampling(p) # sample in pdf
         ev.append(energie_dep_beta2(e[ind],V))
+        # ev.append(e[ind])
     counts, bins = np.histogram(ev, bins=e, density=True)
     p2=counts/sum(counts)
     
-    bin_centers = (bins[:-1] + bins[1:]) / 2
+    # bin_centers = (bins[:-1] + bins[1:]) / 2
     plt.figure(rad)
     plt.clf()
-    plt.bar(bin_centers, p2, width=(bins[1] - bins[0]), color='g', alpha=0.6, label="deposited")
-    plt.plot(e, p,'-r', alpha=0.6, label="betaShape")
+    # plt.bar(bin_centers, p2, width=(bins[1] - bins[0]), color='g', alpha=0.6, label="deposited")
+    plt.plot(bins[:-1], p2, '-g', alpha=0.6, label="deposited")
+    plt.plot(e[:-1], p,'-r', alpha=0.6, label="betaShape")
     plt.legend()
     plt.xlabel("$E$ /keV")
     plt.ylabel(r"$p$ /keV$^{-1}$")
+    
+    em0 = sum(np.asarray(e[:-1])*np.asarray(p))
+    em1 = sum(bins[:-1]*p2)
+    print(f"\nmean emitted E = {em0} keV {len(e)} {len(p)}")
+    print(f"mean deposited E = {em1} keV {len(bins)} {len(p2)}\n")
     
     if rad == "H-3": file_path = sH3
     elif rad == "C-14": file_path = sC14
@@ -2665,12 +2678,14 @@ def buildBetaSpectra(rad, V, N, prt=False):
     
     if prt:
         with open(file_path, "w") as file:
-            for i, b in enumerate(bin_centers):
-                file.write(f"{b}\t{p2[i]}\n")
+            for i, b in enumerate(bins):
+                if i==len(bins)-1: file.write(f"{b}\t{0}\n")
+                else: file.write(f"{b}\t{p2[i]}\n")
         print("file written in distrib.")
         with open(f"./MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_{rad}.txt", "w") as file:
-            for i, b in enumerate(bin_centers):
-                file.write(f"{b}\t{p2[i]}\n")
+            for i, b in enumerate(bins):
+                if i==len(bins)-1: file.write(f"{b}\t{0}\n")
+                else: file.write(f"{b}\t{p2[i]}\n")
         print("file written in local")        
                 
                 

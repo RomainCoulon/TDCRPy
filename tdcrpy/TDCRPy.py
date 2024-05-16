@@ -541,14 +541,14 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             for i, p in enumerate(particle_vec):
                 if p == "beta":
                     e_b,p_b = tl.readBetaShape(rad_i,"beta-",level_before_trans)   # read the data of BetaShape
-                    index_beta_energy = tl.sampling(p_b)                           # sampling energy of beta
+                    index_beta_energy = tl.sampling(p_b)                           # sampling in PDF
                     particle_vec[i] = "electron"
                     energy_vec[i] = e_b[index_beta_energy]
                     if Display: print(f"\t\t emitted {p} of energy = {round(energy_vec[i],3)} keV")
                         
                 if p == "beta+":
                     e_b,p_b = tl.readBetaShape(rad_i,"beta+",level_before_trans)
-                    index_beta_energy = tl.sampling(p_b)
+                    index_beta_energy = tl.sampling(p_b)                          # sampling in PDF
                     particle_vec[i] = "positron"
                     energy_vec[i] = e_b[index_beta_energy]
                     particle_vec.append("gamma")

@@ -13,7 +13,7 @@ import random
 from scipy.optimize import curve_fit
 from tqdm import tqdm
 import sys
-sys.path.insert(1, 'G:\Python_modules\BIPM_RI_PyModules')
+sys.path.insert(1, 'G:\\Python_modules\\BIPM_RI_PyModules')
 import TDCRcalculation as cl
 
 
@@ -44,30 +44,106 @@ Quenching
 # # plt.yscale("log")
 # plt.show()
 
+
+"""
+Sample in bivar distri
+"""
+
+
+# E = td.TDCR_model_lib.energie_dep_beta2(1000,v=10)
+# E = td.TDCR_model_lib.energie_dep_gamma2(10,v=10)
+# print(E)
+
+
+"""
+Sampling in pmf
+"""
+
+# A = ["A","B","C","D"]
+# pmf = [0 , 0.2, 0, 0.8]
+
+# ind = td.TDCR_model_lib.sampling(pmf)
+# print(A[ind])
+
+
+"""
+Sampling in pdf
+"""
+# e = [0, 1, 2, 3, 4, 5]
+# pdf = [0.2,0.1,0.3,0.4,0.2]
+# print(sum(pdf))
+# pdf/=sum(np.asarray(pdf))
+# N = 10000
+# ev=[]
+# for i in tqdm(range(N), desc="Processing", unit=" bins"):
+#     ind = td.TDCR_model_lib.sampling(pdf) # sample in pdf
+#     # ev.append(energie_dep_beta2(e[ind],V))
+#     ev.append(e[ind])
+# counts, bins = np.histogram(ev, bins=e, density=True)
+# p2=counts/sum(counts)
+
+# em0 = sum(np.asarray(e[:-1])*np.asarray(pdf))
+# em1 = sum(bins[:-1]*p2)
+# print(f"\nmean emitted E = {em0} keV {len(e)} {len(pdf)}")
+# print(f"mean deposited E = {em1} keV {len(bins)} {len(p2)}\n")
+# print(p2[-1])
+
+# # bin_centers = (bins[:-1] + bins[1:]) / 2
+# plt.figure("0")
+# plt.clf()
+# # plt.bar(bin_centers, p2, width=(bins[1] - bins[0]), color='g', alpha=0.6, label="deposited")
+# plt.plot(bins[:-1], p2, '-g', alpha=0.6, label="deposited")
+# plt.plot(e[:-1], pdf,'-r', alpha=0.6, label="betaShape")
+# plt.legend()
+# plt.xlabel("$E$ /keV")
+# plt.ylabel(r"$p$ /keV$^{-1}$")
+
 """
 Spectrum sampling and suming
 """
 
-# 3H em = 
-
+# 3H em = 5,68 keV
 e_b,p_b = td.TDCR_model_lib.readBetaShape("H-3","beta-","tot",contH=False)   # read the data of BetaShape
 e_b = np.asarray(e_b)
 p_b = np.asarray(p_b)
+print(sum(p_b))
+p_b/=sum(p_b)
 
+# # integration
+# em =0
+# for i, pi in enumerate(p_b):
+#     em += pi*e_b[i]
+em = sum(e_b[:-1]*p_b)
 
-# integration
-em =0
-for i, pi in enumerate(p_b):
-   em += pi*(e_b[i+1]-e_b[i])
-
-# em = sum(e_b*p_b)
 print("integration ", em)
 
-# index_beta_energy = td.TDCR_model_lib.sampling(p_b)                           # sampling energy of beta
-# e_out = e_b[index_beta_energy]
+# sampling
+e_b,p_b = td.TDCR_model_lib.readBetaShape("H-3","beta-","tot",contH=False)   # read the data of BetaShape
+e_b = np.asarray(e_b)
+p_b = np.asarray(p_b)
+p_b/=sum(p_b)
+ei = []
+N = 1000000
+for i in range(N):
+    ind = td.TDCR_model_lib.sampling(p_b)
+    ei.append(e_b[ind])
+em = np.mean(ei)
+u_em = np.std(ei)/np.sqrt(N)
 
-# print(e_out)
+print("sampling ", em, u_em)
 
+counts, bins = np.histogram(ei, bins=e_b, density=True)
+p2=counts/sum(counts)
+
+# bin_centers = (bins[:-1] + bins[1:]) / 2
+plt.figure("0")
+plt.clf()
+# plt.bar(bin_centers, p2, width=(bins[1] - bins[0]), color='g', alpha=0.6, label="deposited")
+plt.plot(bins[:-1], p2, '-g', alpha=0.6, label="deposited")
+plt.plot(e_b[:-1], p_b,'-r', alpha=0.6, label="betaShape")
+plt.legend()
+plt.xlabel("$E$ /keV")
+plt.ylabel(r"$p$ /keV$^{-1}$")
 
 
 """
