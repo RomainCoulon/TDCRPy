@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------------
 
 BetaShape
-Version: 2.2 (05/2021)
+Version: 2.3.1 (12/2023)
 Author: X. Mougeot (xavier.mougeot@cea.fr)
 CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
-Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+Please cite: [2019MO35] X. Mougeot, Applied Radiation and Isotopes 154, 108884 (2019)
 
 --------------------------------------------------------------------------------------
 
@@ -71,5 +71,6 @@ Input log ft value (ec): 11.55
 
 Log ft value (ec)    =  11.537 (13)
 with log f           =  -6.035 (13)
+or f-value           =  9.22E-7 (26)
 and log partial T1/2 =  17.5729 (46)
 

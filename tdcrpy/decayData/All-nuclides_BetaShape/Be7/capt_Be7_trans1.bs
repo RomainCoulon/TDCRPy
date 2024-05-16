@@ -1,14 +1,14 @@
 --------------------------------------------------------------------------------------
 
 BetaShape
-Version: 2.2 (05/2021)
+Version: 2.3.1 (12/2023)
 Author: X. Mougeot (xavier.mougeot@cea.fr)
 CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
-Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+Please cite: [2019MO35] X. Mougeot, Applied Radiation and Isotopes 154, 108884 (2019)
 
 --------------------------------------------------------------------------------------
 
-Parent nucleus: 4-Be-7 [3/2-] g.s.  -->  Daughter nucleus: 3-Li-7 [1/2-] 477.6210 (20) keV
+Parent nucleus: 4-Be-7 [3/2-] g.s.  -->  Daughter nucleus: 3-Li-7 [1/2-] 477.621 (2) keV
 Calculation of the allowed transition from the electron capture decay of Be-7
 
 Transition energy: 384.194 (18) keV
@@ -35,7 +35,7 @@ L =  0.095 (7)
 ------------------------------
 Capture branch from input data
 
-Iec =   10.440 (40) %
+Iec =   10.44 (4) %
 
 
 ---------------------
@@ -53,5 +53,6 @@ Input log ft value (ec): 3.56
 
 Log ft value (ec)    =  3.48 (6)
 with log f           =  -4.17 (6)
+or f-value           =  6.8E-5 (8)
 and log partial T1/2 =  7.6439 (17)
 

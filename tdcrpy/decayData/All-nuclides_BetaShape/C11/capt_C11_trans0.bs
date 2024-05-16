@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------------
 
 BetaShape
-Version: 2.2 (05/2021)
+Version: 2.3.1 (12/2023)
 Author: X. Mougeot (xavier.mougeot@cea.fr)
 CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
-Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+Please cite: [2019MO35] X. Mougeot, Applied Radiation and Isotopes 154, 108884 (2019)
 
 --------------------------------------------------------------------------------------
 
@@ -51,26 +51,27 @@ EC/b+ =  0.00227 (7)
 Splitting of the branch between capture and beta plus decays
 
 Input data: Iec tot. =   100.000 (18) %   Iec =   0.250 (13) %   Ib+ =   99.750 (13) %
-Iec      =   0.250 (13) % (input data kept)
-Ib+      =   99.750 (13) % (input data kept)
-Iec tot. =   100. % (input data kept)
+Iec      =   0.226 (7) %
+Ib+      =   99.774 (7) %
+Iec tot. =   100 %
 
 
 ---------------------
 Capture probabilities
 
-PK  =  0.00209 (7)
+PK  =  0.00208 (7)
 PL1  =  1.79E-4 (6)
 PL2  =  8.58E-9 (34)
 
-K =  0.00209 (7)
+K =  0.00208 (7)
 L =  1.79E-4 (6)
 
 
 ------------------------------------------------------------
 Input log ft value not given.
 
-Log ft value (ec)    =  3.548 (26)
+Log ft value (ec)    =  3.591 (20)
 with log f           =  -2.141 (14)
-and log partial T1/2 =  5.689 (23)
+or f-value           =  0.00722 (22)
+and log partial T1/2 =  5.732 (14)
 

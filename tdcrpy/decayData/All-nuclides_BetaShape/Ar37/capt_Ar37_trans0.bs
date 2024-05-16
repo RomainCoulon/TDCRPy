@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------------
 
 BetaShape
-Version: 2.2 (05/2021)
+Version: 2.3.1 (12/2023)
 Author: X. Mougeot (xavier.mougeot@cea.fr)
 CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
-Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+Please cite: [2019MO35] X. Mougeot, Applied Radiation and Isotopes 154, 108884 (2019)
 
 --------------------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ M =  0.01239 (15)
 ------------------------------
 Capture branch from input data
 
-Iec =   100. %
+Iec =   100 %
 
 
 ---------------------
@@ -65,5 +65,6 @@ Input log ft value (ec): 5.1
 
 Log ft value (ec)    =  5.101 (5)
 with log f           =  -1.379 (5)
+or f-value           =  0.04174 (48)
 and log partial T1/2 =  6.48071 (24)
 

@@ -1,14 +1,14 @@
 --------------------------------------------------------------------------------------
 
 BetaShape
-Version: 2.2 (05/2021)
+Version: 2.3.1 (12/2023)
 Author: X. Mougeot (xavier.mougeot@cea.fr)
 CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
-Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+Please cite: [2019MO35] X. Mougeot, Applied Radiation and Isotopes 154, 108884 (2019)
 
 --------------------------------------------------------------------------------------
 
-Parent nucleus: 13-Al-26 [5+] g.s.  -->  Daughter nucleus: 12-Mg-26 [2+] 1808.740 (40) keV
+Parent nucleus: 13-Al-26 [5+] g.s.  -->  Daughter nucleus: 12-Mg-26 [2+] 1808.74 (4) keV
 Calculation of the 2nd forbidden unique transition from the electron capture decay of Al-26
 
 Transition energy: 2195.66 (7) keV
@@ -84,5 +84,6 @@ Input log ft value (ec & beta +): 15.726
 
 Log ft value (ec)    =  15.718 (33)
 with log f           =  1.547 (29)
-and log partial T1/2 =  14.171 (16)
+or f-value           =  35.2 (22)
+and log partial T1/2 =  14.172 (16)
 

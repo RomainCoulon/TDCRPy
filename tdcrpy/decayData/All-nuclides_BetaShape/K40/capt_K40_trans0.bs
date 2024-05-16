@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------------
 
 BetaShape
-Version: 2.2 (05/2021)
+Version: 2.3.1 (12/2023)
 Author: X. Mougeot (xavier.mougeot@cea.fr)
 CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
-Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+Please cite: [2019MO35] X. Mougeot, Applied Radiation and Isotopes 154, 108884 (2019)
 
 --------------------------------------------------------------------------------------
 
@@ -47,28 +47,28 @@ M =  0.01271 (15)
 --------------------------
 Capture-to-positron ratios
 
-K/b+ =  188.1 (26)
-L1/b+ =  20.19 (15)
+K/b+ =  188.2 (26)
+L1/b+ =  20.20 (15)
 L2/b+ =  0.0465 (9)
-L3/b+ =  0.1311 (24)
-M1/b+ =  2.669 (8)
-M2/b+ =  0.004818 (38)
-M3/b+ =  0.010749 (37)
+L3/b+ =  0.1312 (24)
+M1/b+ =  2.671 (8)
+M2/b+ =  0.004822 (38)
+M3/b+ =  0.010757 (37)
 
-K/b+ =  188.1 (26)
-L/b+ =  20.37 (15)
-M/b+ =  2.684 (8)
+K/b+ =  188.2 (26)
+L/b+ =  20.38 (15)
+M/b+ =  2.686 (8)
 
-EC/b+ =  211.1 (28)
+EC/b+ =  211.3 (28)
 
 
 ------------------------------------------------------------
 Splitting of the branch between capture and beta plus decays
 
-Input data: Iec tot. =   0.20 (10) %   Iec =   0.20 (10) %   Ib+ =   0.00100 (12) %
-Iec      =   0.20 (10) % (input data kept)
-Ib+      =   0.00100 (12) % (input data kept)
-Iec tot. =   0.20 (10) % (input data kept)
+Input data: Iec tot. =   0.2 (1) %   Iec =   0.2 (1) %   Ib+ =   0.00100 (12) %
+Iec      =   0.2 (1) %
+Ib+      =   9.4E-4 (47) %
+Iec tot. =   0.2 (1) %
 
 
 ---------------------
@@ -92,5 +92,6 @@ Input log ft value (ec & beta +): 21.35
 
 Log ft value (ec)    =  21.33 (22)
 with log f           =  2.033 (5)
+or f-value           =  107.9 (13)
 and log partial T1/2 =  19.30 (22)
 

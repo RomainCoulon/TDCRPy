@@ -44,28 +44,39 @@ Quenching
 # # plt.yscale("log")
 # plt.show()
 
+"""
+Spectrum sampling and suming
+"""
+
+e_b,p_b = td.TDCR_model_lib.readBetaShape("H-3","beta-","tot")   # read the data of BetaShape
+index_beta_energy = td.TDCR_model_lib.sampling(p_b)                           # sampling energy of beta
+e_out = e_b[index_beta_energy]
+
+print(e_out)
+
+
 
 """
 Micelle
 """
-l = 1
-TD =0.9782008792186575
-Rad = "Co-60"
-pmf_1 = "1"
-N=1
-kB = 1e-5
-V=16
-mode="eff"
-mode2="sym"
-TAB = 0.9926063247051856
-TBC = 0.992839996182854
-TAC = 0.9924331860555556
+# l = 1
+# TD =0.9782008792186575
+# Rad = "Co-60"
+# pmf_1 = "1"
+# N=1
+# kB = 1e-5
+# V=16
+# mode="eff"
+# mode2="sym"
+# TAB = 0.9926063247051856
+# TBC = 0.992839996182854
+# TAC = 0.9924331860555556
 
-# out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp= False, Display = True, Smodel=True)
-out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp= False, Display = False, Smodel=False)
-# out = td.TDCRPy.TDCRPy(l, tD[qs],tAB[qs],tBC[qs],tAC[qs], rad, "1", 1, kB*1e-3, 16, "res", "sym", Smodel=Stochastic)
-# out = td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2)
-print(out)
+# # out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp= False, Display = True, Smodel=True)
+# out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, barp= False, Display = False, Smodel=False)
+# # out = td.TDCRPy.TDCRPy(l, tD[qs],tAB[qs],tBC[qs],tAC[qs], rad, "1", 1, kB*1e-3, 16, "res", "sym", Smodel=Stochastic)
+# # out = td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2)
+# print(out)
 
 
 """

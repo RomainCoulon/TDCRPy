@@ -758,7 +758,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
 
 #====================  Fonction pour lire BetaShape   ========================================
 
-def readBetaShape(rad,mode,level,z=z_betashape):
+def readBetaShape(rad,mode,level,z=z_betashape,contH=True):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
     
@@ -809,7 +809,7 @@ def readBetaShape(rad,mode,level,z=z_betashape):
         data.remove([])
     
     for i in range(len(data)):
-        ind = i
+        # ind = i
         if data[i][0] == 'E(keV)':break
     
     for j in range(i+1,len(data)):
@@ -823,7 +823,7 @@ def readBetaShape(rad,mode,level,z=z_betashape):
         else:
             p.append(p0 * (e[k]-e[k-1]))
 
-    e=(np.asarray(e[:-1])+np.asarray(e[1:]))/2 # deal with the continuity hypothesis
+    if contH: e=(np.asarray(e[:-1])+np.asarray(e[1:]))/2 # deal with the continuity hypothesis
     p.pop(-1)
     p /= sum(np.asarray(p)) # normalization
     p = list(p); e = list(e)
@@ -2667,6 +2667,11 @@ def buildBetaSpectra(rad, V, N, prt=False):
         with open(file_path, "w") as file:
             for i, b in enumerate(bin_centers):
                 file.write(f"{b}\t{p2[i]}\n")
+        print("file written in distrib.")
+        with open(f"./MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_{rad}.txt", "w") as file:
+            for i, b in enumerate(bin_centers):
+                file.write(f"{b}\t{p2[i]}\n")
+        print("file written in local")        
                 
                 
 # N = 1e7

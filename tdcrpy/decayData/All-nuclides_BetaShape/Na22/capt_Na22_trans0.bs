@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------------
 
 BetaShape
-Version: 2.2 (05/2021)
+Version: 2.3.1 (12/2023)
 Author: X. Mougeot (xavier.mougeot@cea.fr)
 CEA, LIST, Laboratoire National Henri Becquerel (LNHB), Gif-sur-Yvette F-91191, France
-Please cite: X. Mougeot, Applied Radiation and Isotopes 154 (2019) 108884
+Please cite: [2019MO35] X. Mougeot, Applied Radiation and Isotopes 154, 108884 (2019)
 
 --------------------------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ Capture-to-positron ratios
 K/b+ =  0.01670 (12)
 L1/b+ =  0.001134 (5)
 L2/b+ =  4.391E-7 (22)
-L3/b+ =  1.8100E-7 (21)
+L3/b+ =  1.8098E-7 (21)
 
 K/b+ =  0.01670 (12)
 L/b+ =  0.001135 (5)
@@ -54,20 +54,20 @@ EC/b+ =  0.01783 (13)
 Splitting of the branch between capture and beta plus decays
 
 Input data: Iec tot. =   0.056 (14) %   Iec =   9.8E-4 (25) %   Ib+ =   0.055 (14) %
-Iec      =   9.8E-4 (25) % (input data kept)
-Ib+      =   0.055 (14) % (input data kept)
-Iec tot. =   0.056 (14) % (input data kept)
+Iec      =   9.8E-4 (25) %
+Ib+      =   0.055 (14) %
+Iec tot. =   0.056 (14) %
 
 
 ---------------------
 Capture probabilities
 
-PK  =  0.01641 (12)
+PK  =  0.01640 (12)
 PL1  =  0.001114 (8)
-PL2  =  4.317E-7 (32)
+PL2  =  4.316E-7 (32)
 PL3  =  1.779E-7 (17)
 
-K =  0.01641 (12)
+K =  0.01640 (12)
 L =  0.001115 (8)
 
 
@@ -76,5 +76,6 @@ Input log ft value (ec & beta +): 14.91
 
 Log ft value (ec)    =  14.92 (11)
 with log f           =  1.9977 (31)
+or f-value           =  99.5 (7)
 and log partial T1/2 =  12.92 (11)
 
