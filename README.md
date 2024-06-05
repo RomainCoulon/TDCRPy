@@ -194,15 +194,12 @@ By default, the Monte-Carlo model is not applied for the following list radionuc
 ### Advance settings
 
 An advanced setting can be configured in the `config.toml` file for functions `TDCRPy.TDCRPy()` and `TDCRoptimize.eff()`. In this file:
-*  By default `Y = True` so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set `Y = False`.
-*  The list of radionuclides for which the analytical model is applied is defined by default such as `radListPureBeta = H-3, C-14, S-35, Ca-45, Ni-63, Sr-89, Sr-90, Tc-99, Pm-147, Pu-241`.
-*  The number of bins to discretize the linear energy space for quenching calculation for the radionuclides listed above has been set to induce an error from numerical approximation below 10^-4^. Thus the parameter `nE = 7000, 1000, 1000, 500, 2000, 500, 200, 500, 1000, 7000`.
-*  In the case of Monte-Carlo calculation, the number of bins to discretize the linear energy space for quenching calculation can be adjusted. `nE_electron` and `nE_alpha` parameters for respectively electrons and alpha particles are respectiveley set by default such as `nE_electron = 1000`
-and `nE_alpha = 1000`. These values ensure an error on quenched energy estimation from numerical approximation below 10^-3^.
+*  The number of bins to discretize the linear energy space for quenching calculation can be adjusted. `nE_electron` and `nE_alpha` parameters for respectively electrons and alpha particles are respectiveley set by default such as `nE_electron = 1000` and `nE_alpha = 1000`.
 * By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the `density` (default `density=0.96`), the mean charge number `Z` (default `Z=5.2`) and the mean mass number `A` (default `A=11.04`) of the scintillator.
 * To process photoelectric interactions, the atomic concentration of the scintillator is spectified. By default `pH = 0.578772`, `pC = 0.338741`, `pN = 0.000302`, `pO = 0.082022`, `pP = 0.000092`, `pCl = 0.000071`
-* A correction due reverse micelles in the scintillator is implemented. The diameter of the micelles and the fraction of aqueous solution is specified. By defaut `diam_micelle = 2`, `fAq = 0.1`
-* To optimize the speed of the Monte-Carlo calculation, a spline interpolation on precalculated quenched energy is applied. The parameter `depthSpline` (default `depthSpline = 5`) sets the number of bins on each side of the energy point on which the interpolation is applied. The parameter `Einterp` (default `Einterp = 1`) set the energy (in keV) above which the interpolation is applied.
+* A correction due reverse micelles in the scintillator is implemented. It is by default activated `micCorr = True`. The diameter of the micelles and the fraction of aqueous solution is specified. By defaut `diam_micelle = 2`, `fAq = 0.1`
+* The coincidence resolving time of the LS counter is specified (in ns). By default `tau = 50`.
+* To optimize the speed of the Monte-Carlo calculation, a spline interpolation on precalculated quenched energy is applied. The parameter `depthSpline` (default `depthSpline = 5`) sets the number of bins on each side of the energy point on which the interpolation is applied. The parameter `Einterp_a` for alpha particles and `Einterp_e` for electrons (default `Einterp_a = 100` keV, `Einterp_e = 1.5` keV) set the energy (in keV) above which the interpolation is applied.
 
 ### TDCRoptimize.eff()
 
