@@ -88,6 +88,8 @@ TDCRPy() is parametrised by the following parameters:
 *  `mode2` sets whether the TDCR system has to be considered as symetrical by the model `mode2="sym"` or not symetrical `mode2="asym"`.
 *  `Display` (type `boolean`) is an optional parameter set by default, `Display=False`. If `Display=True`, detailed on the simulated decays are displayed.
 *  `barp` (type `boolean`) is an optional parameter set by default, `barp=False`. If `barp=True`, the progression bar of the calculation is displayed.
+*  `Smodel` (type `boolean`) is an optional parameter set by default, `Smodel=True`. If `barp=True`, the stochastic model is applied otherwise the analytical model is applied (suitable for pure beta emitters).
+*  `uncData` (type `boolean`) is an optional parameter set by default, `uncData=False`. If `uncData=True`, the unceratainty on transition probabilities are propagated by MC sampling (still under study).
 
 
 In  `mode="eff"`, `TDCRPy()` returns a `tuple` composed of:
