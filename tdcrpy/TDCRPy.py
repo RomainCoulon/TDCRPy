@@ -334,7 +334,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             while levelOftheDaughter > 0:                                                # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
                 i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])  # Find the position in the daughter level vector
                 
-                t1 = np.random.exponential(trans_halfLife[index_rad][iDaughter][i_level][0], size=1)[0]
+                t1 = np.random.exponential(trans_halfLife[index_rad][iDaughter][i_level][0]/np.log(2), size=1)[0]
 
                 # test whether the decay occurs within the coincidence resolving time or not
                 if t1 > tau*1e-9: 

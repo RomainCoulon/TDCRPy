@@ -102,48 +102,48 @@ Sampling in pdf
 Spectrum sampling and suming
 """
 
-# 3H em = 5,68 keV
-e_b,p_b = td.TDCR_model_lib.readBetaShape("H-3","beta-","tot",contH=False)   # read the data of BetaShape
-e_b = np.asarray(e_b)
-p_b = np.asarray(p_b)
-print(sum(p_b))
-p_b/=sum(p_b)
+# # 3H em = 5,68 keV
+# e_b,p_b = td.TDCR_model_lib.readBetaShape("H-3","beta-","tot",contH=False)   # read the data of BetaShape
+# e_b = np.asarray(e_b)
+# p_b = np.asarray(p_b)
+# print(sum(p_b))
+# p_b/=sum(p_b)
 
-# # integration
-# em =0
-# for i, pi in enumerate(p_b):
-#     em += pi*e_b[i]
-em = sum(e_b[:-1]*p_b)
+# # # integration
+# # em =0
+# # for i, pi in enumerate(p_b):
+# #     em += pi*e_b[i]
+# em = sum(e_b[:-1]*p_b)
 
-print("integration ", em)
+# print("integration ", em)
 
-# sampling
-e_b,p_b = td.TDCR_model_lib.readBetaShape("H-3","beta-","tot",contH=False)   # read the data of BetaShape
-e_b = np.asarray(e_b)
-p_b = np.asarray(p_b)
-p_b/=sum(p_b)
-ei = []
-N = 1000000
-for i in range(N):
-    ind = td.TDCR_model_lib.sampling(p_b)
-    ei.append(e_b[ind])
-em = np.mean(ei)
-u_em = np.std(ei)/np.sqrt(N)
+# # sampling
+# e_b,p_b = td.TDCR_model_lib.readBetaShape("H-3","beta-","tot",contH=False)   # read the data of BetaShape
+# e_b = np.asarray(e_b)
+# p_b = np.asarray(p_b)
+# p_b/=sum(p_b)
+# ei = []
+# N = 1000000
+# for i in range(N):
+#     ind = td.TDCR_model_lib.sampling(p_b)
+#     ei.append(e_b[ind])
+# em = np.mean(ei)
+# u_em = np.std(ei)/np.sqrt(N)
 
-print("sampling ", em, u_em)
+# print("sampling ", em, u_em)
 
-counts, bins = np.histogram(ei, bins=e_b, density=True)
-p2=counts/sum(counts)
+# counts, bins = np.histogram(ei, bins=e_b, density=True)
+# p2=counts/sum(counts)
 
-# bin_centers = (bins[:-1] + bins[1:]) / 2
-plt.figure("0")
-plt.clf()
-# plt.bar(bin_centers, p2, width=(bins[1] - bins[0]), color='g', alpha=0.6, label="deposited")
-plt.plot(bins[:-1], p2, '-g', alpha=0.6, label="deposited")
-plt.plot(e_b[:-1], p_b,'-r', alpha=0.6, label="betaShape")
-plt.legend()
-plt.xlabel("$E$ /keV")
-plt.ylabel(r"$p$ /keV$^{-1}$")
+# # bin_centers = (bins[:-1] + bins[1:]) / 2
+# plt.figure("0")
+# plt.clf()
+# # plt.bar(bin_centers, p2, width=(bins[1] - bins[0]), color='g', alpha=0.6, label="deposited")
+# plt.plot(bins[:-1], p2, '-g', alpha=0.6, label="deposited")
+# plt.plot(e_b[:-1], p_b,'-r', alpha=0.6, label="betaShape")
+# plt.legend()
+# plt.xlabel("$E$ /keV")
+# plt.ylabel(r"$p$ /keV$^{-1}$")
 
 
 """
