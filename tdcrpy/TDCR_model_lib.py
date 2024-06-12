@@ -76,7 +76,7 @@ def modifynE_electron(x):
     x0 = readParameters()[0]
     data1 = data0.replace(f"nE_electron = {x0}",f"nE_electron = {x}")
     writeConfifAsstr(data1)
-
+   
 def modifynE_alpha(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[1]

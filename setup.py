@@ -3,6 +3,7 @@ import codecs
 import os
 
 VERSION = "1.12.0"
+
 DESCRIPTION = "TDCR model"
 
 with open("README.md", "r") as f:
