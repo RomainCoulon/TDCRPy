@@ -8,7 +8,7 @@ Created on Fri Mar  1 10:02:04 2024
 import numpy as np
 import matplotlib.pyplot as plt
 
-rad ="Fe-55"
+rad ="Cd-109"
 # kB = [6, 10, 15]
 kB = [10]
 CIEMATCODE = "NUR"
@@ -17,7 +17,7 @@ CIEMATCODE = "NUR"
 BIPMCODE = "TDCRPy"
 # BIPMCODE = "TDCRPyA"
 
-TDCR17 = True
+TDCR17 = False
 
 # Fe-55
 # ExpTD = [5.015440131719763883e-01, 3.033921221898202569e-01, 2.337696889928395638e-01, 1.963266220117187155e-01, 1.525520789152907120e-01, 1.290251872314254478e-01]
@@ -32,14 +32,14 @@ xx = 100*(1-2*5.129091648648070878e-01)
 # ExpTD = [9.818128981512568298e-01, 9.714731781760674867e-01, 9.645707367051945536e-01, 9.554547633467871393e-01, 9.488064225575219002e-01, 9.397242455346862533e-01]
 
 # Cd-109
-# ExpTD = [8.522594641728009623e-01, 8.995376644905349606e-01, 9.175877883182167460e-01, 9.242570160461722750e-01, 9.220671007346888937e-01, 8.994349939851205011e-01]
+ExpTD = [8.522594641728009623e-01, 8.995376644905349606e-01, 9.175877883182167460e-01, 9.242570160461722750e-01, 9.220671007346888937e-01, 8.994349939851205011e-01]
 
 # C-14
 # ExpTD = [0.96512047, 0.94196669, 0.92484093, 0.90833458, 0.88807086, 0.850513  ]
 
 # H-3
-ExpTD = [0.77784194, 0.77443954, 0.67543926, 0.55646075, 0.75506601, 0.7546677]
-Dtdcr17 = [0.7954, .7925, .7075, .5999, .7760, .7757]
+# ExpTD = [0.77784194, 0.77443954, 0.67543926, 0.55646075, 0.75506601, 0.7546677]
+# Dtdcr17 = [0.7954, .7925, .7075, .5999, .7760, .7757]
 
 if CIEMATCODE == "EFFY": endHeader=72
 elif CIEMATCODE == "NUR": endHeader=4
@@ -128,18 +128,24 @@ for kBn in kB:
     tdexp =[]
     dexp =[]
     count = 0
-    for v in ExpTD:
+    for iv, v in enumerate(ExpTD):
         if rad == "Cd-109":
-            index=abs(np.asarray(tdTDCRPy)-v).argmin()
-            if count == 0:
-                index=abs(np.asarray(tdTDCRPy)-v).argmin()
-                index0=index
-                count+=1
-            else:
-                count+=1
-                index=abs(np.asarray(tdTDCRPy[:index0])-v).argmin()
-                index0=index
-            print(index0,tdTDCRPy[index0])
+            if iv==0: index = 61
+            if iv==1: index = 47
+            if iv==2: index = 39
+            if iv==3: index = 36
+            if iv==4: index = 36
+            if iv==5: index = 27
+            # index=abs(np.asarray(tdTDCRPy)-v).argmin()
+            # if count == 0:
+            #     index=abs(np.asarray(tdTDCRPy)-v).argmin()
+            #     index0=index
+            #     count+=1
+            # else:
+            #     count+=1
+            #     index=abs(np.asarray(tdTDCRPy[:index0])-v).argmin()
+            #     index0=index
+            print(iv,index,tdTDCRPy[index],dTDCRPy[index],v,tdTDCRPy[index]-v)
         else:
             index=abs(np.asarray(tdTDCRPy)-v).argmin()
         tdexp.append(tdTDCRPy[index])
@@ -155,13 +161,18 @@ for kBn in kB:
         plt.plot(tdNUR,dNUR,'-b',label=CIEMATCODE)
     plt.errorbar(tdTDCRPy,dTDCRPy,yerr=dTDCRPys,fmt="-*k", label=BIPMCODE)
     plt.plot(tdexp,dexp,"or", label="Exp")
+    plt.xlim([0.70,1])
     if TDCR17:
         plt.plot(tdexp,Dtdcr17,"og", label="TDCR17")
     plt.legend(fontsize=14)
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
     for itxt, xtxt in enumerate(tdexp):
-        plt.text(xtxt+0.005,dexp[itxt]-0.00,nd[itxt],fontstyle='italic')
+        if itxt==0: plt.text(xtxt+0.005,dexp[itxt]-0.00,nd[itxt],fontstyle='italic')
+        if itxt==1: plt.text(xtxt+0.005,dexp[itxt]-0.00,nd[itxt],fontstyle='italic')
+        if itxt==2: plt.text(xtxt+0.005,dexp[itxt]-0.00,nd[itxt],fontstyle='italic')
+        if itxt==3: plt.text(xtxt+0.005,dexp[itxt]-0.01,nd[itxt],fontstyle='italic')
+        if itxt==5: plt.text(xtxt+0.01,dexp[itxt]-0.02,nd[itxt],fontstyle='italic')
     plt.ylabel(r"$\epsilon_{D}$",fontsize=16)
     plt.xlabel(r"$\epsilon_{T}$/$\epsilon_{D}$",fontsize=16)
     plt.show()
@@ -171,9 +182,10 @@ for kBn in kB:
     plt.figure('deviation')
     plt.clf()
     plt.plot(tdvec,dev,'-b')
-    plt.plot(tdTDCRPy,100*np.asarray(dTDCRPys)/dTDCRPy,'-r')
-    # plt.plot(tdexp,dexp,'or')
+    # plt.plot(tdTDCRPy,100*np.asarray(dTDCRPys)/dTDCRPy,'-r')
+    plt.ylim([-3,3])
+    plt.plot(tdexp,dexp,'or')
     plt.ylabel(r"$d$ (%)")
     plt.xlabel(r"TDCR")    
             
-        
+print(tdvec[61],dev[61])

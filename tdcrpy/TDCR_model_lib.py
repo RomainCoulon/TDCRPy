@@ -29,36 +29,42 @@ from tqdm import tqdm
 """
 
 # import advanced configuration data
-
 config = configparser.ConfigParser()
-with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
-    file_conf = data_path       
-config.read(file_conf)
 
-nE_electron = config["Inputs"].getint("nE_electron")
-nE_alpha = config["Inputs"].getint("nE_alpha")
-tau = config["Inputs"].getint("tau")
-RHO = config["Inputs"].getfloat("density")
-Z = config["Inputs"].getfloat("Z")
-A = config["Inputs"].getfloat("A")
-depthSpline = config["Inputs"].getint("depthSpline")
-Einterp_a = config["Inputs"].getfloat("Einterp_a")
-Einterp_e = config["Inputs"].getfloat("Einterp_e")
-diam_micelle = config["Inputs"].getfloat("diam_micelle")
-fAq = config["Inputs"].getfloat("fAq")
+def readParameters(disp=False):
+    global config, file_conf
+    config = configparser.ConfigParser()
+    with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
+        file_conf = data_path       
+    config.read(file_conf)
 
-def readParameters():
-    print(f"number of integration bins for electrons = {nE_electron}")
-    print(f"number of integration bins for alpha = {nE_alpha}")
-    print(f"density = {RHO} g/cm3")
-    print(f"Z = {Z}")
-    print(f"A = {A}")
-    print(f"depth of spline interp. = {depthSpline}")
-    print(f"energy above which interp. in implemented (for alpha) = {Einterp_a} keV")
-    print(f"energy above which interp. in implemented (for electron) = {Einterp_e} keV")
-    print(f"diameter of micelle = {diam_micelle} nm")
-    print(f"acqueous fraction = {fAq}")
+    nE_electron = config["Inputs"].getint("nE_electron")
+    nE_alpha = config["Inputs"].getint("nE_alpha")
+    tau = config["Inputs"].getint("tau")
+    RHO = config["Inputs"].getfloat("density")
+    Z = config["Inputs"].getfloat("Z")
+    A = config["Inputs"].getfloat("A")
+    depthSpline = config["Inputs"].getint("depthSpline")
+    Einterp_a = config["Inputs"].getfloat("Einterp_a")
+    Einterp_e = config["Inputs"].getfloat("Einterp_e")
+    diam_micelle = config["Inputs"].getfloat("diam_micelle")
+    fAq = config["Inputs"].getfloat("fAq")
+    
+    if disp:
+        print(f"number of integration bins for electrons = {nE_electron}")
+        print(f"number of integration bins for alpha = {nE_alpha}")
+        print(f"density = {RHO} g/cm3")
+        print(f"Z = {Z}")
+        print(f"A = {A}")
+        print(f"depth of spline interp. = {depthSpline}")
+        print(f"energy above which interp. in implemented (for alpha) = {Einterp_a} keV")
+        print(f"energy above which interp. in implemented (for electron) = {Einterp_e} keV")
+        print(f"diameter of micelle = {diam_micelle} nm")
+        print(f"acqueous fraction = {fAq}")
+    
     return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau
+
+nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau = readParameters()
 
 def readConfigAsstr():
     path2config = str(config.read(file_conf)[0])

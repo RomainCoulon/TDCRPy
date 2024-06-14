@@ -478,41 +478,51 @@ Tests decay data uncertainty propagation
 # else: print(out)
 
 """
-Efficiency curves analytical vs MC
+Efficiency curves !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 """
-
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # L = np.logspace(-3,2,100) # H-3
 # L = np.logspace(-3,2,100) # C-14
 # L = np.logspace(-3,2,10) # Sr-89
 # L = np.logspace(-3,2,10) # Fe-55
-# L = np.arange(0.1,10,0.1) # Fe-55
+# L = np.logspace(-1,1,100) # Fe-55
 # TD = 0.977667386529166
 # TAB = 0.992232838598821
 # TBC = 0.992343419459002
 # TAC = 0.99275350064608
-# rad_v = ["C-14"]
+# rad_v = ["Cd-109"]
 # pmf_1="1"
 # V = 10
 # mode = "eff"
 # mode2 = "sym"
 # N = 10000
-# kB = [0.6e-5, 1.0e-5, 1.5e-5]
-# kBtxt = [6, 10, 15]
+# #kB = [0.6e-5, 1.0e-5, 1.5e-5]
+# # kBtxt = [6, 10, 15]
+# kB = [1.0e-5]
+# kBtxt = [10]
+
 
 # plt.figure("visu")
 # for Rad in rad_v:
 #     for i, kBi in enumerate(kB):
 #         plt.clf()
 #         f = open("result_A_"+Rad+"_"+str(kBtxt[i])+".txt", "w") # analystical
-#         effD = []
+#         effD = []; effT = []
 #         for x, l in enumerate(L):
 #             print('progress',100*x/len(L),' %')
 #             out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
 #             f.write(str(l)+" "+str(out[0])+" "+str(out[1])+" "+str(out[2])+" "+str(out[3])+" "+str(out[4])+" "+str(out[5])+" \n")
 #             effD.append(out[2])
+#             effT.append(out[4])
 #         f.close()
-#         plt.plot(L,effD,label=str(kBi))
-#         plt.xscale("log")
+#         effD=np.asarray(effD)
+#         effT=np.asarray(effT)
+#         plt.plot(effT/effD,effD,label=str(kBi))
+#         # plt.xscale("lin")
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+td.TDCRPy.TDCRPy(1, 0.97, 0.97, 0.97, 0.97, "Fe-55", "1", 10, 1.0e-5, 10, "eff", "sym", Display=True)
 
 # l = 1
 # kBi = 1.0e-5
