@@ -61,6 +61,7 @@ def readParameters(disp=False):
         print(f"energy above which interp. in implemented (for electron) = {Einterp_e} keV")
         print(f"diameter of micelle = {diam_micelle} nm")
         print(f"acqueous fraction = {fAq}")
+        print(f"coincidence resolving time = {tau} ns")
     
     return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau
 
@@ -1155,7 +1156,7 @@ def micelleLoss(E,*, fAq=fAq, diam_micelle=diam_micelle, e_vec=micelle_E, data=m
     S : float
         energy deposited ratio (keV)
     """
-    micDiam = np.array([0.5, 1.0, 2.0, 3.0, 4.0]) #nm
+    micDiam = np.array([0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0]) #nm
     S=np.interp(E*1e3, e_vec, micelle_S[:,np.argwhere(micDiam==diam_micelle)[0][0]])*(1-fAq)/0.9
     return S
 
