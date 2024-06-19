@@ -423,38 +423,38 @@ Plot stopping power
 Read response matrixes
 """
 
-# from scipy.ndimage import gaussian_filter
-# import cv2
+from scipy.ndimage import gaussian_filter
+import cv2
 
 
-# epsilon = 1e-5
-# limite_sup = 1e-2
-# sht = 0
+epsilon = 1e-5
+limite_sup = 1e-2
+sht = 0
 
-# A = td.TDCR_model_lib.Matrice10_e_1
-# A = td.TDCR_model_lib.Matrice10_e_2
-# A = td.TDCR_model_lib.Matrice10_e_3
-# # A = td.TDCR_model_lib.Matrice10_p_1
-# # A = td.TDCR_model_lib.Matrice10_p_2
-# # A = td.TDCR_model_lib.Matrice10_p_3
-# C = np.flipud(A[1:])
-# C = np.clip(C, a_min=epsilon, a_max=limite_sup)
-# C = np.log(C)
-# C = cv2.GaussianBlur(C, (5, 5), 20)
-# print("step",A[0][1]-A[0][0], min(A[0]), max(A[0]))
-# extent = [A[0,0], A[0,-1], A[0,0], A[0,-1]]
-# x = np.arange(A[0,0], A[0,-1], A[0,-1]/9)
-# y = np.arange(A[0,0], A[0,-1], A[0,-1]/9)
+A = td.TDCR_model_lib.Matrice10_e_1
+A = td.TDCR_model_lib.Matrice10_e_2
+A = td.TDCR_model_lib.Matrice10_e_3
+# A = td.TDCR_model_lib.Matrice10_p_1
+# A = td.TDCR_model_lib.Matrice10_p_2
+# A = td.TDCR_model_lib.Matrice10_p_3
+C = np.flipud(A[1:])
+C = np.clip(C, a_min=epsilon, a_max=limite_sup)
+C = np.log(C)
+C = cv2.GaussianBlur(C, (5, 5), 20)
+print("step",A[0][1]-A[0][0], min(A[0]), max(A[0]))
+extent = [A[0,0], A[0,-1], A[0,0], A[0,-1]]
+x = np.arange(A[0,0], A[0,-1], A[0,-1]/9)
+y = np.arange(A[0,0], A[0,-1], A[0,-1]/9)
 
 
-# plt.clf()
-# plt.imshow(C, extent=extent, cmap='viridis', interpolation='nearest')
-# plt.colorbar()
-# plt.xticks(np.arange(A[0,0]-sht, A[0,-1]-sht, A[0,-1]/10))
-# plt.yticks(np.arange(A[0,0]-sht, A[0,-1]-sht, A[0,-1]/10))
-# plt.xlabel(r"$E_i$ /keV", fontsize=14)
-# plt.ylabel(r"$E_d$ /keV", fontsize=14)
-# plt.show()
+plt.clf()
+plt.imshow(C, extent=extent, cmap='viridis', interpolation='nearest')
+plt.colorbar()
+plt.xticks(np.arange(A[0,0]-sht, A[0,-1]-sht, A[0,-1]/10))
+plt.yticks(np.arange(A[0,0]-sht, A[0,-1]-sht, A[0,-1]/10))
+plt.xlabel(r"$E_i$ /keV", fontsize=14)
+plt.ylabel(r"$E_d$ /keV", fontsize=14)
+plt.show()
 
 """
 Tests decay data uncertainty propagation
