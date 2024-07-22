@@ -41,6 +41,7 @@ def readParameters(disp=False):
     nE_electron = config["Inputs"].getint("nE_electron")
     nE_alpha = config["Inputs"].getint("nE_alpha")
     tau = config["Inputs"].getint("tau")
+    extDT = config["Inputs"].getint("extDT")
     RHO = config["Inputs"].getfloat("density")
     Z = config["Inputs"].getfloat("Z")
     A = config["Inputs"].getfloat("A")
@@ -49,6 +50,7 @@ def readParameters(disp=False):
     Einterp_e = config["Inputs"].getfloat("Einterp_e")
     diam_micelle = config["Inputs"].getfloat("diam_micelle")
     fAq = config["Inputs"].getfloat("fAq")
+    micCorr = config["Inputs"].getboolean("micCorr")
     
     if disp:
         print(f"number of integration bins for electrons = {nE_electron}")
@@ -59,13 +61,15 @@ def readParameters(disp=False):
         print(f"depth of spline interp. = {depthSpline}")
         print(f"energy above which interp. in implemented (for alpha) = {Einterp_a} keV")
         print(f"energy above which interp. in implemented (for electron) = {Einterp_e} keV")
+        print(f"activation of the micelle correction = {micCorr}")
         print(f"diameter of micelle = {diam_micelle} nm")
         print(f"acqueous fraction = {fAq}")
         print(f"coincidence resolving time = {tau} ns")
+        print(f"extended dead time = {extDT} µs")
     
-    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau
+    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, micCorr
 
-nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau = readParameters()
+nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, micCorr = readParameters()
 
 def readConfigAsstr():
     path2config = str(config.read(file_conf)[0])
@@ -142,6 +146,18 @@ def modifyTau(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[10]
     data1 = data0.replace(f"tau = {x0}",f"tau = {x}")
+    writeConfifAsstr(data1)
+
+def modifyDeadTime(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[11]
+    data1 = data0.replace(f"extDT = {x0}",f"extDT= {x}")
+    writeConfifAsstr(data1)
+
+def modifyMicCorr(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[12]
+    data1 = data0.replace(f"micCorr = {x0}",f"micCorr= {x}")
     writeConfifAsstr(data1)
 
 # import PenNuc data

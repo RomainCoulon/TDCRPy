@@ -9,6 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 rad ="Cd-109"
+rad ="Co-60"
+rad = "Fe-55"
 # kB = [6, 10, 15]
 kB = [10]
 CIEMATCODE = "NUR"
@@ -22,7 +24,7 @@ TDCR17 = False
 # Fe-55
 # ExpTD = [5.015440131719763883e-01, 3.033921221898202569e-01, 2.337696889928395638e-01, 1.963266220117187155e-01, 1.525520789152907120e-01, 1.290251872314254478e-01]
 # ExpTD = [5.036195861139387553e-01, 3.068002450941523795e-01, 2.347349238197918575e-01, 1.868167474073787748e-01, 1.492620432358786609e-01, 1.111062699027455108e-01]
-# ExpTD = [5.129091648648070878e-01,3.151410221276935708e-01,2.473618561405817318e-01,2.038446684986770507e-01,1.555745292587844830e-01,1.225838288948343929e-01]
+ExpTD = [5.129091648648070878e-01,3.151410221276935708e-01,2.473618561405817318e-01,2.038446684986770507e-01,1.555745292587844830e-01,1.225838288948343929e-01]
 Dtdcr17 = [0.7954, .7925, .7075, .5999, .7760, .7757]
 
 xx = 100*(1-2*5.129091648648070878e-01)
@@ -32,7 +34,7 @@ xx = 100*(1-2*5.129091648648070878e-01)
 # ExpTD = [9.818128981512568298e-01, 9.714731781760674867e-01, 9.645707367051945536e-01, 9.554547633467871393e-01, 9.488064225575219002e-01, 9.397242455346862533e-01]
 
 # Cd-109
-ExpTD = [8.522594641728009623e-01, 8.995376644905349606e-01, 9.175877883182167460e-01, 9.242570160461722750e-01, 9.220671007346888937e-01, 8.994349939851205011e-01]
+# ExpTD = [8.522594641728009623e-01, 8.995376644905349606e-01, 9.175877883182167460e-01, 9.242570160461722750e-01, 9.220671007346888937e-01, 8.994349939851205011e-01]
 
 # C-14
 # ExpTD = [0.96512047, 0.94196669, 0.92484093, 0.90833458, 0.88807086, 0.850513  ]
@@ -118,12 +120,16 @@ for kBn in kB:
     dev = []
     tdvec= []
     indm = 0
+    
     for u, utd in enumerate(tdTDCRPy):
         ind = abs(tdNUR-utd).argmin()
-        if indm != ind:
-            tdvec.append(utd)
-            dev.append(100*(dTDCRPy[u]/dNUR[ind]-1))
-            indm=ind
+        if ind>1:
+            dNURmod = np.interp(np.asarray(utd),tdNUR[ind-1:ind+1], dNUR[ind-1:ind+1])
+            if indm != ind:
+                tdvec.append(utd)
+                #dev.append(100*(dTDCRPy[u]/dNUR[ind]-1))
+                dev.append(100*(dTDCRPy[u]/dNURmod-1))
+                indm=ind
     
     tdexp =[]
     dexp =[]
@@ -150,17 +156,36 @@ for kBn in kB:
             index=abs(np.asarray(tdTDCRPy)-v).argmin()
         tdexp.append(tdTDCRPy[index])
         dexp.append(dTDCRPy[index])
+        
+    tdexp2 =[]
+    dexp2 =[]
+    for iv, v in enumerate(ExpTD):
+        if rad == "Cd-109":
+            if iv==0: index = 6
+            if iv==1: index = 12
+            if iv==2: index = 17
+            if iv==3: index = 19
+            if iv==4: index = 20
+            if iv==5: index = 32
+            print(iv,index,tdTDCRPy[index],dTDCRPy[index],v,tdTDCRPy[index]-v)
+        else:
+            index=abs(np.asarray(tdNUR)-v).argmin()
+        tdexp2.append(tdNUR[index])
+        dexp2.append(dNUR[index])
     
     plt.figure("D vs TDCR", figsize=(8,6))
     plt.clf()
     if rad == "Cd-109":
-        plt.plot(tdNUR[:-900],dNUR[:-900],'-b',label="NUR")
+        plt.plot(tdNUR[:-900],dNUR[:-900],'xb',label="NUR")
     elif rad == "Co-60":
         plt.plot(tdNUR[:-900],dNUR[:-900],'-b',label="NUR")
     else:
         plt.plot(tdNUR,dNUR,'-b',label=CIEMATCODE)
-    plt.errorbar(tdTDCRPy,dTDCRPy,yerr=dTDCRPys,fmt="-*k", label=BIPMCODE)
-    plt.plot(tdexp,dexp,"or", label="Exp")
+    plt.errorbar(tdTDCRPy,dTDCRPy,yerr=dTDCRPys,fmt=".k", label=BIPMCODE)
+    #plt.plot([tdexp, tdexp],[dexp-0.1, dexp+0.1],"or", label="Exp")
+    plt.plot(tdexp,dexp,"sr", label="Exp")
+    plt.plot(tdexp2,dexp2,"sr")
+    
     plt.xlim([0.70,1])
     if TDCR17:
         plt.plot(tdexp,Dtdcr17,"og", label="TDCR17")

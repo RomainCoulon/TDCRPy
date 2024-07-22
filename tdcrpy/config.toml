@@ -34,6 +34,8 @@ fAq = 0.1
 ## PROPERTIES OF THE COUNTER
 # Coincidence resolving time (ns)
 tau = 50
+# Extended dead time (µs)
+extDT = 10
 
 ## INTERPOLATION TO ESTIMATE THE QUENCHED ENERGY
 # depth (number of indexes on each side of the energy point) on which the spline interpolation is done.

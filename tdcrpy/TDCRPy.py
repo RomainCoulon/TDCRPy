@@ -166,6 +166,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         file_conf = data_path       
     config.read(file_conf)
     tau=config["Inputs"].getfloat("tau")
+    extDT=config["Inputs"].getfloat("extDT")
     micCorr=config["Inputs"].getboolean("micCorr")
     radListPureBeta = ["H-3", "C-14", "S-35", "Ca-45", "Ni-63", "Sr-89", "Sr-90", "Tc-99", "Pm-147", "Pu-241"]
     if (Rad in radListPureBeta) and (not Smodel):
@@ -694,7 +695,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             ====================
             '''            
             if mode2=="sym":
-                if evenement !=1:
+                if evenement !=1 and t1 > extDT*1e-6:
                     p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
                     p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
                     p_nosingle2 = np.exp(-L*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
@@ -727,7 +728,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     if Display: print("\t\t Efficiency of triple events = ", round(efficiency_T[-1],5))                    
                                     
             elif mode2=="asym":
-                if evenement !=1:
+                if evenement !=1 and t1 > extDT*1e-6:
                     pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
                     pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
                     pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT

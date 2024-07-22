@@ -423,38 +423,38 @@ Plot stopping power
 Read response matrixes
 """
 
-from scipy.ndimage import gaussian_filter
-import cv2
+# from scipy.ndimage import gaussian_filter
+# import cv2
 
 
-epsilon = 1e-5
-limite_sup = 1e-2
-sht = 0
+# epsilon = 1e-5
+# limite_sup = 1e-2
+# sht = 0
 
-A = td.TDCR_model_lib.Matrice10_e_1
-A = td.TDCR_model_lib.Matrice10_e_2
-A = td.TDCR_model_lib.Matrice10_e_3
-# A = td.TDCR_model_lib.Matrice10_p_1
-# A = td.TDCR_model_lib.Matrice10_p_2
-# A = td.TDCR_model_lib.Matrice10_p_3
-C = np.flipud(A[1:])
-C = np.clip(C, a_min=epsilon, a_max=limite_sup)
-C = np.log(C)
-C = cv2.GaussianBlur(C, (5, 5), 20)
-print("step",A[0][1]-A[0][0], min(A[0]), max(A[0]))
-extent = [A[0,0], A[0,-1], A[0,0], A[0,-1]]
-x = np.arange(A[0,0], A[0,-1], A[0,-1]/9)
-y = np.arange(A[0,0], A[0,-1], A[0,-1]/9)
+# A = td.TDCR_model_lib.Matrice10_e_1
+# A = td.TDCR_model_lib.Matrice10_e_2
+# A = td.TDCR_model_lib.Matrice10_e_3
+# # A = td.TDCR_model_lib.Matrice10_p_1
+# # A = td.TDCR_model_lib.Matrice10_p_2
+# # A = td.TDCR_model_lib.Matrice10_p_3
+# C = np.flipud(A[1:])
+# C = np.clip(C, a_min=epsilon, a_max=limite_sup)
+# C = np.log(C)
+# C = cv2.GaussianBlur(C, (5, 5), 20)
+# print("step",A[0][1]-A[0][0], min(A[0]), max(A[0]))
+# extent = [A[0,0], A[0,-1], A[0,0], A[0,-1]]
+# x = np.arange(A[0,0], A[0,-1], A[0,-1]/9)
+# y = np.arange(A[0,0], A[0,-1], A[0,-1]/9)
 
 
-plt.clf()
-plt.imshow(C, extent=extent, cmap='viridis', interpolation='nearest')
-plt.colorbar()
-plt.xticks(np.arange(A[0,0]-sht, A[0,-1]-sht, A[0,-1]/10))
-plt.yticks(np.arange(A[0,0]-sht, A[0,-1]-sht, A[0,-1]/10))
-plt.xlabel(r"$E_i$ /keV", fontsize=14)
-plt.ylabel(r"$E_d$ /keV", fontsize=14)
-plt.show()
+# plt.clf()
+# plt.imshow(C, extent=extent, cmap='viridis', interpolation='nearest')
+# plt.colorbar()
+# plt.xticks(np.arange(A[0,0]-sht, A[0,-1]-sht, A[0,-1]/10))
+# plt.yticks(np.arange(A[0,0]-sht, A[0,-1]-sht, A[0,-1]/10))
+# plt.xlabel(r"$E_i$ /keV", fontsize=14)
+# plt.ylabel(r"$E_d$ /keV", fontsize=14)
+# plt.show()
 
 """
 Tests decay data uncertainty propagation
@@ -481,50 +481,62 @@ Tests decay data uncertainty propagation
 Efficiency curves !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 """
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# L = np.logspace(-3,2,100) # H-3
-# L = np.logspace(-3,2,100) # C-14
-# L = np.logspace(-3,2,10) # Sr-89
-# L = np.logspace(-3,2,10) # Fe-55
-# L = np.logspace(-1,1,100) # Fe-55
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# rad_v = ["Cd-109"]
-# pmf_1="1"
-# V = 10
-# mode = "eff"
-# mode2 = "sym"
-# N = 10000
-# #kB = [0.6e-5, 1.0e-5, 1.5e-5]
-# # kBtxt = [6, 10, 15]
-# kB = [1.0e-5]
-# kBtxt = [10]
+L = np.logspace(-3,2,100) # H-3
+L = np.logspace(-3,2,100) # C-14
+L = np.logspace(-3,2,10) # Sr-89
+L = np.logspace(-3,2,10) # Fe-55
+L = np.logspace(-1,1,100) # Fe-55
+TD = 0.977667386529166
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+rad_v = ["Fe-55"]
+pmf_1="1"
+V = 10
+mode = "eff"
+mode2 = "sym"
+N = 10000
+#kB = [0.6e-5, 1.0e-5, 1.5e-5]
+# kBtxt = [6, 10, 15]
+kB = [1.0e-5]
+kBtxt = [10]
 
 
-# plt.figure("visu")
-# for Rad in rad_v:
-#     for i, kBi in enumerate(kB):
-#         plt.clf()
-#         f = open("result_A_"+Rad+"_"+str(kBtxt[i])+".txt", "w") # analystical
-#         effD = []; effT = []
-#         for x, l in enumerate(L):
-#             print('progress',100*x/len(L),' %')
-#             out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
-#             f.write(str(l)+" "+str(out[0])+" "+str(out[1])+" "+str(out[2])+" "+str(out[3])+" "+str(out[4])+" "+str(out[5])+" \n")
-#             effD.append(out[2])
-#             effT.append(out[4])
-#         f.close()
-#         effD=np.asarray(effD)
-#         effT=np.asarray(effT)
-#         plt.plot(effT/effD,effD,label=str(kBi))
-#         # plt.xscale("lin")
+plt.figure("visu")
+for Rad in rad_v:
+    for i, kBi in enumerate(kB):
+        plt.clf()
+        f = open("result_A_"+Rad+"_"+str(kBtxt[i])+".txt", "w") # analystical
+        effD = []; effT = []; ueffD = []
+        for x, l in enumerate(L):
+            print('progress',100*x/len(L),' %')
+            out1 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+            out2 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+            out3 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+            out4 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+            out5 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+            meanS = np.mean([out1[0], out2[0], out3[0], out4[0], out5[0]])
+            stdS = np.std([out1[0], out2[0], out3[0], out4[0], out5[0]])
+            meanD = np.mean([out1[2], out2[2], out3[2], out4[2], out5[2]])
+            stdD = np.std([out1[2], out2[2], out3[2], out4[2], out5[2]])
+            meanT = np.mean([out1[4], out2[4], out3[4], out4[4], out5[4]])
+            stdT = np.std([out1[4], out2[4], out3[4], out4[4], out5[4]])            
+            f.write(str(l)+" "+str(meanS)+" "+str(stdS)+" "+str(meanD)+" "+str(stdD)+" "+str(meanT)+" "+str(stdT)+" \n")
+            effD.append(meanD)
+            ueffD.append(stdD)
+            effT.append(meanT)
+        f.close()
+        effD=np.asarray(effD)
+        ueffD=np.asarray(ueffD)
+        effT=np.asarray(effT)
+        plt.errorbar(effT/effD, effD, yerr=ueffD, label=str(kBi))
+        # plt.xscale("lin")
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-td.TDCRPy.TDCRPy(1, 0.97, 0.97, 0.97, 0.97, "Fe-55", "1", 10, 1.0e-5, 10, "eff", "sym", Display=True)
+# td.TDCRPy.TDCRPy(1, 0.97, 0.97, 0.97, 0.97, "Fe-55", "1", 10000, 1.0e-5, 10, "eff", "sym", Display=False,barp=True)
 
-# l = 1
+# # l = 1
 # kBi = 1.0e-5
 # f = open("result_AN_.txt", "w") # analystical
 # for Rad in rad_v:
