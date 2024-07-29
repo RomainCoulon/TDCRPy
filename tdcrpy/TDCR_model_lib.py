@@ -153,7 +153,7 @@ def modifyTau(x):
 def modifyDeadTime(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[11]
-    data1 = data0.replace(f"extDT = {x0}",f"extDT=  {x}")
+    data1 = data0.replace(f"extDT = {x0}",f"extDT = {x}")
     writeConfifAsstr(data1)
 
 def modifyMeasTime(x):
