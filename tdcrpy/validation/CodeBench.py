@@ -10,7 +10,10 @@ import matplotlib.pyplot as plt
 
 rad ="Cd-109"
 rad ="Co-60"
-rad = "Fe-55"
+# rad = "Fe-55"
+rad = "Am-241"
+
+
 # kB = [6, 10, 15]
 kB = [10]
 CIEMATCODE = "NUR"
@@ -29,7 +32,6 @@ Dtdcr17 = [0.7954, .7925, .7075, .5999, .7760, .7757]
 
 xx = 100*(1-2*5.129091648648070878e-01)
 
-
 # Co-60
 # ExpTD = [9.818128981512568298e-01, 9.714731781760674867e-01, 9.645707367051945536e-01, 9.554547633467871393e-01, 9.488064225575219002e-01, 9.397242455346862533e-01]
 
@@ -42,6 +44,10 @@ xx = 100*(1-2*5.129091648648070878e-01)
 # H-3
 # ExpTD = [0.77784194, 0.77443954, 0.67543926, 0.55646075, 0.75506601, 0.7546677]
 # Dtdcr17 = [0.7954, .7925, .7075, .5999, .7760, .7757]
+
+# Am-241
+ExpTD = []
+Dtdcr17 = []
 
 if CIEMATCODE == "EFFY": endHeader=72
 elif CIEMATCODE == "NUR": endHeader=4
@@ -176,17 +182,26 @@ for kBn in kB:
     plt.figure("D vs TDCR", figsize=(8,6))
     plt.clf()
     if rad == "Cd-109":
-        plt.plot(tdNUR[:-900],dNUR[:-900],'xb',label="NUR")
+        plt.plot(tdNUR[:-900],dNUR[:-900],'vb',markersize=4,label="NUR")
     elif rad == "Co-60":
-        plt.plot(tdNUR[:-900],dNUR[:-900],'-b',label="NUR")
+        plt.plot(tdNUR[:-900],dNUR[:-900],'vb',markersize=4,label="NUR")
+    elif rad == "Fe-55":
+        tdNUR = tdNUR[::2]
+        dNUR = dNUR[::2]
+        tdNUR = tdNUR[::2]
+        dNUR = dNUR[::2]
+        plt.plot(tdNUR,dNUR,'vb',markersize=4,label=CIEMATCODE)
+    elif rad == "Am-241":
+        pass
+        #plt.plot(tdNUR,dNUR,'.b',label=CIEMATCODE)
     else:
-        plt.plot(tdNUR,dNUR,'-b',label=CIEMATCODE)
-    plt.errorbar(tdTDCRPy,dTDCRPy,yerr=dTDCRPys,fmt=".k", label=BIPMCODE)
+        plt.plot(tdNUR,dNUR,'.b',label=CIEMATCODE)
+    plt.errorbar(tdTDCRPy,dTDCRPy,yerr=dTDCRPys,fmt="^r", markersize=4,label=BIPMCODE)
     #plt.plot([tdexp, tdexp],[dexp-0.1, dexp+0.1],"or", label="Exp")
-    plt.plot(tdexp,dexp,"sr", label="Exp")
-    plt.plot(tdexp2,dexp2,"sr")
+    #plt.plot(tdexp,dexp,"sr", label="Exp")
+    #plt.plot(tdexp2,dexp2,"sr")
     
-    plt.xlim([0.70,1])
+    #plt.xlim([0.70,1])
     if TDCR17:
         plt.plot(tdexp,Dtdcr17,"og", label="TDCR17")
     plt.legend(fontsize=14)
@@ -208,7 +223,7 @@ for kBn in kB:
     plt.clf()
     plt.plot(tdvec,dev,'-b')
     # plt.plot(tdTDCRPy,100*np.asarray(dTDCRPys)/dTDCRPy,'-r')
-    plt.ylim([-3,3])
+    # plt.ylim([-5,5])
     plt.plot(tdexp,dexp,'or')
     plt.ylabel(r"$d$ (%)")
     plt.xlabel(r"TDCR")    

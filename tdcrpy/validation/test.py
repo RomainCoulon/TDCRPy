@@ -481,55 +481,56 @@ Tests decay data uncertainty propagation
 Efficiency curves !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 """
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-L = np.logspace(-3,2,100) # H-3
-L = np.logspace(-3,2,100) # C-14
-L = np.logspace(-3,2,10) # Sr-89
-L = np.logspace(-3,2,10) # Fe-55
-L = np.logspace(-1,1,100) # Fe-55
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-rad_v = ["Fe-55"]
-pmf_1="1"
-V = 10
-mode = "eff"
-mode2 = "sym"
-N = 10000
-#kB = [0.6e-5, 1.0e-5, 1.5e-5]
-# kBtxt = [6, 10, 15]
-kB = [1.0e-5]
-kBtxt = [10]
+# L = np.logspace(-3,2,100) # H-3
+# L = np.logspace(-3,2,100) # C-14
+# L = np.logspace(-3,2,10) # Sr-89
+# L = np.logspace(-3,2,10) # Fe-55
+# L = np.logspace(-1,1,100) # Fe-55
+# TD = 0.977667386529166
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
+# # rad_v = ["Fe-55"]
+# rad_v = ["Am-241"]
+# pmf_1="1"
+# V = 10
+# mode = "eff"
+# mode2 = "sym"
+# N = 10000
+# #kB = [0.6e-5, 1.0e-5, 1.5e-5]
+# # kBtxt = [6, 10, 15]
+# kB = [1.0e-5]
+# kBtxt = [10]
 
 
-plt.figure("visu")
-for Rad in rad_v:
-    for i, kBi in enumerate(kB):
-        plt.clf()
-        f = open("result_A_"+Rad+"_"+str(kBtxt[i])+".txt", "w") # analystical
-        effD = []; effT = []; ueffD = []
-        for x, l in enumerate(L):
-            print('progress',100*x/len(L),' %')
-            out1 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
-            out2 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
-            out3 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
-            out4 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
-            out5 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
-            meanS = np.mean([out1[0], out2[0], out3[0], out4[0], out5[0]])
-            stdS = np.std([out1[0], out2[0], out3[0], out4[0], out5[0]])
-            meanD = np.mean([out1[2], out2[2], out3[2], out4[2], out5[2]])
-            stdD = np.std([out1[2], out2[2], out3[2], out4[2], out5[2]])
-            meanT = np.mean([out1[4], out2[4], out3[4], out4[4], out5[4]])
-            stdT = np.std([out1[4], out2[4], out3[4], out4[4], out5[4]])            
-            f.write(str(l)+" "+str(meanS)+" "+str(stdS)+" "+str(meanD)+" "+str(stdD)+" "+str(meanT)+" "+str(stdT)+" \n")
-            effD.append(meanD)
-            ueffD.append(stdD)
-            effT.append(meanT)
-        f.close()
-        effD=np.asarray(effD)
-        ueffD=np.asarray(ueffD)
-        effT=np.asarray(effT)
-        plt.errorbar(effT/effD, effD, yerr=ueffD, label=str(kBi))
+# plt.figure("visu")
+# for Rad in rad_v:
+#     for i, kBi in enumerate(kB):
+#         plt.clf()
+#         f = open("result_A_"+Rad+"_"+str(kBtxt[i])+".txt", "w") # analystical
+#         effD = []; effT = []; ueffD = []
+#         for x, l in enumerate(L):
+#             print('progress',100*x/len(L),' %')
+#             out1 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+#             out2 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+#             out3 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+#             out4 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+#             out5 = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, Rad, pmf_1, N, kBi, V, mode, mode2)
+#             meanS = np.mean([out1[0], out2[0], out3[0], out4[0], out5[0]])
+#             stdS = np.std([out1[0], out2[0], out3[0], out4[0], out5[0]])
+#             meanD = np.mean([out1[2], out2[2], out3[2], out4[2], out5[2]])
+#             stdD = np.std([out1[2], out2[2], out3[2], out4[2], out5[2]])
+#             meanT = np.mean([out1[4], out2[4], out3[4], out4[4], out5[4]])
+#             stdT = np.std([out1[4], out2[4], out3[4], out4[4], out5[4]])            
+#             f.write(str(l)+" "+str(meanS)+" "+str(stdS)+" "+str(meanD)+" "+str(stdD)+" "+str(meanT)+" "+str(stdT)+" \n")
+#             effD.append(meanD)
+#             ueffD.append(stdD)
+#             effT.append(meanT)
+#         f.close()
+#         effD=np.asarray(effD)
+#         ueffD=np.asarray(ueffD)
+#         effT=np.asarray(effT)
+#         plt.errorbar(effT/effD, effD, yerr=ueffD, label=str(kBi))
         # plt.xscale("lin")
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -804,40 +805,44 @@ for the quick start
 Validation with standard solution for Co-60 (comparison 2023)
 """
 
-# file_path = "result.txt"  # Replace "example.txt" with the path of your desired file.
-# file = open(file_path, "w")
+file_path = "result_Co60_sym.txt"  # Replace "example.txt" with the path of your desired file.
+file = open(file_path, "w")
 
-# Rad="Co-60"    # list of radionuclides (Na-24)
-# pmf_1="1"
-# kB =1.0e-5       # Birks constant in cm/keV
-# RHO = 0.98
-# V = 10
-# nE = 1000
-# TD = 0.977667386529166        # Measured TDCR value
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# L = 1.5
-# N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 7000, 8000, 9000, 10000, 20000, 30000, 40000, 60000, 70000, 80000, 90000, 100000]
+Rad="Co-60"    # list of radionuclides (Na-24)
+pmf_1="1"
+kB =1.0e-5       # Birks constant in cm/keV
+RHO = 0.98
+V = 10
+nE = 1000
+TD = 0.977667386529166        # Measured TDCR value
+TAB = 0.992232838598821
+TBC = 0.992343419459002
+TAC = 0.99275350064608
+L = 1.5
+N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 7000, 8000, 9000, 10000, 20000, 30000, 40000, 60000, 70000, 80000, 90000, 100000]
 
-# # Symetrical model
-# for Ni in N:
-#     print("symetrical model")
-#     # td.TDCR_model_lib.tic()
-#     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
-#     # a = td.TDCR_model_lib.toc()
-#     print("/n",Ni,resuts_2,"/n/n")
-#     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+# Symmetrical model
+for Ni in N:
+    print("symetrical model")
+    # td.TDCR_model_lib.tic()
+    resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
+    # a = td.TDCR_model_lib.toc()
+    print("/n",Ni,resuts_2,"/n/n")
+    file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+file.close()
 
-# Asymetrical model
-# for Ni in N:
-#     print("asymetrical model")
-#     # td.TDCR_model_lib.tic()
-#     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "asym", N=Ni)
-#     # a = td.TDCR_model_lib.toc()
-#     print("\n",Ni,resuts_2,"\n\n")
-#     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+file_path = "result_Co60_asym.txt"  # Replace "example.txt" with the path of your desired file.
+file = open(file_path, "w")
 
+# Asymmetrical model
+for Ni in N:
+    print("asymetrical model")
+    # td.TDCR_model_lib.tic()
+    resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "asym", N=Ni)
+    # a = td.TDCR_model_lib.toc()
+    print("\n",Ni,resuts_2,"\n\n")
+    file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+file.close()
 
 """
 Validation with Fe-55

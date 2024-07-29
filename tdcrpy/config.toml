@@ -36,6 +36,8 @@ fAq = 0.1
 tau = 50
 # Extended dead time (µs)
 extDT = 10
+# Measurement time (minutes)
+measTime = 20
 
 ## INTERPOLATION TO ESTIMATE THE QUENCHED ENERGY
 # depth (number of indexes on each side of the energy point) on which the spline interpolation is done.

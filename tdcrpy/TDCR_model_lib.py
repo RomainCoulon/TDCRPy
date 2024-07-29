@@ -42,6 +42,7 @@ def readParameters(disp=False):
     nE_alpha = config["Inputs"].getint("nE_alpha")
     tau = config["Inputs"].getint("tau")
     extDT = config["Inputs"].getint("extDT")
+    measTime = config["Inputs"].getint("measTime")
     RHO = config["Inputs"].getfloat("density")
     Z = config["Inputs"].getfloat("Z")
     A = config["Inputs"].getfloat("A")
@@ -66,10 +67,11 @@ def readParameters(disp=False):
         print(f"acqueous fraction = {fAq}")
         print(f"coincidence resolving time = {tau} ns")
         print(f"extended dead time = {extDT} µs")
+        print(f"measurement time = {measTime} min")
     
-    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, micCorr
+    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr
 
-nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, micCorr = readParameters()
+nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr = readParameters()
 
 def readConfigAsstr():
     path2config = str(config.read(file_conf)[0])
@@ -151,12 +153,18 @@ def modifyTau(x):
 def modifyDeadTime(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[11]
-    data1 = data0.replace(f"extDT = {x0}",f"extDT= {x}")
+    data1 = data0.replace(f"extDT = {x0}",f"extDT=  {x}")
+    writeConfifAsstr(data1)
+
+def modifyMeasTime(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[12]
+    data1 = data0.replace(f"measTime = {x0}",f"measTime = {x}")
     writeConfifAsstr(data1)
 
 def modifyMicCorr(x):
     data0 = readConfigAsstr()
-    x0 = readParameters()[12]
+    x0 = readParameters()[13]
     data1 = data0.replace(f"micCorr = {x0}",f"micCorr= {x}")
     writeConfifAsstr(data1)
 
