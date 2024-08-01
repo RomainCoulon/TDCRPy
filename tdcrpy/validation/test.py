@@ -491,7 +491,7 @@ Efficiency curves !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # TBC = 0.992343419459002
 # TAC = 0.99275350064608
 # # rad_v = ["Fe-55"]
-# rad_v = ["Am-241"]
+# rad_v = ["F-18"]
 # pmf_1="1"
 # V = 10
 # mode = "eff"
@@ -805,44 +805,89 @@ for the quick start
 Validation with standard solution for Co-60 (comparison 2023)
 """
 
-file_path = "result_Co60_sym.txt"  # Replace "example.txt" with the path of your desired file.
-file = open(file_path, "w")
+# file_path = "result_Co60_sym.txt"  # Replace "example.txt" with the path of your desired file.
+# file = open(file_path, "w")
 
-Rad="Co-60"    # list of radionuclides (Na-24)
+rad="Co-60"    # list of radionuclides (Na-24)
 pmf_1="1"
 kB =1.0e-5       # Birks constant in cm/keV
 RHO = 0.98
 V = 10
-nE = 1000
+N = 1000
 TD = 0.977667386529166        # Measured TDCR value
 TAB = 0.992232838598821
 TBC = 0.992343419459002
 TAC = 0.99275350064608
+# TAB = 0.992232838598821
+# TBC = 0.992343419459002
+# TAC = 0.99275350064608
 L = 1.5
-N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 7000, 8000, 9000, 10000, 20000, 30000, 40000, 60000, 70000, 80000, 90000, 100000]
+# N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 7000, 8000, 9000, 10000, 20000, 30000, 40000, 60000, 70000, 80000, 90000, 100000]
+
+effKCDB =   0.97426
+u_effKCDB = 0.00032
+
+resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, rad, pmf_1, kB, V, "asym", N=10000)
+print('asym 10000 kB = 0.010')
+print(resuts_2)
+
+
+# span = 5
+# Nstep = 3
+# Lstart=0.5 
+# Lend=3 
+# for jst in range(Nstep):
+#     if jst==0:
+#         L = np.arange(Lstart,Lend,span)
+#         res0 =[]
+#         for l in tqdm(L, desc="Processing", unit=" trail"):
+#             # out = td.TDCR_model_lib.modelAnalytical(l, TD[j],TAB[j],TBC[j],TAC[j], rad, kB*1e-3, 10, "res", "sym", nE)
+#             out = td.TDCRPy.TDCRPy(l, TD, TAB, TBC, TAC, rad, "1", 1000, kB, 10, "res", "sym")
+#             res0.append(out)
+#         L0=L[np.argmin(res0)]
+#     else:
+#         span/=10
+#         L1 = np.arange(L0-10*span,L0+10*span,span)
+#         res =[]
+#         for l in tqdm(L1, desc="Processing", unit=" trail"):
+#             # out = td.TDCR_model_lib.modelAnalytical(l, TD[j],TAB[j],TBC[j],TAC[j], rad, kB*1e-3, 10, "res", "sym", nE)
+#             out = td.TDCRPy.TDCRPy(l, TD,TAB,TBC,TAC, rad, "1", 1000, kB*1e-3, 10, "res", "sym")
+#             res.append(out)
+#         L0=L1[np.argmin(res)]
+# out = td.TDCRPy.TDCRPy(L0, TD,TAB,TBC,TAC, rad, "1", 10000, kB*1e-3, 10, "eff", "sym"); eff=out[2]
+# eff1 = td.TDCRPy.TDCRPy(L0-span, TD,TAB,TBC,TAC, rad, "1", 10000, kB*1e-3, 10, "eff", "sym")[2]
+# eff2 = td.TDCRPy.TDCRPy(L0+span, TD,TAB,TBC,TAC, rad, "1", 10000, kB*1e-3, 10, "eff", "sym")[2]
+# ureff = (eff2-eff1)/(2*eff)
+# #### procedure TDCRPy
+
+# plt.plot(L,res0)   # filtered 2
+# plt.plot(L0,min(res0),"ok")
+
+# print("efficiency",out[2])
+# print("true eff", 0.9743)
 
 # Symmetrical model
-for Ni in N:
-    print("symetrical model")
-    # td.TDCR_model_lib.tic()
-    resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "sym", N=Ni)
-    # a = td.TDCR_model_lib.toc()
-    print("/n",Ni,resuts_2,"/n/n")
-    file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
-file.close()
+# for Ni in N:
+#     print("symetrical model")
+#     # td.TDCR_model_lib.tic()
+#     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, rad, pmf_1, kB, V, "sym", N=Ni)
+#     # a = td.TDCR_model_lib.toc()
+#     print("/n",Ni,resuts_2,"/n/n")
+#     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+# file.close()
 
-file_path = "result_Co60_asym.txt"  # Replace "example.txt" with the path of your desired file.
-file = open(file_path, "w")
+# file_path = "result_Co60_asym.txt"  # Replace "example.txt" with the path of your desired file.
+# file = open(file_path, "w")
 
-# Asymmetrical model
-for Ni in N:
-    print("asymetrical model")
-    # td.TDCR_model_lib.tic()
-    resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, "asym", N=Ni)
-    # a = td.TDCR_model_lib.toc()
-    print("\n",Ni,resuts_2,"\n\n")
-    file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
-file.close()
+# # Asymmetrical model
+# for Ni in N:
+#     print("asymetrical model")
+#     # td.TDCR_model_lib.tic()
+#     resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, rad, pmf_1, kB, V, "asym", N=Ni)
+#     # a = td.TDCR_model_lib.toc()
+#     print("\n",Ni,resuts_2,"\n\n")
+#     file.write(str(resuts_2[0])+" "+str(resuts_2[2])+" "+str(resuts_2[3])+"\n")
+# file.close()
 
 """
 Validation with Fe-55

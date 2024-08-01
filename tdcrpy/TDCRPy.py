@@ -700,27 +700,27 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
                     p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
                     p_nosingle2 = np.exp(-L*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
-                    p_single2 = 1-p_nosingle2 
-                    efficiency_S.append(p_single+p_single2)
+                    p_single2 = 1-p_nosingle2
+                    efficiency_S.append(1-p_nosingle**3+1-p_nosingle2**3)
                     efficiency_T.append(p_single**3+p_single2**3)
                     efficiency_D.append(3*(p_single)**2-2*p_single**3+(3*(p_single2)**2-2*p_single2**3))
                     if Display: print(f"\n\t COUNTING--Sym \n\t\t Free parameter = {L} keV-1 \n\t Summary of TDCR measurement (prompt)")
                     if Display: print("\t\t Free parameter = ", L, "keV-1")
-                    if Display: print("\t\t Efficiency of single events = ", round(p_single,5))
+                    if Display: print("\t\t Efficiency of single events = ", round(1-p_nosingle**3,5))
                     if Display: print("\t\t Efficiency of double events = ", round(3*(p_single)**2-2*p_single**3,5))
                     if Display: print("\t\t Efficiency of triple events = ", round(p_single**3,5))
                     if Display: print("\t Summary of TDCR measurement (delayed)")
-                    if Display: print("\t\t Efficiency of single events = ", round(p_single2,5))
+                    if Display: print("\t\t Efficiency of single events = ", round(1-p_nosingle2**3,5))
                     if Display: print("\t\t Efficiency of double events = ", round(3*(p_single2)**2-2*p_single2**3,5))
                     if Display: print("\t\t Efficiency of triple events = ", round(p_single2**3,5))
                     if Display: print("\t Summary of TDCR measurement (prompt + delayed)")
-                    if Display: print("\t\t Efficiency of single events = ", round(p_single+p_single2,5))
+                    if Display: print("\t\t Efficiency of single events = ", round(1-p_nosingle**3+1-p_nosingle2**3,5))
                     if Display: print("\t\t Efficiency of double events = ", round(3*(p_single)**2-2*p_single**3+(3*(p_single2)**2-2*p_single2**3),5))
                     if Display: print("\t\t Efficiency of triple events = ", round(p_single**3+p_single2**3,5))
                 else:
                     p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
                     p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
-                    efficiency_S.append(p_single)
+                    efficiency_S.append(1-p_nosingle**3)
                     efficiency_T.append(p_single**3)
                     efficiency_D.append(3*(p_single)**2-2*efficiency_T[-1])
                     if Display: print(f"\n\t COUNTING--Sym \n\t\t Free parameter = {L} keV-1 \n\t Summary of TDCR measurement (prompt)")
@@ -749,7 +749,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     efficiency_AC.append(pA_single*pC_single+pA_single2*pC_single2)
                     efficiency_T.append(pA_single*pB_single*pC_single+pA_single2*pB_single2*pC_single2)
                     efficiency_D.append(pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single+(pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2))
-                    efficiency_S.append(pA_single+pB_single+pC_single-pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single-pA_single*pB_single*pC_single+(pA_single2+pB_single2+pC_single2-pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2-pA_single2*pB_single2*pC_single2))
+                    #efficiency_S.append(pA_single+pB_single+pC_single-pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single-pA_single*pB_single*pC_single+(pA_single2+pB_single2+pC_single2-pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2-pA_single2*pB_single2*pC_single2))
+                    efficiency_S.append(1-pA_nosingle*pB_nosingle*pC_nosingle+1-pA_nosingle2*pB_nosingle2*pC_nosingle2)
                     
                     if Display: print(f"\n\t COUNTING--Asym \n\t\t Free parameters (A,B,C) = {L[0]},{L[1]},{L[2]} keV-1 \n\t Summary of TDCR measurement (prompt)")
                     #if Display: print("\t Summary of TDCR measurement (prompt)")
@@ -759,7 +760,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     if Display: print("\t Summary of TDCR measurement (delayed)")
                     if Display: print("\t\t Efficiency of single events: ", round(pA_single2+pB_single2+pC_single2-pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2-pA_single2*pB_single2*pC_single2,5))
                     if Display: print("\t\t Efficiency of double events: ", round(pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2,5))
-                    if Display: print("\t\t Efficiency of triple events: ", round(pA_single2*pB_single2*pC_single2,5))
+                    if Display: print("\t\t Efficiency of triple events: ", round(efficiency_S[-1],5))
                 else:
                     pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
                     pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
@@ -773,7 +774,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                     efficiency_AC.append(pA_single*pC_single)
                     efficiency_T.append(pA_single*pB_single*pC_single)
                     efficiency_D.append(efficiency_AB[-1]+efficiency_BC[-1]+efficiency_AC[-1]-2*efficiency_T[-1])
-                    efficiency_S.append(pA_single+pB_single+pC_single-efficiency_D[-1]-efficiency_T[-1])
+                    efficiency_S.append(1-pA_nosingle*pB_nosingle*pC_nosingle)
                     if Display: print(f"\n\t COUNTING--Asym \n\t\t Free parameters (A,B,C) = {L[0]},{L[1]},{L[2]} keV-1 \n\t Summary of TDCR measurement (prompt)")
                     if Display: print("\t\t Free parameter PMT A: ", L[0], "keV-1")
                     if Display: print("\t\t Free parameter PMT B: ", L[1], "keV-1")

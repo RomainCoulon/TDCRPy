@@ -12,6 +12,7 @@ rad ="Cd-109"
 rad ="Co-60"
 # rad = "Fe-55"
 rad = "Am-241"
+rad = "F-18"
 
 
 # kB = [6, 10, 15]
@@ -215,6 +216,8 @@ for kBn in kB:
         if itxt==5: plt.text(xtxt+0.01,dexp[itxt]-0.02,nd[itxt],fontstyle='italic')
     plt.ylabel(r"$\epsilon_{D}$",fontsize=16)
     plt.xlabel(r"$\epsilon_{T}$/$\epsilon_{D}$",fontsize=16)
+    plt.xlim([0.94,1])
+    plt.ylim([0.93,0.99])
     plt.show()
     plt.savefig(rad+'.png', dpi=100)
     
@@ -227,5 +230,6 @@ for kBn in kB:
     plt.plot(tdexp,dexp,'or')
     plt.ylabel(r"$d$ (%)")
     plt.xlabel(r"TDCR")    
+    
             
-print(tdvec[61],dev[61])
+# print(tdvec[61],dev[61])
