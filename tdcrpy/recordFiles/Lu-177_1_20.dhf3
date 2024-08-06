@@ -1,0 +1,33 @@
+# TDCRPy output: deposited quenched energies from nuclear decays
+# Column 1: KPAR (1=electron, 2=photon, 3=positron, 4=alpha)
+# Column 2: Energy in eV  (> ECNUC)
+# Column 3: Decay number mod 100, two digits
+# Column 4: Cascade number mod 10, one digit
+# Column 5: Particle age in seconds (since decay started)
+# 2            3  4 5
+1 2.588026E+03  0 1 0
+1 1.890965E+05  1 1 0
+1 3.267970E+05  2 1 0
+1 4.065664E+04  3 1 0
+1 3.244428E+04  4 1 0
+1 9.607344E+04  5 1 0
+1 5.363266E+03  6 1 0
+1 1.873785E+04  7 1 0
+1 3.363650E+02  8 1 0
+1 1.583003E+05  9 1 0
+1 7.964015E+03 10 1 0
+1 0.000000E+00 10 1 0
+1 8.423896E+04 10 1 0
+1 4.466165E+03 10 1 0
+1 1.284485E+05 11 1 0
+1 9.258300E+04 12 1 0
+1 1.100556E+05 13 1 0
+1 1.091808E+05 14 1 0
+1 2.596480E+05 15 1 0
+1 1.126805E+05 16 1 0
+1 4.644092E+03 17 1 0
+1 1.380978E+05 18 1 0
+1 0.000000E+00 18 1 0
+1 5.001573E+03 19 1 0
+1 5.291130E+03 19 1 0
+1 7.068248E+03 19 1 0
