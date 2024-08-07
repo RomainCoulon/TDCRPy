@@ -189,6 +189,96 @@ def read_temp_files(copy=False, path="C:"):
     
     return content1, content2, content3, content4, 
 
+def energyVectors1(temp):
+    temp = temp.split("\n")
+    row_m = ""
+    ee_vec, eg_vec, ep_vec, ea_vec = [], [], [], []
+    ee=0; eg=0; ep=0; ea=0 
+    for row in temp:
+        if row=="": row = "#"
+        if row[0] != "#":
+            row = row.split(" ")
+            if "" in row: row.pop(2)
+            if row[0]=='1': ee+=float(row[1])*1e-3
+            if row[0]=='2': eg+=float(row[1])*1e-3
+            if row[0]=='3': ep+=float(row[1])*1e-3
+            if row[0]=='4': ea+=float(row[1])*1e-3
+            if row[2] != row_m:
+                ee_vec.append(ee)
+                eg_vec.append(eg)
+                ep_vec.append(ep)
+                ea_vec.append(ea)
+                eg=0; ee=0; ep=0; ea=0
+        #else: print(row)
+    ee_vec = [num for num in ee_vec if num != 0]
+    eg_vec = [num for num in eg_vec if num != 0]
+    ep_vec = [num for num in ep_vec if num != 0]
+    ea_vec = [num for num in ea_vec if num != 0]
+    return ee_vec, eg_vec, ep_vec, ea_vec
+
+def energyVectors2(temp):
+    temp = temp.split("\n")
+    row_m = ""
+    ee_vec, ep_vec, ea_vec = [], [], []
+    ee=0; ep=0; ea=0 
+    for row in temp:
+        if row=="": row = "#"
+        if row[0] != "#":
+            row = row.split(" ")
+            if "" in row: row.pop(2)
+            if row[0]=='1': ee+=float(row[1])*1e-3
+            if row[0]=='3': ep+=float(row[1])*1e-3
+            if row[0]=='4': ea+=float(row[1])*1e-3
+            if row[2] != row_m:
+                ee_vec.append(ee)
+                ep_vec.append(ep)
+                ea_vec.append(ea)
+                ee=0; ep=0; ea=0
+        #else: print(row)
+    ee_vec = [num for num in ee_vec if num != 0]
+    ep_vec = [num for num in ep_vec if num != 0]
+    ea_vec = [num for num in ea_vec if num != 0]
+    return ee_vec, ep_vec, ea_vec
+
+
+def energyVectors3(temp):
+    temp = temp.split("\n")
+    row_m = ""
+    ee_vec = []; ee=0 
+    for row in temp:
+        if row=="": row = "#"
+        if row[0] != "#":
+            row = row.split(" ")
+            if "" in row: row.pop(2)
+            ee+=float(row[1])*1e-3
+            if row[2] != row_m:
+                ee_vec.append(ee)
+                ee=0
+        #else: print(row)
+    ee_vec = [num for num in ee_vec if num != 0]
+    return ee_vec
+
+def effVector(temp):
+    temp = temp.split("\n")
+    row_m = ""
+    s_vec, d_vec, t_vec = [], [], []
+    s=0; d=0; t=0 
+    for row in temp:
+        if row=="": row = "#"
+        if row[0] != "#":
+            row = row.split(" ")
+            s+=float(row[1])
+            d+=float(row[2])
+            t+=float(row[3])
+            if row[0] != row_m:
+                s_vec.append(s)
+                d_vec.append(d)
+                t_vec.append(t)
+                s=0; d=0; t=0
+        #else: print(row)
+    return s_vec, d_vec, t_vec
+
+
 # import PenNuc data
 with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
 #with importlib.resources.path('tdcrpy', 'decayData') as data_path:

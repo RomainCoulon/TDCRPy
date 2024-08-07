@@ -994,7 +994,6 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             """
             if record:
                 with open(recfile4, "a") as file:
-                    print(idec)
                     if mode2=="sym":
                         file.write(f"{idec} {efficiency_S[-1]} {efficiency_D[-1]} {efficiency_T[-1]}\n")
                     elif mode2=="asym":
