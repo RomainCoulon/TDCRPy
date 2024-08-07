@@ -15,6 +15,8 @@ from importlib.resources import files
 import configparser
 import numpy as np
 from tqdm import tqdm
+import tempfile
+import os
 
 def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=False):
          
@@ -167,8 +169,8 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
         Standard uncertainty from calculation associated with the estimation of the efficiency of double coincidences for C/N systems. (only in mode="eff")
     """
     if record:
-        # recfile1 = "recordFiles/"+Rad+"_"+pmf_1+"_"+str(N)+".dhf1"
-        recfile1 = "recordFiles/Temp_E0.txt"
+        temp_dir = tempfile.gettempdir()
+        recfile1 = os.path.join(temp_dir, "Temp_E0.txt")
         header_content1 = """# TDCRPy output: inital energies from nuclear decays
 # Column 1: KPAR (1=electron, 2=photon, 3=positron, 4=alpha)
 # Column 2: Energy in eV  (> ECNUC)
@@ -177,10 +179,9 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 # Column 5: Particle age in seconds (since decay started)
 # 2            3  4 5
 """
-        with open(recfile1, "w") as file: file.write(header_content1)
+        with open(recfile1, 'w') as file: file.write(header_content1)
 
-        # recfile2 = "recordFiles/"+Rad+"_"+pmf_1+"_"+str(N)+".dhf2"
-        recfile2 = "recordFiles/Temp_E1.txt"
+        recfile2 = os.path.join(temp_dir, "Temp_E1.txt")
         header_content2 = """# TDCRPy output: deposited energies from nuclear decays
 # Column 1: KPAR (1=electron, 2=photon, 3=positron, 4=alpha)
 # Column 2: Energy in eV  (> ECNUC)
@@ -191,8 +192,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 """
         with open(recfile2, "w") as file: file.write(header_content2)
 
-        # recfile3 = "recordFiles/"+Rad+"_"+pmf_1+"_"+str(N)+".dhf3"
-        recfile3 = "recordFiles/Temp_E2.txt"
+        recfile3 = os.path.join(temp_dir, "Temp_E2.txt")
         header_content3 = """# TDCRPy output: deposited quenched energies from nuclear decays
 # Column 1: KPAR (1=electron, 2=photon, 3=positron, 4=alpha)
 # Column 2: Energy in eV  (> ECNUC)
@@ -210,8 +210,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 # Column 4: detection probability if triple coincidences
 # 2 3 4
 """
-        # recfile4 = "recordFiles/"+Rad+"_"+pmf_1+"_"+str(N)+".dhf4"
-        recfile4 = "recordFiles/Temp_E3.txt"
+        recfile4 = os.path.join(temp_dir, "Temp_E3.txt")
         with open(recfile4, "w") as file: file.write(header_content4)
             
     if barp: tl.display_header()
@@ -1085,9 +1084,9 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 # mode = "eff"
 # mode2 = "sym"
 
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
-# print("TDCR", out[4]/out[2])
-# print("Eff D", out[2])
+# # out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
+# # print("TDCR", out[4]/out[2])
+# # print("Eff D", out[2])
 
 
 # out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, 20, kB, V, mode, mode2, Display=True, barp=False, Smodel=True, syst = "TDCR", record = "phf1", uncData=False)

@@ -23,6 +23,7 @@ import os
 import scipy.interpolate as  interp
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import tempfile
 
 """
 ======= Import ressource data =======
@@ -167,6 +168,26 @@ def modifyMicCorr(x):
     x0 = readParameters()[13]
     data1 = data0.replace(f"micCorr = {x0}",f"micCorr= {x}")
     writeConfifAsstr(data1)
+
+def read_temp_files(copy=False, path="C:"):
+    
+    temp_dir = tempfile.gettempdir()
+    file_path1 = os.path.join(temp_dir, 'Temp_E0.txt')
+    file_path2 = os.path.join(temp_dir, 'Temp_E1.txt')
+    file_path3 = os.path.join(temp_dir, 'Temp_E2.txt')
+    file_path4 = os.path.join(temp_dir, 'Temp_E3.txt')
+    with open(file_path1, 'r') as temp_file: content1 = temp_file.read()
+    with open(file_path2, 'r') as temp_file: content2 = temp_file.read()
+    with open(file_path3, 'r') as temp_file: content3 = temp_file.read()
+    with open(file_path4, 'r') as temp_file: content4 = temp_file.read()
+    
+    if copy:
+        with open(path+'Temp_E0.txt', 'w') as temp_file: temp_file.write(content1)
+        with open(path+'Temp_E1.txt', 'w') as temp_file: temp_file.write(content2)
+        with open(path+'Temp_E2.txt', 'w') as temp_file: temp_file.write(content3)
+        with open(path+'Temp_E3.txt', 'w') as temp_file: temp_file.write(content4)      
+    
+    return content1, content2, content3, content4, 
 
 # import PenNuc data
 with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:

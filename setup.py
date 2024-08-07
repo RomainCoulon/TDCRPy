@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "1.12.13"
+VERSION = "1.12.14"
 
 DESCRIPTION = "TDCR model"
 
@@ -53,6 +53,5 @@ setup(
 		'MCNP-MATRIX/Spectra_for_analytical_model/*.txt',
 		'EfficiencyCurves/*/*.txt',
                 'Micelle/*.csv',
-                'recordFiles/*.txt',
 		]},
 )

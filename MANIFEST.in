@@ -8,6 +8,5 @@ include tdrcpy/Quenching/TandataUG.txt
 include tdrcpy/EfficiencyCurves/*/*.txt
 include tdrcpy/MCNP-MATRIX/matrice/fichier/*.txt
 include tdrcpy/Micelle/*.csv
-include tdrcpy/recordFiles/*.txt
 include ../*.html
 include ../docs/_build/html/*.html
