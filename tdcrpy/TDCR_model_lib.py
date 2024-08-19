@@ -2830,7 +2830,122 @@ def buildBetaSpectra(rad, V, N, prt=False):
                 else: file.write(f"{b}\t{p2[i]}\n")
         print("file written in local")        
                 
+def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, mode2, extDT, measTime):
+    if mode2=="sym":
+        # print(evenement !=1, t1 > extDT*1e-6, t1 < measTime*60)
+        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
+            # TDCR
+            p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
+            p_nosingle2 = np.exp(-L*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            p_single2 = 1-p_nosingle2
+            efficiency0_S = 1-p_nosingle**3+1-p_nosingle2**3
+            efficiency0_T = p_single**3+p_single2**3
+            efficiency0_D = 3*(p_single)**2-2*p_single**3+(3*(p_single2)**2-2*p_single2**3)
+            
+            # CN
+            p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
+            p_nosingle2 = np.exp(-L*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            p_single2 = 1-p_nosingle2            
+            efficiency0_D2 = p_single**2+p_single2**2
+        else:
+            # TDCR
+            p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
+            efficiency0_S = 1-p_nosingle**3
+            efficiency0_T = p_single**3
+            efficiency0_D = 3*(p_single)**2-2*efficiency0_T
+            
+            # CN
+            p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT            
+            efficiency0_D2 = p_single**2
+        
+                            
+    elif mode2=="asym":
+        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
+            # TDCR            
+            pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pC_nosingle = np.exp(-L[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
+            
+            pA_nosingle2 = np.exp(-L[0]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pA_single2 = 1-pA_nosingle2                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle2 = np.exp(-L[1]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pB_single2 = 1-pB_nosingle2                                    # probability to have at least 1 electrons in a PMT
+            pC_nosingle2 = np.exp(-L[2]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pC_single2 = 1-pC_nosingle2                                    # probability to have at least 1 electrons in a PMT
+            
+            efficiency0_A2 = pA_single+pA_single2
+            efficiency0_B2 = pB_single+pB_single2
+            efficiency0_AB = pA_single*pB_single+pA_single2*pB_single2
+            efficiency0_BC = pB_single*pC_single+pB_single2*pC_single2
+            efficiency0_AC = pA_single*pC_single+pA_single2*pC_single2
+            efficiency0_T = pA_single*pB_single*pC_single+pA_single2*pB_single2*pC_single2
+            efficiency0_D = pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single+(pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2)
+            #efficiency_S = pA_single+pB_single+pC_single-pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single-pA_single*pB_single*pC_single+(pA_single2+pB_single2+pC_single2-pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2-pA_single2*pB_single2*pC_single2)
+            efficiency0_S = 1-pA_nosingle*pB_nosingle*pC_nosingle+1-pA_nosingle2*pB_nosingle2*pC_nosingle2
+            
+            
+            # CN
+            pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
+            
+            pA_nosingle2 = np.exp(-L[0]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            pA_single2 = 1-pA_nosingle2                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle2 = np.exp(-L[1]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            pB_single2 = 1-pB_nosingle2                                    # probability to have at least 1 electrons in a PMT
+
+            efficiency0_D2 = pA_single*pB_single+pA_single2*pB_single2
+        else:
+            # TDCR
+            pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pC_nosingle = np.exp(-L[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
                 
+            efficiency0_A2 = pA_single
+            efficiency0_B2 = pB_single
+            efficiency0_AB = pA_single*pB_single
+            efficiency0_BC = pB_single*pC_single
+            efficiency0_AC = pA_single*pC_single
+            efficiency0_T = pA_single*pB_single*pC_single
+            efficiency0_D = efficiency0_AB+efficiency0_BC+efficiency0_AC-2*efficiency0_T
+            efficiency0_S = 1-pA_nosingle*pB_nosingle*pC_nosingle
+            
+            # CN
+            pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT            
+            efficiency0_D2 = pA_single*pB_single
+            
+    return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_D2        
+
+
+def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_D2,N):
+    mean_efficiency_T = np.mean(efficiency_T) # average
+    std_efficiency_T = np.std(efficiency_T)/np.sqrt(N)   # standard deviation
+    mean_efficiency_D = np.mean(efficiency_D)
+    std_efficiency_D = np.std(efficiency_D)/np.sqrt(N)
+    mean_efficiency_D2 = np.mean(efficiency_D2)
+    std_efficiency_D2 = np.std(efficiency_D2)/np.sqrt(N)
+    mean_efficiency_S = np.mean(efficiency_S)
+    std_efficiency_S = np.std(efficiency_S)/np.sqrt(N)
+    return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_D2, std_efficiency_D2
+    
+
+
+
+
 # N = 1e7
 # buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
 # buildBetaSpectra('C-14', 16, N, prt=True); print('C-14 - done')
