@@ -2624,7 +2624,7 @@ def relaxation_atom_ph(lacune,element,v):
 
 
 
-def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
+def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,symm,ne):
     """
     TDCR analytical model that is used for pure beta emitting radionuclides
     
@@ -2648,8 +2648,8 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
         volume of the scintillator in ml. run only for 10 ml
     mode : string
         "res" to return the residual, "eff" to return efficiencies.
-    mode2 : string
-        "sym" for symetrical model, "asym" for symetrical model.
+    symm : boolean
+        "True" for symetrical model, "False" for symetrical model.
     nE : integer
          Number of bins for the quenching function.
     
@@ -2675,14 +2675,13 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
         em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
         
         
-    if mode2=="sym":
+    if symm:
         eff_S = sum(p*(1-np.exp(-L*em/3)))
         eff_T = sum(p*(1-np.exp(-L*em/3))**3)
         eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
         TDCR_calcul=eff_T/eff_D
         res=(TDCR_calcul-TD)**2
-
-    if mode2=="asym":
+    else:
         # eff_A = sum(p*(1-np.exp(-L[0]*em/3)))
         # eff_B = sum(p*(1-np.exp(-L[1]*em/3)))
         # eff_C = sum(p*(1-np.exp(-L[2]*em/3)))
@@ -2830,8 +2829,8 @@ def buildBetaSpectra(rad, V, N, prt=False):
                 else: file.write(f"{b}\t{p2[i]}\n")
         print("file written in local")        
                 
-def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, mode2, extDT, measTime):
-    if mode2=="sym":
+def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, symm, extDT, measTime):
+    if symm:
         # print(evenement !=1, t1 > extDT*1e-6, t1 < measTime*60)
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
             # TDCR
@@ -2863,7 +2862,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, mode2, extD
             efficiency0_D2 = p_single**2
         
                             
-    elif mode2=="asym":
+    else:
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
             # TDCR            
             pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
