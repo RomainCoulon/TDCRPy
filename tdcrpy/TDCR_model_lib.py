@@ -2829,7 +2829,50 @@ def buildBetaSpectra(rad, V, N, prt=False):
                 else: file.write(f"{b}\t{p2[i]}\n")
         print("file written in local")        
                 
-def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, symm, extDT, measTime):
+def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime):
+    """
+    Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
+
+    Parameters
+    ----------
+    L : float or tuple
+        If L is float, then L is the global free parameter. If L is tuple, then L is a triplet of free parameters. unit keV-1
+    e_quenching : list
+        List of quenched deposited energies from prompt particles in keV.
+    e_quenching2 : list
+        List of quenched deposited energies from delayed particles in keV.
+    t1 : float
+        decay time of the delayed transitions in s.
+    evenement : interger
+        number of pulses per decay (prompt (1), prompt + delayed (2)).
+    extDT : float
+        extended dead time of the system in ns.
+    measTime : float
+        measurement time in minutes.
+
+    Returns
+    -------
+    efficiency0_S : float
+        detection probability of single event.
+    efficiency0_D : float
+        detection probability of double coincidences.
+    efficiency0_T : float
+        detection probability of triple coincidences.
+    efficiency0_AB : float
+        detection probability of coincidences between channels A and B.
+    efficiency0_BC : float
+        detection probability of coincidences between channels B and C.
+    efficiency0_AC : float
+        detection probability of coincidences between channels A and C.
+    efficiency0_D2 : float
+        detection probability of coincidences in a C/N system.
+
+    """
+    if isinstance(L, (tuple, list)):
+        symm = False
+    else:
+        symm = True
+        
     if symm:
         # print(evenement !=1, t1 > extDT*1e-6, t1 < measTime*60)
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
@@ -2841,12 +2884,17 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, symm, extDT
             efficiency0_S = 1-p_nosingle**3+1-p_nosingle2**3
             efficiency0_T = p_single**3+p_single2**3
             efficiency0_D = 3*(p_single)**2-2*p_single**3+(3*(p_single2)**2-2*p_single2**3)
+            efficiency0_AB = (efficiency0_D+2*efficiency0_T)/3
+            efficiency0_BC = efficiency0_AB
+            efficiency0_AC = efficiency0_AB
             
             # CN
             p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
             p_nosingle2 = np.exp(-L*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
             p_single2 = 1-p_nosingle2            
+            efficiency0_A2 = p_single+p_single2
+            efficiency0_B2 = efficiency0_A2
             efficiency0_D2 = p_single**2+p_single2**2
         else:
             # TDCR
@@ -2855,10 +2903,15 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, symm, extDT
             efficiency0_S = 1-p_nosingle**3
             efficiency0_T = p_single**3
             efficiency0_D = 3*(p_single)**2-2*efficiency0_T
+            efficiency0_AB = (efficiency0_D+2*efficiency0_T)/3
+            efficiency0_BC = efficiency0_AB
+            efficiency0_AC = efficiency0_AB
             
             # CN
             p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT            
+            efficiency0_A2 = p_single
+            efficiency0_B2 = efficiency0_A2
             efficiency0_D2 = p_single**2
         
                             
@@ -2927,19 +2980,81 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, symm, extDT
             pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT            
             efficiency0_D2 = pA_single*pB_single
             
-    return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_D2        
+    return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
 
 
-def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_D2,N):
-    mean_efficiency_T = np.mean(efficiency_T) # average
-    std_efficiency_T = np.std(efficiency_T)/np.sqrt(N)   # standard deviation
-    mean_efficiency_D = np.mean(efficiency_D)
-    std_efficiency_D = np.std(efficiency_D)/np.sqrt(N)
-    mean_efficiency_D2 = np.mean(efficiency_D2)
-    std_efficiency_D2 = np.std(efficiency_D2)/np.sqrt(N)
+def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
+    """
+    Calculate detection efficiencies from list of detection probabilities per decays.
+
+    Parameters
+    ----------
+    efficiency0_S : float
+        detection probability of single event.
+    efficiency0_D : float
+        detection probability of double coincidences.
+    efficiency0_T : float
+        detection probability of triple coincidences.
+    efficiency0_AB : float
+        detection probability of coincidences between channels A and B.
+    efficiency0_BC : float
+        detection probability of coincidences between channels B and C.
+    efficiency0_AC : float
+        detection probability of coincidences between channels A and C.
+    efficiency0_D2 : float
+        detection probability of coincidences in a C/N system.
+    N : interger
+        number of simulated decays.
+
+    Returns
+    -------
+    mean_efficiency_S : float
+        detection efficiency of single event.
+    std_efficiency_S : float
+        standard uncertainty of detection efficiency of single event.
+    mean_efficiency_D : float
+        detection efficiency of double coincidences.
+    std_efficiency_D : float
+        standard uncertainty of detection efficiency of double coincidences.
+    mean_efficiency_T : float
+        detection efficiency of triple coincidences.
+    std_efficiency_T : float
+        standard uncertainty of detection efficiency of triple coincidences.
+    mean_efficiency_AB : float
+        detection efficiency of coincidences between channels A and B.
+    std_efficiency_AB : float
+        standard uncertainty of detection efficiency of coincidences between channels A and B.
+    mean_efficiency_BC : float
+        detection efficiency of coincidences between channels B and C.
+    std_efficiency_BC : float
+        standard uncertainty of Ddetection efficiency of coincidences between channels B and C.
+    mean_efficiency_AC : float
+        detection efficiency of coincidences between channels A and C.
+    std_efficiency_AC : float
+        standard uncertainty of detection efficiency of coincidences between channels A and C.
+    mean_efficiency_D2 : float
+        detection efficiency of coincidences in a C/N system.
+    std_efficiency_D2 : float
+        standard uncertainty of detection efficiency of coincidences in a C/N system.
+
+    """
     mean_efficiency_S = np.mean(efficiency_S)
     std_efficiency_S = np.std(efficiency_S)/np.sqrt(N)
-    return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_D2, std_efficiency_D2
+    mean_efficiency_D = np.mean(efficiency_D)
+    std_efficiency_D = np.std(efficiency_D)/np.sqrt(N)
+    mean_efficiency_T = np.mean(efficiency_T) # average
+    std_efficiency_T = np.std(efficiency_T)/np.sqrt(N)   # standard deviation
+    mean_efficiency_AB = np.mean(efficiency_AB)
+    std_efficiency_AB = np.std(efficiency_AB)/np.sqrt(N)
+    mean_efficiency_BC = np.mean(efficiency_BC)
+    std_efficiency_BC = np.std(efficiency_BC)/np.sqrt(N)
+    mean_efficiency_AC = np.mean(efficiency_AC)
+    std_efficiency_AC = np.std(efficiency_AC)/np.sqrt(N)
+    
+    mean_efficiency_D2 = np.mean(efficiency_D2)
+    std_efficiency_D2 = np.std(efficiency_D2)/np.sqrt(N)
+
+    return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_AB, std_efficiency_AB, mean_efficiency_BC, std_efficiency_BC, mean_efficiency_AC, std_efficiency_AC, mean_efficiency_D2, std_efficiency_D2
     
 
 

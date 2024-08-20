@@ -17,6 +17,7 @@ import numpy as np
 from tqdm import tqdm
 import tempfile
 import os
+import scipy.optimize as opt
 
 def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=False):
          
@@ -83,61 +84,30 @@ def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=F
                 relaxation = False
     return particle_vec, energy_vec
 
-# def objectFct()
-
-def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, symm=True, mode="eff", Display=False, barp=False, Smodel=True, syst = "TDCR", record = False, readRecHist = False, uncData=False):
+def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smodel=True, record = False, readRecHist = False, uncData=False):
     """
-    This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
+    This is the main function of the TDCRPy package.
     The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB. 
-    
-    It can operates in two modes:
        
-       --> In mode="eff", it calculates the efficiency of the TDCR system as a function of a value (triplet) of free parameter(s) L, the measurement data is not used;
-       
-       --> In mode="res", it calculates the residual of the TDCR model parametrized by a value (or triplet) of free parameter(s) L and the measurement data TD, TAB, TBC, TAC.
-    
-    also, two configuration can be set:
-       
-        --> mode2="sym", where symmetry is considered between the 3 photomultiplier tubes - here L is a scalar and only the global TDCR value TD is used as measurement data.
-        
-        --> mode2="asym", where an asymmetry between the 3 photomultiplier tubes is possible - here L is a triplet and only the specific TDCR values TAB, TBC, TAC are used as measurement data.
-    
     The parmeter N sets the number of Monte-Carlo trails used for the estimation. Each MC trial corresponds to a simulated radiactive decay.
     TDCRPY() used a set of fonctions from the tdcrpy.TDCR_model_lib module.
     
     Advanced settings can be configured in the config.toml file.
     
-       --> By default Y = True so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set Y = False.
-       
-       --> If you would like to change the number of bins nE to discretize the linear energy space for quenching calculation, you can change nE_electron and nE_alpha parameters for respectively electrons and alpha particles.
-       
-       --> By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the density, the mean charge number Z and the mean mass number A of the scintillator.
-       
-    
     Parameters
     ----------
-    L : Float (if mode2="sym") or a tuple (if mode2="asym")
-        Free parameter in keV-1.
-    TD : float
-        triple-to-double coincidence ratio. Not consider if mode2="asym". Not consider if mode2="asym".
-    TAB : float
-        triple-to-double coincidence ratio (coincidences between channel A and B). Not consider if mode2="sym".
-    TBC : float
-        triple-to-double coincidence ratio (coincidences between channel B and C). Not consider if mode2="sym".
-    TAC : float
-        triple-to-double coincidence ratio (coincidences between channel A and C). Not consider if mode2="sym".
+    L : Float or tuple
+        If L is float, then L is the global free parameter. If L is tuple, then L is a triplet of free parameters. unit keV-1
     Rad : string
         List of radionuclides (eg. "H-3, Co-60").
     pmf_1 : string
         list of probability of each radionuclide (eg. "0.8, 0.2").
     N : integer
-        Number of Monte-Carlo trials. recommanded N>10000 (see JCGM 101). Not applied in the case of pure beta emitting radionuclides.
+        Number of Monte-Carlo trials. recommanded N>10000 (see JCGM 101). Not applied in the case of the analytical model.
     kB : float
         Birks constant in cm/keV.
     V : float
         volume of the scintillator in ml.
-    symm : Boolean, optional
-        "False" to consider PMT asymmetry. the default is True.
     mode : string
         "eff" to return efficiencies, "dis" to return list of decay events.
     Display : Boolean, optional
@@ -151,25 +121,42 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, symm=True, mode="eff", Di
     
     Returns
     -------
-    res : float
-        Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode="res")
     mean_efficiency_S : float
-        Estimation of the efficiency of single counting events. (only in mode="eff")
+        Estimation of the efficiency of single counting events.
     std_efficiency_S : float
-        Standard uncertainty from calculation associated with the estimation of the efficiency of single counting events. (only in mode="eff")
+        Standard uncertainty from calculation associated with the estimation of the efficiency of single counting events.
     mean_efficiency_D : float
-        Estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
+        Estimation of the efficiency of logic sum of double coincidences.
     std_efficiency_D : float
-        Standard uncertainty from calculation associated with the estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
+        Standard uncertainty from calculation associated with the estimation of the efficiency of logic sum of double coincidences.
     mean_efficiency_T : float
-        Estimation of the efficiency of triple coincidences. (only in mode="eff")
+        Estimation of the efficiency of triple coincidences.
     std_efficiency_T : float
-        Standard uncertainty from calculation associated with the estimation of the efficiency of triple coincidences. (only in mode="eff")    
+        Standard uncertainty from calculation associated with the estimation of the efficiency of triple coincidences.
+    mean_efficiency_AB : float
+        detection efficiency of coincidences between channels A and B.
+    std_efficiency_AB : float
+        standard uncertainty of detection efficiency of coincidences between channels A and B.
+    mean_efficiency_BC : float
+        detection efficiency of coincidences between channels B and C.
+    std_efficiency_BC : float
+        standard uncertainty of Ddetection efficiency of coincidences between channels B and C.
+    mean_efficiency_AC : float
+        detection efficiency of coincidences between channels A and C.
+    std_efficiency_AC : float
+        standard uncertainty of detection efficiency of coincidences between channels A and C.
     mean_efficiency_D2 : float
-        Estimation of the efficiency of double coincidences for C/N systems. (only in mode="eff")
+        detection efficiency of coincidences in a C/N system.
     std_efficiency_D2 : float
-        Standard uncertainty from calculation associated with the estimation of the efficiency of double coincidences for C/N systems. (only in mode="eff")
+        standard uncertainty of detection efficiency of coincidences in a C/N system.
     """
+    
+    if isinstance(L, (tuple, list)):
+        symm = False
+    else:
+        symm = True
+    
+    
     if record:
         temp_dir = tempfile.gettempdir()
         recfile1 = os.path.join(temp_dir, "Temp_E0.txt")
@@ -230,17 +217,13 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, symm=True, mode="eff", Di
         inE = radListPureBeta.index(Rad)
         nE = nElist[inE]
         # print(f"Analytical model used for {Rad}")
-        out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,symm,nE)
-        if mode == "res":
-            return out
+        out=tl.modelAnalytical(L,1,1,1,1,Rad,kB,V,mode,symm,nE)
         if mode == "eff":
             return out[0], 0, out[1], 0, out[2], 0
     elif (not Smodel) and (not Rad in radListPureBeta):
         # print("cannot be processed by the analytical model.")
         # print(f"Analytical model used for {Rad}")
-        out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,symm,1000)
-        if mode == "res":
-            return out
+        out=tl.modelAnalytical(L,1,1,1,1,Rad,kB,V,mode,symm,1000)
         if mode == "eff":
             return out[0], 0, out[1], 0, out[2], 0
     
@@ -271,10 +254,13 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, symm=True, mode="eff", Di
                     if decay != decaym:
                         if decay>0:
                             # print(decay-1,e_quenching,e_quenching2, evenement)
-                            efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, symm, extDT, measTime)
+                            efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
                             efficiency_S.append(efficiency0_S)
                             efficiency_T.append(efficiency0_T)
                             efficiency_D.append(efficiency0_D)
+                            efficiency_AB.append(efficiency0_AB)
+                            efficiency_BC.append(efficiency0_BC)
+                            efficiency_AC.append(efficiency0_AC)
                             efficiency_D2.append(efficiency0_D2)
                             
                             # print(efficiency0_D, "\n")
@@ -296,14 +282,17 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, symm=True, mode="eff", Di
                         else:
                             e_quenching.append(energy)
                             
-            efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, symm, extDT, measTime)
+            efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
             efficiency_S.append(efficiency0_S)
             efficiency_T.append(efficiency0_T)
             efficiency_D.append(efficiency0_D)
+            efficiency_AB.append(efficiency0_AB)
+            efficiency_BC.append(efficiency0_BC)
+            efficiency_AC.append(efficiency0_AC)
             efficiency_D2.append(efficiency0_D2)
                             
             # print(efficiency_D)
-            outEff = tl.efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_D2, N)
+            outEff = tl.efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N)
             if mode == "eff": return outEff
             if mode == "dis": return efficiency_S, efficiency_D, efficiency_T, efficiency_D2
                 
@@ -960,10 +949,13 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, symm=True, mode="eff", Di
             ====================
             '''
             if evenement == 1: e_quenching2 = 0; t1=0
-            efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, symm, extDT, measTime)
+            efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
             efficiency_S.append(efficiency0_S)
             efficiency_T.append(efficiency0_T)
             efficiency_D.append(efficiency0_D)
+            efficiency_AB.append(efficiency0_AB)
+            efficiency_BC.append(efficiency0_BC)
+            efficiency_AC.append(efficiency0_AC)            
             efficiency_D2.append(efficiency0_D2)
          
 
@@ -984,71 +976,174 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, symm=True, mode="eff", Di
         VI. CALCULATION OF THE FINAL ESTIMATORS
         ====================
         '''
-        mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_D2, std_efficiency_D2 = tl.efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_D2,N)
-        
-        if symm:
-            TDCR_calcul = mean_efficiency_T/mean_efficiency_D
-        else:
-            mean_efficiency_AB = np.mean(efficiency_AB)
-            std_efficiency_AB = np.std(efficiency_AB)/np.sqrt(N)
-            mean_efficiency_BC = np.mean(efficiency_BC)
-            std_efficiency_BC = np.std(efficiency_BC)/np.sqrt(N)
-            mean_efficiency_AC = np.mean(efficiency_AC)
-            std_efficiency_AC = np.std(efficiency_AC)/np.sqrt(N)
-            TDCR_calcul = mean_efficiency_T/mean_efficiency_D
-            TABmodel = mean_efficiency_T/mean_efficiency_AB
-            TBCmodel = mean_efficiency_T/mean_efficiency_BC
-            TACmodel = mean_efficiency_T/mean_efficiency_AC
-        
-        if symm:
-            res=(TDCR_calcul-TD)**2
-        else:
-            res=(TAB-TABmodel)**2+(TBC-TBCmodel)**2+(TAC-TACmodel)**2
-        
-        if mode == "res":
-            return res
+        mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_AB, std_efficiency_AB, mean_efficiency_BC, std_efficiency_BC, mean_efficiency_AC, std_efficiency_AC, mean_efficiency_D2, std_efficiency_D2 = tl.efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N)
+                        
         if mode == "eff":
-            return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_D2, std_efficiency_D2
+            return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_AB, std_efficiency_AB, mean_efficiency_BC, std_efficiency_BC, mean_efficiency_AC, std_efficiency_AC, mean_efficiency_D2, std_efficiency_D2
         if mode =="dis":
             return efficiency_S, efficiency_D, efficiency_T, efficiency_D2
 
-# L = 1
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# Rad="H-3"
-# pmf_1="1"
-# N = 100
-# kB =1.0e-5
-# V = 10
-# mode = "eff"
-# mode2 = "sym"
+def objectFct(L, TD, Rad, pmf_1, N, kB, V):
+    """
+    Objective function to minimize in order the estimate the detection efficiencies based on the measurements.
 
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False, Smodel=False, uncData=False)
+    Parameters
+    ----------
+    L : float or tuple
+        If L is float, then L is the global free parameter. If L is tuple, then L is a triplet of free parameters. unit keV-1
+    TD : float or tuple
+        measurements. If TD is float, then TD is the measured TDCR parameter. If TD is tuple, then TD must contain the global TDCR parameter followed by specific ones (T/B, T/AB, T/BC, T/AC)
+    Rad : string
+        List of radionuclides (eg. "H-3, Co-60").
+    pmf_1 : string
+        list of probability of each radionuclide (eg. "0.8, 0.2").
+    N : integer
+        Number of Monte-Carlo trials. recommanded N>10000 (see JCGM 101). Not applied in the case of the analytical model.
+    kB : float
+        Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml.
 
-# print(out)
+    Returns
+    -------
+    res : float
+        The residual value.
 
-# L = 1
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
+    """
+    
+    if isinstance(TD, (tuple, list)):
+        symm = False
+    else:
+        symm = True
+        
+    if symm:
+        eff_model = TDCRPy(L, Rad, pmf_1, N, kB, V, readRecHist = True)
+        TDCR_calcul = eff_model[4]/eff_model[2]
+        res=(TDCR_calcul-TD)**2
+    else:
+        eff_model = TDCRPy(L, Rad, pmf_1, N, kB, V, readRecHist = True)
+        TAB_calcul = eff_model[4]/eff_model[6]
+        TBC_calcul = eff_model[4]/eff_model[8]
+        TAC_calcul = eff_model[4]/eff_model[10]
+        res=(TD[1]-TAB_calcul)**2+(TD[2]-TBC_calcul)**2+(TD[3]-TAC_calcul)**2        
+    
+    return res
+
+def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False):
+    """
+    Caclulation of the efficiency of a TDCR system based on the model TDCRPy.
+    This function includes optimization procedures from scipy.
+
+    Parameters
+    ----------
+    TD : float or tuple
+        measurements. If TD is float, then TD is the measured TDCR parameter. If TD is tuple, then TD must contain the global TDCR parameter followed by specific ones (T/B, T/AB, T/BC, T/AC)
+    Rad : string
+        List of radionuclides (eg. "H-3, Co-60").
+    pmf_1 : string
+        list of probability of each radionuclide (eg. "0.8, 0.2").
+    kB : float
+        Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml.
+    N : interger, optional
+        number of Monte-Carlo trials. The default is 10000.
+    maxiter : interger, optional
+        maximum number of iterations of the optimization procedures
+    xatol : float
+        convergence parameter of the Nelder Mead optimisation
+    disp : Boolean
+        to display detailed results of the procedure. Default is False.
+
+    Returns
+    -------
+    L0 : float
+        global free parameter.
+    L : tuple
+        free parameters (relevant for the asymetric model).
+    eff_S : float
+        counting efficiency of single events.
+    u_eff_S : float
+        standard uncertainty of eff_S.
+    eff_D : float
+        counting efficiency of double coincidences.
+    u_eff_D : float
+        standard uncertainty of eff_D.
+    eff_T : float
+        counting efficiency of triple coincidences.
+    u_eff_T : float
+        standard uncertainty of eff_T.
+    eff_AB : float
+        counting efficiency of coincidences AB.
+    u_eff_AB : float
+        standard uncertainty of eff_AB.
+    eff_BC : float
+        counting efficiency of coincidences BC.
+    u_eff_BC : float
+        standard uncertainty of eff_BC.
+    eff_AC : float
+        counting efficiency of coincidences AC.
+    u_eff_AC : float
+        standard uncertainty of eff_AC.    
+    eff_D : float
+        counting efficiency of double coincidences in C/N configuation (not relevant).
+    u_eff_D : float
+        standard uncertainty of eff_D in C/N configuation (not relevant).
+
+    """
+    if isinstance(TD, (tuple, list)):
+        symm = False
+    else:
+        symm = True
+    
+    if symm: r=opt.minimize_scalar(objectFct, args=(TD, Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
+    else: r=opt.minimize_scalar(objectFct, args=(TD[0], Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
+    L0=r.x
+    L=(L0, L0, L0)
+    print(f"global free parameter = {L0} keV-1")
+    
+    if not symm:
+        r=opt.minimize(objectFct, L, args=(TD, Rad, pmf_1, N, kB, V), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
+        L=r.x
+        print(f"free parameters = {L} keV-1")   
+
+    if symm: out=TDCRPy(L0, Rad, pmf_1, N, kB, V, readRecHist = True)
+    else: out=TDCRPy(L, Rad, pmf_1, N, kB, V, readRecHist = True)
+    eff_S = out[0]
+    u_eff_S = out[1]
+    eff_D = out[2]
+    u_eff_D = out[3]
+    eff_T = out[4]
+    u_eff_T = out[5]
+    eff_AB = out[6]
+    u_eff_AB = out[7]
+    eff_BC = out[8]
+    u_eff_BC = out[9]
+    eff_AC = out[10]
+    u_eff_AC = out[11]
+    eff_D2 = out[12]
+    u_eff_D2 = out[13]
+    
+    return L0, L, eff_S, u_eff_S, eff_D, u_eff_D, eff_T, u_eff_T, eff_AB, u_eff_AB, eff_BC, u_eff_BC, eff_AC, u_eff_AC, eff_D2, u_eff_D2
+
+
+# # L = 1
+# # L = (1.1, 1.05, 1.15)
+# # TD = 0.977667386529166
+# TD = (0.977667386529166, 0.992232838598821, 0.992343419459002, 0.99275350064608)
+# # TD = (0.977667386529166, 0.995232838598821, 0.990343419459002, 0.99275350064608)
 # Rad="Co-60"
 # pmf_1="1"
-# N = 5
+# N = 1000
 # kB =1.0e-5
 # V = 10
 # mode = "eff"
 
-# # # # out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
-# # # # print("TDCR", out[4]/out[2])
-# # # # print("Eff D", out[2])
 
+# # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
+# # print("result", out)
+# # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = True)
+# # print("result", out)
 
-# # # out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, 20, kB, V, mode, mode2, Display=True, barp=False, Smodel=True, syst = "TDCR", record = "phf1", uncData=False)
-
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, symm=True, Display = False, record = True, readRecHist = False)
-# print("result", out)
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, symm=True, Display = False, record = False, readRecHist = True)
-# print("result", out)
+# out = eff(TD, Rad, pmf_1, kB, V, N=1000, L=1, maxiter=20, xatol=1e-7)
+# print(out)

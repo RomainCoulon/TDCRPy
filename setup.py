@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "1.13.1"
+VERSION = "2.0.0"
 
 DESCRIPTION = "TDCR model"
 
@@ -20,7 +20,7 @@ setup(
     url="https://pypi.org/project/TDCRPy/",
     py_modules=['TDCRPy'],
     project_urls={'Documentation': 'https://github.com/RomainCoulon/TDCRPy/',},
-    # packages = find_packages(exclude=["tdcrpy.EfficiencyProfils","tdcrpy.decay","tdcrpy.Activity_TDCR"], include=["tdcrpy.TDCR_model_lib","tdcrpy.TDCRoptimize","tdcrpy.TDCRPy", "tdcrpy.test.test_tdcrpy"]),
+    # packages = find_packages(exclude=["tdcrpy.EfficiencyProfils","tdcrpy.decay","tdcrpy.Activity_TDCR"], include=["tdcrpy.TDCR_model_lib","tdcrpy.TDCRPy", "tdcrpy.test.test_tdcrpy"]),
     packages = find_packages(),
     install_requires = ["numpy","tqdm","setuptools","scipy","configparser","importlib.resources","matplotlib"],
     python_requires='>=3.11',
