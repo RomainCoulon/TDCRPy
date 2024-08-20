@@ -3057,8 +3057,40 @@ def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_A
     return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_AB, std_efficiency_AB, mean_efficiency_BC, std_efficiency_BC, mean_efficiency_AC, std_efficiency_AC, mean_efficiency_D2, std_efficiency_D2
     
 
-
-
+def readRecQuenchedEnergies():
+    temp_dir = tempfile.gettempdir()
+    recfile3 = os.path.join(temp_dir, "Temp_E2.txt")
+    with open(recfile3, "r") as file:
+        Epromt, Edelayed = [], []
+        decaym = -1
+        e_quenching = []; e_quenching2 = []; evenement=1; t1=0
+        for line in file:
+            if line[0] != "#":
+                line = line.split(' ')
+                line = [element for element in line if element != ""]
+                decay = int(line[2])                
+                if decay != decaym:
+                    if decay>0:
+                        Epromt.append(sum(e_quenching))
+                        Edelayed.append(sum(e_quenching2))
+                        
+                        
+                        energy = float(line[1])*1e-3
+                        t1 = float(line[4])
+                        decaym = decay
+                        e_quenching = []; e_quenching2 = []
+                        evenement=1
+                        e_quenching.append(energy)
+                else:
+                    energy = float(line[1])*1e-3
+                    t1 = float(line[4])
+                    # print(decay, energy, t1, extDT)
+                    if t1 > tau*1e-9:
+                        evenement = evenement + 1
+                        e_quenching2.append(energy)
+                    else:
+                        e_quenching.append(energy)
+    return Epromt, Edelayed
 
 # N = 1e7
 # buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
