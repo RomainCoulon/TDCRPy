@@ -1096,6 +1096,8 @@ def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False)
     else:
         symm = True
     
+    TDCRPy(L, Rad, pmf_1, N, kB, V, record = True)
+       
     if symm: r=opt.minimize_scalar(objectFct, args=(TD, Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
     else: r=opt.minimize_scalar(objectFct, args=(TD[0], Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
     L0=r.x
@@ -1128,10 +1130,10 @@ def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False)
 
 
 # # L = 1
-# # L = (1.1, 1.05, 1.15)
-# # TD = 0.977667386529166
+# L = (1.1, 1.05, 1.15)
+# # # TD = 0.977667386529166
 # TD = (0.977667386529166, 0.992232838598821, 0.992343419459002, 0.99275350064608)
-# # TD = (0.977667386529166, 0.995232838598821, 0.990343419459002, 0.99275350064608)
+# # # TD = (0.977667386529166, 0.995232838598821, 0.990343419459002, 0.99275350064608)
 # Rad="Co-60"
 # pmf_1="1"
 # N = 1000

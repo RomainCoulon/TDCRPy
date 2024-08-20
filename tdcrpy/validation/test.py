@@ -17,6 +17,34 @@ sys.path.insert(1, 'G:\\Python_modules\\BIPM_RI_PyModules')
 import TDCRcalculation as cl
 
 
+L = 1
+# L = (1.1, 1.05, 1.15)
+TD = 0.977667386529166
+# TD = (0.977667386529166, 0.992232838598821, 0.992343419459002, 0.99275350064608)
+# TD = (0.977667386529166, 0.995232838598821, 0.990343419459002, 0.99275350064608)
+Rad="Co-60"
+pmf_1="1"
+N = 1000
+kB =1.0e-5
+V = 10
+mode = "eff"
+
+out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = False)
+print(out)
+
+# out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
+# print("result", out)
+# out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = True)
+# print("result", out)
+
+# out = td.TDCRPy.eff(TD, Rad, pmf_1, kB, V, N=1000, L=1, maxiter=20, xatol=1e-7)
+# print(out)
+
+
+
+
+
+
 """
 Quenching
 """
@@ -808,28 +836,28 @@ Validation with standard solution for Co-60 (comparison 2023)
 # file_path = "result_Co60_sym.txt"  # Replace "example.txt" with the path of your desired file.
 # file = open(file_path, "w")
 
-rad="Co-60"    # list of radionuclides (Na-24)
-pmf_1="1"
-kB =1.0e-5       # Birks constant in cm/keV
-RHO = 0.98
-V = 10
-N = 1000
-TD = 0.977667386529166        # Measured TDCR value
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
+# rad="Co-60"    # list of radionuclides (Na-24)
+# pmf_1="1"
+# kB =1.0e-5       # Birks constant in cm/keV
+# RHO = 0.98
+# V = 10
+# N = 1000
+# TD = 0.977667386529166        # Measured TDCR value
 # TAB = 0.992232838598821
 # TBC = 0.992343419459002
 # TAC = 0.99275350064608
-L = 1.5
-# N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 7000, 8000, 9000, 10000, 20000, 30000, 40000, 60000, 70000, 80000, 90000, 100000]
+# # TAB = 0.992232838598821
+# # TBC = 0.992343419459002
+# # TAC = 0.99275350064608
+# L = 1.5
+# # N = [10, 20, 50, 100, 200, 500, 800, 1000, 2000, 3000, 5000, 7000, 8000, 9000, 10000, 20000, 30000, 40000, 60000, 70000, 80000, 90000, 100000]
 
-effKCDB =   0.97426
-u_effKCDB = 0.00032
+# effKCDB =   0.97426
+# u_effKCDB = 0.00032
 
-resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, rad, pmf_1, kB, V, "asym", N=10000)
-print('asym 10000 kB = 0.010')
-print(resuts_2)
+# resuts_2=td.TDCRoptimize.eff(TD, TAB, TBC, TAC, rad, pmf_1, kB, V, "asym", N=10000)
+# print('asym 10000 kB = 0.010')
+# print(resuts_2)
 
 
 # span = 5
