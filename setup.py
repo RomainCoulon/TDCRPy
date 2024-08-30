@@ -2,16 +2,32 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "2.0.4"
+VERSION = "2.0.5"
 
 DESCRIPTION = "TDCR model"
 
-md_files = ["README.md", "docs//tuturial.md", "docs/changeParameters.md", "docs/efficiencyCuve/efficiencyCuve.md", "docs/readBetaSpectrum/readBetaSpectrum.md", "docs/stoppingPower/stoppingPower.md", "docs/quenchingModel/quenchingModel.md", "docs/interaction/interaction.md", "docs/analyticalModel/analyticalModel.md", "docs/mixture/mixture.md", "docs/dynamicDecay/dynamicDecay.md", "docs/distrubutionTDCR/distrubutionTDCR.md"]
+md_files = [
+    "README.md", 
+    "docs/tutorial.md",  # Corrected from 'tuturial.md' to 'tutorial.md'
+    "docs/changeParameters.md", 
+    "docs/efficiencyCuve/efficiencyCuve.md", 
+    "docs/readBetaSpectrum/readBetaSpectrum.md", 
+    "docs/stoppingPower/stoppingPower.md", 
+    "docs/quenchingModel/quenchingModel.md", 
+    "docs/interaction/interaction.md", 
+    "docs/analyticalModel/analyticalModel.md", 
+    "docs/mixture/mixture.md", 
+    "docs/dynamicDecay/dynamicDecay.md", 
+    "docs/distrubutionTDCR/distrubutionTDCR.md"
+]
 
 long_description = ""
 for md_file in md_files:
-    with open(md_file, "r") as f:
-        long_description += f.read() + "\n\n"
+    if os.path.exists(md_file):
+        with open(md_file, "r") as f:
+            long_description += f.read() + "\n\n"
+    else:
+        print(f"Warning: {md_file} not found. Skipping...")
 
 setup(
     name = "TDCRPy",
