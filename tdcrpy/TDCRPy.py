@@ -1129,10 +1129,107 @@ def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False)
     return L0, L, eff_S, u_eff_S, eff_D, u_eff_D, eff_T, u_eff_T, eff_AB, u_eff_AB, eff_BC, u_eff_BC, eff_AC, u_eff_AC, eff_D2, u_eff_D2
 
 
-# # L = 1
-# L = (1.1, 1.05, 1.15)
-# # # TD = 0.977667386529166
-# TD = (0.977667386529166, 0.992232838598821, 0.992343419459002, 0.99275350064608)
+# def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False):
+#     """
+#     Caclulation of the efficiency of a TDCR system based on the model TDCRPy (analytical model).
+#     This function includes optimization procedures from scipy.
+
+#     Parameters
+#     ----------
+#     TD : float or tuple
+#         measurements. If TD is float, then TD is the measured TDCR parameter. If TD is tuple, then TD must contain the global TDCR parameter followed by specific ones (T/B, T/AB, T/BC, T/AC)
+#     Rad : string
+#         List of radionuclides (eg. "H-3, Co-60").
+#     pmf_1 : string
+#         list of probability of each radionuclide (eg. "0.8, 0.2").
+#     kB : float
+#         Birks constant in cm/keV.
+#     V : float
+#         volume of the scintillator in ml.
+#     maxiter : interger, optional
+#         maximum number of iterations of the optimization procedures
+#     xatol : float
+#         convergence parameter of the Nelder Mead optimisation
+#     disp : Boolean
+#         to display detailed results of the procedure. Default is False.
+
+#     Returns
+#     -------
+#     L0 : float
+#         global free parameter.
+#     L : tuple
+#         free parameters (relevant for the asymetric model).
+#     eff_S : float
+#         counting efficiency of single events.
+#     u_eff_S : float
+#         standard uncertainty of eff_S.
+#     eff_D : float
+#         counting efficiency of double coincidences.
+#     u_eff_D : float
+#         standard uncertainty of eff_D.
+#     eff_T : float
+#         counting efficiency of triple coincidences.
+#     u_eff_T : float
+#         standard uncertainty of eff_T.
+#     eff_AB : float
+#         counting efficiency of coincidences AB.
+#     u_eff_AB : float
+#         standard uncertainty of eff_AB.
+#     eff_BC : float
+#         counting efficiency of coincidences BC.
+#     u_eff_BC : float
+#         standard uncertainty of eff_BC.
+#     eff_AC : float
+#         counting efficiency of coincidences AC.
+#     u_eff_AC : float
+#         standard uncertainty of eff_AC.    
+#     eff_D : float
+#         counting efficiency of double coincidences in C/N configuation (not relevant).
+#     u_eff_D : float
+#         standard uncertainty of eff_D in C/N configuation (not relevant).
+
+#     """
+#     if isinstance(TD, (tuple, list)):
+#         symm = False
+#     else:
+#         symm = True
+
+#     if symm: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD, TD, TD, TD, Rad, kB, V, "res", True, 1e3), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
+#     else: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", True, 1e3), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
+#     L0=r.x
+#     L=(L0, L0, L0)
+#     print(f"global free parameter = {L0} keV-1")
+    
+#     if not symm:
+#         r=opt.minimize(tl.modelAnalytical, L, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", True, 1e3), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
+#         L=r.x
+#         print(f"free parameters = {L} keV-1")   
+
+#     if symm: out=tl.modelAnalytical(L, TD, TD, TD, TD, Rad, kB, V, "eff", True, 1e3)
+#     else: out=tl.modelAnalytical(L, TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "eff", True, 1e3)
+#     eff_S = out[0]
+#     u_eff_S = out[1]
+#     eff_D = out[2]
+#     u_eff_D = out[3]
+#     eff_T = out[4]
+#     u_eff_T = out[5]
+#     eff_AB = out[6]
+#     u_eff_AB = out[7]
+#     eff_BC = out[8]
+#     u_eff_BC = out[9]
+#     eff_AC = out[10]
+#     u_eff_AC = out[11]
+    
+#     return L0, L, eff_S, u_eff_S, eff_D, u_eff_D, eff_T, u_eff_T, eff_AB, u_eff_AB, eff_BC, u_eff_BC, eff_AC, u_eff_AC
+
+
+
+
+
+# L = 1
+# # L = (1.1, 1.05, 1.15)
+# TD = 0.977667386529166
+# # TD = (0.977667386529166, 0.992232838598821, 0.992343419459002, 0.99275350064608)
 # # # TD = (0.977667386529166, 0.995232838598821, 0.990343419459002, 0.99275350064608)
 # Rad="Co-60"
 # pmf_1="1"
@@ -1142,10 +1239,11 @@ def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False)
 # mode = "eff"
 
 
-# # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
-# # print("result", out)
-# # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = True)
-# # print("result", out)
+# # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
+# # # print("result", out)
+# # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = True)
+# # # print("result", out)
 
-# out = eff(TD, Rad, pmf_1, kB, V, N=1000, L=1, maxiter=20, xatol=1e-7)
+# # out = eff(TD, Rad, pmf_1, kB, V, N=1000, L=1, maxiter=20, xatol=1e-7)
+# out = effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7)
 # print(out)

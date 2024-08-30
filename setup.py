@@ -2,17 +2,16 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "2.0.2"
+VERSION = "2.0.3"
 
 DESCRIPTION = "TDCR model"
 
-md_files = ["README.md", "CHANGELOG.md", "CONTRIBUTING.md"]
+md_files = ["README.md", "tuturial.md", "changeParameters.md", "efficiencyCuve/efficiencyCuve.md", "readBetaSpectrum/readBetaSpectrum.md", "stoppingPower/stoppingPower.md", "quenchingModel/quenchingModel.md", "interaction/interaction.md", "analyticalModel/analyticalModel.md", "mixture/mixture.md", "dynamicDecay/dynamicDecay.md", "distrubutionTDCR/distrubutionTDCR.md"]
 
-# Concatenate the contents of these files
 long_description = ""
 for md_file in md_files:
     with open(md_file, "r") as f:
-        long_description += f.read() + "\n\n"  # Add a newline between each file's content
+        long_description += f.read() + "\n\n"
 
 setup(
     name = "TDCRPy",
