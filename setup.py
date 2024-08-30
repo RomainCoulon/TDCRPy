@@ -6,7 +6,7 @@ VERSION = "2.0.4"
 
 DESCRIPTION = "TDCR model"
 
-md_files = ["README.md", "docs/tuturial.md", "docs/changeParameters.md", "docs/efficiencyCuve/efficiencyCuve.md", "docs/readBetaSpectrum/readBetaSpectrum.md", "docs/stoppingPower/stoppingPower.md", "docs/quenchingModel/quenchingModel.md", "docs/interaction/interaction.md", "docs/analyticalModel/analyticalModel.md", "docs/mixture/mixture.md", "docs/dynamicDecay/dynamicDecay.md", "docs/distrubutionTDCR/distrubutionTDCR.md"]
+md_files = ["README.md", "docs//tuturial.md", "docs/changeParameters.md", "docs/efficiencyCuve/efficiencyCuve.md", "docs/readBetaSpectrum/readBetaSpectrum.md", "docs/stoppingPower/stoppingPower.md", "docs/quenchingModel/quenchingModel.md", "docs/interaction/interaction.md", "docs/analyticalModel/analyticalModel.md", "docs/mixture/mixture.md", "docs/dynamicDecay/dynamicDecay.md", "docs/distrubutionTDCR/distrubutionTDCR.md"]
 
 long_description = ""
 for md_file in md_files:
