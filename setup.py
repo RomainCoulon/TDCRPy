@@ -6,8 +6,13 @@ VERSION = "2.0.2"
 
 DESCRIPTION = "TDCR model"
 
-with open("README.md", "r") as f:
-    long_description = f.read()
+md_files = ["README.md", "CHANGELOG.md", "CONTRIBUTING.md"]
+
+# Concatenate the contents of these files
+long_description = ""
+for md_file in md_files:
+    with open(md_file, "r") as f:
+        long_description += f.read() + "\n\n"  # Add a newline between each file's content
 
 setup(
     name = "TDCRPy",
