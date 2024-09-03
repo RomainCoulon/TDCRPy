@@ -2,11 +2,11 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "2.0.6"
+VERSION = "2.0.7"
 
 DESCRIPTION = "TDCR model"
 
-md_files = ["README.md", "tuturial.md", "changeParameters.md", "efficiencyCuve/efficiencyCuve.md", "readBetaSpectrum/readBetaSpectrum.md", "stoppingPower/stoppingPower.md", "quenchingModel/quenchingModel.md", "interaction/interaction.md", "analyticalModel/analyticalModel.md", "mixture/mixture.md", "dynamicDecay/dynamicDecay.md", "distrubutionTDCR/distrubutionTDCR.md"]
+md_files = ["README.md"]
 
 long_description = ""
 for md_file in md_files:
