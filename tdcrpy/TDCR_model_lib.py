@@ -132,7 +132,7 @@ def modifyAtmConc(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[-6:]
     data1 = data0.replace(f"pH = {x0[0]:.6f}",f"pH = {x[0]:.6f}")
-    data1 = data1.replace(f"pC = {x0[1]:.6f}",f"pH = {x[1]:.6f}")
+    data1 = data1.replace(f"pC = {x0[1]:.6f}",f"pC = {x[1]:.6f}")
     data1 = data1.replace(f"pN = {x0[2]:.6f}",f"pN = {x[2]:.6f}")
     data1 = data1.replace(f"pO = {x0[3]:.6f}",f"pO = {x[3]:.6f}")
     data1 = data1.replace(f"pP = {x0[4]:.6f}",f"pP = {x[4]:.6f}") #

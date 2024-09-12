@@ -17,20 +17,20 @@ sys.path.insert(1, 'G:\\Python_modules\\BIPM_RI_PyModules')
 import TDCRcalculation as cl
 
 
-L = 1
-# L = (1.1, 1.05, 1.15)
-TD = 0.977667386529166
-# TD = (0.977667386529166, 0.992232838598821, 0.992343419459002, 0.99275350064608)
-# TD = (0.977667386529166, 0.995232838598821, 0.990343419459002, 0.99275350064608)
-Rad="Co-60"
-pmf_1="1"
-N = 1000
-kB =1.0e-5
-V = 10
-mode = "eff"
+# L = 1
+# # L = (1.1, 1.05, 1.15)
+# TD = 0.977667386529166
+# # TD = (0.977667386529166, 0.992232838598821, 0.992343419459002, 0.99275350064608)
+# # TD = (0.977667386529166, 0.995232838598821, 0.990343419459002, 0.99275350064608)
+# Rad="Co-60"
+# pmf_1="1"
+# N = 1000
+# kB =1.0e-5
+# V = 10
+# mode = "eff"
 
-out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = False)
-print(out)
+# out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = False)
+# print(out)
 
 # out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
 # print("result", out)
@@ -41,7 +41,11 @@ print(out)
 # print(out)
 
 
-
+td.TDCR_model_lib.modifyAtmConc([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071])
+print("New configuration:")
+td.TDCR_model_lib.readParameters(disp=True)
+# back to the default value
+td.TDCR_model_lib.modifyAtmConc([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071])
 
 
 
