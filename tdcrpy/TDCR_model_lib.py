@@ -47,6 +47,13 @@ def readParameters(disp=False):
     RHO = config["Inputs"].getfloat("density")
     Z = config["Inputs"].getfloat("Z")
     A = config["Inputs"].getfloat("A")
+    pH = config["Inputs"].getfloat("pH")
+    pC = config["Inputs"].getfloat("pC")
+    pN = config["Inputs"].getfloat("pN")
+    pO = config["Inputs"].getfloat("pO")
+    pP = config["Inputs"].getfloat("pP")
+    pCl = config["Inputs"].getfloat("pCl")
+    
     depthSpline = config["Inputs"].getint("depthSpline")
     Einterp_a = config["Inputs"].getfloat("Einterp_a")
     Einterp_e = config["Inputs"].getfloat("Einterp_e")
@@ -60,6 +67,9 @@ def readParameters(disp=False):
         print(f"density = {RHO} g/cm3")
         print(f"Z = {Z}")
         print(f"A = {A}")
+        print(f"Atomic fraction: [H] = {pH:.6f}, [C] = {pC:.6f}")
+        print(f"[N] = {pN:.6f}, [O] = {pO:.6f}")
+        print(f"[P] = {pP:.6f}, [Cl] = {pCl:.6f}")
         print(f"depth of spline interp. = {depthSpline}")
         print(f"energy above which interp. in implemented (for alpha) = {Einterp_a} keV")
         print(f"energy above which interp. in implemented (for electron) = {Einterp_e} keV")
@@ -70,9 +80,12 @@ def readParameters(disp=False):
         print(f"extended dead time = {extDT} µs")
         print(f"measurement time = {measTime} min")
     
-    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr
+    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, pH,pC,pN,pO,pP,pCl
 
-nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr = readParameters()
+nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, pH,pC,pN,pO,pP,pCl = readParameters()
+
+p_atom = np.array([pH,pC,pN,pO,pP,pCl]) # atom abondance in the scintillator
+p_atom /= sum(p_atom) 
 
 def readConfigAsstr():
     path2config = str(config.read(file_conf)[0])
@@ -113,6 +126,17 @@ def modifyA(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[4]
     data1 = data0.replace(f"A = {x0}",f"A = {x}")
+    writeConfifAsstr(data1)
+
+def modifyAtmConc(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[-6:]
+    data1 = data0.replace(f"pH = {x0[0]:.6f}",f"pH = {x[0]:.6f}")
+    data1 = data1.replace(f"pC = {x0[1]:.6f}",f"pH = {x[1]:.6f}")
+    data1 = data1.replace(f"pN = {x0[2]:.6f}",f"pN = {x[2]:.6f}")
+    data1 = data1.replace(f"pO = {x0[3]:.6f}",f"pO = {x[3]:.6f}")
+    data1 = data1.replace(f"pP = {x0[4]:.6f}",f"pP = {x[4]:.6f}") #
+    data1 = data1.replace(f"pCl = {x0[5]:.6f}",f"pCl = {x[5]:.6f}")
     writeConfifAsstr(data1)
 
 def modifyDepthSpline(x):
@@ -2184,7 +2208,7 @@ def read_ENDF_photon(atom,z=z_endf_ph):
 
 
 
-def interaction_scintillation(e_p):
+def interaction_scintillation(e_p, p_atom=p_atom):
     """
     Simulation of the photoelectric interaction
 
@@ -2203,7 +2227,7 @@ def interaction_scintillation(e_p):
         target atom ('H', ...).
 
     """
-    p_atom = np.array([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071]) # atom abondance in the scintillator
+    # p_atom = np.array([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071]) # atom abondance in the scintillator
     atom = ['H','C','N','O','P','Cl']
     # sampling atom 
     
