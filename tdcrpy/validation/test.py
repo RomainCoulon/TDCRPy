@@ -15,22 +15,78 @@ from tqdm import tqdm
 import sys
 sys.path.insert(1, 'G:\\Python_modules\\BIPM_RI_PyModules')
 import TDCRcalculation as cl
+import TDCRLabZy
 
 
-# L = 1
+# fname = "G:\\Activity_mesurements\\LS_TDCR\\CompW4piBetaGamma\\NPL7.tdc"
+# fname = "G:\\Activity_mesurements\\LS_TDCR\\CompW4piBetaGamma\\ENEA3.tdc"
+# fname = "G:\\Activity_mesurements\\LS_TDCR\\CompW4piBetaGamma\\NRC5.tdc"
+# fname = "G:\\Activity_mesurements\\LS_TDCR\\CompW4piBetaGamma\\PTB9.tdc"
+# fname = "G:\\Activity_mesurements\\LS_TDCR\\CompW4piBetaGamma\\BCK1.tdc"
+# out1 = TDCRLabZy.readLabZyfile(fname, 1)
+
+# D = np.mean(out1[1])
+# uD = np.std(out1[1])
+# TD = out1[0]/out1[1]
+
+TD = 0.977
+D = 5342
+
+Rad="Tc-99"
+pmf_1 = "1"
+V = 16
+kB =1.0e-5
+N=10000
+L = 1.217
+
+# out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, barp=False, record = True, readRecHist = False)
+out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, barp=False, record = False, readRecHist = True)
+Tmodel = out[4]
+Dmodel = out[2]
+uDmodel = out[3]
+TDCR_model = Tmodel/Dmodel
+print("TDCR_model", TDCR_model)
+print("obj", TDCR_model-np.mean(TD))
+print("eff", Dmodel, uDmodel)
+print("A", D/Dmodel)
+
+
+# print(D)
+# print(uD)
+# print(np.mean(TD))
+
 # # L = (1.1, 1.05, 1.15)
-# TD = 0.977667386529166
+# # TD = 0.977667386529166
 # # TD = (0.977667386529166, 0.992232838598821, 0.992343419459002, 0.99275350064608)
 # # TD = (0.977667386529166, 0.995232838598821, 0.990343419459002, 0.99275350064608)
 # Rad="Co-60"
 # pmf_1="1"
-# N = 1000
+# N = 10000
 # kB =1.0e-5
 # V = 10
 # mode = "eff"
 
-# out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = False)
-# print(out)
+# # out = td.TDCRPy.eff(TD, Rad, pmf_1, kB, V)
+# # print(out)
+
+# # L=1.42747 # NPL7
+# # L=1.18705 # NPL7 old
+# # L=1.43725 # ENEA3
+# # L=1.22820 # ENEA3 old
+# # L=1.46192 # NRC5
+# # L=1.26154 # NRC5 old
+# # L=1.44138 # PTB9
+# L=1.36057 # PTB9 old
+# # out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, barp=False, record = True, readRecHist = False)
+# out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, barp=False, record = False, readRecHist = True)
+# Tmodel = out[4]
+# Dmodel = out[2]
+# uDmodel = out[3]
+# TDCR_model = Tmodel/Dmodel
+# print("TDCR_model", TDCR_model)
+# print("obj", TDCR_model-np.mean(TD))
+# print("eff", Dmodel, uDmodel)
+
 
 # out = td.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
 # print("result", out)
@@ -41,11 +97,11 @@ import TDCRcalculation as cl
 # print(out)
 
 
-td.TDCR_model_lib.modifyAtmConc([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071])
-print("New configuration:")
-td.TDCR_model_lib.readParameters(disp=True)
-# back to the default value
-td.TDCR_model_lib.modifyAtmConc([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071])
+# td.TDCR_model_lib.modifyAtmConc([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071])
+# print("New configuration:")
+# td.TDCR_model_lib.readParameters(disp=True)
+# # back to the default value
+# td.TDCR_model_lib.modifyAtmConc([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071])
 
 
 

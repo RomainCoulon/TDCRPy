@@ -1277,7 +1277,7 @@ def Em_e(Ei, Ed, kB, nE, Et = Einterp_e*1e3, kB_vec = kB_e):
     """    
     if Ed <= Et or Ei != Ed:
         # run the accurate quenching model
-        r = E_quench_e(Ei,Ed,kB,nE)
+        r = E_quench_e(Ei,Ed,kB,int(nE))
     else:
         # run interpolation
         r = run_interpolate(kB_vec, kB , Ei_electron, Em_electron, Ed)
@@ -2648,7 +2648,7 @@ def relaxation_atom_ph(lacune,element,v):
 
 
 
-def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,symm,ne):
+def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
     """
     TDCR analytical model that is used for pure beta emitting radionuclides
     
@@ -2672,8 +2672,6 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,symm,ne):
         volume of the scintillator in ml. run only for 10 ml
     mode : string
         "res" to return the residual, "eff" to return efficiencies.
-    symm : boolean
-        "True" for symetrical model, "False" for symetrical model.
     nE : integer
          Number of bins for the quenching function.
     
@@ -2699,7 +2697,7 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,symm,ne):
         em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
         
         
-    if symm:
+    if type(L)==float or isinstance(L, np.float64):
         eff_S = sum(p*(1-np.exp(-L*em/3)))
         eff_T = sum(p*(1-np.exp(-L*em/3))**3)
         eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
