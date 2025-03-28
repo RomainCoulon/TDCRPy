@@ -691,7 +691,7 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                         
                         if p == "electron" or ("Auger" in p): col1 = "1"
                         elif p == "gamma" or ("X" in p): col1 = "2"
-                        elif p == "beta+": col1 = "3"
+                        elif p == "positron": col1 = "3"
                         elif p == "alpha": col1 = "4"
                         else: writeOn = False
 
@@ -709,7 +709,7 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                             
                             if p == "electron" or ("Auger" in p): col1 = "1"
                             elif p == "gamma" or ("X" in p): col1 = "2"
-                            elif p == "beta+": col1 = "3"
+                            elif p == "positron": col1 = "3"
                             elif p == "alpha": col1 = "4"
                             else: writeOn = False
     
@@ -825,7 +825,7 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                         
                         if p == "electron" or ("Auger" in p): col1 = "1"
                         elif p == "gamma" or ("X" in p): col1 = "2"
-                        elif p == "beta+": col1 = "3"
+                        elif p == "positron": col1 = "3"
                         elif p == "alpha": col1 = "4"
                         else: writeOn = False
 
@@ -843,7 +843,7 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                             
                             if p == "electron" or ("Auger" in p): col1 = "1"
                             elif p == "gamma" or ("X" in p): col1 = "2"
-                            elif p == "beta+": col1 = "3"
+                            elif p == "positron": col1 = "3"
                             elif p == "alpha": col1 = "4"
                             else: writeOn = False
     
@@ -911,7 +911,7 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                         
                         if p == "electron" or ("Auger" in p): col1 = "1"
                         elif p == "gamma" or ("X" in p): col1 = "2"
-                        elif p == "beta+": col1 = "3"
+                        elif p == "positron": col1 = "3"
                         elif p == "alpha": col1 = "4"
                         else: writeOn = False
 
@@ -929,7 +929,7 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                             
                             if p == "electron" or ("Auger" in p): col1 = "1"
                             elif p == "gamma" or ("X" in p): col1 = "2"
-                            elif p == "beta+": col1 = "3"
+                            elif p == "positron": col1 = "3"
                             elif p == "alpha": col1 = "4"
                             else: writeOn = False
     
@@ -1137,7 +1137,7 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False):
     Parameters
     ----------
     TD : float or tuple
-        measurements. If TD is float, then TD is the measured TDCR parameter. If TD is tuple, then TD must contain the global TDCR parameter followed by specific ones (T/B, T/AB, T/BC, T/AC)
+        measurements. If TD is float, then TD is the measured TDCR parameter. If TD is tuple, then TD must contain the global TDCR parameter followed by specific ones (T/D, T/AB, T/BC, T/AC)
     Rad : string
         List of radionuclides (eg. "H-3, Co-60").
     pmf_1 : string
@@ -1226,18 +1226,74 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False):
 
 
 
+# mode = "eff"                # ask for efficiency calculation
+# Rad="Na-22"                 # radionuclides
+# pmf_1="1"                   # relatives fractions of the radionulides
+# N = 1000                    # number of Monte Carlo trials
+# kB =1.0e-5                  # Birks constant in cm keV-1
+# V = 10                      # volume of scintillator in mL
+# L=np.logspace(-3,2,num=100) # free parameter in keV-1
+
+# # TDCRPy(1, Rad, pmf_1, 10, kB, V, mode, Display= True, barp=False, record=True)
+# # Record decay histories in temporary files
+# TDCRPy(L[0], Rad, pmf_1, N, kB, V, mode, barp=True, record=True)
+
+# effS, u_effS, effD, u_effD, effT, u_effT, effD2, u_effD2 = [], [],[], [],[], [], [], []
+# for l in tqdm(L, desc="free parameters ", unit=" iterations"):
+#   out = TDCRPy(l, Rad, pmf_1, N, kB, V, mode, readRecHist=True)
+#   effS.append(out[2])
+#   u_effS.append(out[3])
+#   effD.append(out[2])
+#   u_effD.append(out[3])
+#   effT.append(out[4])
+#   u_effT.append(out[5])
+#   effD2.append(out[12])
+#   u_effD2.append(out[13])
+
+# effS=np.asarray(effS)
+# effT=np.asarray(effT)
+# effD=np.asarray(effD)
+# effD2=np.asarray(effD2)
+# u_effS=np.asarray(u_effS)
+# u_effT=np.asarray(u_effT)
+# u_effD=np.asarray(u_effD)
+# u_effD2=np.asarray(u_effD2)
+
+# tdcr=effT/effD
+# u_tdcr=np.sqrt(u_effD**2*effT**2/effD**4+u_effT**2/effD**2)
+
+# import matplotlib.pyplot as plt
+# plt.figure("efficiency vs free parameter")
+# plt.clf()
+# plt.errorbar(L,effD,yerr=u_effD,fmt="-k",label="double coincidences")
+# plt.errorbar(L,effT,yerr=u_effT,fmt="-r",label="triple coincidences")
+# plt.errorbar(L,effD2,yerr=u_effD2,fmt="-g",label="double coincidences (CIEMAT/NIST)")
+# plt.xscale('log')
+# plt.xlabel(r'$L$ /keV$^{-1}$', fontsize=14)
+# plt.ylabel(r'$\epsilon$', fontsize=14)
+# plt.legend()
+
+# plt.figure("efficiency vs TDCR")
+# plt.clf()
+# plt.errorbar(tdcr,effD,xerr=u_tdcr,yerr=u_effD,fmt="-k")
+# #plt.xscale('log')
+# plt.xlabel(r'$R_T/R_D$', fontsize=14)
+# plt.ylabel(r'$\epsilon_{D}$', fontsize=14)
+# plt.show()
 
 
 # L = 1
 # # L = (1.1, 1.05, 1.15)
-# TD = 0.977667386529166
-# # TD = (0.977667386529166, 0.992232838598821, 0.992343419459002, 0.99275350064608)
-# # # TD = (0.977667386529166, 0.995232838598821, 0.990343419459002, 0.99275350064608)
-# Rad="Co-60"
+# # TD = 0.977667386529166
+# # TD = (0.9767359812638453, 0.9925429293804757, 0.991829757077315, 0.9919970813639295) # source 1
+# # TD = (0.9768862920127371, 0.9928478299182348, 0.9912531441227223, 0.9924249578285456) # source 2
+# # TD = (0.9769014488454436, 0.9918130431206161, 0.9920156754198314, 0.9927119011073454) # source 3
+# TD = (0.9764032345164899, 0.9928417189012709, 0.9911455450383777, 0.9920402844839974) # source 4
+# Rad="Tc-99"
 # pmf_1="1"
-# N = 1000
-# kB =1.0e-5
-# V = 10
+# N = 10000
+# kB =1.4e-5
+# V = 16
 # mode = "eff"
 
 
@@ -1246,6 +1302,7 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False):
 # # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = True)
 # # # print("result", out)
 
-# # out = eff(TD, Rad, pmf_1, kB, V, N=1000, L=1, maxiter=20, xatol=1e-7)
-# out = effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7)
-# print(out)
+# outS = eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7)
+# outA = effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7)
+# print(outS)
+# print(outA)
