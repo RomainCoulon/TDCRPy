@@ -84,7 +84,7 @@ def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=F
                 relaxation = False
     return particle_vec, energy_vec
 
-def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smodel=True, record = False, readRecHist = False, uncData=False):
+def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smodel=True, record = False, readRecHist = False, uncData = False, fullMC = False):
     """
     This is the main function of the TDCRPy package.
     The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB. 
@@ -254,7 +254,10 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                     if decay != decaym:
                         if decay>0:
                             # print(decay-1,e_quenching,e_quenching2, evenement)
-                            efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+                            if fullMC:
+                                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+                            else:
+                                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
                             efficiency_S.append(efficiency0_S)
                             efficiency_T.append(efficiency0_T)
                             efficiency_D.append(efficiency0_D)
@@ -281,8 +284,11 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                             e_quenching2.append(energy)
                         else:
                             e_quenching.append(energy)
-                            
-            efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+            
+            if fullMC:
+                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+            else:
+                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
             efficiency_S.append(efficiency0_S)
             efficiency_T.append(efficiency0_T)
             efficiency_D.append(efficiency0_D)
@@ -949,7 +955,10 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
             ====================
             '''
             if evenement == 1: e_quenching2 = 0; t1=0
-            efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+            if fullMC:
+                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+            else:
+                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
             efficiency_S.append(efficiency0_S)
             efficiency_T.append(efficiency0_T)
             efficiency_D.append(efficiency0_D)
@@ -1236,7 +1245,7 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False):
 
 # # TDCRPy(1, Rad, pmf_1, 10, kB, V, mode, Display= True, barp=False, record=True)
 # # Record decay histories in temporary files
-# TDCRPy(L[0], Rad, pmf_1, N, kB, V, mode, barp=True, record=True)
+# TDCRPy(L[0], Rad, pmf_1, N, kB, V, mode, barp=False, record=True)
 
 # effS, u_effS, effD, u_effD, effT, u_effT, effD2, u_effD2 = [], [],[], [],[], [], [], []
 # for l in tqdm(L, desc="free parameters ", unit=" iterations"):

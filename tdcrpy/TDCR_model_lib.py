@@ -2894,6 +2894,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
         symm = False
     else:
         symm = True
+         
         
     if symm:
         # print(evenement !=1, t1 > extDT*1e-6, t1 < measTime*60)
@@ -2935,8 +2936,6 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             efficiency0_A2 = p_single
             efficiency0_B2 = efficiency0_A2
             efficiency0_D2 = p_single**2
-        
-                            
     else:
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
             # TDCR            
@@ -3003,6 +3002,164 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             efficiency0_D2 = pA_single*pB_single
             
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
+
+
+def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime):
+    """
+    Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
+
+    Parameters
+    ----------
+    L : float or tuple
+        If L is float, then L is the global free parameter. If L is tuple, then L is a triplet of free parameters. unit keV-1
+    e_quenching : list
+        List of quenched deposited energies from prompt particles in keV.
+    e_quenching2 : list
+        List of quenched deposited energies from delayed particles in keV.
+    t1 : float
+        decay time of the delayed transitions in s.
+    evenement : interger
+        number of pulses per decay (prompt (1), prompt + delayed (2)).
+    extDT : float
+        extended dead time of the system in ns.
+    measTime : float
+        measurement time in minutes.
+
+    Returns
+    -------
+    efficiency0_S : float
+        detection probability of single event.
+    efficiency0_D : float
+        detection probability of double coincidences.
+    efficiency0_T : float
+        detection probability of triple coincidences.
+    efficiency0_AB : float
+        detection probability of coincidences between channels A and B.
+    efficiency0_BC : float
+        detection probability of coincidences between channels B and C.
+    efficiency0_AC : float
+        detection probability of coincidences between channels A and C.
+    efficiency0_D2 : float
+        detection probability of coincidences in a C/N system.
+
+    """
+    if isinstance(L, (tuple, list)):
+        symm = False
+    else:
+        symm = True
+    
+    if symm:
+        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
+            m = len(e_quenching)
+            n_ph = np.random.poisson(np.asarray((e_quenching+e_quenching2)*L))
+            n_S = 0; n_D = 0; n_T = 0; n_AB = 0;  n_BC = 0;  n_AC = 0; n_D2 = 0; n_A2 = 0; n_B2 = 0;
+            for j in n_ph:
+                n_phPMT = np.random.multinomial(j, [1/3, 1/3, 1/3])
+                if sum(n_phPMT>1)>0: n_S +=1
+                if sum(n_phPMT>1)>1: n_D +=1
+                if sum(n_phPMT>1)>2: n_T +=1
+                if n_phPMT[0]>1 and n_phPMT[1]>1: n_AB +=1 
+                if n_phPMT[1]>1 and n_phPMT[2]>1: n_BC +=1 
+                if n_phPMT[0]>1 and n_phPMT[2]>1: n_AC +=1 
+            efficiency0_S = n_S/m
+            efficiency0_T = n_T/m
+            efficiency0_D = n_D/m
+            efficiency0_AB = n_AB/m
+            efficiency0_BC = n_BC/m
+            efficiency0_AC = n_AC/m
+            for j in n_ph:
+                n_phPMT = np.random.multinomial(j, [1/2, 1/2])
+                if sum(n_phPMT>1)>1: n_D2 +=1
+                if n_phPMT[0]>1: n_A2 +=1 
+                if n_phPMT[1]>1: n_B2 +=1
+            # efficiency0_A2 = n_A2/m
+            # efficiency0_B2 = n_B2/m     
+            efficiency0_D2 = n_D2/m  
+        else: # symm and no deleayed event sum
+            m = len(e_quenching)
+            n_ph = np.random.poisson(np.asarray(e_quenching*L))
+            n_S = 0; n_D = 0; n_T = 0; n_AB = 0;  n_BC = 0;  n_AC = 0; n_D2 = 0; n_A2 = 0; n_B2 = 0;
+            for j in n_ph:
+                n_phPMT = np.random.multinomial(j, [1/3, 1/3, 1/3])
+                if sum(n_phPMT>1)>0: n_S +=1
+                if sum(n_phPMT>1)>1: n_D +=1
+                if sum(n_phPMT>1)>2: n_T +=1
+                if n_phPMT[0]>1 and n_phPMT[1]>1: n_AB +=1 
+                if n_phPMT[1]>1 and n_phPMT[2]>1: n_BC +=1 
+                if n_phPMT[0]>1 and n_phPMT[2]>1: n_AC +=1 
+            efficiency0_S = n_S/m
+            efficiency0_T = n_T/m
+            efficiency0_D = n_D/m
+            efficiency0_AB = n_AB/m
+            efficiency0_BC = n_BC/m
+            efficiency0_AC = n_AC/m
+            for j in n_ph:
+                n_phPMT = np.random.multinomial(j, [1/2, 1/2])
+                if sum(n_phPMT>1)>1: n_D2 +=1
+                if n_phPMT[0]>1: n_A2 +=1 
+                if n_phPMT[1]>1: n_B2 +=1 
+            # efficiency0_A2 = n_A2/m
+            # efficiency0_B2 = n_B2/m     
+            efficiency0_D2 = n_D2/m  
+    else: # asym
+        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60: # sum of delayed event
+            m = len(e_quenching)
+            Lm = np.mean(L)
+            n_ph = np.random.poisson(np.asarray(e_quenching+e_quenching2)*Lm)
+            n_S = 0; n_D = 0; n_T = 0; n_AB = 0;  n_BC = 0;  n_AC = 0; n_D2 = 0; n_A2 = 0; n_B2 = 0;
+            for j in n_ph:
+                n_phPMT = np.random.multinomial(j, [L[0]/(3*Lm), L[1]/(3*Lm), L[2]/(3*Lm)])
+                if sum(n_phPMT>1)>0: n_S +=1
+                if sum(n_phPMT>1)>1: n_D +=1
+                if sum(n_phPMT>1)>2: n_T +=1
+                if n_phPMT[0]>1 and n_phPMT[1]>1: n_AB +=1 
+                if n_phPMT[1]>1 and n_phPMT[2]>1: n_BC +=1 
+                if n_phPMT[0]>1 and n_phPMT[2]>1: n_AC +=1 
+            efficiency0_S = n_S/m
+            efficiency0_T = n_T/m
+            efficiency0_D = n_D/m
+            efficiency0_AB = n_AB/m
+            efficiency0_BC = n_BC/m
+            efficiency0_AC = n_AC/m
+            for j in n_ph:
+                n_phPMT = np.random.multinomial(j, [L[0]/(2*Lm), L[1]/(2*Lm)])
+                if sum(n_phPMT>1)>1: n_D2 +=1
+                if n_phPMT[0]>1: n_A2 +=1 
+                if n_phPMT[1]>1: n_B2 +=1 
+            # efficiency0_A2 = n_A2/m
+            # efficiency0_B2 = n_B2/m     
+            efficiency0_D2 = n_D2/m  
+        else: # asym and no sum of delayed events
+            m = len(e_quenching)
+            Lm = np.mean(L)
+            n_ph = np.random.poisson(np.asarray((e_quenching+e_quenching2)*Lm))
+            n_S = 0; n_D = 0; n_T = 0; n_AB = 0;  n_BC = 0;  n_AC = 0; n_D2 = 0; n_A2 = 0; n_B2 = 0;
+            for j in n_ph:
+                n_phPMT = np.random.multinomial(j, [L[0]/(3*Lm), L[1]/(3*Lm), L[2]/(3*Lm)])
+                if sum(n_phPMT>1)>0: n_S +=1
+                if sum(n_phPMT>1)>1: n_D +=1
+                if sum(n_phPMT>1)>2: n_T +=1
+                if n_phPMT[0]>1 and n_phPMT[1]>1: n_AB +=1 
+                if n_phPMT[1]>1 and n_phPMT[2]>1: n_BC +=1 
+                if n_phPMT[0]>1 and n_phPMT[2]>1: n_AC +=1 
+            efficiency0_S = n_S/m
+            efficiency0_T = n_T/m
+            efficiency0_D = n_D/m
+            efficiency0_AB = n_AB/m
+            efficiency0_BC = n_BC/m
+            efficiency0_AC = n_AC/m
+            for j in n_ph:
+                n_phPMT = np.random.multinomial(j, [L[0]/(2*Lm), L[1]/(2*Lm)])
+                if sum(n_phPMT>1)>1: n_D2 +=1
+                if n_phPMT[0]>1: n_A2 +=1 
+                if n_phPMT[1]>1: n_B2 +=1 
+            # efficiency0_A2 = n_A2/m
+            # efficiency0_B2 = n_B2/m     
+            efficiency0_D2 = n_D2/m
+    return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
+
+
+
 
 
 def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
