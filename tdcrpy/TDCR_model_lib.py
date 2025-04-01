@@ -60,6 +60,7 @@ def readParameters(disp=False):
     diam_micelle = config["Inputs"].getfloat("diam_micelle")
     fAq = config["Inputs"].getfloat("fAq")
     micCorr = config["Inputs"].getboolean("micCorr")
+    alphaDir = config["Inputs"].getfloat("alphaDir")
     
     if disp:
         print(f"number of integration bins for electrons = {nE_electron}")
@@ -76,13 +77,14 @@ def readParameters(disp=False):
         print(f"activation of the micelle correction = {micCorr}")
         print(f"diameter of micelle = {diam_micelle} nm")
         print(f"acqueous fraction = {fAq}")
+        print(f"alpha parameter of the hidden Dirichlet process = {alphaDir}")
         print(f"coincidence resolving time = {tau} ns")
         print(f"extended dead time = {extDT} µs")
         print(f"measurement time = {measTime} min")
     
-    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, pH,pC,pN,pO,pP,pCl
+    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, pH,pC,pN,pO,pP,pCl
 
-nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, pH,pC,pN,pO,pP,pCl = readParameters()
+nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, pH,pC,pN,pO,pP,pCl = readParameters()
 
 p_atom = np.array([pH,pC,pN,pO,pP,pCl]) # atom abondance in the scintillator
 p_atom /= sum(p_atom) 
@@ -191,6 +193,12 @@ def modifyMicCorr(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[13]
     data1 = data0.replace(f"micCorr = {x0}",f"micCorr= {x}")
+    writeConfifAsstr(data1)
+    
+def modifyAlphaDir(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[14]
+    data1 = data0.replace(f"alphaDir = {x0}",f"alphaDir = {x}")
     writeConfifAsstr(data1)
 
 def read_temp_files(copy=False, path="C:"):
@@ -3004,7 +3012,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
 
 
-def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime):
+def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, dir_param = alphaDir):
     """
     Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
 
@@ -3048,115 +3056,77 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     else:
         symm = True
     
+    alpha = 1
+    
+    if alpha < 1000:
+        dirichTD = np.random.dirichlet([alpha, alpha, alpha])
+        dirichCN = np.random.dirichlet([alpha, alpha])      
+    else:
+        dirichTD = [1/3, 1/3, 1/3]
+        dirichCN = [1/2, 1/2]
+    
+    efficiency0_S = 0;    efficiency0_T = 0;    efficiency0_D = 0
+    efficiency0_AB = 0;    efficiency0_BC = 0;    efficiency0_AC = 0
+    efficiency0_D2 = 0;
+    
     if symm:
-        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
-            m = len(e_quenching)
-            n_ph = np.random.poisson(np.asarray((e_quenching+e_quenching2)*L))
-            n_S = 0; n_D = 0; n_T = 0; n_AB = 0;  n_BC = 0;  n_AC = 0; n_D2 = 0; n_A2 = 0; n_B2 = 0;
-            for j in n_ph:
-                n_phPMT = np.random.multinomial(j, [1/3, 1/3, 1/3])
-                if sum(n_phPMT>1)>0: n_S +=1
-                if sum(n_phPMT>1)>1: n_D +=1
-                if sum(n_phPMT>1)>2: n_T +=1
-                if n_phPMT[0]>1 and n_phPMT[1]>1: n_AB +=1 
-                if n_phPMT[1]>1 and n_phPMT[2]>1: n_BC +=1 
-                if n_phPMT[0]>1 and n_phPMT[2]>1: n_AC +=1 
-            efficiency0_S = n_S/m
-            efficiency0_T = n_T/m
-            efficiency0_D = n_D/m
-            efficiency0_AB = n_AB/m
-            efficiency0_BC = n_BC/m
-            efficiency0_AC = n_AC/m
-            for j in n_ph:
-                n_phPMT = np.random.multinomial(j, [1/2, 1/2])
-                if sum(n_phPMT>1)>1: n_D2 +=1
-                if n_phPMT[0]>1: n_A2 +=1 
-                if n_phPMT[1]>1: n_B2 +=1
-            # efficiency0_A2 = n_A2/m
-            # efficiency0_B2 = n_B2/m     
-            efficiency0_D2 = n_D2/m  
-        else: # symm and no deleayed event sum
-            m = len(e_quenching)
-            n_ph = np.random.poisson(np.asarray(e_quenching*L))
-            n_S = 0; n_D = 0; n_T = 0; n_AB = 0;  n_BC = 0;  n_AC = 0; n_D2 = 0; n_A2 = 0; n_B2 = 0;
-            for j in n_ph:
-                n_phPMT = np.random.multinomial(j, [1/3, 1/3, 1/3])
-                if sum(n_phPMT>1)>0: n_S +=1
-                if sum(n_phPMT>1)>1: n_D +=1
-                if sum(n_phPMT>1)>2: n_T +=1
-                if n_phPMT[0]>1 and n_phPMT[1]>1: n_AB +=1 
-                if n_phPMT[1]>1 and n_phPMT[2]>1: n_BC +=1 
-                if n_phPMT[0]>1 and n_phPMT[2]>1: n_AC +=1 
-            efficiency0_S = n_S/m
-            efficiency0_T = n_T/m
-            efficiency0_D = n_D/m
-            efficiency0_AB = n_AB/m
-            efficiency0_BC = n_BC/m
-            efficiency0_AC = n_AC/m
-            for j in n_ph:
-                n_phPMT = np.random.multinomial(j, [1/2, 1/2])
-                if sum(n_phPMT>1)>1: n_D2 +=1
-                if n_phPMT[0]>1: n_A2 +=1 
-                if n_phPMT[1]>1: n_B2 +=1 
-            # efficiency0_A2 = n_A2/m
-            # efficiency0_B2 = n_B2/m     
-            efficiency0_D2 = n_D2/m  
+        n_ph = np.random.poisson(sum(np.asarray(e_quenching))*L)
+        # TDCR
+        n_phPMT = np.random.multinomial(n_ph, dirichTD)
+        if sum(n_phPMT>1)>0: efficiency0_S =1
+        if sum(n_phPMT>1)>1: efficiency0_D =1
+        if sum(n_phPMT>1)>2: efficiency0_T =1
+        if n_phPMT[0]>1 and n_phPMT[1]>1: efficiency0_AB =1 
+        if n_phPMT[1]>1 and n_phPMT[2]>1: efficiency0_BC =1 
+        if n_phPMT[0]>1 and n_phPMT[2]>1: efficiency0_AC =1
+        # C/N
+        n_phPMT = np.random.multinomial(n_ph, dirichCN)
+        if sum(n_phPMT>1)>1: efficiency0_D2 =1
+        
+        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:  
+            n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*L)
+            # TDCR
+            n_phPMT2 = np.random.multinomial(n_ph2, dirichTD)
+            if sum(n_phPMT2>1)>0: efficiency0_S +=1
+            if sum(n_phPMT2>1)>1: efficiency0_D +=1
+            if sum(n_phPMT2>1)>2: efficiency0_T +=1
+            if n_phPMT2[0]>1 and n_phPMT2[1]>1: efficiency0_AB +=1 
+            if n_phPMT2[1]>1 and n_phPMT2[2]>1: efficiency0_BC +=1 
+            if n_phPMT2[0]>1 and n_phPMT2[2]>1: efficiency0_AC +=1
+            # C/N
+            n_phPMT2 = np.random.multinomial(n_ph2, dirichCN)
+            if sum(n_phPMT2>1)>1: efficiency0_D2 +=1           
+            
     else: # asym
-        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60: # sum of delayed event
-            m = len(e_quenching)
-            Lm = np.mean(L)
-            n_ph = np.random.poisson(np.asarray(e_quenching+e_quenching2)*Lm)
-            n_S = 0; n_D = 0; n_T = 0; n_AB = 0;  n_BC = 0;  n_AC = 0; n_D2 = 0; n_A2 = 0; n_B2 = 0;
-            for j in n_ph:
-                n_phPMT = np.random.multinomial(j, [L[0]/(3*Lm), L[1]/(3*Lm), L[2]/(3*Lm)])
-                if sum(n_phPMT>1)>0: n_S +=1
-                if sum(n_phPMT>1)>1: n_D +=1
-                if sum(n_phPMT>1)>2: n_T +=1
-                if n_phPMT[0]>1 and n_phPMT[1]>1: n_AB +=1 
-                if n_phPMT[1]>1 and n_phPMT[2]>1: n_BC +=1 
-                if n_phPMT[0]>1 and n_phPMT[2]>1: n_AC +=1 
-            efficiency0_S = n_S/m
-            efficiency0_T = n_T/m
-            efficiency0_D = n_D/m
-            efficiency0_AB = n_AB/m
-            efficiency0_BC = n_BC/m
-            efficiency0_AC = n_AC/m
-            for j in n_ph:
-                n_phPMT = np.random.multinomial(j, [L[0]/(2*Lm), L[1]/(2*Lm)])
-                if sum(n_phPMT>1)>1: n_D2 +=1
-                if n_phPMT[0]>1: n_A2 +=1 
-                if n_phPMT[1]>1: n_B2 +=1 
-            # efficiency0_A2 = n_A2/m
-            # efficiency0_B2 = n_B2/m     
-            efficiency0_D2 = n_D2/m  
-        else: # asym and no sum of delayed events
-            m = len(e_quenching)
-            Lm = np.mean(L)
-            n_ph = np.random.poisson(np.asarray((e_quenching+e_quenching2)*Lm))
-            n_S = 0; n_D = 0; n_T = 0; n_AB = 0;  n_BC = 0;  n_AC = 0; n_D2 = 0; n_A2 = 0; n_B2 = 0;
-            for j in n_ph:
-                n_phPMT = np.random.multinomial(j, [L[0]/(3*Lm), L[1]/(3*Lm), L[2]/(3*Lm)])
-                if sum(n_phPMT>1)>0: n_S +=1
-                if sum(n_phPMT>1)>1: n_D +=1
-                if sum(n_phPMT>1)>2: n_T +=1
-                if n_phPMT[0]>1 and n_phPMT[1]>1: n_AB +=1 
-                if n_phPMT[1]>1 and n_phPMT[2]>1: n_BC +=1 
-                if n_phPMT[0]>1 and n_phPMT[2]>1: n_AC +=1 
-            efficiency0_S = n_S/m
-            efficiency0_T = n_T/m
-            efficiency0_D = n_D/m
-            efficiency0_AB = n_AB/m
-            efficiency0_BC = n_BC/m
-            efficiency0_AC = n_AC/m
-            for j in n_ph:
-                n_phPMT = np.random.multinomial(j, [L[0]/(2*Lm), L[1]/(2*Lm)])
-                if sum(n_phPMT>1)>1: n_D2 +=1
-                if n_phPMT[0]>1: n_A2 +=1 
-                if n_phPMT[1]>1: n_B2 +=1 
-            # efficiency0_A2 = n_A2/m
-            # efficiency0_B2 = n_B2/m     
-            efficiency0_D2 = n_D2/m
-    return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
+        Lm = np.mean(L)
+        n_ph = np.random.poisson(sum(np.asarray((e_quenching))*Lm))
+        # TDCR
+        n_phPMT = np.random.multinomial(n_ph, [L[0]*dirichTD[0]/Lm, L[1]*dirichTD[1]/Lm, L[2]*dirichTD[2]/Lm])
+        if sum(n_phPMT>1)>0: efficiency0_S =1
+        if sum(n_phPMT>1)>1: efficiency0_D =1
+        if sum(n_phPMT>1)>2: efficiency0_T =1
+        if n_phPMT[0]>1 and n_phPMT[1]>1: efficiency0_AB =1 
+        if n_phPMT[1]>1 and n_phPMT[2]>1: efficiency0_BC =1 
+        if n_phPMT[0]>1 and n_phPMT[2]>1: efficiency0_AC =1
+        # C/N
+        n_phPMT = np.random.multinomial(n_ph, [L[0]/(2*Lm), L[1]/(2*Lm)])
+        if sum(n_phPMT>1)>1: efficiency0_D2 =1       
+        
+        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
+            n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*Lm)
+            # TDCR
+            n_phPMT2 = np.random.multinomial(n_ph2, [L[0]*dirichCN[0]/Lm, L[1]*dirichCN[1]/Lm, L[2]*dirichCN[2]/Lm])
+            if sum(n_phPMT2>1)>0: efficiency0_S +=1
+            if sum(n_phPMT2>1)>1: efficiency0_D +=1
+            if sum(n_phPMT2>1)>2: efficiency0_T +=1
+            if n_phPMT2[0]>1 and n_phPMT2[1]>1: efficiency0_AB +=1 
+            if n_phPMT2[1]>1 and n_phPMT2[2]>1: efficiency0_BC +=1 
+            if n_phPMT2[0]>1 and n_phPMT2[2]>1: efficiency0_AC +=1
+            # C/N
+            n_phPMT2 = np.random.multinomial(n_ph2, [L[0]/(2*Lm), L[1]/(2*Lm)])
+            if sum(n_phPMT2>1)>1: efficiency0_D2 +=1   
+        
+    return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
 
 
 

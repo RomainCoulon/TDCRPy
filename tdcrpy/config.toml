@@ -31,6 +31,10 @@ diam_micelle = 2
 # acqueous fraction of the scintillator
 fAq = 0.1
 
+## OPTICAL PROPERTIES
+# Dirichlet parameter
+alphaDir = 100000
+
 ## PROPERTIES OF THE COUNTER
 # Coincidence resolving time (ns)
 tau = 50
