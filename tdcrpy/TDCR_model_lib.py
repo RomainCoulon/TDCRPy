@@ -3056,11 +3056,11 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     else:
         symm = True
     
-    alpha = 1
+    mu = 0.2
     
-    if alpha < 1000:
-        dirichTD = np.random.dirichlet([alpha, alpha, alpha])
-        dirichCN = np.random.dirichlet([alpha, alpha])      
+    if dir_param < 1000:
+        dirichTD = np.random.dirichlet([dir_param, dir_param, dir_param])
+        dirichCN = np.random.dirichlet([dir_param, dir_param])      
     else:
         dirichTD = [1/3, 1/3, 1/3]
         dirichCN = [1/2, 1/2]
@@ -3068,63 +3068,83 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     efficiency0_S = 0;    efficiency0_T = 0;    efficiency0_D = 0
     efficiency0_AB = 0;    efficiency0_BC = 0;    efficiency0_AC = 0
     efficiency0_D2 = 0;
+    n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
     
     if symm:
-        n_ph = np.random.poisson(sum(np.asarray(e_quenching))*L)
+        n_ph = np.random.poisson(sum(np.asarray(e_quenching))*L/mu)
         # TDCR
         n_phPMT = np.random.multinomial(n_ph, dirichTD)
-        if sum(n_phPMT>1)>0: efficiency0_S =1
-        if sum(n_phPMT>1)>1: efficiency0_D =1
-        if sum(n_phPMT>1)>2: efficiency0_T =1
-        if n_phPMT[0]>1 and n_phPMT[1]>1: efficiency0_AB =1 
-        if n_phPMT[1]>1 and n_phPMT[2]>1: efficiency0_BC =1 
-        if n_phPMT[0]>1 and n_phPMT[2]>1: efficiency0_AC =1
+        n_e[0]=np.random.binomial(n_phPMT[0],mu)
+        n_e[1]=np.random.binomial(n_phPMT[1],mu)
+        n_e[2]=np.random.binomial(n_phPMT[2],mu)
+        if sum(n_e>1)>0: efficiency0_S =1
+        if sum(n_e>1)>1: efficiency0_D =1
+        if sum(n_e>1)>2: efficiency0_T =1
+        if n_e[0]>1 and n_e[1]>1: efficiency0_AB =1 
+        if n_e[1]>1 and n_e[2]>1: efficiency0_BC =1 
+        if n_e[0]>1 and n_e[2]>1: efficiency0_AC =1
         # C/N
         n_phPMT = np.random.multinomial(n_ph, dirichCN)
-        if sum(n_phPMT>1)>1: efficiency0_D2 =1
+        n_eCN[0]=np.random.binomial(n_phPMT[0],mu)
+        n_eCN[1]=np.random.binomial(n_phPMT[1],mu)        
+        if sum(n_e>1)>1: efficiency0_D2 =1
         
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:  
-            n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*L)
+            n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*L/mu)
             # TDCR
             n_phPMT2 = np.random.multinomial(n_ph2, dirichTD)
-            if sum(n_phPMT2>1)>0: efficiency0_S +=1
-            if sum(n_phPMT2>1)>1: efficiency0_D +=1
-            if sum(n_phPMT2>1)>2: efficiency0_T +=1
-            if n_phPMT2[0]>1 and n_phPMT2[1]>1: efficiency0_AB +=1 
-            if n_phPMT2[1]>1 and n_phPMT2[2]>1: efficiency0_BC +=1 
-            if n_phPMT2[0]>1 and n_phPMT2[2]>1: efficiency0_AC +=1
+            n_e2[0]=np.random.binomial(n_phPMT2[0],mu)
+            n_e2[1]=np.random.binomial(n_phPMT2[1],mu)
+            n_e2[2]=np.random.binomial(n_phPMT2[2],mu)            
+            if sum(n_e2>1)>0: efficiency0_S +=1
+            if sum(n_e2>1)>1: efficiency0_D +=1
+            if sum(n_e2>1)>2: efficiency0_T +=1
+            if n_e2[0]>1 and n_e2[1]>1: efficiency0_AB +=1 
+            if n_e2[1]>1 and n_e2[2]>1: efficiency0_BC +=1 
+            if n_e2[0]>1 and n_e2[2]>1: efficiency0_AC +=1
             # C/N
             n_phPMT2 = np.random.multinomial(n_ph2, dirichCN)
-            if sum(n_phPMT2>1)>1: efficiency0_D2 +=1           
+            n_e2CN[0]=np.random.binomial(n_phPMT2[0],mu)
+            n_e2CN[1]=np.random.binomial(n_phPMT2[1],mu)            
+            if sum(n_e2CN>1)>1: efficiency0_D2 +=1           
             
     else: # asym
         Lm = np.mean(L)
-        n_ph = np.random.poisson(sum(np.asarray((e_quenching))*Lm))
+        n_ph = np.random.poisson(sum(np.asarray((e_quenching))*Lm/mu))
         # TDCR
         n_phPMT = np.random.multinomial(n_ph, [L[0]*dirichTD[0]/Lm, L[1]*dirichTD[1]/Lm, L[2]*dirichTD[2]/Lm])
-        if sum(n_phPMT>1)>0: efficiency0_S =1
-        if sum(n_phPMT>1)>1: efficiency0_D =1
-        if sum(n_phPMT>1)>2: efficiency0_T =1
-        if n_phPMT[0]>1 and n_phPMT[1]>1: efficiency0_AB =1 
-        if n_phPMT[1]>1 and n_phPMT[2]>1: efficiency0_BC =1 
-        if n_phPMT[0]>1 and n_phPMT[2]>1: efficiency0_AC =1
+        n_e[0]=np.random.binomial(n_phPMT[0],mu)
+        n_e[1]=np.random.binomial(n_phPMT[1],mu)
+        n_e[2]=np.random.binomial(n_phPMT[2],mu)
+        if sum(n_e>1)>0: efficiency0_S =1
+        if sum(n_e>1)>1: efficiency0_D =1
+        if sum(n_e>1)>2: efficiency0_T =1
+        if n_e[0]>1 and n_e[1]>1: efficiency0_AB =1 
+        if n_e[1]>1 and n_e[2]>1: efficiency0_BC =1 
+        if n_e[0]>1 and n_e[2]>1: efficiency0_AC =1
         # C/N
         n_phPMT = np.random.multinomial(n_ph, [L[0]/(2*Lm), L[1]/(2*Lm)])
-        if sum(n_phPMT>1)>1: efficiency0_D2 =1       
+        n_eCN[0]=np.random.binomial(n_phPMT[0],mu)
+        n_eCN[1]=np.random.binomial(n_phPMT[1],mu)            
+        if sum(n_eCN>1)>1: efficiency0_D2 =1       
         
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
-            n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*Lm)
+            n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*Lm/mu)
             # TDCR
             n_phPMT2 = np.random.multinomial(n_ph2, [L[0]*dirichCN[0]/Lm, L[1]*dirichCN[1]/Lm, L[2]*dirichCN[2]/Lm])
-            if sum(n_phPMT2>1)>0: efficiency0_S +=1
-            if sum(n_phPMT2>1)>1: efficiency0_D +=1
-            if sum(n_phPMT2>1)>2: efficiency0_T +=1
-            if n_phPMT2[0]>1 and n_phPMT2[1]>1: efficiency0_AB +=1 
-            if n_phPMT2[1]>1 and n_phPMT2[2]>1: efficiency0_BC +=1 
-            if n_phPMT2[0]>1 and n_phPMT2[2]>1: efficiency0_AC +=1
+            n_e2[0]=np.random.binomial(n_phPMT2[0],mu)
+            n_e2[1]=np.random.binomial(n_phPMT2[1],mu)
+            n_e2[2]=np.random.binomial(n_phPMT2[2],mu)     
+            if sum(n_e2>1)>0: efficiency0_S +=1
+            if sum(n_e2>1)>1: efficiency0_D +=1
+            if sum(n_e2>1)>2: efficiency0_T +=1
+            if n_e2[0]>1 and n_e2[1]>1: efficiency0_AB +=1 
+            if n_e2[1]>1 and n_e2[2]>1: efficiency0_BC +=1 
+            if n_e2[0]>1 and n_e2[2]>1: efficiency0_AC +=1
             # C/N
-            n_phPMT2 = np.random.multinomial(n_ph2, [L[0]/(2*Lm), L[1]/(2*Lm)])
-            if sum(n_phPMT2>1)>1: efficiency0_D2 +=1   
+            n_e2CN[0]=np.random.binomial(n_phPMT2[0],mu)
+            n_e2CN[1]=np.random.binomial(n_phPMT2[1],mu)            
+            if sum(n_e2CN>1)>1: efficiency0_D2 +=1  
         
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
 
