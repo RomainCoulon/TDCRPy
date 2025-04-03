@@ -34,6 +34,8 @@ fAq = 0.1
 ## OPTICAL PROPERTIES
 # Dirichlet parameter
 alphaDir = 100000
+# Quantum efficiency
+effQuantum = 0.25
 
 ## PROPERTIES OF THE COUNTER
 # Coincidence resolving time (ns)

@@ -61,6 +61,7 @@ def readParameters(disp=False):
     fAq = config["Inputs"].getfloat("fAq")
     micCorr = config["Inputs"].getboolean("micCorr")
     alphaDir = config["Inputs"].getfloat("alphaDir")
+    effQuantic = config["Inputs"].getfloat("effQuantum")
     
     if disp:
         print(f"number of integration bins for electrons = {nE_electron}")
@@ -78,13 +79,14 @@ def readParameters(disp=False):
         print(f"diameter of micelle = {diam_micelle} nm")
         print(f"acqueous fraction = {fAq}")
         print(f"alpha parameter of the hidden Dirichlet process = {alphaDir}")
+        print(f"quantum efficiency of the photocathodes = {effQuantic}")
         print(f"coincidence resolving time = {tau} ns")
         print(f"extended dead time = {extDT} µs")
         print(f"measurement time = {measTime} min")
     
-    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, pH,pC,pN,pO,pP,pCl
+    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, pH,pC,pN,pO,pP,pCl
 
-nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, pH,pC,pN,pO,pP,pCl = readParameters()
+nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, pH,pC,pN,pO,pP,pCl = readParameters()
 
 p_atom = np.array([pH,pC,pN,pO,pP,pCl]) # atom abondance in the scintillator
 p_atom /= sum(p_atom) 
@@ -199,6 +201,12 @@ def modifyAlphaDir(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[14]
     data1 = data0.replace(f"alphaDir = {x0}",f"alphaDir = {x}")
+    writeConfifAsstr(data1)
+    
+def modifyEffQ(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[15]
+    data1 = data0.replace(f"effQuantum = {x0}",f"effQuantum = {x}")
     writeConfifAsstr(data1)
 
 def read_temp_files(copy=False, path="C:"):
@@ -3012,7 +3020,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
 
 
-def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, dir_param = alphaDir):
+def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, dir_param = alphaDir, effQuantic = effQuantic):
     """
     Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
 
@@ -3056,7 +3064,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     else:
         symm = True
     
-    mu = 0.2
+    mu = effQuantic
     
     if dir_param < 1000:
         dirichTD = np.random.dirichlet([dir_param, dir_param, dir_param])
