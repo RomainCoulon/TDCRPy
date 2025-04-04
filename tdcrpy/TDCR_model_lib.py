@@ -62,7 +62,7 @@ def readParameters(disp=False):
     micCorr = config["Inputs"].getboolean("micCorr")
     alphaDir = config["Inputs"].getfloat("alphaDir")
     effQuantic = config["Inputs"].getfloat("effQuantum")
-    optionModel = config["Inputs"].getfloat("optionModel")
+    optionModel = config["Inputs"].get("optionModel")
     
     if disp:
         print(f"number of integration bins for electrons = {nE_electron}")
