@@ -62,6 +62,7 @@ def readParameters(disp=False):
     micCorr = config["Inputs"].getboolean("micCorr")
     alphaDir = config["Inputs"].getfloat("alphaDir")
     effQuantic = config["Inputs"].getfloat("effQuantum")
+    optionModel = config["Inputs"].getfloat("optionModel")
     
     if disp:
         print(f"number of integration bins for electrons = {nE_electron}")
@@ -80,13 +81,14 @@ def readParameters(disp=False):
         print(f"acqueous fraction = {fAq}")
         print(f"alpha parameter of the hidden Dirichlet process = {alphaDir}")
         print(f"quantum efficiency of the photocathodes = {effQuantic}")
+        print(f"Monte Carlo model of the optics = {optionModel}")
         print(f"coincidence resolving time = {tau} ns")
         print(f"extended dead time = {extDT} µs")
         print(f"measurement time = {measTime} min")
     
-    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, pH,pC,pN,pO,pP,pCl
+    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, optionModel, pH,pC,pN,pO,pP,pCl
 
-nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, pH,pC,pN,pO,pP,pCl = readParameters()
+nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, optionModel, pH,pC,pN,pO,pP,pCl = readParameters()
 
 p_atom = np.array([pH,pC,pN,pO,pP,pCl]) # atom abondance in the scintillator
 p_atom /= sum(p_atom) 
@@ -207,6 +209,12 @@ def modifyEffQ(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[15]
     data1 = data0.replace(f"effQuantum = {x0}",f"effQuantum = {x}")
+    writeConfifAsstr(data1)
+
+def modifyOptModel(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[16]
+    data1 = data0.replace(f"optionModel = {x0}",f"optionModel = {x}")
     writeConfifAsstr(data1)
 
 def read_temp_files(copy=False, path="C:"):
@@ -3020,7 +3028,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
 
 
-def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, dir_param = alphaDir, effQuantic = effQuantic):
+def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, dir_param = alphaDir, effQuantic = effQuantic, optionModel=optionModel):
     """
     Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
 
@@ -3079,79 +3087,121 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
     
     if symm:
-        n_ph = np.random.poisson(sum(np.asarray(e_quenching))*L/mu)
-        # TDCR
-        n_phPMT = np.random.multinomial(n_ph, dirichTD)
-        n_e[0]=np.random.binomial(n_phPMT[0],mu)
-        n_e[1]=np.random.binomial(n_phPMT[1],mu)
-        n_e[2]=np.random.binomial(n_phPMT[2],mu)
+        if optionModel == "poisson-multinomial-binomial":
+            n_ph = np.random.poisson(sum(np.asarray(e_quenching))*L/mu)
+            # TDCR
+            n_phPMT = np.random.multinomial(n_ph, dirichTD)
+            n_e[0]=np.random.binomial(n_phPMT[0],mu)
+            n_e[1]=np.random.binomial(n_phPMT[1],mu)
+            n_e[2]=np.random.binomial(n_phPMT[2],mu)
+            # C/N
+            n_phPMTCN = np.random.multinomial(n_ph, dirichCN)
+            n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu)
+            n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu)
+        elif optionModel == "poisson":
+            n_e[0] = np.random.poisson(sum(np.asarray(e_quenching))*L*mu*dirichTD[0])
+            n_e[1] = np.random.poisson(sum(np.asarray(e_quenching))*L*mu*dirichTD[1])
+            n_e[2] = np.random.poisson(sum(np.asarray(e_quenching))*L*mu*dirichTD[2])
+            n_eCN[0] = np.random.poisson(sum(np.asarray(e_quenching))*L*mu*dirichCN[0])
+            n_eCN[1] = np.random.poisson(sum(np.asarray(e_quenching))*L*mu*dirichCN[1])           
+        else:
+            print("unknown model")        
+                
         if sum(n_e>1)>0: efficiency0_S =1
         if sum(n_e>1)>1: efficiency0_D =1
         if sum(n_e>1)>2: efficiency0_T =1
         if n_e[0]>1 and n_e[1]>1: efficiency0_AB =1 
         if n_e[1]>1 and n_e[2]>1: efficiency0_BC =1 
         if n_e[0]>1 and n_e[2]>1: efficiency0_AC =1
-        # C/N
-        n_phPMT = np.random.multinomial(n_ph, dirichCN)
-        n_eCN[0]=np.random.binomial(n_phPMT[0],mu)
-        n_eCN[1]=np.random.binomial(n_phPMT[1],mu)        
-        if sum(n_e>1)>1: efficiency0_D2 =1
+        if sum(n_eCN>1)>1: efficiency0_D2 =1
         
-        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:  
-            n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*L/mu)
-            # TDCR
-            n_phPMT2 = np.random.multinomial(n_ph2, dirichTD)
-            n_e2[0]=np.random.binomial(n_phPMT2[0],mu)
-            n_e2[1]=np.random.binomial(n_phPMT2[1],mu)
-            n_e2[2]=np.random.binomial(n_phPMT2[2],mu)            
+        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
+            if optionModel == "poisson-multinomial-binomial":
+                n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*L/mu)
+                # TDCR
+                n_phPMT2 = np.random.multinomial(n_ph2, dirichTD)
+                n_e2[0]=np.random.binomial(n_phPMT2[0],mu)
+                n_e2[1]=np.random.binomial(n_phPMT2[1],mu)
+                n_e2[2]=np.random.binomial(n_phPMT2[2],mu)            
+                # C/N
+                n_phPMT2CN = np.random.multinomial(n_ph2, dirichCN)
+                n_e2CN[0]=np.random.binomial(n_phPMT2CN[0],mu)
+                n_e2CN[1]=np.random.binomial(n_phPMT2CN[1],mu)
+            elif optionModel == "poisson":
+                n_e2[0] = np.random.poisson(sum(np.asarray(e_quenching2))*L*mu*dirichTD[0])
+                n_e2[1] = np.random.poisson(sum(np.asarray(e_quenching2))*L*mu*dirichTD[1])
+                n_e2[2] = np.random.poisson(sum(np.asarray(e_quenching2))*L*mu*dirichTD[2])
+                n_e2CN[0] = np.random.poisson(sum(np.asarray(e_quenching2))*L*mu*dirichCN[0])
+                n_e2CN[1] = np.random.poisson(sum(np.asarray(e_quenching2))*L*mu*dirichCN[1])           
+            else:
+                print("unknown model")        
+            
+                
             if sum(n_e2>1)>0: efficiency0_S +=1
             if sum(n_e2>1)>1: efficiency0_D +=1
             if sum(n_e2>1)>2: efficiency0_T +=1
             if n_e2[0]>1 and n_e2[1]>1: efficiency0_AB +=1 
             if n_e2[1]>1 and n_e2[2]>1: efficiency0_BC +=1 
             if n_e2[0]>1 and n_e2[2]>1: efficiency0_AC +=1
-            # C/N
-            n_phPMT2 = np.random.multinomial(n_ph2, dirichCN)
-            n_e2CN[0]=np.random.binomial(n_phPMT2[0],mu)
-            n_e2CN[1]=np.random.binomial(n_phPMT2[1],mu)            
             if sum(n_e2CN>1)>1: efficiency0_D2 +=1           
             
     else: # asym
-        Lm = np.mean(L)
-        n_ph = np.random.poisson(sum(np.asarray((e_quenching))*Lm/mu))
-        # TDCR
-        n_phPMT = np.random.multinomial(n_ph, [L[0]*dirichTD[0]/Lm, L[1]*dirichTD[1]/Lm, L[2]*dirichTD[2]/Lm])
-        n_e[0]=np.random.binomial(n_phPMT[0],mu)
-        n_e[1]=np.random.binomial(n_phPMT[1],mu)
-        n_e[2]=np.random.binomial(n_phPMT[2],mu)
+        if optionModel == "poisson-multinomial-binomial":
+            Lm = np.mean(L)
+            n_ph = np.random.poisson(sum(np.asarray((e_quenching))*Lm/mu))
+            # TDCR
+            n_phPMT = np.random.multinomial(n_ph, [L[0]*dirichTD[0]/Lm, L[1]*dirichTD[1]/Lm, L[2]*dirichTD[2]/Lm])
+            n_e[0]=np.random.binomial(n_phPMT[0],mu)
+            n_e[1]=np.random.binomial(n_phPMT[1],mu)
+            n_e[2]=np.random.binomial(n_phPMT[2],mu)
+            # C/N
+            n_phPMTCN = np.random.multinomial(n_ph, [L[0]/(2*Lm), L[1]/(2*Lm)])
+            n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu)
+            n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu)
+        elif optionModel == "poisson":
+            n_e[0] = np.random.poisson(sum(np.asarray(e_quenching))*L[0]*mu*dirichTD[0])
+            n_e[1] = np.random.poisson(sum(np.asarray(e_quenching))*L[1]*mu*dirichTD[1])
+            n_e[2] = np.random.poisson(sum(np.asarray(e_quenching))*L[2]*mu*dirichTD[2])
+            n_eCN[0] = np.random.poisson(sum(np.asarray(e_quenching))*L[0]*mu*dirichCN[0])
+            n_eCN[1] = np.random.poisson(sum(np.asarray(e_quenching))*L[1]*mu*dirichCN[1])           
+        else:
+            print("unknown model")        
+            
         if sum(n_e>1)>0: efficiency0_S =1
         if sum(n_e>1)>1: efficiency0_D =1
         if sum(n_e>1)>2: efficiency0_T =1
         if n_e[0]>1 and n_e[1]>1: efficiency0_AB =1 
         if n_e[1]>1 and n_e[2]>1: efficiency0_BC =1 
         if n_e[0]>1 and n_e[2]>1: efficiency0_AC =1
-        # C/N
-        n_phPMT = np.random.multinomial(n_ph, [L[0]/(2*Lm), L[1]/(2*Lm)])
-        n_eCN[0]=np.random.binomial(n_phPMT[0],mu)
-        n_eCN[1]=np.random.binomial(n_phPMT[1],mu)            
         if sum(n_eCN>1)>1: efficiency0_D2 =1       
         
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
-            n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*Lm/mu)
-            # TDCR
-            n_phPMT2 = np.random.multinomial(n_ph2, [L[0]*dirichCN[0]/Lm, L[1]*dirichCN[1]/Lm, L[2]*dirichCN[2]/Lm])
-            n_e2[0]=np.random.binomial(n_phPMT2[0],mu)
-            n_e2[1]=np.random.binomial(n_phPMT2[1],mu)
-            n_e2[2]=np.random.binomial(n_phPMT2[2],mu)     
+            if optionModel == "poisson-multinomial-binomial":
+                n_ph2 = np.random.poisson(sum(np.asarray(e_quenching2))*Lm/mu)
+                # TDCR
+                n_phPMT2 = np.random.multinomial(n_ph2, [L[0]*dirichCN[0]/Lm, L[1]*dirichCN[1]/Lm, L[2]*dirichCN[2]/Lm])
+                n_e2[0]=np.random.binomial(n_phPMT2[0],mu)
+                n_e2[1]=np.random.binomial(n_phPMT2[1],mu)
+                n_e2[2]=np.random.binomial(n_phPMT2[2],mu)
+                # C/N
+                n_phPMT2CN = np.random.multinomial(n_ph2, [L[0]/(2*Lm), L[1]/(2*Lm)])
+                n_e2CN[0]=np.random.binomial(n_phPMT2CN[0],mu)
+                n_e2CN[1]=np.random.binomial(n_phPMT2CN[1],mu)
+            elif optionModel == "poisson":
+                n_e2[0] = np.random.poisson(sum(np.asarray(e_quenching2))*L[0]*mu*dirichTD[0])
+                n_e2[1] = np.random.poisson(sum(np.asarray(e_quenching2))*L[1]*mu*dirichTD[1])
+                n_e2[2] = np.random.poisson(sum(np.asarray(e_quenching2))*L[2]*mu*dirichTD[2])
+                n_e2CN[0] = np.random.poisson(sum(np.asarray(e_quenching2))*L[0]*mu*dirichCN[0])
+                n_e2CN[1] = np.random.poisson(sum(np.asarray(e_quenching2))*L[1]*mu*dirichCN[1])           
+            else:
+                print("unknown model")   
+                
             if sum(n_e2>1)>0: efficiency0_S +=1
             if sum(n_e2>1)>1: efficiency0_D +=1
             if sum(n_e2>1)>2: efficiency0_T +=1
             if n_e2[0]>1 and n_e2[1]>1: efficiency0_AB +=1 
             if n_e2[1]>1 and n_e2[2]>1: efficiency0_BC +=1 
             if n_e2[0]>1 and n_e2[2]>1: efficiency0_AC +=1
-            # C/N
-            n_e2CN[0]=np.random.binomial(n_phPMT2[0],mu)
-            n_e2CN[1]=np.random.binomial(n_phPMT2[1],mu)            
             if sum(n_e2CN>1)>1: efficiency0_D2 +=1  
         
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
