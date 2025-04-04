@@ -35,7 +35,7 @@ fAq = 0.1
 # Dirichlet parameter
 alphaDir = 100000
 # Quantum efficiency
-effQuantum = 0.25
+effQuantum = 0.25, 0.25, 0.25
 # Optical MC model
 optionModel = poisson-multinomial-binomial
 
