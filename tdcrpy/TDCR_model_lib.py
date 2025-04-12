@@ -3071,11 +3071,6 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         detection probability of coincidences in a C/N system.
 
     """
-    if isinstance(L, (tuple, list)):
-        symm = False
-    else:
-        symm = True
-    
     mu = effQuantic
     
     if dir_param < 1000:
@@ -3089,7 +3084,8 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         L = [L, L, L]
     
     def PMBmodel(e_q, dirichTD, dirichCN, L, mu):
-        n_ph = np.random.poisson(sum(np.asarray(e_quenching))*np.mean(L)/np.mean(mu))
+        n_e=np.zeros(3); n_eCN=np.zeros(2)
+        n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)/np.mean(mu))
         # TDCR
         n_phPMT = np.random.multinomial(n_ph, dirichTD)
         n_e[0]=np.random.binomial(n_phPMT[0],mu[0])
@@ -3102,26 +3098,37 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         return n_e, n_eCN
     
     def Pmodel(e_q, dirichTD, dirichCN, L, mu):
-        n_e[0] = np.random.poisson(sum(np.asarray(e_quenching))*L[0]*mu[0]*dirichTD[0])
-        n_e[1] = np.random.poisson(sum(np.asarray(e_quenching))*L[1]*mu[1]*dirichTD[1])
-        n_e[2] = np.random.poisson(sum(np.asarray(e_quenching))*L[2]*mu[2]*dirichTD[2])
-        n_eCN[0] = np.random.poisson(sum(np.asarray(e_quenching))*L[0]*mu[0]*dirichCN[0])
-        n_eCN[1] = np.random.poisson(sum(np.asarray(e_quenching))*L[1]*mu[1]*dirichCN[1])
+        n_e=np.zeros(3); n_eCN=np.zeros(2)
+        n_e[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*dirichTD[0])
+        n_e[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*dirichTD[1])
+        n_e[2] = np.random.poisson(sum(np.asarray(e_q))*L[2]*mu[2]*dirichTD[2])
+        n_eCN[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*dirichCN[0])
+        n_eCN[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*dirichCN[1])
         return n_e, n_eCN
     
     def EPmodel(e_q, dirichTD, dirichCN, L, mu):
-        n_e[0] = sum(np.asarray(e_quenching))*L[0]*mu[0]*dirichTD[0]
-        n_e[1] = sum(np.asarray(e_quenching))*L[1]*mu[1]*dirichTD[1]
-        n_e[2] = sum(np.asarray(e_quenching))*L[2]*mu[2]*dirichTD[2]
-        n_eCN[0] = sum(np.asarray(e_quenching))*L[0]*mu[0]*dirichCN[0]
-        n_eCN[1] = sum(np.asarray(e_quenching))*L[1]*mu[1]*dirichCN[1]
-        return n_e, n_eCN    
+        n_e=np.zeros(3); n_eCN=np.zeros(2)
+        n_e[0] = sum(np.asarray(e_q))*L[0]*mu[0]*dirichTD[0]
+        n_e[1] = sum(np.asarray(e_q))*L[1]*mu[1]*dirichTD[1]
+        n_e[2] = sum(np.asarray(e_q))*L[2]*mu[2]*dirichTD[2]
+        n_eCN[0] = sum(np.asarray(e_q))*L[0]*mu[0]*dirichCN[0]
+        n_eCN[1] = sum(np.asarray(e_q))*L[1]*mu[1]*dirichCN[1]
+        return n_e, n_eCN
+    
+    # def Amodel(e_q, dirichTD, dirichCN, L, mu):
+    #     n_e=np.zeros(3); n_eCN=np.zeros(2)
+    #     n_e[0] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
+    #     n_e[1] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
+    #     n_e[2] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
+    #     n_eCN[0] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
+    #     n_eCN[1] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
+    #     return n_e, n_eCN  
     
     
     efficiency0_S = 0;    efficiency0_T = 0;    efficiency0_D = 0
     efficiency0_AB = 0;    efficiency0_BC = 0;    efficiency0_AC = 0
     efficiency0_D2 = 0;
-    n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
+    # n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
 
     if optionModel == "poisson-multinomial-binomial":
         n_e, n_eCN = PMBmodel(e_quenching, dirichTD, dirichCN, L, mu)
@@ -3132,12 +3139,12 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     else:
         print("unknown model")        
             
-    if sum(n_e>1)>0: efficiency0_S =1
-    if sum(n_e>1)>1: efficiency0_D =1
-    if sum(n_e>1)>2: efficiency0_T =1
-    if n_e[0]>1 and n_e[1]>1: efficiency0_AB =1 
-    if n_e[1]>1 and n_e[2]>1: efficiency0_BC =1 
-    if n_e[0]>1 and n_e[2]>1: efficiency0_AC =1
+    if sum(n_e>0)>0: efficiency0_S =1
+    if sum(n_e>0)>1: efficiency0_D =1
+    if sum(n_e>0)>2: efficiency0_T =1
+    if n_e[0]>0 and n_e[1]>0: efficiency0_AB =1 
+    if n_e[1]>0 and n_e[2]>0: efficiency0_BC =1 
+    if n_e[0]>0 and n_e[2]>0: efficiency0_AC =1
     if sum(n_eCN>1)>1: efficiency0_D2 =1
     
     if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
@@ -3150,12 +3157,12 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         else:
             print("unknown model")        
         
-        if sum(n_e2>1)>0: efficiency0_S +=1
-        if sum(n_e2>1)>1: efficiency0_D +=1
-        if sum(n_e2>1)>2: efficiency0_T +=1
-        if n_e2[0]>1 and n_e2[1]>1: efficiency0_AB +=1 
-        if n_e2[1]>1 and n_e2[2]>1: efficiency0_BC +=1 
-        if n_e2[0]>1 and n_e2[2]>1: efficiency0_AC +=1
+        if sum(n_e2>0)>0: efficiency0_S +=1
+        if sum(n_e2>0)>1: efficiency0_D +=1
+        if sum(n_e2>0)>2: efficiency0_T +=1
+        if n_e2[0]>0 and n_e2[1]>0: efficiency0_AB +=1 
+        if n_e2[1]>0 and n_e2[2]>0: efficiency0_BC +=1 
+        if n_e2[0]>0 and n_e2[2]>0: efficiency0_AC +=1
         if sum(n_e2CN>1)>1: efficiency0_D2 +=1           
                     
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
