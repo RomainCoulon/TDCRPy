@@ -3270,10 +3270,6 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
                     
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
 
-
-print(detectProbabilitiesMC(1, 10, 0, 0, "electron", 50, 1000000, dir_param = alphaDir, effQuantic = effQuantic, optionModel=optionModel, diffP = diffP, PMTspace = PMTspace))
-
-
 def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
     """
     Calculate detection efficiencies from list of detection probabilities per decays.
