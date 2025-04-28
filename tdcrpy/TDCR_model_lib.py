@@ -3229,9 +3229,10 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     efficiency0_AB = 0;    efficiency0_BC = 0;    efficiency0_AC = 0
     efficiency0_D2 = 0;
     # n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
-
-    if optionModel == "poisson-multinomial-binomial":
+    if optionModel == "stochastic-dependence":
         n_e, n_eCN = stochasOpticModel(e_quenching, L, mu)
+    if optionModel == "poisson-multinomial-binomial":
+        n_e, n_eCN = PMBmodel(e_quenching, dirichTD, dirichCN, L, mu)
     elif optionModel == "poisson":
         n_e, n_eCN = Pmodel(e_quenching, dirichTD, dirichCN, L, mu)
     elif optionModel == "expectation":
@@ -3249,7 +3250,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     
     if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
         if optionModel == "stochastic-dependence":
-            n_e2, n_e2CN = PMBmodel(e_quenching2, dirichTD, dirichCN, L, mu)
+            n_e2, n_e2CN = stochasOpticModel(e_quenching2, L, mu)
         elif optionModel == "poisson-multinomial-binomial":
             n_e2, n_e2CN = PMBmodel(e_quenching2, dirichTD, dirichCN, L, mu)
         elif optionModel == "poisson":
@@ -3270,7 +3271,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
 
 
-
+print(detectProbabilitiesMC(1, 10, 0, 0, "electron", 50, 1000000, dir_param = alphaDir, effQuantic = effQuantic, optionModel=optionModel, diffP = diffP, PMTspace = PMTspace))
 
 
 def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
