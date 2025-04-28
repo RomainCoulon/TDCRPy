@@ -39,7 +39,7 @@ effQuantum = 0.25, 0.25, 0.25
 # Optical MC model
 optionModel = stochastic-dependence
 # fraction of diffused scintillation photons
-diffP = 1
+diffP = 1.0
 # relative distance from vials border to PMT entrance
 PMTspace = 0.1
 

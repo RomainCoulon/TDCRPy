@@ -229,13 +229,13 @@ def modifyOptModel(x):
 def modifyDiffP(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[17]
-    data1 = data0.replace(f"diffP = {x0}",f"diffP = {x}")
+    data1 = data0.replace(f"diffP = {x0:.1f}",f"diffP = {x:.1f}")
     writeConfifAsstr(data1)
 
 def modifyPMTspace(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[18]
-    data1 = data0.replace(f"PMTspace = {x0}",f"PMTspace = {x}")
+    data1 = data0.replace(f"PMTspace = {x0:.1f}",f"PMTspace = {x:.1f}")
     writeConfifAsstr(data1)
 
 def read_temp_files(copy=False, path="C:"):
