@@ -3164,7 +3164,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     if type(L) == float:
         L = [L, L, L]
     
-    def stochasOpticModel(e_q, dirichTD, dirichCN, L, mu):
+    def stochasOpticModel(e_q, L, mu):
         n_e=np.zeros(3); n_eCN=np.zeros(2)
         n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)/np.mean(mu))
         
@@ -3231,7 +3231,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     # n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
 
     if optionModel == "poisson-multinomial-binomial":
-        n_e, n_eCN = PMBmodel(e_quenching, dirichTD, dirichCN, L, mu)
+        n_e, n_eCN = stochasOpticModel(e_quenching, L, mu)
     elif optionModel == "poisson":
         n_e, n_eCN = Pmodel(e_quenching, dirichTD, dirichCN, L, mu)
     elif optionModel == "expectation":
