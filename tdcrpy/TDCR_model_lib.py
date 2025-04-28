@@ -3231,7 +3231,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     # n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
     if optionModel == "stochastic-dependence":
         n_e, n_eCN = stochasOpticModel(e_quenching, L, mu)
-    if optionModel == "poisson-multinomial-binomial":
+    elif optionModel == "PMBmodel":
         n_e, n_eCN = PMBmodel(e_quenching, dirichTD, dirichCN, L, mu)
     elif optionModel == "poisson":
         n_e, n_eCN = Pmodel(e_quenching, dirichTD, dirichCN, L, mu)
@@ -3251,7 +3251,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
         if optionModel == "stochastic-dependence":
             n_e2, n_e2CN = stochasOpticModel(e_quenching2, L, mu)
-        elif optionModel == "poisson-multinomial-binomial":
+        elif optionModel == "PMBmodel":
             n_e2, n_e2CN = PMBmodel(e_quenching2, dirichTD, dirichCN, L, mu)
         elif optionModel == "poisson":
             n_e2, n_e2CN = Pmodel(e_quenching2, dirichTD, dirichCN, L, mu) 
