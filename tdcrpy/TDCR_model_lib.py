@@ -2942,7 +2942,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
          
         
     if symm:
-        # print(evenement !=1, t1 > extDT*1e-6, t1 < measTime*60)
+        
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
             # TDCR
             p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
@@ -3102,7 +3102,7 @@ def stochasticDepCN(diffP, PMTspace):
         return angle_deg
     
     x, y = simulate_photon_groups()
-    print(x,y)
+
     if np.random.randint(0, high=2)==0:
         pa=(1-diffP)*calculate_angle([x, y])/360+diffP/2
         pb=1-pa
