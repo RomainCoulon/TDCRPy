@@ -24,6 +24,7 @@ import scipy.interpolate as  interp
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import tempfile
+import math
 
 """
 ======= Import ressource data =======
@@ -67,6 +68,8 @@ def readParameters(disp=False):
         iS=iS.replace(" ","")
         if iS != 'None':  effQuantic[i]=float(iS)
     optionModel = config["Inputs"].get("optionModel")
+    diffP = config["Inputs"].getfloat("diffP")
+    PMTspace = config["Inputs"].getfloat("PMTspace")
     
     if disp:
         print(f"number of integration bins for electrons = {nE_electron}")
@@ -86,13 +89,15 @@ def readParameters(disp=False):
         print(f"alpha parameter of the hidden Dirichlet process = {alphaDir}")
         print(f"quantum efficiency of the photocathodes = {effQuantic}")
         print(f"Monte Carlo model of the optics = {optionModel}")
+        print(f"fraction of diffused scintillation photons = {diffP*100:.1f} %")
+        print(f"relative distance from vials border to PMT entrance = {PMTspace*100:.1f} %")
         print(f"coincidence resolving time = {tau} ns")
         print(f"extended dead time = {extDT} µs")
         print(f"measurement time = {measTime} min")
     
-    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, optionModel, pH,pC,pN,pO,pP,pCl
+    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, optionModel, diffP, PMTspace, pH,pC,pN,pO,pP,pCl
 
-nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, optionModel, pH,pC,pN,pO,pP,pCl = readParameters()
+nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, optionModel, diffP, PMTspace, pH,pC,pN,pO,pP,pCl = readParameters()
 
 p_atom = np.array([pH,pC,pN,pO,pP,pCl]) # atom abondance in the scintillator
 p_atom /= sum(p_atom) 
@@ -219,6 +224,18 @@ def modifyOptModel(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[16]
     data1 = data0.replace(f"optionModel = {x0}",f"optionModel = {x}")
+    writeConfifAsstr(data1)
+
+def modifyDiffP(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[17]
+    data1 = data0.replace(f"diffP = {x0}",f"diffP = {x}")
+    writeConfifAsstr(data1)
+
+def modifyPMTspace(x):
+    data0 = readConfigAsstr()
+    x0 = readParameters()[18]
+    data1 = data0.replace(f"PMTspace = {x0}",f"PMTspace = {x}")
     writeConfifAsstr(data1)
 
 def read_temp_files(copy=False, path="C:"):
@@ -3032,7 +3049,71 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
 
 
-def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, dir_param = alphaDir, effQuantic = effQuantic, optionModel=optionModel):
+def stochasticDepTD(diffP, PMTspace):
+    detA = np.array([[2*(1+PMTspace), 0], [-(1+PMTspace), np.sqrt(3)*(1+PMTspace)]])
+    detB = np.array([[-(1+PMTspace), np.sqrt(3)*(1+PMTspace)], [-(1+PMTspace), -np.sqrt(3)*(1+PMTspace)]])
+    detC = np.array([[-(1+PMTspace), -np.sqrt(3)*(1+PMTspace)], [2*(1+PMTspace), 0]])
+
+    def simulate_photon_groups():
+        rho = 1 * np.sqrt(np.random.uniform(0, 1, 1))  # Radial distance
+        theta = np.random.uniform(0, 2 * np.pi, 1)     # Angular position
+        x = rho * np.cos(theta)
+        y = rho * np.sin(theta)
+        return x, y
+
+    def calculate_angle(O, det):
+        A=det[0]
+        B=det[1]
+        OA = (A[0] - O[0], A[1] - O[1]) # Vecteurs OA et OB
+        OB = (B[0] - O[0], B[1] - O[1])
+        dot_product = OA[0] * OB[0] + OA[1] * OB[1] # Produit scalaire OA . OB
+        norm_OA = math.sqrt((OA[0]**2 + OA[1]**2)[0]) # Normes des vecteurs OA et OB
+        norm_OB = math.sqrt((OB[0]**2 + OB[1]**2)[0])
+        cos_angle = dot_product / (norm_OA * norm_OB) # Cosinus de l'angle
+        angle_rad = math.acos(cos_angle[0]) # Angle en radians
+        angle_deg = math.degrees(angle_rad) # Convertir en degrés
+        return angle_deg
+
+    x, y = simulate_photon_groups()
+
+    pa=(1-diffP)*calculate_angle([x, y], detA)/360+diffP/3
+    pb=(1-diffP)*calculate_angle([x, y], detB)/360+diffP/3
+    pc=(1-diffP)*calculate_angle([x, y], detC)/360+diffP/3
+        
+    return pa, pb, pc
+
+def stochasticDepCN(diffP, PMTspace):
+    def simulate_photon_groups():
+        rho = 1 * np.sqrt(np.random.uniform(0, 1, 1))  # Radial distance
+        theta = np.random.uniform(0, 2 * np.pi, 1)     # Angular position
+        x = rho * np.cos(theta)
+        y = rho * np.sin(theta)
+        return x, y
+    
+    def calculate_angle(O):
+        OA = (-1-PMTspace - O[0], 0 - O[1]) # Vecteurs OA et OB
+        OB = (1+PMTspace - O[0], 0 - O[1])
+        dot_product = OA[0] * OB[0] + OA[1] * OB[1] # Produit scalaire OA . OB
+        norm_OA = math.sqrt((OA[0]**2 + OA[1]**2)[0]) # Normes des vecteurs OA et OB
+        norm_OB = math.sqrt((OB[0]**2 + OB[1]**2)[0])
+        cos_angle = dot_product / (norm_OA * norm_OB) # Cosinus de l'angle
+        angle_rad = math.acos(cos_angle[0]) # Angle en radians
+        angle_deg = math.degrees(angle_rad) # Convertir en degrés
+        return angle_deg
+    
+    x, y = simulate_photon_groups()
+    print(x,y)
+    if np.random.randint(0, high=2)==0:
+        pa=(1-diffP)*calculate_angle([x, y])/360+diffP/2
+        pb=1-pa
+    else:
+        pb=(1-diffP)*calculate_angle([x, y])/360+diffP/2
+        pa=1-pb        
+        
+    return pa, pb
+    
+
+def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, dir_param = alphaDir, effQuantic = effQuantic, optionModel=optionModel, diffP = diffP, PMTspace = PMTspace):
     """
     Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
 
@@ -3082,6 +3163,25 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     
     if type(L) == float:
         L = [L, L, L]
+    
+    def stochasOpticModel(e_q, dirichTD, dirichCN, L, mu):
+        n_e=np.zeros(3); n_eCN=np.zeros(2)
+        n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)/np.mean(mu))
+        
+        diffP = 0
+        PMTspace = 0.1
+        pTD = stochasticDepTD(diffP, PMTspace)
+        pCN = stochasticDepCN(diffP, PMTspace)
+        # TDCR
+        n_phPMT = np.random.multinomial(n_ph, pTD)
+        n_e[0]=np.random.binomial(n_phPMT[0],mu[0])
+        n_e[1]=np.random.binomial(n_phPMT[1],mu[0])
+        n_e[2]=np.random.binomial(n_phPMT[2],mu[0])
+        # C/N
+        n_phPMTCN = np.random.multinomial(n_ph, pCN)
+        n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu[0])
+        n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu[0])
+        return n_e, n_eCN        
     
     def PMBmodel(e_q, dirichTD, dirichCN, L, mu):
         n_e=np.zeros(3); n_eCN=np.zeros(2)
@@ -3148,7 +3248,9 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     if sum(n_eCN>1)>1: efficiency0_D2 =1
     
     if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
-        if optionModel == "poisson-multinomial-binomial":
+        if optionModel == "stochastic-dependence":
+            n_e2, n_e2CN = PMBmodel(e_quenching2, dirichTD, dirichCN, L, mu)
+        elif optionModel == "poisson-multinomial-binomial":
             n_e2, n_e2CN = PMBmodel(e_quenching2, dirichTD, dirichCN, L, mu)
         elif optionModel == "poisson":
             n_e2, n_e2CN = Pmodel(e_quenching2, dirichTD, dirichCN, L, mu) 
@@ -3279,6 +3381,9 @@ def readRecQuenchedEnergies():
                     else:
                         e_quenching.append(energy)
     return Epromt, Edelayed
+
+
+
 
 # N = 1e7
 # buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')

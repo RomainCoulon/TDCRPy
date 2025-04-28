@@ -32,12 +32,16 @@ diam_micelle = 2
 fAq = 0.1
 
 ## OPTICAL PROPERTIES
-# Dirichlet parameter
+# Dirichlet parameter (deprecated)
 alphaDir = 100000
 # Quantum efficiency
 effQuantum = 0.25, 0.25, 0.25
 # Optical MC model
-optionModel = poisson-multinomial-binomial
+optionModel = stochastic-dependence
+# fraction of diffused scintillation photons
+diffP = 1
+# relative distance from vials border to PMT entrance
+PMTspace = 0.1
 
 ## PROPERTIES OF THE COUNTER
 # Coincidence resolving time (ns)
