@@ -3165,22 +3165,20 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         L = [L, L, L]
     
     def stochasOpticModel(e_q, L, mu):
-        n_e=np.zeros(3); n_eCN=np.zeros(2)
-        n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)/np.mean(mu))
+        n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of phooelectrons
         
-        diffP = 0
-        PMTspace = 0.1
-        pTD = stochasticDepTD(diffP, PMTspace)
-        pCN = stochasticDepCN(diffP, PMTspace)
-        # TDCR
-        n_phPMT = np.random.multinomial(n_ph, pTD)
-        n_e[0]=np.random.binomial(n_phPMT[0],mu[0])
-        n_e[1]=np.random.binomial(n_phPMT[1],mu[0])
-        n_e[2]=np.random.binomial(n_phPMT[2],mu[0])
-        # C/N
-        n_phPMTCN = np.random.multinomial(n_ph, pCN)
-        n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu[0])
-        n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu[0])
+        n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)/np.mean(mu)) # sample the number of scintillation photons
+        pTD = stochasticDepTD(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (TDCR configuration)
+        pCN = stochasticDepCN(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (C/N configuration)
+
+        n_phPMT = np.random.multinomial(n_ph, pTD) # sample the number of photons in each PMTs (TDCR configuration)
+        n_e[0]=np.random.binomial(n_phPMT[0],mu[0]) # sample the conversion to photoelectrons PMT A
+        n_e[1]=np.random.binomial(n_phPMT[1],mu[0]) # sample the conversion to photoelectrons PMT B
+        n_e[2]=np.random.binomial(n_phPMT[2],mu[0]) # sample the conversion to photoelectrons PMT C
+
+        n_phPMTCN = np.random.multinomial(n_ph, pCN) # sample the number of photons in each PMTs (C/N configuration)
+        n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu[0]) # sample the conversion to photoelectrons PMT A
+        n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu[0]) # sample the conversion to photoelectrons PMT B
         return n_e, n_eCN        
     
     def PMBmodel(e_q, dirichTD, dirichCN, L, mu):
