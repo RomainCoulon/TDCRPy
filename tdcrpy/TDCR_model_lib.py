@@ -33,6 +33,16 @@ import math
 # import advanced configuration data
 config = configparser.ConfigParser()
 
+def readEffQ0():
+    global config, file_conf
+    config = configparser.ConfigParser()
+    with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
+        file_conf = data_path       
+    config.read(file_conf)
+    
+    effQuantic0 = config["Inputs"].get("effQuantum")
+    return effQuantic0
+
 def readParameters(disp=False):
     global config, file_conf
     config = configparser.ConfigParser()
@@ -214,10 +224,10 @@ def modifyAlphaDir(x):
     data1 = data0.replace(f"alphaDir = {x0}",f"alphaDir = {x}")
     writeConfifAsstr(data1)
     
-def modifyEffQ(x, effQuantic0):
+def modifyEffQ(x):
     data0 = readConfigAsstr()
     # x0 = readParameters()[15]
-    x0 = effQuantic0
+    x0 = readEffQ0()
     data1 = data0.replace(f"effQuantum = {x0}",f"effQuantum = {x}")
     writeConfifAsstr(data1)
 
