@@ -289,6 +289,7 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                 efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
             else:
                 efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+            
             efficiency_S.append(efficiency0_S)
             efficiency_T.append(efficiency0_T)
             efficiency_D.append(efficiency0_D)

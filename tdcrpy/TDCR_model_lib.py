@@ -62,8 +62,8 @@ def readParameters(disp=False):
     fAq = config["Inputs"].getfloat("fAq")
     micCorr = config["Inputs"].getboolean("micCorr")
     alphaDir = config["Inputs"].getfloat("alphaDir")
-    effQuantic = config["Inputs"].get("effQuantum")
-    effQuantic = effQuantic.split(',')
+    effQuantic0 = config["Inputs"].get("effQuantum")
+    effQuantic = effQuantic0.split(',')
     for i, iS in enumerate(effQuantic):
         iS=iS.replace(" ","")
         if iS != 'None':  effQuantic[i]=float(iS)
@@ -214,9 +214,10 @@ def modifyAlphaDir(x):
     data1 = data0.replace(f"alphaDir = {x0}",f"alphaDir = {x}")
     writeConfifAsstr(data1)
     
-def modifyEffQ(x):
+def modifyEffQ(x, effQuantic0):
     data0 = readConfigAsstr()
-    x0 = readParameters()[15]
+    # x0 = readParameters()[15]
+    x0 = effQuantic0
     data1 = data0.replace(f"effQuantum = {x0}",f"effQuantum = {x}")
     writeConfifAsstr(data1)
 
@@ -3082,6 +3083,24 @@ def stochasticDepTD(diffP, PMTspace):
         
     return pa, pb, pc
 
+# Di = []; Ti = []
+# n=1000000
+# for i in range(n):
+#     A = stochasticDepTD(1, 0)
+#     B = np.random.poisson(2)
+#     n_phPMT = np.random.multinomial(B, A) # sample the number of photons in each PMTs (TDCR configuration)
+#     nA=np.random.binomial(n_phPMT[0],0.25) # sample the conversion to photoelectrons PMT A
+#     nB=np.random.binomial(n_phPMT[1],0.25) # sample the conversion to photoelectrons PMT B
+#     nC=np.random.binomial(n_phPMT[2],0.25) # sample the conversion to photoelectrons PMT C
+#     Di.append(sum([nA>0, nB>0, nC>0])>1)
+#     Ti.append(sum([nA>0, nB>0, nC>0])>2)
+# D = sum(Di)/n
+# uD = D/np.sqrt(sum(Di))#np.sqrt(n)
+# T = sum(Ti)/n
+# uT = T/np.sqrt(sum(Ti))#/np.sqrt(n)
+# print(D, uD)
+# print(T, uT)
+
 def stochasticDepCN(diffP, PMTspace):
     def simulate_photon_groups():
         rho = 1 * np.sqrt(np.random.uniform(0, 1, 1))  # Radial distance
@@ -3165,20 +3184,21 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         L = [L, L, L]
     
     def stochasOpticModel(e_q, L, mu):
-        n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of phooelectrons
+        n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of photoelectrons
         
         n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)/np.mean(mu)) # sample the number of scintillation photons
+        
         pTD = stochasticDepTD(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (TDCR configuration)
-        pCN = stochasticDepCN(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (C/N configuration)
-
         n_phPMT = np.random.multinomial(n_ph, pTD) # sample the number of photons in each PMTs (TDCR configuration)
         n_e[0]=np.random.binomial(n_phPMT[0],mu[0]) # sample the conversion to photoelectrons PMT A
         n_e[1]=np.random.binomial(n_phPMT[1],mu[0]) # sample the conversion to photoelectrons PMT B
         n_e[2]=np.random.binomial(n_phPMT[2],mu[0]) # sample the conversion to photoelectrons PMT C
-
+        
+        pCN = stochasticDepCN(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (C/N configuration)
         n_phPMTCN = np.random.multinomial(n_ph, pCN) # sample the number of photons in each PMTs (C/N configuration)
         n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu[0]) # sample the conversion to photoelectrons PMT A
         n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu[0]) # sample the conversion to photoelectrons PMT B
+        
         return n_e, n_eCN        
     
     def PMBmodel(e_q, dirichTD, dirichCN, L, mu):
@@ -3213,14 +3233,14 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         n_eCN[1] = sum(np.asarray(e_q))*L[1]*mu[1]*dirichCN[1]
         return n_e, n_eCN
     
-    # def Amodel(e_q, dirichTD, dirichCN, L, mu):
-    #     n_e=np.zeros(3); n_eCN=np.zeros(2)
-    #     n_e[0] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
-    #     n_e[1] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
-    #     n_e[2] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
-    #     n_eCN[0] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
-    #     n_eCN[1] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
-    #     return n_e, n_eCN  
+    def Amodel(e_q, dirichTD, dirichCN, L, mu):
+        n_e=np.zeros(3); n_eCN=np.zeros(2)
+        n_e[0] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
+        n_e[1] = 1-np.exp(-L[1]*np.sum(np.asarray(e_q))*dirichTD[1])
+        n_e[2] = 1-np.exp(-L[2]*np.sum(np.asarray(e_q))*dirichTD[2])
+        n_eCN[0] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
+        n_eCN[1] = 1-np.exp(-L[1]*np.sum(np.asarray(e_q))*dirichTD[1])
+        return n_e, n_eCN  
     
     
     efficiency0_S = 0;    efficiency0_T = 0;    efficiency0_D = 0
@@ -3235,6 +3255,8 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         n_e, n_eCN = Pmodel(e_quenching, dirichTD, dirichCN, L, mu)
     elif optionModel == "expectation":
         n_e, n_eCN =  EPmodel(e_quenching, dirichTD, dirichCN, L, mu)
+    # elif optionModel == "proba":
+    #     n_e, n_eCN =  Amodel(e_quenching, dirichTD, dirichCN, L, mu)
     else:
         print("unknown model")        
             
