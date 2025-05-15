@@ -71,7 +71,7 @@ def readParameters(disp=False):
     diam_micelle = config["Inputs"].getfloat("diam_micelle")
     fAq = config["Inputs"].getfloat("fAq")
     micCorr = config["Inputs"].getboolean("micCorr")
-    alphaDir = config["Inputs"].getfloat("alphaDir")
+    # alphaDir = config["Inputs"].getfloat("alphaDir")
     effQuantic0 = config["Inputs"].get("effQuantum")
     effQuantic = effQuantic0.split(',')
     for i, iS in enumerate(effQuantic):
@@ -96,7 +96,7 @@ def readParameters(disp=False):
         print(f"activation of the micelle correction = {micCorr}")
         print(f"diameter of micelle = {diam_micelle} nm")
         print(f"acqueous fraction = {fAq}")
-        print(f"alpha parameter of the hidden Dirichlet process = {alphaDir}")
+        # print(f"alpha parameter of the hidden Dirichlet process = {alphaDir}")
         print(f"quantum efficiency of the photocathodes = {effQuantic}")
         print(f"Monte Carlo model of the optics = {optionModel}")
         print(f"fraction of diffused scintillation photons = {diffP*100:.1f} %")
@@ -105,9 +105,9 @@ def readParameters(disp=False):
         print(f"extended dead time = {extDT} µs")
         print(f"measurement time = {measTime} min")
     
-    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, optionModel, diffP, PMTspace, pH,pC,pN,pO,pP,pCl
+    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, optionModel, diffP, PMTspace, pH,pC,pN,pO,pP,pCl
 
-nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, alphaDir, effQuantic, optionModel, diffP, PMTspace, pH,pC,pN,pO,pP,pCl = readParameters()
+nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, optionModel, diffP, PMTspace, pH,pC,pN,pO,pP,pCl = readParameters()
 
 p_atom = np.array([pH,pC,pN,pO,pP,pCl]) # atom abondance in the scintillator
 p_atom /= sum(p_atom) 
@@ -218,34 +218,34 @@ def modifyMicCorr(x):
     data1 = data0.replace(f"micCorr = {x0}",f"micCorr= {x}")
     writeConfifAsstr(data1)
     
-def modifyAlphaDir(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[14]
-    data1 = data0.replace(f"alphaDir = {x0}",f"alphaDir = {x}")
-    writeConfifAsstr(data1)
+# def modifyAlphaDir(x):
+#     data0 = readConfigAsstr()
+#     x0 = readParameters()[14]
+#     data1 = data0.replace(f"alphaDir = {x0}",f"alphaDir = {x}")
+#     writeConfifAsstr(data1)
     
 def modifyEffQ(x):
     data0 = readConfigAsstr()
-    # x0 = readParameters()[15]
+    # x0 = readParameters()[14]
     x0 = readEffQ0()
     data1 = data0.replace(f"effQuantum = {x0}",f"effQuantum = {x}")
     writeConfifAsstr(data1)
 
 def modifyOptModel(x):
     data0 = readConfigAsstr()
-    x0 = readParameters()[16]
+    x0 = readParameters()[15]
     data1 = data0.replace(f"optionModel = {x0}",f"optionModel = {x}")
     writeConfifAsstr(data1)
 
 def modifyDiffP(x):
     data0 = readConfigAsstr()
-    x0 = readParameters()[17]
+    x0 = readParameters()[16]
     data1 = data0.replace(f"diffP = {x0:.1f}",f"diffP = {x:.1f}")
     writeConfifAsstr(data1)
 
 def modifyPMTspace(x):
     data0 = readConfigAsstr()
-    x0 = readParameters()[18]
+    x0 = readParameters()[17]
     data1 = data0.replace(f"PMTspace = {x0:.1f}",f"PMTspace = {x:.1f}")
     writeConfifAsstr(data1)
 
@@ -3142,7 +3142,7 @@ def stochasticDepCN(diffP, PMTspace):
     return pa, pb
     
 
-def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, dir_param = alphaDir, effQuantic = effQuantic, optionModel=optionModel, diffP = diffP, PMTspace = PMTspace):
+def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic, optionModel=optionModel, diffP = diffP, PMTspace = PMTspace):
     """
     Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
 
@@ -3182,14 +3182,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
 
     """
     mu = effQuantic
-    
-    if dir_param < 1000:
-        dirichTD = np.random.dirichlet([dir_param, dir_param, dir_param])
-        dirichCN = np.random.dirichlet([dir_param, dir_param])      
-    else:
-        dirichTD = [1/3, 1/3, 1/3]
-        dirichCN = [1/2, 1/2]
-    
+        
     if type(L) == float:
         L = [L, L, L]
     
@@ -3211,47 +3204,17 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         
         return n_e, n_eCN        
     
-    def PMBmodel(e_q, dirichTD, dirichCN, L, mu):
-        n_e=np.zeros(3); n_eCN=np.zeros(2)
-        n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)/np.mean(mu))
-        # TDCR
-        n_phPMT = np.random.multinomial(n_ph, dirichTD)
-        n_e[0]=np.random.binomial(n_phPMT[0],mu[0])
-        n_e[1]=np.random.binomial(n_phPMT[1],mu[0])
-        n_e[2]=np.random.binomial(n_phPMT[2],mu[0])
-        # C/N
-        n_phPMTCN = np.random.multinomial(n_ph, dirichCN)
-        n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu[0])
-        n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu[0])
+    def Pmodel(e_q, pTD_ideal, pCN_ideal, L, mu):
+        n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of photoelectrons
+        
+        n_e[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*pTD_ideal[0]) # sample the conversion to photoelectrons PMT A
+        n_e[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*pTD_ideal[1]) # sample the conversion to photoelectrons PMT B
+        n_e[2] = np.random.poisson(sum(np.asarray(e_q))*L[2]*mu[2]*pTD_ideal[2]) # sample the conversion to photoelectrons PMT C
+        n_eCN[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*pCN_ideal[0]) # sample the conversion to photoelectrons PMT A
+        n_eCN[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*pCN_ideal[1]) # sample the conversion to photoelectrons PMT B
+        
         return n_e, n_eCN
-    
-    def Pmodel(e_q, dirichTD, dirichCN, L, mu):
-        n_e=np.zeros(3); n_eCN=np.zeros(2)
-        n_e[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*dirichTD[0])
-        n_e[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*dirichTD[1])
-        n_e[2] = np.random.poisson(sum(np.asarray(e_q))*L[2]*mu[2]*dirichTD[2])
-        n_eCN[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*dirichCN[0])
-        n_eCN[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*dirichCN[1])
-        return n_e, n_eCN
-    
-    def EPmodel(e_q, dirichTD, dirichCN, L, mu):
-        n_e=np.zeros(3); n_eCN=np.zeros(2)
-        n_e[0] = sum(np.asarray(e_q))*L[0]*mu[0]*dirichTD[0]
-        n_e[1] = sum(np.asarray(e_q))*L[1]*mu[1]*dirichTD[1]
-        n_e[2] = sum(np.asarray(e_q))*L[2]*mu[2]*dirichTD[2]
-        n_eCN[0] = sum(np.asarray(e_q))*L[0]*mu[0]*dirichCN[0]
-        n_eCN[1] = sum(np.asarray(e_q))*L[1]*mu[1]*dirichCN[1]
-        return n_e, n_eCN
-    
-    def Amodel(e_q, dirichTD, dirichCN, L, mu):
-        n_e=np.zeros(3); n_eCN=np.zeros(2)
-        n_e[0] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
-        n_e[1] = 1-np.exp(-L[1]*np.sum(np.asarray(e_q))*dirichTD[1])
-        n_e[2] = 1-np.exp(-L[2]*np.sum(np.asarray(e_q))*dirichTD[2])
-        n_eCN[0] = 1-np.exp(-L[0]*np.sum(np.asarray(e_q))*dirichTD[0])
-        n_eCN[1] = 1-np.exp(-L[1]*np.sum(np.asarray(e_q))*dirichTD[1])
-        return n_e, n_eCN  
-    
+     
     
     efficiency0_S = 0;    efficiency0_T = 0;    efficiency0_D = 0
     efficiency0_AB = 0;    efficiency0_BC = 0;    efficiency0_AC = 0
@@ -3259,14 +3222,8 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     # n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
     if optionModel == "stochastic-dependence":
         n_e, n_eCN = stochasOpticModel(e_quenching, L, mu)
-    elif optionModel == "PMBmodel":
-        n_e, n_eCN = PMBmodel(e_quenching, dirichTD, dirichCN, L, mu)
     elif optionModel == "poisson":
-        n_e, n_eCN = Pmodel(e_quenching, dirichTD, dirichCN, L, mu)
-    elif optionModel == "expectation":
-        n_e, n_eCN =  EPmodel(e_quenching, dirichTD, dirichCN, L, mu)
-    # elif optionModel == "proba":
-    #     n_e, n_eCN =  Amodel(e_quenching, dirichTD, dirichCN, L, mu)
+        n_e, n_eCN = Pmodel(e_quenching, [1/3, 1/3, 1/3], [1/2, 1/2], L, mu)
     else:
         print("unknown model")        
             
@@ -3281,12 +3238,8 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
         if optionModel == "stochastic-dependence":
             n_e2, n_e2CN = stochasOpticModel(e_quenching2, L, mu)
-        elif optionModel == "PMBmodel":
-            n_e2, n_e2CN = PMBmodel(e_quenching2, dirichTD, dirichCN, L, mu)
         elif optionModel == "poisson":
-            n_e2, n_e2CN = Pmodel(e_quenching2, dirichTD, dirichCN, L, mu) 
-        elif optionModel == "expectation":
-            n_e2, n_e2CN =  EPmodel(e_quenching2, dirichTD, dirichCN, L, mu)
+            n_e2, n_e2CN = Pmodel(e_quenching2, [1/3, 1/3, 1/3], [1/2, 1/2], L, mu) 
         else:
             print("unknown model")        
         
@@ -3299,6 +3252,37 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         if sum(n_e2CN>1)>1: efficiency0_D2 +=1           
                     
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
+
+# import tdcrpy
+# # tdcrpy.TDCR_model_lib.modifyOptModel("stochastic-dependence")
+# tdcrpy.TDCR_model_lib.modifyOptModel("poisson")
+# L = [1, 1, 1]
+# e_q = [1]
+# e_q2 = [0]
+# t1 = 0
+# evenement = 1
+# extDT = 50
+# measTime = 60000
+# S,D,T,_,_,_,_ = detectProbabilities(L, e_q, e_q2, t1, evenement, extDT, measTime)
+# SmcI=[];DmcI=[];TmcI=[]
+# nIter=5000000
+# for i in range(nIter):
+#     Smc,Dmc,Tmc,_,_,_,_ = detectProbabilitiesMC(L, e_q, e_q2, t1, evenement, extDT, measTime,
+#                                             PMTspace=0,diffP=1)
+#     SmcI.append(Smc); DmcI.append(Dmc); TmcI.append(Tmc)
+
+# print("single eff = ",round(S,4),round(np.mean(SmcI),4),round(np.std(SmcI)/np.sqrt(nIter),4))
+# print("double eff = ",round(D,4),round(np.mean(DmcI),4),round(np.std(DmcI)/np.sqrt(nIter),4))
+# print("triple eff = ",round(T,4),round(np.mean(TmcI),4),round(np.std(TmcI)/np.sqrt(nIter),4))
+
+# print("single eff = ",abs(round(S,4)-round(np.mean(SmcI),4))<2*round(np.std(SmcI)/np.sqrt(nIter),4))
+# print("double eff = ",abs(round(D,4)-round(np.mean(DmcI),4))<2*round(np.std(DmcI)/np.sqrt(nIter),4))
+# print("triple eff = ",abs(round(T,4)-round(np.mean(TmcI),4))<2*round(np.std(TmcI)/np.sqrt(nIter),4))
+
+# print("single eff = ",round(100*np.std(SmcI)/(np.sqrt(nIter)*round(np.mean(SmcI),4)),4)," %")
+# print("double eff = ",round(100*np.std(DmcI)/(np.sqrt(nIter)*round(np.mean(DmcI),4)),4)," %")
+# print("triple eff = ",round(100*np.std(TmcI)/(np.sqrt(nIter)*round(np.mean(TmcI),4)),4)," %")
+
 
 def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
     """

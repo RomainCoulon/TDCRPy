@@ -32,8 +32,6 @@ diam_micelle = 2
 fAq = 0.1
 
 ## OPTICAL PROPERTIES
-# Dirichlet parameter (deprecated)
-alphaDir = 100000
 # Quantum efficiency
 effQuantum = 0.25, 0.25, 0.25
 # Optical MC model
