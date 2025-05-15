@@ -3061,6 +3061,22 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
 
 
 def stochasticDepTD(diffP, PMTspace):
+    """
+    Generate the probability
+
+    Parameters
+    ----------
+    diffP : TYPE
+        DESCRIPTION.
+    PMTspace : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    """
     detA = np.array([[2*(1+PMTspace), 0], [-(1+PMTspace), np.sqrt(3)*(1+PMTspace)]])
     detB = np.array([[-(1+PMTspace), np.sqrt(3)*(1+PMTspace)], [-(1+PMTspace), -np.sqrt(3)*(1+PMTspace)]])
     detC = np.array([[-(1+PMTspace), -np.sqrt(3)*(1+PMTspace)], [2*(1+PMTspace), 0]])
@@ -3140,9 +3156,9 @@ def stochasticDepCN(diffP, PMTspace):
         pa=1-pb        
         
     return pa, pb
-    
 
-def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic, optionModel=optionModel, diffP = diffP, PMTspace = PMTspace):
+
+def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic, optionModel=optionModel, diffP = diffP, PMTspace = PMTspace, dispParam=False):
     """
     Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
 
@@ -3186,6 +3202,8 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     if type(L) == float:
         L = [L, L, L]
     
+    if dispParam: print(f"EffQ = {mu} - model = {optionModel} - diffP = {diffP} - PMTspace = {PMTspace}")
+    
     def stochasOpticModel(e_q, L, mu):
         n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of photoelectrons
         
@@ -3194,13 +3212,13 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         pTD = stochasticDepTD(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (TDCR configuration)
         n_phPMT = np.random.multinomial(n_ph, pTD) # sample the number of photons in each PMTs (TDCR configuration)
         n_e[0]=np.random.binomial(n_phPMT[0],mu[0]) # sample the conversion to photoelectrons PMT A
-        n_e[1]=np.random.binomial(n_phPMT[1],mu[0]) # sample the conversion to photoelectrons PMT B
-        n_e[2]=np.random.binomial(n_phPMT[2],mu[0]) # sample the conversion to photoelectrons PMT C
+        n_e[1]=np.random.binomial(n_phPMT[1],mu[1]) # sample the conversion to photoelectrons PMT B
+        n_e[2]=np.random.binomial(n_phPMT[2],mu[2]) # sample the conversion to photoelectrons PMT C
         
         pCN = stochasticDepCN(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (C/N configuration)
         n_phPMTCN = np.random.multinomial(n_ph, pCN) # sample the number of photons in each PMTs (C/N configuration)
         n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu[0]) # sample the conversion to photoelectrons PMT A
-        n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu[0]) # sample the conversion to photoelectrons PMT B
+        n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu[1]) # sample the conversion to photoelectrons PMT B
         
         return n_e, n_eCN        
     
@@ -3252,36 +3270,6 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         if sum(n_e2CN>1)>1: efficiency0_D2 +=1           
                     
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
-
-# import tdcrpy
-# # tdcrpy.TDCR_model_lib.modifyOptModel("stochastic-dependence")
-# tdcrpy.TDCR_model_lib.modifyOptModel("poisson")
-# L = [1, 1, 1]
-# e_q = [1]
-# e_q2 = [0]
-# t1 = 0
-# evenement = 1
-# extDT = 50
-# measTime = 60000
-# S,D,T,_,_,_,_ = detectProbabilities(L, e_q, e_q2, t1, evenement, extDT, measTime)
-# SmcI=[];DmcI=[];TmcI=[]
-# nIter=5000000
-# for i in range(nIter):
-#     Smc,Dmc,Tmc,_,_,_,_ = detectProbabilitiesMC(L, e_q, e_q2, t1, evenement, extDT, measTime,
-#                                             PMTspace=0,diffP=1)
-#     SmcI.append(Smc); DmcI.append(Dmc); TmcI.append(Tmc)
-
-# print("single eff = ",round(S,4),round(np.mean(SmcI),4),round(np.std(SmcI)/np.sqrt(nIter),4))
-# print("double eff = ",round(D,4),round(np.mean(DmcI),4),round(np.std(DmcI)/np.sqrt(nIter),4))
-# print("triple eff = ",round(T,4),round(np.mean(TmcI),4),round(np.std(TmcI)/np.sqrt(nIter),4))
-
-# print("single eff = ",abs(round(S,4)-round(np.mean(SmcI),4))<2*round(np.std(SmcI)/np.sqrt(nIter),4))
-# print("double eff = ",abs(round(D,4)-round(np.mean(DmcI),4))<2*round(np.std(DmcI)/np.sqrt(nIter),4))
-# print("triple eff = ",abs(round(T,4)-round(np.mean(TmcI),4))<2*round(np.std(TmcI)/np.sqrt(nIter),4))
-
-# print("single eff = ",round(100*np.std(SmcI)/(np.sqrt(nIter)*round(np.mean(SmcI),4)),4)," %")
-# print("double eff = ",round(100*np.std(DmcI)/(np.sqrt(nIter)*round(np.mean(DmcI),4)),4)," %")
-# print("triple eff = ",round(100*np.std(TmcI)/(np.sqrt(nIter)*round(np.mean(TmcI),4)),4)," %")
 
 
 def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
