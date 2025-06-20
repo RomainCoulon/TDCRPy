@@ -11,7 +11,6 @@ Bureau International des Poids et Mesures
 """
 ======= Import Python Module =======
 """
-
 import importlib.resources
 from importlib.resources import files
 import pkg_resources
@@ -121,7 +120,7 @@ def readConfigAsstr():
 def writeConfifAsstr(data):
     path2config = str(config.read(file_conf)[0])
     with open(path2config, 'w') as file:
-        file.write(data)    
+        file.write(data)
 
 def modifynE_electron(x):
     data0 = readConfigAsstr()
@@ -2907,7 +2906,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
                 else: file.write(f"{b}\t{p2[i]}\n")
         print("file written in local")        
                 
-def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime):
+def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic):
     """
     Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
 
@@ -2948,17 +2947,20 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
     """
     if isinstance(L, (tuple, list)):
         symm = False
+        mu = effQuantic
     else:
         symm = True
+        mu = np.mean(effQuantic)
          
+    
         
     if symm:
         
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
             # TDCR
-            p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
-            p_nosingle2 = np.exp(-L*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            p_nosingle2 = np.exp(-L*mu*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
             p_single2 = 1-p_nosingle2
             efficiency0_S = 1-p_nosingle**3+1-p_nosingle2**3
             efficiency0_T = p_single**3+p_single2**3
@@ -2968,16 +2970,16 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             efficiency0_AC = efficiency0_AB
             
             # CN
-            p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
-            p_nosingle2 = np.exp(-L*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            p_nosingle2 = np.exp(-L*mu*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
             p_single2 = 1-p_nosingle2            
             efficiency0_A2 = p_single+p_single2
             efficiency0_B2 = efficiency0_A2
             efficiency0_D2 = p_single**2+p_single2**2
         else:
             # TDCR
-            p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
             efficiency0_S = 1-p_nosingle**3
             efficiency0_T = p_single**3
@@ -2987,7 +2989,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             efficiency0_AC = efficiency0_AB
             
             # CN
-            p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT            
             efficiency0_A2 = p_single
             efficiency0_B2 = efficiency0_A2
@@ -2995,18 +2997,18 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
     else:
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
             # TDCR            
-            pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
             pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
             pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pC_nosingle = np.exp(-L[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pC_nosingle = np.exp(-L[2]*mu[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
             pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
             
-            pA_nosingle2 = np.exp(-L[0]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pA_nosingle2 = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
             pA_single2 = 1-pA_nosingle2                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle2 = np.exp(-L[1]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pB_nosingle2 = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
             pB_single2 = 1-pB_nosingle2                                    # probability to have at least 1 electrons in a PMT
-            pC_nosingle2 = np.exp(-L[2]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pC_nosingle2 = np.exp(-L[2]*mu[2]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
             pC_single2 = 1-pC_nosingle2                                    # probability to have at least 1 electrons in a PMT
             
             efficiency0_A2 = pA_single+pA_single2
@@ -3021,24 +3023,24 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             
             
             # CN
-            pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
             pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
             pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
             
-            pA_nosingle2 = np.exp(-L[0]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            pA_nosingle2 = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
             pA_single2 = 1-pA_nosingle2                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle2 = np.exp(-L[1]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            pB_nosingle2 = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
             pB_single2 = 1-pB_nosingle2                                    # probability to have at least 1 electrons in a PMT
 
             efficiency0_D2 = pA_single*pB_single+pA_single2*pB_single2
         else:
             # TDCR
-            pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
             pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
             pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pC_nosingle = np.exp(-L[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pC_nosingle = np.exp(-L[2]*mu[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
             pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
                 
             efficiency0_A2 = pA_single
@@ -3051,9 +3053,9 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             efficiency0_S = 1-pA_nosingle*pB_nosingle*pC_nosingle
             
             # CN
-            pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
             pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
             pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT            
             efficiency0_D2 = pA_single*pB_single
             
@@ -3207,7 +3209,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     def stochasOpticModel(e_q, L, mu):
         n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of photoelectrons
         
-        n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)/np.mean(mu)) # sample the number of scintillation photons
+        n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)) # sample the number of scintillation photons
         
         pTD = stochasticDepTD(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (TDCR configuration)
         n_phPMT = np.random.multinomial(n_ph, pTD) # sample the number of photons in each PMTs (TDCR configuration)

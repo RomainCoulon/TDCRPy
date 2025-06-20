@@ -19,38 +19,34 @@ import numpy as np
 # print(ps0-ps1,ups1)
 # print(abs(ps0-ps1)<2*ups1)
 
-
+import importlib
 import tdcrpy
-tdcrpy.TDCR_model_lib.modifyEffQ("0.2, 0.2, 0.2")
+tdcrpy.TDCR_model_lib.modifyEffQ("0.1, 0.1, 0.1")
 # tdcrpy.TDCR_model_lib.modifyOptModel("stochastic-dependence")
 tdcrpy.TDCR_model_lib.modifyOptModel("poisson")
-L = [9.0, 9.0, 9.0]
-e_q = [0.5]
-tdcrpy.TDCR_model_lib.readParameters(disp=True)
-
-import tdcrpy
+L = [1.0, 1.0, 1.0]
+e_q = [100]
 diffP = 1
-
+importlib.reload(tdcrpy.TDCR_model_lib)
 
 Q = tdcrpy.TDCR_model_lib.readEffQ0()
 Q = Q.split(",")
 Q = [float(i) for i in Q]
 QL = [float(Qi)*L[i] for i, Qi in enumerate(Q)]
-print("EffQ = ", Q)
-print("EffQ*L = ", QL)
 
 e_q2 = [0]; t1 = 0; evenement = 1; extDT = 50; measTime = 60000
 
-# S,D,T,_,_,_,_ = detectProbabilities(QL, e_q, e_q2, t1, evenement, extDT, measTime)
 S,D,T,_,_,_,_ = tdcrpy.TDCR_model_lib.detectProbabilities(QL, e_q, e_q2, t1, evenement, extDT, measTime)
 SmcI=[];DmcI=[];TmcI=[]
 nIter=100000
 for i in range(nIter):
-    Smc,Dmc,Tmc,_,_,_,_ = tdcrpy.TDCR_model_lib.detectProbabilitiesMC(L, e_q, e_q2, t1, evenement, extDT, measTime,
-                                            PMTspace=0, diffP=diffP, effQuantic = Q)
-    # Smc,Dmc,Tmc,_,_,_,_ = detectProbabilitiesMC(L, e_q, e_q2, t1, evenement, extDT, measTime,
-    #                                         PMTspace=0,diffP=diffP)
+    Smc,Dmc,Tmc,_,_,_,_ = tdcrpy.TDCR_model_lib.detectProbabilitiesMC(L, e_q, e_q2, t1, evenement, extDT, measTime, dispParam=True)
     SmcI.append(Smc); DmcI.append(Dmc); TmcI.append(Tmc)
+
+print('\n')
+tdcrpy.TDCR_model_lib.readParameters(disp=True)
+
+print("\nEffQ = ", Q, "\tEffQ*L = ", QL, "\n")
 
 print("\nEFF, EFFmc, +/-")
 print("single eff = ",round(S,4),round(np.mean(SmcI),4),round(np.std(SmcI)/np.sqrt(nIter),4))
