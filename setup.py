@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "2.13.0"
+VERSION = "2.14.0"
 
 DESCRIPTION = "TDCR model"
 
@@ -30,7 +30,7 @@ setup(
     python_requires='>=3.11',
     keywords = ["Python","TDCR","Monte-Carlo","radionuclide","scintillation","counting"],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",

@@ -1108,8 +1108,8 @@ def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False)
     
     TDCRPy(L, Rad, pmf_1, N, kB, V, record = True)
        
-    if symm: r=opt.minimize_scalar(objectFct, args=(TD, Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
-    else: r=opt.minimize_scalar(objectFct, args=(TD[0], Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
+    if symm: r=opt.minimize_scalar(objectFct, args=(TD, Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.01, 50), options={'disp': disp, 'maxiter':maxiter})
+    else: r=opt.minimize_scalar(objectFct, args=(TD[0], Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.01, 50), options={'disp': disp, 'maxiter':maxiter})
     L0=r.x
     L=(L0, L0, L0)
     print(f"global free parameter = {L0} keV-1")
@@ -1204,8 +1204,8 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False):
     else:
         symm = True
 
-    if symm: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD, TD, TD, TD, Rad, kB, V, "res", 1e3), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
-    else: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='bounded', bounds = (0.1, 5), options={'disp': disp, 'maxiter':maxiter})
+    if symm: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD, TD, TD, TD, Rad, kB, V, "res", 1e3), method='bounded', bounds = (0.01, 50), options={'disp': disp, 'maxiter':maxiter})
+    else: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='bounded', bounds = (0.01, 50), options={'disp': disp, 'maxiter':maxiter})
     L0=r.x
     L=(L0, L0, L0)
     print(f"global free parameter = {L0} keV-1")
