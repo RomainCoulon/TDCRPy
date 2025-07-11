@@ -1039,7 +1039,7 @@ def objectFct(L, TD, Rad, pmf_1, N, kB, V):
     
     return res
 
-def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False):
+def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds=[0.1, 10]):
     """
     Caclulation of the efficiency of a TDCR system based on the model TDCRPy.
     This function includes optimization procedures from scipy.
@@ -1108,8 +1108,8 @@ def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False)
     
     TDCRPy(L, Rad, pmf_1, N, kB, V, record = True)
        
-    if symm: r=opt.minimize_scalar(objectFct, args=(TD, Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.01, 50), options={'disp': disp, 'maxiter':maxiter})
-    else: r=opt.minimize_scalar(objectFct, args=(TD[0], Rad, pmf_1, N, kB, V), method='bounded', bounds = (0.01, 50), options={'disp': disp, 'maxiter':maxiter})
+    if symm: r=opt.minimize_scalar(objectFct, args=(TD, Rad, pmf_1, N, kB, V), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+    else: r=opt.minimize_scalar(objectFct, args=(TD[0], Rad, pmf_1, N, kB, V), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
     L0=r.x
     L=(L0, L0, L0)
     print(f"global free parameter = {L0} keV-1")
@@ -1139,7 +1139,7 @@ def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False)
     return L0, L, eff_S, u_eff_S, eff_D, u_eff_D, eff_T, u_eff_T, eff_AB, u_eff_AB, eff_BC, u_eff_BC, eff_AC, u_eff_AC, eff_D2, u_eff_D2
 
 
-def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False):
+def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds=[0.1, 10]):
     """
     Caclulation of the efficiency of a TDCR system based on the model TDCRPy (analytical model).
     This function includes optimization procedures from scipy.
@@ -1204,8 +1204,8 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False):
     else:
         symm = True
 
-    if symm: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD, TD, TD, TD, Rad, kB, V, "res", 1e3), method='bounded', bounds = (0.01, 50), options={'disp': disp, 'maxiter':maxiter})
-    else: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='bounded', bounds = (0.01, 50), options={'disp': disp, 'maxiter':maxiter})
+    if symm: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD, TD, TD, TD, Rad, kB, V, "res", 1e3), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+    else: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
     L0=r.x
     L=(L0, L0, L0)
     print(f"global free parameter = {L0} keV-1")
