@@ -2,5 +2,8 @@
  2JA  H TYP=UPD$AUT=M.-M.BE$CUT=20-DEC-2005$                                                            
  2JA C  References:1977La19                                                    
  2JA T  Auger electrons and X ray energies and emission intensities:           
- 2JA T       {U Energy (keV)}   {U Intensity}  {U Line}                                                          
+ 2JA T       {U Energy (keV)}   {U Intensity}  {U Line}   
+ 2JA  T                                                                         
+ 2JA  T        3.3111             0.000270 9     XKA2                           
+ 2JA  T        3.3138             0.000533 17     XKA1                                                        
  2JA  L 0           5/2-               STABLE                                 
