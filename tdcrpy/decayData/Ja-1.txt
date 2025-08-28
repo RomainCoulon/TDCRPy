@@ -1,0 +1,6 @@
+ 2JA    1JA EC DECAY (2.747 Y)                                                
+ 2JA  H TYP=UPD$AUT=M.-M.BE$CUT=20-DEC-2005$                                                            
+ 2JA C  References:1977La19                                                    
+ 2JA T  Auger electrons and X ray energies and emission intensities:           
+ 2JA T       {U Energy (keV)}   {U Intensity}  {U Line}                                                          
+ 2JA  L 0           5/2-               STABLE                                 
