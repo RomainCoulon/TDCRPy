@@ -214,7 +214,7 @@ def modifyMeasTime(x):
 def modifyMicCorr(x):
     data0 = readConfigAsstr()
     x0 = readParameters()[13]
-    data1 = data0.replace(f"micCorr = {x0}",f"micCorr= {x}")
+    data1 = data0.replace(f"micCorr = {x0}",f"micCorr = {x}")
     writeConfifAsstr(data1)
     
 # def modifyAlphaDir(x):
