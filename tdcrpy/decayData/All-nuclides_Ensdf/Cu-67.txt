@@ -5,7 +5,7 @@
  67ZN T        8.61587            0.0193   4     XKA2                           
  67ZN T        8.63896            0.0375   8     XKA1                           
  67ZN T                                                                         
- 67ZN T        9.611              0.00804  18    XKB1                                                                                               
+ 67ZN T        9.611              0.00804 18     XKB1                                                                                               
  67ZN T                                                                                  
- 67ZN T        7.53               0.0687   10    KXY AUGER                
- 67ZN T        0.99               0.1914   23    L AUGER                        
+ 67ZN T        7.53               0.0687  10     KLL AUGER                
+ 67ZN T        0.99               0.1914  23     L AUGER                        
