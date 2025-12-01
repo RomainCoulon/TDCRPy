@@ -2041,7 +2041,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
     """
     daug_name,Energy,Prob,Type,Incertitude,prob_str,Prob_K,Type_K,Energie_augerK = read_ENSDF(rad)  # tirer les vecteurs de rad d'Ensdf 
     incertitude = incer(prob_str,Incertitude)
-
+    print(daug_name,Energy,Prob,Type,Incertitude,prob_str,Prob_K,Type_K,Energie_augerK)
     index_daug = daug_name.index(daugther)        # repérer l'indice de fille correspondante
     
     Energie = np.array(Energy[index_daug])                  # tirer le vecteur d'énergie
@@ -2127,7 +2127,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
         energie_fin = 0
     return type_fin,energie_fin
 
-# out = relaxation_atom("ZN67","Cu-67"); print(out)
+#out = relaxation_atom("ZN67","Cu-67"); print(out)
 
 def format_modif(nombre):
     if '-' in nombre:
