@@ -1899,7 +1899,7 @@ def read_ENSDF(rad, *, z=z_ensdf):
                 if 'AUGER' in p1:              # block of electron Auger
                     energie_augerK_b.append(float(p1[2]))
                     type_b.append('Auger K')   # for electron Auger, only the block of electron Auger K has |] 
-                    if len(p1)>7:               # repérer la ligne qui comprend la proba totale et l'incertitude
+                    if len(p1)>7:               # repérer la ligne qui comprend la proba totale et l'incertitude  
                         prob_str_b.append(p1[5])
                         prob_b.append(float(p1[5]))        # enregistrer la proba totale du bloc
                         incertitude_b.append(int(p1[6]))   # enregistrer l'incertitude pour la proba totale
@@ -2127,6 +2127,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
         energie_fin = 0
     return type_fin,energie_fin
 
+# out = relaxation_atom("ZN67","Cu-67"); print(out)
 
 def format_modif(nombre):
     if '-' in nombre:
