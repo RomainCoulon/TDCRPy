@@ -7,7 +7,8 @@ The code is developped and maintained by the BIPM (MIT license).
 
 Technical details can be found in
 
-http://dx.doi.org/10.13140/RG.2.2.15682.80321
+* http://dx.doi.org/10.13140/RG.2.2.15682.80321
+* https://doi.org/10.1016/j.apradiso.2024.111518
 
 ## 1.1 Installation
 
