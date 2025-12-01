@@ -1,0 +1,15 @@
+  6LI    6HE B- DECAY (807.11 MS)                                               
+  6LI C  References:1946SO05, 1947CA15, 1948KN13, 1949HO24, 1952SH44, 1952VE1A, 
+  6LI2C  1953BA04, 1954KL36, 1955RU06, 1956VE10, 1958HE46, 1962BI14, 1962MA38,  
+  6LI3C  1963VI06, 1974WI14, 1981BA58, 1982AL17, 1990RI01, 2002AN06, 2002TI10,  
+  6LI4C  2009RA33, 2012KN01, 2012KN02, 2018TU02, 2019MO35, 2021KO07, 2021WA16,  
+  6LI5C  2022KA42
+  6LI T Auger
+  6LI T 
+  6LI T 0.00   X
+  6LI T                                                               
+  6HE  P 0.0         0+                807.11 MS 15             3505.21   5     
+  6LI  N 1.0         1.0       1         1.0                                    
+  6LI  L 0           1+                 STABLE                                  
+  6LI  B 3505.21   5 100                 2.90924                                
+  6LIS B EAV=15840E-1 24                                                        

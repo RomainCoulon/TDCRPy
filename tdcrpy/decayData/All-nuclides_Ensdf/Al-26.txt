@@ -1,0 +1,37 @@
+ 26MG    26AL EC DECAY (717E3 Y)                                                
+ 26MG C  References:1996SC06, 2000SC47, 2008DUZX, 2088KI07, 2016BA18, 2019MO35, 
+ 26MG2C  2021WA16                                                               
+ 26MG T  Auger electrons and X ray energies and emission intensities:           
+ 26MG T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 26MG T                                                                         
+ 26MG T        1.25361            0.158    6     XKA2                           
+ 26MG T        1.25361            0.315   11     XKA1                           
+ 26MG T                                                                         
+ 26MG T        1.3022         |]  0.0080  19     XKB1                           
+ 26MG T                                                                         
+ 26MG T                                                                         
+ 26MG T        0.04914                           XLL                            
+ 26MG T        0.0494                            XLC                            
+ 26MG T                                                                         
+ 26MG T        1.102-1.182    |] 15.51                KLL AUGER                      
+ 26MG T        1.214-1.252    |] 0.527 16.04   17     KLX AUGER                      
+ 26MG T        1.301-1.301    |] 0.004                KXY AUGER                      
+ 26MG T        0.0359-0.0359      1.293   15     L AUGER                        
+ 26AL  P 0.0         5+                717E3 Y   24             4004.40   6     
+ 26MG  N 1.0         1.0       1         1.0                                    
+ 26MG  L 0           0+                 STABLE                                  
+ 26MG  L 1808.74   4 2+                476 FS    21                             
+ 26MG  E             82.01   1815.23   1815.726                 97.24     25 2U 
+ 26MG2 E EAV=542.425  31$CK=0.14400  11$CL=0.01126   6$CM=0.00137   6           
+ 26MG  G 1808.65   7 99.76    4E2                      2.28E-4 4                
+ 26MG2 G KC=5.29E-6   8$LC=3.40E-7   5$MC=1.259E-8 18                           
+ 26MG3 G IPC=0.000222  4                                                        
+ 26MG  L 2938.33   4 2+                141 FS    8                              
+ 26MG  E             5.70E-7 412.74     214.577                 2.74       2 2U 
+ 26MG2 E EAV=24.414   38$CK=0.9190    8$CL=0.0722    4$CM=0.00879  36           
+ 26MG  G 1129.67   102.5      2M1+E2     0.12    2     1255E-818                
+ 26MG2 G KC=1.037E-5 15$LC=6.66E-7  10$MC=2.47E-8   4                           
+ 26MG3 G IPC=1.492E-6 22                                                        
+ 26MG  G 2938      1 0.24     4E2                      7.60E-411                
+ 26MG2 G KC=2.29E-6   4$LC=1.473E-7 21$MC=5.46E-9   8                           
+ 26MG3 G IPC=0.000758 11                                                        

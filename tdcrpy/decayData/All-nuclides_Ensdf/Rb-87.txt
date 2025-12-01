@@ -1,0 +1,25 @@
+ 87SR    87RB B- DECAY (49.65E9 Y)                                              
+ 87SR  H TYP=MOD$AUT=S. LEBLOND$DAT=10-JUN-2021$COM=See DDEP website$           
+ 87SR2 H TYP=CRE$AUT=A. SINGH$CUT=16-JAN-2018$                                  
+ 87SR C  References:1954FL18, 1956AL31, 1956FR12, 1956HEU0, 1957LI42, 1960GVU0, 
+ 87SR2C  1964KO11, 1965BR25, 1966MC12, 1974Ne14, 1974NE14, 1977De22, 1977DE22,  
+ 87SR3C  1982MI14, 1985ShCY, 2002AmU0, 2003KO66, 2008DUZX, 2011NOU0, 2012RoU0,  
+ 87SR4C  2012Wa38, 2019MO35, 2021WA16                                           
+ 87SR T  Auger electrons and X ray energies and emission intensities:           
+ 87SR T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 87SR T                                                                         
+ 87SR T        14.098                            XKA2                           
+ 87SR T        14.1652                           XKA1                           
+ 87SR T                                                                         
+ 87SR T        15.8252        |]                 XKB3                           
+ 87SR T        15.8359        |]                 XKB1                           
+ 87SR T        15.969         |]                 XKB5II                         
+ 87SR T                                                                         
+ 87SR T        16.0847        |]                 XKB2                           
+ 87SR T        16.104         |]                 XKB4                           
+ 87SR T                                                                         
+ 87RB  P 0.0         3/2-              49.65E9 Y 4              282.275   6     
+ 87SR  N 1.0         1.0       1         1.0                                    
+ 87SR  L 0           9/2+               STABLE                                  
+ 87SR  B 282.275   6 100                 17.06326                            3  
+ 87SRS B EAV=56.4715 10                                                         
