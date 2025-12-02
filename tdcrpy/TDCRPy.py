@@ -1237,16 +1237,17 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
 
 
 # mode = "eff"                # ask for efficiency calculation
-# Rad="Fe-55"                 # radionuclides
+# Rad="Cu-67"                 # radionuclides
 # pmf_1="1"                   # relatives fractions of the radionulides
 # N = 1000                    # number of Monte Carlo trials
 # kB =1.0e-5                  # Birks constant in cm keV-1
 # V = 10                      # volume of scintillator in mL
 # L=np.logspace(-1,2,num=100) # free parameter in keV-1
 
-# # Record decay histories in temporary files
+# Record decay histories in temporary files
+# TDCRPy(L[0], Rad, pmf_1, N, kB, V, mode, Display=True)
 # TDCRPy(L[0], Rad, pmf_1, N, kB, V, mode, barp=False, record=True, fullMC=False)
-# # TDCRPy(100, Rad, pmf_1, N, kB, V, mode, barp=False, record=True, fullMC=True)
+# TDCRPy(100, Rad, pmf_1, N, kB, V, mode, barp=False, record=True, fullMC=True)
 
 # effS, u_effS, effD, u_effD, effT, u_effT, effD2, u_effD2 = [], [],[], [],[], [], [], []
 # for l in tqdm(L, desc="free parameters ", unit=" iterations"):
