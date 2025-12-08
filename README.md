@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/logo.png" alt="TDCRPy Logo" width="200"/>
+<img src="docs/logo1.png" alt="TDCRPy Logo" width="200"/>
 
 **A Photo-Physical Stochastic Model for Liquid Scintillation Counting**
 
