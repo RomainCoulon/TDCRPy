@@ -24,230 +24,433 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import tempfile
 import math
+import shutil
 
-"""
-======= Import ressource data =======
-"""
-
-# import advanced configuration data
+# --- GLOBAL CONFIG SETUP ---
 config = configparser.ConfigParser()
+config.optionxform = str  # Preserve case sensitivity (pH, pC, HCl, etc.)
+
+"""
+======= DATA & CALCULATIONS =======
+"""
+
+# Define Atomic Weights (g/mol)
+ATOMIC_WEIGHTS = {
+    'H': 1.008, 'C': 12.011, 'N': 14.007, 'O': 15.999, 
+    'P': 30.974, 'S': 32.06, 'Na': 22.990, 'Cl': 35.453
+}
+# Define Atomic Numbers (Z)
+ATOMIC_Z = {
+    'H': 1, 'C': 6, 'N': 7, 'O': 8, 
+    'P': 15, 'S': 16, 'Na': 11, 'Cl': 17
+}
+
+def normalizeDic(w_dict):
+    total = sum(w_dict.values())
+    return {k: v / total for k, v in w_dict.items()}
+
+COCKTAIL_DATA = {
+    'Ultima Gold': {
+        'w': normalizeDic({'H': 0.0967, 'C': 0.7891, 'O': 0.0950, 'P': 0.0133, 'N': 0.0022, 'S': 0.0025, 'Na': 0.0018, 'Cl': 0.0}),
+        'rho': 0.98 
+    },
+    'Ultima Gold XR': {
+        'w': normalizeDic({'H': 0.1008, 'C': 0.7296, 'O': 0.1519, 'P': 0.0114, 'N': 0.0016, 'S': 0.0032, 'Na': 0.0023, 'Cl': 0.0}),
+        'rho': 0.99 
+    },
+    'Ultima Gold AB': {
+        'w': normalizeDic({'H': 0.0978, 'C': 0.7635, 'O': 0.1379, 'P': 0.0011, 'N': 0.0005, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.98
+    },
+    'Ultima Gold LLT': {
+        'w': normalizeDic({'H': 0.0979, 'C': 0.7618, 'O': 0.1399, 'P': 0.0011, 'N': 0.0005, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.98
+    },
+    'Insta-Gel Plus': {
+        'w': normalizeDic({'H': 0.0990, 'C': 0.7064, 'O': 0.1983, 'P': 0.0, 'N': 0.0003, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.95
+    },
+    'Hionic-Fluor': {
+        'w': normalizeDic({'H': 0.1002, 'C': 0.6888, 'O': 0.1668, 'P': 0.0295, 'N': 0.0044, 'S': 0.0068, 'Na': 0.0049, 'Cl': 0.0}),
+        'rho': 0.95
+    },
+    'ProSafe HC+': {
+        'w': normalizeDic({'H': 0.0980, 'C': 0.7750, 'O': 0.1250, 'P': 0.0010, 'N': 0.0010, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96 
+    },
+    'ProSafe TS+': {
+         'w': normalizeDic({'H': 0.0990, 'C': 0.7600, 'O': 0.1400, 'P': 0.0010, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+         'rho': 0.96
+    },
+    'Water': {
+        'w': {'H': 0.111894, 'C': 0.0, 'O': 0.888106, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+        'rho': 0.9982
+    },
+    'Toluene': {
+        'w': {'H': 0.0875, 'C': 0.9125, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+        'rho': 0.867
+    },
+    'Pseudocumene': {
+        'w': {'H': 0.1006, 'C': 0.8994, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+        'rho': 0.876
+    },
+    'PXE': {
+        'w': {'H': 0.0863, 'C': 0.9137, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+        'rho': 0.985
+    },
+    'LAB': {
+         'w': {'H': 0.126, 'C': 0.874, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+         'rho': 0.86
+    }
+}
+
+def calculate_aqueous_fractions(solvantType, conc_mol_L):
+    """
+    Calculates the mass fractions (w_i) of the aqueous phase based on 
+    the solvent type (HCl, HNO3, or Water) and concentration.
+    """
+    # Default to pure water if no type specified
+    if not solvantType or solvantType == "False" or solvantType == "None" or solvantType == "Water":
+        return COCKTAIL_DATA['Water']['w']
+
+    conc = float(conc_mol_L)
+    if conc <= 0:
+        return COCKTAIL_DATA['Water']['w']
+
+    # Molar Masses
+    MW_H = ATOMIC_WEIGHTS['H']
+    MW_O = ATOMIC_WEIGHTS['O']
+    MW_N = ATOMIC_WEIGHTS['N']
+    MW_Cl = ATOMIC_WEIGHTS['Cl']
+    
+    MW_Water = 2*MW_H + MW_O
+    
+    # Calculate Acid contributions
+    if solvantType == "HCl":
+        MW_Acid = MW_H + MW_Cl
+        # Elements in Acid molecule: 1 H, 1 Cl
+        acid_elements = {'H': 1 * MW_H / MW_Acid, 'Cl': 1 * MW_Cl / MW_Acid}
+        
+    elif solvantType == "HNO3":
+        MW_Acid = MW_H + MW_N + 3*MW_O
+        # Elements in Acid molecule: 1 H, 1 N, 3 O
+        acid_elements = {'H': 1 * MW_H / MW_Acid, 'N': 1 * MW_N / MW_Acid, 'O': 3 * MW_O / MW_Acid}
+    else:
+        # Fallback to water if unknown string
+        return COCKTAIL_DATA['Water']['w']
+
+    # Mixing Calculation (Approximate Density ~ 1000 g/L for the solution base)
+    # Mass of Acid in 1 L = Conc (mol/L) * MW_Acid (g/mol)
+    mass_acid = conc * MW_Acid
+    
+    # Approximation: Assume total mass of 1L solution is roughly 1000g + mass_acid (or simply 1000g total).
+    # Standard LSC approximation: 1L of dilute acid ~ 1000g total mass. 
+    # Mass of water = Total Mass - Mass Acid.
+    # We will assume a baseline density of 1.0 kg/L for the conversion unless high conc.
+    total_mass_solution = 1000.0 
+    
+    # Safety clamp: if acid mass > total mass (impossible physical conc), return pure acid
+    if mass_acid >= total_mass_solution:
+        mass_water = 0
+        w_acid = 1.0
+    else:
+        mass_water = total_mass_solution - mass_acid
+        w_acid = mass_acid / total_mass_solution
+
+    w_water = 1.0 - w_acid
+
+    # Combine Elements
+    w_aqueous = {}
+    
+    # 1. Contribution from Water
+    w_H_water = COCKTAIL_DATA['Water']['w']['H']
+    w_O_water = COCKTAIL_DATA['Water']['w']['O']
+    
+    w_aqueous['H'] = w_water * w_H_water
+    w_aqueous['O'] = w_water * w_O_water
+    
+    # 2. Contribution from Acid
+    for el, w_el_in_acid in acid_elements.items():
+        w_aqueous[el] = w_aqueous.get(el, 0.0) + (w_acid * w_el_in_acid)
+
+    # Normalize to ensure sum is exactly 1.0
+    return normalizeDic(w_aqueous)
+# print(calculate_aqueous_fractions("HCl", 0.1))
+
+def calculate_lsc_mixture_properties(cocktail_name, aqueous_mass_fraction, solvantType, solvantConc):
+    """
+    Calculates atomic fractions, density, effective Z, and effective A.
+    Takes into account the specific aqueous solvent composition.
+    """
+    if cocktail_name not in COCKTAIL_DATA:
+        return False
+
+    cocktail_data = COCKTAIL_DATA[cocktail_name]
+    W_aqueous = float(aqueous_mass_fraction)
+    W_cocktail = 1.0 - W_aqueous
+    
+    rho_cocktail = cocktail_data['rho']
+    rho_water = COCKTAIL_DATA['Water']['rho'] # Approximation: Use water density for aqueous phase density
+    
+    # Inverse density mixing rule
+    inv_rho_mix = (W_cocktail / rho_cocktail) + (W_aqueous / rho_water)
+    rho_mix = 1.0 / inv_rho_mix
+    
+    final_mass_fractions = {}
+    
+    # 1. Cocktail contribution
+    for elem, w_i_cocktail in cocktail_data['w'].items():
+        final_mass_fractions[elem] = w_i_cocktail * W_cocktail
+    
+    # 2. Aqueous contribution (Dynamic based on HCl/HNO3)
+    w_aqueous_phase = calculate_aqueous_fractions(solvantType, solvantConc)
+    
+    for elem, w_i_aq in w_aqueous_phase.items():
+        final_mass_fractions[elem] = final_mass_fractions.get(elem, 0) + w_i_aq * W_aqueous
+    
+    # Ensure all keys exist
+    for elem in ATOMIC_WEIGHTS:
+        if elem not in final_mass_fractions:
+             final_mass_fractions[elem] = 0.0
+
+    # 3. Calculate Atomic Fractions
+    relative_moles = {}
+    for elem, w_i in final_mass_fractions.items():
+        if elem in ATOMIC_WEIGHTS:
+            relative_moles[elem] = w_i / ATOMIC_WEIGHTS[elem]
+
+    M_mix_eff = sum(relative_moles.values())
+    
+    atomic_fractions = {}
+    for elem, n_rel in relative_moles.items():
+        atomic_fractions[elem] = n_rel / M_mix_eff
+        
+    # Calculate Effective Z and A
+    Z_eff = sum(atomic_fractions[elem] * ATOMIC_Z.get(elem, 0) for elem in atomic_fractions)
+    A_eff = sum(atomic_fractions[elem] * ATOMIC_WEIGHTS.get(elem, 0) for elem in atomic_fractions)
+    
+    filtered_atomic_fractions = {
+        k: v for k, v in sorted(atomic_fractions.items(), key=lambda item: item[1], reverse=True) 
+    }
+    
+    return {
+        'density_g_cm3': rho_mix,
+        'effective_Z': Z_eff,
+        'effective_A_g_mol': A_eff,
+        'atomic_fractions': filtered_atomic_fractions
+    }
+# print(calculate_lsc_mixture_properties("Ultima Gold", "0.1", "Water", 0.1))
+
+"""
+======= CONFIGURATION I/O (Safe Implementation) =======
+"""
+
+def get_config_path():
+    return files('tdcrpy').joinpath('config.toml')
+
+def read_config_object():
+    global config
+    with importlib.resources.as_file(get_config_path()) as data_path:
+        config.read(data_path)
+
+def save_config_object():
+    with importlib.resources.as_file(get_config_path()) as data_path:
+        with open(data_path, 'w') as configfile:
+            config.write(configfile)
+
+def update_config_value(key, value, section="Inputs"):
+    read_config_object()
+    if section not in config:
+        config.add_section(section)
+    config[section][key] = str(value)
+    save_config_object()
+
+def update_config_batch(updates_dict, section="Inputs"):
+    read_config_object()
+    if section not in config:
+        config.add_section(section)
+    for key, value in updates_dict.items():
+        config[section][key] = str(value)
+    save_config_object()
+
+# --- READING FUNCTIONS ---
 
 def readEffQ0():
-    global config, file_conf
-    config = configparser.ConfigParser()
-    with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
-        file_conf = data_path       
-    config.read(file_conf)
-    
-    effQuantic0 = config["Inputs"].get("effQuantum")
-    return effQuantic0
+    read_config_object()
+    return config["Inputs"].get("effQuantum")
+
+def lsCocktail():
+    read_config_object()
+    return config["Inputs"].get("ls_cocktail")
 
 def readParameters(disp=False):
-    global config, file_conf
-    config = configparser.ConfigParser()
-    with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
-        file_conf = data_path       
-    config.read(file_conf)
-
-    nE_electron = config["Inputs"].getint("nE_electron")
-    nE_alpha = config["Inputs"].getint("nE_alpha")
-    tau = config["Inputs"].getint("tau")
-    extDT = config["Inputs"].getint("extDT")
-    measTime = config["Inputs"].getint("measTime")
-    RHO = config["Inputs"].getfloat("density")
-    Z = config["Inputs"].getfloat("Z")
-    A = config["Inputs"].getfloat("A")
-    pH = config["Inputs"].getfloat("pH")
-    pC = config["Inputs"].getfloat("pC")
-    pN = config["Inputs"].getfloat("pN")
-    pO = config["Inputs"].getfloat("pO")
-    pP = config["Inputs"].getfloat("pP")
-    pCl = config["Inputs"].getfloat("pCl")
+    read_config_object()
     
-    depthSpline = config["Inputs"].getint("depthSpline")
-    Einterp_a = config["Inputs"].getfloat("Einterp_a")
-    Einterp_e = config["Inputs"].getfloat("Einterp_e")
-    diam_micelle = config["Inputs"].getfloat("diam_micelle")
-    fAq = config["Inputs"].getfloat("fAq")
-    micCorr = config["Inputs"].getboolean("micCorr")
-    # alphaDir = config["Inputs"].getfloat("alphaDir")
-    effQuantic0 = config["Inputs"].get("effQuantum")
-    effQuantic = effQuantic0.split(',')
-    for i, iS in enumerate(effQuantic):
-        iS=iS.replace(" ","")
-        if iS != 'None':  effQuantic[i]=float(iS)
-    optionModel = config["Inputs"].get("optionModel")
-    diffP = config["Inputs"].getfloat("diffP")
-    PMTspace = config["Inputs"].getfloat("PMTspace")
+    if "Inputs" not in config:
+        raise ValueError("Config file missing [Inputs] section")
+        
+    inputs = config["Inputs"]
+
+    nE_electron = inputs.getint("nE_electron")
+    nE_alpha = inputs.getint("nE_alpha")
+    tau = inputs.getint("tau")
+    extDT = inputs.getfloat("extDT")
+    measTime = inputs.getfloat("measTime")
+    RHO = inputs.getfloat("density")
+    Z = inputs.getfloat("Z")
+    A = inputs.getfloat("A")
+    
+    # Atomic Fractions
+    pH = inputs.getfloat("pH")
+    pC = inputs.getfloat("pC")
+    pN = inputs.getfloat("pN")
+    pO = inputs.getfloat("pO")
+    pP = inputs.getfloat("pP")
+    pS = inputs.getfloat("pS", fallback=0.0)
+    pNa = inputs.getfloat("pNa", fallback=0.0)
+    pCl = inputs.getfloat("pCl")
+    
+    depthSpline = inputs.getint("depthSpline")
+    Einterp_a = inputs.getfloat("Einterp_a")
+    Einterp_e = inputs.getfloat("Einterp_e")
+    diam_micelle = inputs.getfloat("diam_micelle")
+    fAq = inputs.getfloat("fAq")
+    micCorr = inputs.getboolean("micCorr")
+
+    # --- NEW PARAMETERS ---
+    solvantType = inputs.get("solvantType", fallback="Water")
+    solvantConc = inputs.getfloat("solvantConc_mol_L", fallback=0.0)
+    
+    effQuantic0 = inputs.get("effQuantum")
+    effQuantic = []
+    if effQuantic0:
+        for iS in effQuantic0.split(','):
+            iS = iS.strip()
+            if iS and iS != 'None':
+                effQuantic.append(float(iS))
+
+    optionModel = inputs.get("optionModel")
+    diffP = inputs.getfloat("diffP")
+    PMTspace = inputs.getfloat("PMTspace")
     
     if disp:
-        print(f"number of integration bins for electrons = {nE_electron}")
-        print(f"number of integration bins for alpha = {nE_alpha}")
         print(f"density = {RHO} g/cm3")
-        print(f"Z = {Z}")
-        print(f"A = {A}")
-        print(f"Atomic fraction: [H] = {pH:.6f}, [C] = {pC:.6f}")
-        print(f"[N] = {pN:.6f}, [O] = {pO:.6f}")
-        print(f"[P] = {pP:.6f}, [Cl] = {pCl:.6f}")
-        print(f"depth of spline interp. = {depthSpline}")
-        print(f"energy above which interp. in implemented (for alpha) = {Einterp_a} keV")
-        print(f"energy above which interp. in implemented (for electron) = {Einterp_e} keV")
-        print(f"activation of the micelle correction = {micCorr}")
-        print(f"diameter of micelle = {diam_micelle} nm")
-        print(f"acqueous fraction = {fAq}")
-        # print(f"alpha parameter of the hidden Dirichlet process = {alphaDir}")
-        print(f"quantum efficiency of the photocathodes = {effQuantic}")
-        print(f"Monte Carlo model of the optics = {optionModel}")
-        print(f"fraction of diffused scintillation photons = {diffP*100:.1f} %")
-        print(f"relative distance from vials border to PMT entrance = {PMTspace*100:.1f} %")
-        print(f"coincidence resolving time = {tau} ns")
-        print(f"extended dead time = {extDT} µs")
-        print(f"measurement time = {measTime} min")
+        print(f"Z = {Z:.4f}, A = {A:.4f}")
+        print(f"Atomic fraction: H={pH:.4f}, C={pC:.4f}, N={pN:.4f}, O={pO:.4f}")
+        print(f"                 P={pP:.4f}, S={pS:.4f}, Na={pNa:.4f}, Cl={pCl:.4f}")
+        print(f"acqueous fraction = {fAq} (Type: {solvantType}, {solvantConc} mol/L)")
+        print(f"quantum efficiency = {effQuantic}")
     
-    return nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, optionModel, diffP, PMTspace, pH,pC,pN,pO,pP,pCl
+    # Added solvantType and solvantConc to return tuple
+    return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
+            diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
+            optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl,
+            solvantType, solvantConc)
 
-nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, optionModel, diffP, PMTspace, pH,pC,pN,pO,pP,pCl = readParameters()
+# --- MODIFY FUNCTIONS ---
 
-p_atom = np.array([pH,pC,pN,pO,pP,pCl]) # atom abondance in the scintillator
-p_atom /= sum(p_atom) 
-
-def readConfigAsstr():
-    path2config = str(config.read(file_conf)[0])
-    with open(path2config, 'r') as file:
-        data0 = file.read()
-    return data0
-
-def writeConfifAsstr(data):
-    path2config = str(config.read(file_conf)[0])
-    with open(path2config, 'w') as file:
-        file.write(data)
-
-def modifynE_electron(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[0]
-    data1 = data0.replace(f"nE_electron = {x0}",f"nE_electron = {x}")
-    writeConfifAsstr(data1)
-   
-def modifynE_alpha(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[1]
-    data1 = data0.replace(f"nE_alpha = {x0}",f"nE_alpha = {x}")
-    writeConfifAsstr(data1)
-
-def modifyDensity(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[2]
-    data1 = data0.replace(f"density = {x0}",f"density = {x}")
-    writeConfifAsstr(data1)
-
-def modifyZ(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[3]
-    data1 = data0.replace(f"Z = {x0}",f"Z = {x}")
-    writeConfifAsstr(data1)
-    
-def modifyA(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[4]
-    data1 = data0.replace(f"A = {x0}",f"A = {x}")
-    writeConfifAsstr(data1)
+def modifynE_electron(x): update_config_value("nE_electron", x)
+def modifynE_alpha(x): update_config_value("nE_alpha", x)
+def modifyDensity(x): update_config_value("density", x)
+def modifyZ(x): update_config_value("Z", x)
+def modifyA(x): update_config_value("A", x)
 
 def modifyAtmConc(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[-6:]
-    data1 = data0.replace(f"pH = {x0[0]:.6f}",f"pH = {x[0]:.6f}")
-    data1 = data1.replace(f"pC = {x0[1]:.6f}",f"pC = {x[1]:.6f}")
-    data1 = data1.replace(f"pN = {x0[2]:.6f}",f"pN = {x[2]:.6f}")
-    data1 = data1.replace(f"pO = {x0[3]:.6f}",f"pO = {x[3]:.6f}")
-    data1 = data1.replace(f"pP = {x0[4]:.6f}",f"pP = {x[4]:.6f}") #
-    data1 = data1.replace(f"pCl = {x0[5]:.6f}",f"pCl = {x[5]:.6f}")
-    writeConfifAsstr(data1)
+    """
+    Accepts dict or array. Updates atomic fractions in config.
+    """
+    if isinstance(x, dict):
+        updates = {
+            "pH": f"{x.get('H', 0.0):.6f}",
+            "pC": f"{x.get('C', 0.0):.6f}",
+            "pN": f"{x.get('N', 0.0):.6f}",
+            "pO": f"{x.get('O', 0.0):.6f}",
+            "pP": f"{x.get('P', 0.0):.6f}",
+            "pS": f"{x.get('S', 0.0):.6f}",
+            "pNa": f"{x.get('Na', 0.0):.6f}",
+            "pCl": f"{x.get('Cl', 0.0):.6f}"
+        }
+        update_config_batch(updates)
+    else:
+        # Fallback (assuming standard order: H, C, N, O, P, Cl)
+        # Note: Array logic is fragile with new elements, better to use dict where possible
+        update_config_batch({
+            "pH": f"{x[0]:.6f}", "pC": f"{x[1]:.6f}", "pN": f"{x[2]:.6f}",
+            "pO": f"{x[3]:.6f}", "pP": f"{x[4]:.6f}", "pCl": f"{x[5]:.6f}"
+        })
 
-def modifyDepthSpline(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[5]
-    data1 = data0.replace(f"depthSpline = {x0}",f"depthSpline = {x}")
-    writeConfifAsstr(data1)
+def modifyDepthSpline(x): update_config_value("depthSpline", x)
+def modifyEinterp_a(x): update_config_value("Einterp_a", int(x))
+def modifyEinterp_e(x): update_config_value("Einterp_e", x)
+def modifyDiam_micelle(x): update_config_value("diam_micelle", int(x))
+def modifyfAq(x): update_config_value("fAq", x)
+def modifySolvantType(x): update_config_value("solvantType", x)
+def modifySolvantConc(x): update_config_value("solvantConc_mol_L", x)
+def modifyTau(x): update_config_value("tau", x)
+def modifyDeadTime(x): update_config_value("extDT", x)
+def modifyMeasTime(x): update_config_value("measTime", x)
+def modifyMicCorr(x): update_config_value("micCorr", x)
+def modifyEffQ(x): update_config_value("effQuantum", x)
+def modifyOptModel(x): update_config_value("optionModel", x)
+def modifyDiffP(x): update_config_value("diffP", f"{x:.1f}")
+def modifyPMTspace(x): update_config_value("PMTspace", f"{x:.1f}")
 
-def modifyEinterp_a(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[6]
-    data1 = data0.replace(f"Einterp_a = {int(x0)}",f"Einterp_a = {int(x)}")
-    writeConfifAsstr(data1)
-
-def modifyEinterp_e(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[7]
-    data1 = data0.replace(f"Einterp_e = {x0}",f"Einterp_e = {x}")
-    writeConfifAsstr(data1)
-
-def modifyDiam_micelle(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[8]
-    data1 = data0.replace(f"diam_micelle = {int(x0)}",f"diam_micelle = {int(x)}")
-    writeConfifAsstr(data1)    
-
-def modifyfAq(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[9]
-    data1 = data0.replace(f"fAq = {x0}",f"fAq = {x}")
-    writeConfifAsstr(data1)
-
-def modifyTau(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[10]
-    data1 = data0.replace(f"tau = {x0}",f"tau = {x}")
-    writeConfifAsstr(data1)
-
-def modifyDeadTime(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[11]
-    data1 = data0.replace(f"extDT = {x0}",f"extDT = {x}")
-    writeConfifAsstr(data1)
-
-def modifyMeasTime(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[12]
-    data1 = data0.replace(f"measTime = {x0}",f"measTime = {x}")
-    writeConfifAsstr(data1)
-
-def modifyMicCorr(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[13]
-    data1 = data0.replace(f"micCorr = {x0}",f"micCorr = {x}")
-    writeConfifAsstr(data1)
+def modifyLScocktail(cocktail_name, fAq, solvantType="Water", solvantConc=0.0):
+    """
+    Updates cocktail name, aqueous properties, and re-calculates all physics.
+    """
+    # 1. Update config settings
+    update_config_batch({
+        "ls_cocktail": cocktail_name,
+        "fAq": str(fAq),
+        "solvantType": str(solvantType),
+        "solvantConc_mol_L": str(solvantConc)
+    })
     
-# def modifyAlphaDir(x):
-#     data0 = readConfigAsstr()
-#     x0 = readParameters()[14]
-#     data1 = data0.replace(f"alphaDir = {x0}",f"alphaDir = {x}")
-#     writeConfifAsstr(data1)
+    # 2. Calculate properties using the new solvent info
+    lsc_results = calculate_lsc_mixture_properties(cocktail_name, fAq, solvantType, solvantConc)
     
-def modifyEffQ(x):
-    data0 = readConfigAsstr()
-    # x0 = readParameters()[14]
-    x0 = readEffQ0()
-    data1 = data0.replace(f"effQuantum = {x0}",f"effQuantum = {x}")
-    writeConfifAsstr(data1)
+    if lsc_results:
+        # 3. Batch update all physical properties
+        updates = {
+            "density": lsc_results["density_g_cm3"],
+            "Z": lsc_results["effective_Z"],
+            "A": lsc_results["effective_A_g_mol"],
+            "pH": f"{lsc_results['atomic_fractions'].get('H', 0.0):.6f}",
+            "pC": f"{lsc_results['atomic_fractions'].get('C', 0.0):.6f}",
+            "pN": f"{lsc_results['atomic_fractions'].get('N', 0.0):.6f}",
+            "pO": f"{lsc_results['atomic_fractions'].get('O', 0.0):.6f}",
+            "pP": f"{lsc_results['atomic_fractions'].get('P', 0.0):.6f}",
+            "pS": f"{lsc_results['atomic_fractions'].get('S', 0.0):.6f}",
+            "pNa": f"{lsc_results['atomic_fractions'].get('Na', 0.0):.6f}",
+            "pCl": f"{lsc_results['atomic_fractions'].get('Cl', 0.0):.6f}"
+        }
+        update_config_batch(updates)
+        
+        # 4. Display confirmation
+        readParameters(disp=True)
+    else:
+        print(f"Warning: Cocktail '{cocktail_name}' not found. Config not updated.")
 
-def modifyOptModel(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[15]
-    data1 = data0.replace(f"optionModel = {x0}",f"optionModel = {x}")
-    writeConfifAsstr(data1)
+def resetConfFile():
+    with importlib.resources.as_file(files('tdcrpy')) as data_path:
+        file_configDefault = data_path / "configDefault.toml"
+        shutil.copyfile(file_configDefault, "config.toml")
 
-def modifyDiffP(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[16]
-    data1 = data0.replace(f"diffP = {x0:.1f}",f"diffP = {x:.1f}")
-    writeConfifAsstr(data1)
+# --- INITIALIZATION ---
 
-def modifyPMTspace(x):
-    data0 = readConfigAsstr()
-    x0 = readParameters()[17]
-    data1 = data0.replace(f"PMTspace = {x0:.1f}",f"PMTspace = {x:.1f}")
-    writeConfifAsstr(data1)
+# Read current parameters
+(nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
+ diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
+ optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc) = readParameters()
 
+# Calculate normalized atomic array (if needed for legacy code)
+p_atom = np.array([pH, pC, pN, pO, pP, pS, pNa, pCl])
+if sum(p_atom) > 0:
+    p_atom /= sum(p_atom) 
+
+
+        
 def read_temp_files(copy=False, path="C:"):
     
     temp_dir = tempfile.gettempdir()
@@ -2182,6 +2385,10 @@ def read_ENDF_photon(atom,z=z_endf_ph):
         name = "photoat-007_N_000.txt"
     elif atom == 'P':
         name = "photoat-015_P_000.txt"    
+    elif atom == 'S':
+        name = "photoat-016_S_000.txt"
+    elif atom == 'Na':
+        name = "photoat-011_Na_000.txt"    
     elif atom == 'Cl':
         name = "photoat-017_Cl_000.txt"
         
@@ -2284,7 +2491,7 @@ def interaction_scintillation(e_p, p_atom=p_atom):
 
     """
     # p_atom = np.array([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071]) # atom abondance in the scintillator
-    atom = ['H','C','N','O','P','Cl']
+    atom = ['H','C','N','O','P','S','Na','Cl']
     # sampling atom 
     
     binding_H, energie_H, cross_section_H = read_ENDF_photon('H')
@@ -2292,8 +2499,10 @@ def interaction_scintillation(e_p, p_atom=p_atom):
     binding_N, energie_N, cross_section_N = read_ENDF_photon('N')
     binding_O, energie_O, cross_section_O = read_ENDF_photon('O')
     binding_P, energie_P, cross_section_P = read_ENDF_photon('P')
+    binding_S, energie_S, cross_section_S = read_ENDF_photon('S')
+    binding_Na, energie_Na, cross_section_Na = read_ENDF_photon('Na')
     binding_Cl, energie_Cl, cross_section_Cl = read_ENDF_photon('Cl')
-    binding_T = [binding_H,binding_C,binding_N,binding_O,binding_P,binding_Cl]
+    binding_T = [binding_H,binding_C,binding_N,binding_O,binding_P,binding_S,binding_Na,binding_Cl]
     
     ###  probability of atoms
     cross_t = []
@@ -2318,6 +2527,14 @@ def interaction_scintillation(e_p, p_atom=p_atom):
     index_P_t = reperer_energie_index(e_p,energie_P[0])
     cross_t.append(cross_section_P[0][index_P_t])
     
+    ## S
+    index_S_t = reperer_energie_index(e_p,energie_S[0])
+    cross_t.append(cross_section_S[0][index_S_t])
+    
+    ## Na
+    index_Na_t = reperer_energie_index(e_p,energie_Na[0])
+    cross_t.append(cross_section_Na[0][index_Na_t])
+    
     ## Cl
     index_Cl_t = reperer_energie_index(e_p,energie_Cl[0])
     cross_t.append(cross_section_Cl[0][index_Cl_t])
@@ -2330,9 +2547,11 @@ def interaction_scintillation(e_p, p_atom=p_atom):
     p_N = cross_t[2]*p_atom[2]/p_t_somme 
     p_O = cross_t[3]*p_atom[3]/p_t_somme
     p_P = cross_t[4]*p_atom[4]/p_t_somme
-    p_Cl = cross_t[5]*p_atom[5]/p_t_somme
+    p_S = cross_t[5]*p_atom[5]/p_t_somme
+    p_Na = cross_t[6]*p_atom[6]/p_t_somme
+    p_Cl = cross_t[7]*p_atom[7]/p_t_somme
 
-    p_T = [p_H,p_C,p_N,p_O,p_P,p_Cl] # probability distribution of possible targets
+    p_T = [p_H,p_C,p_N,p_O,p_P,p_S,p_Na,p_Cl] # probability distribution of possible targets
     
     ## definir l'element
     index_element = sampling(p_T)
@@ -2369,6 +2588,14 @@ def interaction_scintillation(e_p, p_atom=p_atom):
         energie = energie_P
         binding_e = binding_P
     elif  index_element == 5:
+        cross_section = cross_section_S
+        energie = energie_S
+        binding_e = binding_S
+    elif  index_element == 6:
+        cross_section = cross_section_Na
+        energie = energie_Na
+        binding_e = binding_Na
+    elif  index_element == 7:
         cross_section = cross_section_Cl
         energie = energie_Cl
         binding_e = binding_Cl              
@@ -2442,6 +2669,10 @@ def read_ENDF_RA(atom,z=z_endf_ar):
         name = "atom-008_O_000.endf"
     elif atom == 'P':
         name = "atom-015_P_000.endf"
+    elif atom == 'S':
+        name = "atom-016_S_000.endf"
+    elif atom == 'Na':
+        name = "atom-011_Na_000.endf"
     elif atom == 'Cl':
         name = "atom-017_Cl_000.endf"   
         
