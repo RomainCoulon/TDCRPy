@@ -74,6 +74,10 @@ COCKTAIL_DATA = {
         'w': normalizeDic({'H': 0.1002, 'C': 0.6888, 'O': 0.1668, 'P': 0.0295, 'N': 0.0044, 'S': 0.0068, 'Na': 0.0049, 'Cl': 0.0}),
         'rho': 0.95
     },
+    'ProSafe+': {
+        'w': normalizeDic({'H': 0.1020, 'C': 0.8150, 'O': 0.0800, 'P': 0.0010, 'N': 0.0010, 'S': 0.0005, 'Na': 0.0005, 'Cl': 0.0}),
+        'rho': 0.96  # Standard density for ProSafe series
+    },
     'ProSafe HC+': {
         'w': normalizeDic({'H': 0.0980, 'C': 0.7750, 'O': 0.1250, 'P': 0.0010, 'N': 0.0010, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
         'rho': 0.96 
