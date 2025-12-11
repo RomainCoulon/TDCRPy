@@ -2390,9 +2390,11 @@ def read_ENDF_photon(atom,z=z_endf_ph):
     elif atom == 'P':
         name = "photoat-015_P_000.txt"    
     elif atom == 'S':
-        name = "photoat-016_S_000.txt"
+        name = "photoat-001_H_000.txt"
+        # name = "photoat-016_S_000.txt"
     elif atom == 'Na':
-        name = "photoat-011_Na_000.txt"    
+        name = "photoat-001_H_000.txt"
+        # name = "photoat-011_Na_000.txt"    
     elif atom == 'Cl':
         name = "photoat-017_Cl_000.txt"
         
@@ -2636,10 +2638,6 @@ def interaction_scintillation(e_p, p_atom=p_atom):
         lacune = 'Atom_M'
    
     return e_ele_emis,lacune,element
-
-
-
-
 
 
 def read_ENDF_RA(atom,z=z_endf_ar):
