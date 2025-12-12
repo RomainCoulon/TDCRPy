@@ -11,34 +11,559 @@ Bureau International des Poids et Mesures
 """
 ======= Import Python Module =======
 """
-
 import importlib.resources
 from importlib.resources import files
 import pkg_resources
 import configparser
 import numpy as np
 import zipfile as zf
-import time
 import re
 import os
 import scipy.interpolate as  interp
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+import tempfile
+import math
+import shutil
 
-"""
-======= Import ressource data =======
-"""
-
-# import advanced configuration data
-
+# --- GLOBAL CONFIG SETUP ---
 config = configparser.ConfigParser()
-with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
-    file_conf = data_path       
-config.read(file_conf)
-RHO = config["Inputs"].getfloat("density")
-Z = config["Inputs"].getfloat("Z")
-A = config["Inputs"].getfloat("A")
-depthSpline = config["Inputs"].getint("depthSpline")
-Einterp = config["Inputs"].getfloat("Einterp")
+config.optionxform = str  # Preserve case sensitivity (pH, pC, HCl, etc.)
+
+"""
+======= DATA & CALCULATIONS =======
+"""
+
+# Define Atomic Weights (g/mol)
+ATOMIC_WEIGHTS = {
+    'H': 1.008, 'C': 12.011, 'N': 14.007, 'O': 15.999, 
+    'P': 30.974, 'S': 32.06, 'Na': 22.990, 'Cl': 35.453
+}
+# Define Atomic Numbers (Z)
+ATOMIC_Z = {
+    'H': 1, 'C': 6, 'N': 7, 'O': 8, 
+    'P': 15, 'S': 16, 'Na': 11, 'Cl': 17
+}
+
+def normalizeDic(w_dict):
+    total = sum(w_dict.values())
+    return {k: v / total for k, v in w_dict.items()}
+
+COCKTAIL_DATA = {
+    'Ultima Gold': {
+        'w': normalizeDic({'H': 0.0967, 'C': 0.7891, 'O': 0.0950, 'P': 0.0133, 'N': 0.0022, 'S': 0.0025, 'Na': 0.0018, 'Cl': 0.0}),
+        'rho': 0.98 
+    },
+    'Ultima Gold XR': {
+        'w': normalizeDic({'H': 0.1008, 'C': 0.7296, 'O': 0.1519, 'P': 0.0114, 'N': 0.0016, 'S': 0.0032, 'Na': 0.0023, 'Cl': 0.0}),
+        'rho': 0.99 
+    },
+    'Ultima Gold AB': {
+        'w': normalizeDic({'H': 0.0978, 'C': 0.7635, 'O': 0.1379, 'P': 0.0011, 'N': 0.0005, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.98
+    },
+    'Ultima Gold LLT': {
+        'w': normalizeDic({'H': 0.0979, 'C': 0.7618, 'O': 0.1399, 'P': 0.0011, 'N': 0.0005, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.98
+    },
+    'Insta-Gel Plus': {
+        'w': normalizeDic({'H': 0.0990, 'C': 0.7064, 'O': 0.1983, 'P': 0.0, 'N': 0.0003, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.95
+    },
+    'Hionic-Fluor': {
+        'w': normalizeDic({'H': 0.1002, 'C': 0.6888, 'O': 0.1668, 'P': 0.0295, 'N': 0.0044, 'S': 0.0068, 'Na': 0.0049, 'Cl': 0.0}),
+        'rho': 0.95
+    },
+    'ProSafe+': {
+        'w': normalizeDic({'H': 0.1020, 'C': 0.8150, 'O': 0.0800, 'P': 0.0010, 'N': 0.0010, 'S': 0.0005, 'Na': 0.0005, 'Cl': 0.0}),
+        'rho': 0.96  # Standard density for ProSafe series
+    },
+    'ProSafe HC+': {
+        'w': normalizeDic({'H': 0.0980, 'C': 0.7750, 'O': 0.1250, 'P': 0.0010, 'N': 0.0010, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96 
+    },
+    'ProSafe TS+': {
+         'w': normalizeDic({'H': 0.0990, 'C': 0.7600, 'O': 0.1400, 'P': 0.0010, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+         'rho': 0.96
+    },
+    'Water': {
+        'w': {'H': 0.111894, 'C': 0.0, 'O': 0.888106, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+        'rho': 0.9982
+    },
+    'Toluene': {
+        'w': {'H': 0.0875, 'C': 0.9125, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+        'rho': 0.867
+    },
+    'Pseudocumene': {
+        'w': {'H': 0.1006, 'C': 0.8994, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+        'rho': 0.876
+    },
+    'PXE': {
+        'w': {'H': 0.0863, 'C': 0.9137, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+        'rho': 0.985
+    },
+    'LAB': {
+         'w': {'H': 0.126, 'C': 0.874, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
+         'rho': 0.86
+    }
+}
+
+def calculate_aqueous_fractions(solvantType, conc_mol_L):
+    """
+    Calculates the mass fractions (w_i) of the aqueous phase based on 
+    the solvent type (HCl, HNO3, or Water) and concentration.
+    """
+    # Default to pure water if no type specified
+    if not solvantType or solvantType == "False" or solvantType == "None" or solvantType == "Water":
+        return COCKTAIL_DATA['Water']['w']
+
+    conc = float(conc_mol_L)
+    if conc <= 0:
+        return COCKTAIL_DATA['Water']['w']
+
+    # Molar Masses
+    MW_H = ATOMIC_WEIGHTS['H']
+    MW_O = ATOMIC_WEIGHTS['O']
+    MW_N = ATOMIC_WEIGHTS['N']
+    MW_Cl = ATOMIC_WEIGHTS['Cl']
+    
+    MW_Water = 2*MW_H + MW_O
+    
+    # Calculate Acid contributions
+    if solvantType == "HCl":
+        MW_Acid = MW_H + MW_Cl
+        # Elements in Acid molecule: 1 H, 1 Cl
+        acid_elements = {'H': 1 * MW_H / MW_Acid, 'Cl': 1 * MW_Cl / MW_Acid}
+        
+    elif solvantType == "HNO3":
+        MW_Acid = MW_H + MW_N + 3*MW_O
+        # Elements in Acid molecule: 1 H, 1 N, 3 O
+        acid_elements = {'H': 1 * MW_H / MW_Acid, 'N': 1 * MW_N / MW_Acid, 'O': 3 * MW_O / MW_Acid}
+    else:
+        # Fallback to water if unknown string
+        return COCKTAIL_DATA['Water']['w']
+
+    # Mixing Calculation (Approximate Density ~ 1000 g/L for the solution base)
+    # Mass of Acid in 1 L = Conc (mol/L) * MW_Acid (g/mol)
+    mass_acid = conc * MW_Acid
+    
+    # Approximation: Assume total mass of 1L solution is roughly 1000g + mass_acid (or simply 1000g total).
+    # Standard LSC approximation: 1L of dilute acid ~ 1000g total mass. 
+    # Mass of water = Total Mass - Mass Acid.
+    # We will assume a baseline density of 1.0 kg/L for the conversion unless high conc.
+    total_mass_solution = 1000.0 
+    
+    # Safety clamp: if acid mass > total mass (impossible physical conc), return pure acid
+    if mass_acid >= total_mass_solution:
+        mass_water = 0
+        w_acid = 1.0
+    else:
+        mass_water = total_mass_solution - mass_acid
+        w_acid = mass_acid / total_mass_solution
+
+    w_water = 1.0 - w_acid
+
+    # Combine Elements
+    w_aqueous = {}
+    
+    # 1. Contribution from Water
+    w_H_water = COCKTAIL_DATA['Water']['w']['H']
+    w_O_water = COCKTAIL_DATA['Water']['w']['O']
+    
+    w_aqueous['H'] = w_water * w_H_water
+    w_aqueous['O'] = w_water * w_O_water
+    
+    # 2. Contribution from Acid
+    for el, w_el_in_acid in acid_elements.items():
+        w_aqueous[el] = w_aqueous.get(el, 0.0) + (w_acid * w_el_in_acid)
+
+    # Normalize to ensure sum is exactly 1.0
+    return normalizeDic(w_aqueous)
+# print(calculate_aqueous_fractions("HCl", 0.1))
+
+def calculate_lsc_mixture_properties(cocktail_name, aqueous_mass_fraction, solvantType, solvantConc):
+    """
+    Calculates atomic fractions, density, effective Z, and effective A.
+    Takes into account the specific aqueous solvent composition.
+    """
+    if cocktail_name not in COCKTAIL_DATA:
+        return False
+
+    cocktail_data = COCKTAIL_DATA[cocktail_name]
+    W_aqueous = float(aqueous_mass_fraction)
+    W_cocktail = 1.0 - W_aqueous
+    
+    rho_cocktail = cocktail_data['rho']
+    rho_water = COCKTAIL_DATA['Water']['rho'] # Approximation: Use water density for aqueous phase density
+    
+    # Inverse density mixing rule
+    inv_rho_mix = (W_cocktail / rho_cocktail) + (W_aqueous / rho_water)
+    rho_mix = 1.0 / inv_rho_mix
+    
+    final_mass_fractions = {}
+    
+    # 1. Cocktail contribution
+    for elem, w_i_cocktail in cocktail_data['w'].items():
+        final_mass_fractions[elem] = w_i_cocktail * W_cocktail
+    
+    # 2. Aqueous contribution (Dynamic based on HCl/HNO3)
+    w_aqueous_phase = calculate_aqueous_fractions(solvantType, solvantConc)
+    
+    for elem, w_i_aq in w_aqueous_phase.items():
+        final_mass_fractions[elem] = final_mass_fractions.get(elem, 0) + w_i_aq * W_aqueous
+    
+    # Ensure all keys exist
+    for elem in ATOMIC_WEIGHTS:
+        if elem not in final_mass_fractions:
+             final_mass_fractions[elem] = 0.0
+
+    # 3. Calculate Atomic Fractions
+    relative_moles = {}
+    for elem, w_i in final_mass_fractions.items():
+        if elem in ATOMIC_WEIGHTS:
+            relative_moles[elem] = w_i / ATOMIC_WEIGHTS[elem]
+
+    M_mix_eff = sum(relative_moles.values())
+    
+    atomic_fractions = {}
+    for elem, n_rel in relative_moles.items():
+        atomic_fractions[elem] = n_rel / M_mix_eff
+        
+    # Calculate Effective Z and A
+    Z_eff = sum(atomic_fractions[elem] * ATOMIC_Z.get(elem, 0) for elem in atomic_fractions)
+    A_eff = sum(atomic_fractions[elem] * ATOMIC_WEIGHTS.get(elem, 0) for elem in atomic_fractions)
+    
+    filtered_atomic_fractions = {
+        k: v for k, v in sorted(atomic_fractions.items(), key=lambda item: item[1], reverse=True) 
+    }
+    
+    return {
+        'density_g_cm3': rho_mix,
+        'effective_Z': Z_eff,
+        'effective_A_g_mol': A_eff,
+        'atomic_fractions': filtered_atomic_fractions
+    }
+# print(calculate_lsc_mixture_properties("Ultima Gold", "0.1", "Water", 0.1))
+
+"""
+======= CONFIGURATION I/O (Safe Implementation) =======
+"""
+
+def get_config_path():
+    return files('tdcrpy').joinpath('config.toml')
+
+def read_config_object():
+    global config
+    with importlib.resources.as_file(get_config_path()) as data_path:
+        config.read(data_path)
+
+def save_config_object():
+    with importlib.resources.as_file(get_config_path()) as data_path:
+        with open(data_path, 'w') as configfile:
+            config.write(configfile)
+
+def update_config_value(key, value, section="Inputs"):
+    read_config_object()
+    if section not in config:
+        config.add_section(section)
+    config[section][key] = str(value)
+    save_config_object()
+
+def update_config_batch(updates_dict, section="Inputs"):
+    read_config_object()
+    if section not in config:
+        config.add_section(section)
+    for key, value in updates_dict.items():
+        config[section][key] = str(value)
+    save_config_object()
+
+# --- READING FUNCTIONS ---
+
+def readEffQ0():
+    read_config_object()
+    return config["Inputs"].get("effQuantum")
+
+def lsCocktail():
+    read_config_object()
+    return config["Inputs"].get("ls_cocktail")
+
+def readParameters(disp=False):
+    read_config_object()
+    
+    if "Inputs" not in config:
+        raise ValueError("Config file missing [Inputs] section")
+        
+    inputs = config["Inputs"]
+
+    nE_electron = inputs.getint("nE_electron")
+    nE_alpha = inputs.getint("nE_alpha")
+    tau = inputs.getint("tau")
+    extDT = inputs.getfloat("extDT")
+    measTime = inputs.getfloat("measTime")
+    RHO = inputs.getfloat("density")
+    Z = inputs.getfloat("Z")
+    A = inputs.getfloat("A")
+    
+    # Atomic Fractions
+    pH = inputs.getfloat("pH")
+    pC = inputs.getfloat("pC")
+    pN = inputs.getfloat("pN")
+    pO = inputs.getfloat("pO")
+    pP = inputs.getfloat("pP")
+    pS = inputs.getfloat("pS", fallback=0.0)
+    pNa = inputs.getfloat("pNa", fallback=0.0)
+    pCl = inputs.getfloat("pCl")
+    
+    depthSpline = inputs.getint("depthSpline")
+    Einterp_a = inputs.getfloat("Einterp_a")
+    Einterp_e = inputs.getfloat("Einterp_e")
+    diam_micelle = inputs.getfloat("diam_micelle")
+    fAq = inputs.getfloat("fAq")
+    micCorr = inputs.getboolean("micCorr")
+
+    # --- NEW PARAMETERS ---
+    solvantType = inputs.get("solvantType", fallback="Water")
+    solvantConc = inputs.getfloat("solvantConc_mol_L", fallback=0.0)
+    
+    effQuantic0 = inputs.get("effQuantum")
+    effQuantic = []
+    if effQuantic0:
+        for iS in effQuantic0.split(','):
+            iS = iS.strip()
+            if iS and iS != 'None':
+                effQuantic.append(float(iS))
+
+    optionModel = inputs.get("optionModel")
+    diffP = inputs.getfloat("diffP")
+    PMTspace = inputs.getfloat("PMTspace")
+    
+    if disp:
+        print(f"density = {RHO} g/cm3")
+        print(f"Z = {Z:.4f}, A = {A:.4f}")
+        print(f"Atomic fraction: H={pH:.4f}, C={pC:.4f}, N={pN:.4f}, O={pO:.4f}")
+        print(f"                 P={pP:.4f}, S={pS:.4f}, Na={pNa:.4f}, Cl={pCl:.4f}")
+        print(f"acqueous fraction = {fAq} (Type: {solvantType}, {solvantConc} mol/L)")
+        print(f"quantum efficiency = {effQuantic}")
+    
+    # Added solvantType and solvantConc to return tuple
+    return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
+            diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
+            optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl,
+            solvantType, solvantConc)
+
+# --- MODIFY FUNCTIONS ---
+
+def modifynE_electron(x): update_config_value("nE_electron", x)
+def modifynE_alpha(x): update_config_value("nE_alpha", x)
+def modifyDensity(x): update_config_value("density", x)
+def modifyZ(x): update_config_value("Z", x)
+def modifyA(x): update_config_value("A", x)
+
+def modifyAtmConc(x):
+    """
+    Accepts dict or array. Updates atomic fractions in config.
+    """
+    if isinstance(x, dict):
+        updates = {
+            "pH": f"{x.get('H', 0.0):.6f}",
+            "pC": f"{x.get('C', 0.0):.6f}",
+            "pN": f"{x.get('N', 0.0):.6f}",
+            "pO": f"{x.get('O', 0.0):.6f}",
+            "pP": f"{x.get('P', 0.0):.6f}",
+            "pS": f"{x.get('S', 0.0):.6f}",
+            "pNa": f"{x.get('Na', 0.0):.6f}",
+            "pCl": f"{x.get('Cl', 0.0):.6f}"
+        }
+        update_config_batch(updates)
+    else:
+        # Fallback (assuming standard order: H, C, N, O, P, Cl)
+        # Note: Array logic is fragile with new elements, better to use dict where possible
+        update_config_batch({
+            "pH": f"{x[0]:.6f}", "pC": f"{x[1]:.6f}", "pN": f"{x[2]:.6f}",
+            "pO": f"{x[3]:.6f}", "pP": f"{x[4]:.6f}", "pCl": f"{x[5]:.6f}"
+        })
+
+def modifyDepthSpline(x): update_config_value("depthSpline", x)
+def modifyEinterp_a(x): update_config_value("Einterp_a", int(x))
+def modifyEinterp_e(x): update_config_value("Einterp_e", x)
+def modifyDiam_micelle(x): update_config_value("diam_micelle", int(x))
+def modifyfAq(x): update_config_value("fAq", x)
+def modifySolvantType(x): update_config_value("solvantType", x)
+def modifySolvantConc(x): update_config_value("solvantConc_mol_L", x)
+def modifyTau(x): update_config_value("tau", x)
+def modifyDeadTime(x): update_config_value("extDT", x)
+def modifyMeasTime(x): update_config_value("measTime", x)
+def modifyMicCorr(x): update_config_value("micCorr", x)
+def modifyEffQ(x): update_config_value("effQuantum", x)
+def modifyOptModel(x): update_config_value("optionModel", x)
+def modifyDiffP(x): update_config_value("diffP", f"{x:.1f}")
+def modifyPMTspace(x): update_config_value("PMTspace", f"{x:.1f}")
+
+def modifyLScocktail(cocktail_name, fAq, solvantType="Water", solvantConc=0.0):
+    """
+    Updates cocktail name, aqueous properties, and re-calculates all physics.
+    """
+    # 1. Update config settings
+    update_config_batch({
+        "ls_cocktail": cocktail_name,
+        "fAq": str(fAq),
+        "solvantType": str(solvantType),
+        "solvantConc_mol_L": str(solvantConc)
+    })
+    
+    # 2. Calculate properties using the new solvent info
+    lsc_results = calculate_lsc_mixture_properties(cocktail_name, fAq, solvantType, solvantConc)
+    
+    if lsc_results:
+        # 3. Batch update all physical properties
+        updates = {
+            "density": lsc_results["density_g_cm3"],
+            "Z": lsc_results["effective_Z"],
+            "A": lsc_results["effective_A_g_mol"],
+            "pH": f"{lsc_results['atomic_fractions'].get('H', 0.0):.6f}",
+            "pC": f"{lsc_results['atomic_fractions'].get('C', 0.0):.6f}",
+            "pN": f"{lsc_results['atomic_fractions'].get('N', 0.0):.6f}",
+            "pO": f"{lsc_results['atomic_fractions'].get('O', 0.0):.6f}",
+            "pP": f"{lsc_results['atomic_fractions'].get('P', 0.0):.6f}",
+            "pS": f"{lsc_results['atomic_fractions'].get('S', 0.0):.6f}",
+            "pNa": f"{lsc_results['atomic_fractions'].get('Na', 0.0):.6f}",
+            "pCl": f"{lsc_results['atomic_fractions'].get('Cl', 0.0):.6f}"
+        }
+        update_config_batch(updates)
+        
+        # 4. Display confirmation
+        readParameters(disp=True)
+    else:
+        print(f"Warning: Cocktail '{cocktail_name}' not found. Config not updated.")
+
+def resetConfFile():
+    with importlib.resources.as_file(files('tdcrpy')) as data_path:
+        file_configDefault = data_path / "configDefault.toml"
+        shutil.copyfile(file_configDefault, "config.toml")
+
+# --- INITIALIZATION ---
+
+# Read current parameters
+(nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
+ diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
+ optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc) = readParameters()
+
+# Calculate normalized atomic array (if needed for legacy code)
+p_atom = np.array([pH, pC, pN, pO, pP, pS, pNa, pCl])
+if sum(p_atom) > 0:
+    p_atom /= sum(p_atom) 
+
+
+        
+def read_temp_files(copy=False, path="C:"):
+    
+    temp_dir = tempfile.gettempdir()
+    file_path1 = os.path.join(temp_dir, 'Temp_E0.txt')
+    file_path2 = os.path.join(temp_dir, 'Temp_E1.txt')
+    file_path3 = os.path.join(temp_dir, 'Temp_E2.txt')
+    file_path4 = os.path.join(temp_dir, 'Temp_E3.txt')
+    with open(file_path1, 'r') as temp_file: content1 = temp_file.read()
+    with open(file_path2, 'r') as temp_file: content2 = temp_file.read()
+    with open(file_path3, 'r') as temp_file: content3 = temp_file.read()
+    with open(file_path4, 'r') as temp_file: content4 = temp_file.read()
+    
+    if copy:
+        with open(path+'Temp_E0.txt', 'w') as temp_file: temp_file.write(content1)
+        with open(path+'Temp_E1.txt', 'w') as temp_file: temp_file.write(content2)
+        with open(path+'Temp_E2.txt', 'w') as temp_file: temp_file.write(content3)
+        with open(path+'Temp_E3.txt', 'w') as temp_file: temp_file.write(content4)      
+    
+    return content1, content2, content3, content4, 
+
+def energyVectors1(temp):
+    temp = temp.split("\n")
+    row_m = ""
+    ee_vec, eg_vec, ep_vec, ea_vec = [], [], [], []
+    ee=0; eg=0; ep=0; ea=0 
+    for row in temp:
+        if row=="": row = "#"
+        if row[0] != "#":
+            row = row.split(" ")
+            if "" in row: row.pop(2)
+            if row[0]=='1': ee+=float(row[1])*1e-3
+            if row[0]=='2': eg+=float(row[1])*1e-3
+            if row[0]=='3': ep+=float(row[1])*1e-3
+            if row[0]=='4': ea+=float(row[1])*1e-3
+            if row[2] != row_m:
+                ee_vec.append(ee)
+                eg_vec.append(eg)
+                ep_vec.append(ep)
+                ea_vec.append(ea)
+                eg=0; ee=0; ep=0; ea=0
+        #else: print(row)
+    ee_vec = [num for num in ee_vec if num != 0]
+    eg_vec = [num for num in eg_vec if num != 0]
+    ep_vec = [num for num in ep_vec if num != 0]
+    ea_vec = [num for num in ea_vec if num != 0]
+    return ee_vec, eg_vec, ep_vec, ea_vec
+
+def energyVectors2(temp):
+    temp = temp.split("\n")
+    row_m = ""
+    ee_vec, ep_vec, ea_vec = [], [], []
+    ee=0; ep=0; ea=0 
+    for row in temp:
+        if row=="": row = "#"
+        if row[0] != "#":
+            row = row.split(" ")
+            if "" in row: row.pop(2)
+            if row[0]=='1': ee+=float(row[1])*1e-3
+            if row[0]=='3': ep+=float(row[1])*1e-3
+            if row[0]=='4': ea+=float(row[1])*1e-3
+            if row[2] != row_m:
+                ee_vec.append(ee)
+                ep_vec.append(ep)
+                ea_vec.append(ea)
+                ee=0; ep=0; ea=0
+        #else: print(row)
+    ee_vec = [num for num in ee_vec if num != 0]
+    ep_vec = [num for num in ep_vec if num != 0]
+    ea_vec = [num for num in ea_vec if num != 0]
+    return ee_vec, ep_vec, ea_vec
+
+
+def energyVectors3(temp):
+    temp = temp.split("\n")
+    row_m = ""
+    ee_vec = []; ee=0 
+    for row in temp:
+        if row=="": row = "#"
+        if row[0] != "#":
+            row = row.split(" ")
+            if "" in row: row.pop(2)
+            ee+=float(row[1])*1e-3
+            if row[2] != row_m:
+                ee_vec.append(ee)
+                ee=0
+        #else: print(row)
+    ee_vec = [num for num in ee_vec if num != 0]
+    return ee_vec
+
+def effVector(temp):
+    temp = temp.split("\n")
+    row_m = ""
+    s_vec, d_vec, t_vec = [], [], []
+    s=0; d=0; t=0 
+    for row in temp:
+        if row=="": row = "#"
+        if row[0] != "#":
+            row = row.split(" ")
+            s+=float(row[1])
+            d+=float(row[2])
+            t+=float(row[3])
+            if row[0] != row_m:
+                s_vec.append(s)
+                d_vec.append(d)
+                t_vec.append(t)
+                s=0; d=0; t=0
+        #else: print(row)
+    return s_vec, d_vec, t_vec
+
 
 # import PenNuc data
 with importlib.resources.as_file(files('tdcrpy').joinpath('decayData')) as data_path:
@@ -111,7 +636,8 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as dat
     sTc99 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Tc-99.txt'
     sPm147 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pm-147.txt'
     sPu241 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pu-241.txt'
-
+    sCo60 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Co-60.txt'
+    
 # import stopping power data for electron
 with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
 #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
@@ -178,6 +704,17 @@ for ikB in kB_e:
     Em_electron.append(line)
 
 
+micelle_E = []; micelle_S = []
+with importlib.resources.as_file(files('tdcrpy').joinpath('Micelle')) as data_path:
+    tamptxt = "faq01.csv"
+    fid = open(data_path / tamptxt)
+line = fid.readlines()
+for iline in line:
+    iline=iline.replace("\n","").split(";")
+    micelle_E.append(float(iline[0]))
+    micelle_S.append([float(x) for x in iline[1:]])
+micelle_S = np.asarray(micelle_S)
+
 """
 ======= Library of functions =======
 """
@@ -222,7 +759,7 @@ def sampling(p_x):
     Returns
     -------
     i : integer
-        index in x pointing the sampled value of the random variable X.
+        index in x pointing the sampled value of the random variable X. in case of pdf use i+1
     """
 
     cf = np.cumsum(p_x) # Cummulative Density (or mass) Function (CDF or CMF)
@@ -561,7 +1098,14 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 
     energy_alpha = np.array(energy_alpha)
     dEdx_alpha = np.array(dEdx_alpha)
-    dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
+    if e<=1:
+        dEdx=409536.0
+    #     dEdx = -1.14904489e-02*e**2+3.05280288e+04*e+3.79007982e+05
+    elif e>8e3:
+        dEdx=619200.0
+    #     dEdx = -9.79419960e-08*e**2-2.95679422e+02*e+2.12735915e+06
+    else:
+        dEdx = np.interp(e,energy_alpha ,dEdx_alpha)   
     return dEdx*rho                        #unit keV.cm-1
 
 
@@ -642,7 +1186,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
 
 #====================  Fonction pour lire BetaShape   ========================================
 
-def readBetaShape(rad,mode,level,z=z_betashape):
+def readBetaShape(rad,mode,level,z=z_betashape,contH=False):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
     
@@ -672,6 +1216,8 @@ def readBetaShape(rad,mode,level,z=z_betashape):
     Rad = rad.replace('-','')
     if level == 'tot':
         name_doc = Rad+'/'+mode+'_'+Rad+'_tot.bs'
+    elif level == 'tot_myEstep':
+        name_doc = Rad+'/'+mode+'_'+Rad+'_tot_myEstep.bs'
     else:
         name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
     with z.open(name_doc) as file_trans:
@@ -691,7 +1237,7 @@ def readBetaShape(rad,mode,level,z=z_betashape):
         data.remove([])
     
     for i in range(len(data)):
-        ind = i
+        # ind = i
         if data[i][0] == 'E(keV)':break
     
     for j in range(i+1,len(data)):
@@ -704,10 +1250,54 @@ def readBetaShape(rad,mode,level,z=z_betashape):
             p.append(p0 * (e[k+1])-e[k])
         else:
             p.append(p0 * (e[k]-e[k-1]))
-            
+
+    if contH: e=(np.asarray(e[:-1])+np.asarray(e[1:]))/2 # deal with the continuity hypothesis
+    p.pop(-1)
     p /= sum(np.asarray(p)) # normalization
-    p = list(p)
+    p = list(p); e = list(e)
     return e, p
+
+def readBetaShapeInfo(rad,mode,level,z=z_betashape):
+    """
+    Read information about how the spectrum was built
+
+    Parameters
+    ----------
+    rad : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    Rad = rad.replace('-','')
+    if level == 'tot':
+        name_doc = Rad+'/'+mode+'_'+Rad+'_tot.bs'
+    else:
+        name_doc = Rad+'/'+mode+'_'+Rad+'_'+ "trans" + str(level) +'.bs'
+    with z.open(name_doc) as file_trans:
+        data = file_trans.readlines()
+
+    for i in range(np.size(data)):
+        data[i] = str(data[i])
+        data[i] = data[i].replace("b'",'')
+        data[i] = data[i].replace("\\r\\n",'')
+        data[i] = data[i].replace("'",'')
+    for i in range(np.size(data)):
+        data[i] = data[i].split()
+    
+    while [] in data:
+        data.remove([])
+    out = ""
+    for i in range(len(data)):    
+        if "Total" in data[i][0] : break
+        out += str(np.ravel(data[i]))
+    out = out.replace('--','')
+    out = out.replace('[','')
+    out = out.replace(']','')
+    out = out.replace('\'','')
+    return out
 
 
 def readBetaSpectra(rad):
@@ -741,6 +1331,7 @@ def readBetaSpectra(rad):
     elif rad == "Tc-99": file_path = sTc99
     elif rad == "Pm-147": file_path = sPm147
     elif rad == "Pu-241": file_path = sPu241
+    elif rad == "Co-60": file_path = sCo60
 
     with open(file_path, "r") as file:
         for line in file:
@@ -887,7 +1478,7 @@ def run_interpolate(kB_vec, kB , Ev, Emv, E, m = depthSpline):
         r = f2(E)+(f1(E) - f2(E))/(kB_vec[ind_k]-kB_vec[ind_k-1])*(kB-kB_vec[ind_k-1])
     return r
 
-def Em_a(E, kB, nE, Et = Einterp, kB_vec = kB_a):
+def Em_a(E, kB, nE, Et = Einterp_a, kB_vec = kB_a):
     """
     This fonction management the calculation of the quenched energy for alpha particles.
     A mixture between the accurate quenching model and the extrapolated model can be setup. 
@@ -911,6 +1502,7 @@ def Em_a(E, kB, nE, Et = Einterp, kB_vec = kB_a):
         interpolated quenched energy in keV
 
     """
+    
     if E <= Et:
         # run the accurate quenching model
         r = E_quench_a(E,kB,nE)
@@ -919,7 +1511,7 @@ def Em_a(E, kB, nE, Et = Einterp, kB_vec = kB_a):
         r = run_interpolate(kB_vec, kB , Ei_alpha, Em_alpha, E)    
     return r
 
-def Em_e(Ei, Ed, kB, nE, Et = Einterp*1e3, kB_vec = kB_e):
+def Em_e(Ei, Ed, kB, nE, Et = Einterp_e*1e3, kB_vec = kB_e):
     """
     This fonction management the calculation of the quenched energy for electrons.
     A mixture between the accurate quenching model and the extrapolated model can be setup. 
@@ -947,16 +1539,47 @@ def Em_e(Ei, Ed, kB, nE, Et = Einterp*1e3, kB_vec = kB_e):
     """    
     if Ed <= Et or Ei != Ed:
         # run the accurate quenching model
-        r = E_quench_e(Ei,Ed,kB,nE)
+        r = E_quench_e(Ei,Ed,kB,int(nE))
     else:
         # run interpolation
         r = run_interpolate(kB_vec, kB , Ei_electron, Em_electron, Ed)
     return r
 
 
+#============================================================================================
 
+#============================================================================================
 
+#========================= Reverse micelle treatment ========================================
 
+def micelleLoss(E,*, fAq=fAq, diam_micelle=diam_micelle, e_vec=micelle_E, data=micelle_S):
+    """
+    Estimation of the energy deposited ratio due to loss in reversed micelles.
+    The function carries out interpolation in values estimated with GENAT4-DNA
+    in: Nedjadi et al. Applied Radiation and Isotopes, Volume 125, 2017, Pages 94-107,
+    https://doi.org/10.1016/j.apradiso.2017.04.020
+    
+    Parameters
+    ----------
+    E : float
+        Initial energy of the electron. (in keV)
+    fAq : float, optional
+        Aqueous fraction. The default is fAq.    
+    diam_micelle : float, optional
+        Diameter of micelles (in nm). The default is diam_micelle.    
+    e_vec : list, optional
+        Tabulated data of considered energies (in eV). The default is micelle_E.    
+    data : list, optional
+        Tabulated data of energy deposited ratio. The default is micelle_S.
+
+    Returns
+    -------
+    S : float
+        energy deposited ratio (keV)
+    """
+    micDiam = np.array([0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0]) #nm
+    S=np.interp(E*1e3, e_vec, micelle_S[:,np.argwhere(micDiam==diam_micelle)[0][0]])*(1-fAq)/0.9
+    return S
 
 
 #============================================================================================
@@ -1032,7 +1655,9 @@ Matrice16_e_3 = read_matrice(fe6,2)
 #Matrice_e = read_matrice(fe,'e')
 
 def energie_dep_gamma(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_p_2,matrice10_3=Matrice10_p_3,matrice16_1=Matrice16_p_1,matrice16_2=Matrice16_p_2,matrice16_3=Matrice16_p_3,matrice13_1=Matrice13_p_1,matrice13_2=Matrice13_p_2,matrice13_3=Matrice13_p_3,ed=Matrice_e):
-    """ This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
+    """
+    Deprecated!
+    This function samples the energy deposited by a x or gamma rays in the scintillator using response calculated by the Monte-Carlo code MCNP6. 
     
     Parameters
     ----------
@@ -1195,6 +1820,10 @@ def energie_dep_gamma2(e_inci,v,matrice10_1=Matrice10_p_1,matrice10_2=Matrice10_
     return result
 
 def energie_dep_beta(e_inci,*,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e_2,matrice10_3=Matrice10_e_3,matrice16_1=Matrice16_e_1,matrice16_2=Matrice16_e_2,matrice16_3=Matrice16_e_3,ed=Matrice_e):
+    """
+    Deprecated
+    """
+    
     ## sort keV / entrée : keV
     if e_inci <= 200:
         if e_inci < 1:
@@ -1477,7 +2106,7 @@ def read_ENSDF(rad, *, z=z_ensdf):
                 if 'AUGER' in p1:              # block of electron Auger
                     energie_augerK_b.append(float(p1[2]))
                     type_b.append('Auger K')   # for electron Auger, only the block of electron Auger K has |] 
-                    if len(p1)>7:               # repérer la ligne qui comprend la proba totale et l'incertitude
+                    if len(p1)>7:               # repérer la ligne qui comprend la proba totale et l'incertitude  
                         prob_str_b.append(p1[5])
                         prob_b.append(float(p1[5]))        # enregistrer la proba totale du bloc
                         incertitude_b.append(int(p1[6]))   # enregistrer l'incertitude pour la proba totale
@@ -1619,7 +2248,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
     """
     daug_name,Energy,Prob,Type,Incertitude,prob_str,Prob_K,Type_K,Energie_augerK = read_ENSDF(rad)  # tirer les vecteurs de rad d'Ensdf 
     incertitude = incer(prob_str,Incertitude)
-
+    #print(daug_name,Energy,Prob,Type,Incertitude,prob_str,Prob_K,Type_K,Energie_augerK)
     index_daug = daug_name.index(daugther)        # repérer l'indice de fille correspondante
     
     Energie = np.array(Energy[index_daug])                  # tirer le vecteur d'énergie
@@ -1705,6 +2334,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
         energie_fin = 0
     return type_fin,energie_fin
 
+#out = relaxation_atom("ZN67","Cu-67",lacune="Atom_K"); print(out)
 
 def format_modif(nombre):
     if '-' in nombre:
@@ -1759,6 +2389,10 @@ def read_ENDF_photon(atom,z=z_endf_ph):
         name = "photoat-007_N_000.txt"
     elif atom == 'P':
         name = "photoat-015_P_000.txt"    
+    elif atom == 'S':
+        name = "photoat-016_S_000.txt"
+    elif atom == 'Na':
+        name = "photoat-011_Na_000.txt"    
     elif atom == 'Cl':
         name = "photoat-017_Cl_000.txt"
         
@@ -1841,7 +2475,7 @@ def read_ENDF_photon(atom,z=z_endf_ph):
 
 
 
-def interaction_scintillation(e_p):
+def interaction_scintillation(e_p, p_atom=p_atom):
     """
     Simulation of the photoelectric interaction
 
@@ -1860,8 +2494,8 @@ def interaction_scintillation(e_p):
         target atom ('H', ...).
 
     """
-    p_atom = np.array([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071]) # atom abondance in the scintillator
-    atom = ['H','C','N','O','P','Cl']
+    # p_atom = np.array([0.578772,0.338741,0.000302,0.082022,0.000092,0.000071]) # atom abondance in the scintillator
+    atom = ['H','C','N','O','P','S','Na','Cl']
     # sampling atom 
     
     binding_H, energie_H, cross_section_H = read_ENDF_photon('H')
@@ -1869,8 +2503,10 @@ def interaction_scintillation(e_p):
     binding_N, energie_N, cross_section_N = read_ENDF_photon('N')
     binding_O, energie_O, cross_section_O = read_ENDF_photon('O')
     binding_P, energie_P, cross_section_P = read_ENDF_photon('P')
+    binding_S, energie_S, cross_section_S = read_ENDF_photon('S')
+    binding_Na, energie_Na, cross_section_Na = read_ENDF_photon('Na')
     binding_Cl, energie_Cl, cross_section_Cl = read_ENDF_photon('Cl')
-    binding_T = [binding_H,binding_C,binding_N,binding_O,binding_P,binding_Cl]
+    binding_T = [binding_H,binding_C,binding_N,binding_O,binding_P,binding_S,binding_Na,binding_Cl]
     
     ###  probability of atoms
     cross_t = []
@@ -1895,6 +2531,14 @@ def interaction_scintillation(e_p):
     index_P_t = reperer_energie_index(e_p,energie_P[0])
     cross_t.append(cross_section_P[0][index_P_t])
     
+    ## S
+    index_S_t = reperer_energie_index(e_p,energie_S[0])
+    cross_t.append(cross_section_S[0][index_S_t])
+    
+    ## Na
+    index_Na_t = reperer_energie_index(e_p,energie_Na[0])
+    cross_t.append(cross_section_Na[0][index_Na_t])
+    
     ## Cl
     index_Cl_t = reperer_energie_index(e_p,energie_Cl[0])
     cross_t.append(cross_section_Cl[0][index_Cl_t])
@@ -1907,9 +2551,11 @@ def interaction_scintillation(e_p):
     p_N = cross_t[2]*p_atom[2]/p_t_somme 
     p_O = cross_t[3]*p_atom[3]/p_t_somme
     p_P = cross_t[4]*p_atom[4]/p_t_somme
-    p_Cl = cross_t[5]*p_atom[5]/p_t_somme
+    p_S = cross_t[5]*p_atom[5]/p_t_somme
+    p_Na = cross_t[6]*p_atom[6]/p_t_somme
+    p_Cl = cross_t[7]*p_atom[7]/p_t_somme
 
-    p_T = [p_H,p_C,p_N,p_O,p_P,p_Cl] # probability distribution of possible targets
+    p_T = [p_H,p_C,p_N,p_O,p_P,p_S,p_Na,p_Cl] # probability distribution of possible targets
     
     ## definir l'element
     index_element = sampling(p_T)
@@ -1946,6 +2592,14 @@ def interaction_scintillation(e_p):
         energie = energie_P
         binding_e = binding_P
     elif  index_element == 5:
+        cross_section = cross_section_S
+        energie = energie_S
+        binding_e = binding_S
+    elif  index_element == 6:
+        cross_section = cross_section_Na
+        energie = energie_Na
+        binding_e = binding_Na
+    elif  index_element == 7:
         cross_section = cross_section_Cl
         energie = energie_Cl
         binding_e = binding_Cl              
@@ -2019,6 +2673,10 @@ def read_ENDF_RA(atom,z=z_endf_ar):
         name = "atom-008_O_000.endf"
     elif atom == 'P':
         name = "atom-015_P_000.endf"
+    elif atom == 'S':
+        name = "atom-016_S_000.endf"
+    elif atom == 'Na':
+        name = "atom-011_Na_000.endf"
     elif atom == 'Cl':
         name = "atom-017_Cl_000.endf"   
         
@@ -2281,7 +2939,7 @@ def relaxation_atom_ph(lacune,element,v):
 
 
 
-def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
+def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
     """
     TDCR analytical model that is used for pure beta emitting radionuclides
     
@@ -2305,8 +2963,6 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
         volume of the scintillator in ml. run only for 10 ml
     mode : string
         "res" to return the residual, "eff" to return efficiencies.
-    mode2 : string
-        "sym" for symetrical model, "asym" for symetrical model.
     nE : integer
          Number of bins for the quenching function.
     
@@ -2328,18 +2984,17 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,mode2,ne):
     e, p = readBetaSpectra(rad)
     em=np.empty(len(e))
     for i, ei in enumerate(e):
-        ed = energie_dep_beta(ei)
-        em[i] = E_quench_e(ed*1e3,ed*1e3,kB*1e3,ne)*1e-3
+        #em[i] = E_quench_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
+        em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
         
         
-    if mode2=="sym":
+    if type(L)==float or isinstance(L, np.float64):
         eff_S = sum(p*(1-np.exp(-L*em/3)))
         eff_T = sum(p*(1-np.exp(-L*em/3))**3)
         eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
         TDCR_calcul=eff_T/eff_D
         res=(TDCR_calcul-TD)**2
-
-    if mode2=="asym":
+    else:
         # eff_A = sum(p*(1-np.exp(-L[0]*em/3)))
         # eff_B = sum(p*(1-np.exp(-L[1]*em/3)))
         # eff_C = sum(p*(1-np.exp(-L[2]*em/3)))
@@ -2424,3 +3079,559 @@ def display_distrib(S, D, T):
     # plt.ylabel(r"Number of counts", fontsize = 14)
     # plt.legend(fontsize = 12)
     # # plt.savefig('TDCRdistribution.png')
+
+def buildBetaSpectra(rad, V, N, prt=False):
+    """
+    Build beta spectra to be used in the analitical model
+
+    Returns
+    -------
+    None.
+
+    """
+    # e, p = readBetaShape(rad,"beta-",'tot')
+    if rad=="Co-60":
+        e, p = readBetaShape(rad,"beta-",'tot_myEstep')
+    else:
+        e, p = readBetaShape(rad,"beta-",'tot')
+    N = int(N)
+    ev=[]
+    for i in tqdm(range(N), desc="Processing", unit=" bins"):
+        ind = sampling(p) # sample in pdf
+        ev.append(energie_dep_beta2(e[ind],V))
+        # ev.append(e[ind])
+    counts, bins = np.histogram(ev, bins=e, density=True)
+    p2=counts/sum(counts)
+    
+    # bin_centers = (bins[:-1] + bins[1:]) / 2
+    plt.figure(rad)
+    plt.clf()
+    # plt.bar(bin_centers, p2, width=(bins[1] - bins[0]), color='g', alpha=0.6, label="deposited")
+    plt.plot(bins[:-1], p2, '-g', alpha=0.6, label="deposited")
+    plt.plot(e[:-1], p,'-r', alpha=0.6, label="betaShape")
+    plt.legend()
+    plt.xlabel("$E$ /keV")
+    plt.ylabel(r"$p$ /keV$^{-1}$")
+    
+    em0 = sum(np.asarray(e[:-1])*np.asarray(p))
+    em1 = sum(bins[:-1]*p2)
+    print(f"\nmean emitted E = {em0} keV {len(e)} {len(p)}")
+    print(f"mean deposited E = {em1} keV {len(bins)} {len(p2)}\n")
+    
+    if rad == "H-3": file_path = sH3
+    elif rad == "C-14": file_path = sC14
+    elif rad == "S-35": file_path = sS35
+    elif rad == "Ca-45": file_path = sCa45
+    elif rad == "Ni-63": file_path = sNi63
+    elif rad == "Sr-89": file_path = sSr89
+    elif rad == "Sr-90": file_path = sSr90
+    elif rad == "Tc-99": file_path = sTc99
+    elif rad == "Pm-147": file_path = sPm147
+    elif rad == "Pu-241": file_path = sPu241
+    elif rad == "Co-60": file_path = sCo60
+    
+    if prt:
+        with open(file_path, "w") as file:
+            for i, b in enumerate(bins):
+                if i==len(bins)-1: file.write(f"{b}\t{0}\n")
+                else: file.write(f"{b}\t{p2[i]}\n")
+        print("file written in distrib.")
+        with open(f"./MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_{rad}.txt", "w") as file:
+            for i, b in enumerate(bins):
+                if i==len(bins)-1: file.write(f"{b}\t{0}\n")
+                else: file.write(f"{b}\t{p2[i]}\n")
+        print("file written in local")        
+                
+def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic):
+    """
+    Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
+
+    Parameters
+    ----------
+    L : float or tuple
+        If L is float, then L is the global free parameter. If L is tuple, then L is a triplet of free parameters. unit keV-1
+    e_quenching : list
+        List of quenched deposited energies from prompt particles in keV.
+    e_quenching2 : list
+        List of quenched deposited energies from delayed particles in keV.
+    t1 : float
+        decay time of the delayed transitions in s.
+    evenement : interger
+        number of pulses per decay (prompt (1), prompt + delayed (2)).
+    extDT : float
+        extended dead time of the system in ns.
+    measTime : float
+        measurement time in minutes.
+
+    Returns
+    -------
+    efficiency0_S : float
+        detection probability of single event.
+    efficiency0_D : float
+        detection probability of double coincidences.
+    efficiency0_T : float
+        detection probability of triple coincidences.
+    efficiency0_AB : float
+        detection probability of coincidences between channels A and B.
+    efficiency0_BC : float
+        detection probability of coincidences between channels B and C.
+    efficiency0_AC : float
+        detection probability of coincidences between channels A and C.
+    efficiency0_D2 : float
+        detection probability of coincidences in a C/N system.
+
+    """
+    if isinstance(L, (tuple, list)):
+        symm = False
+        mu = effQuantic
+    else:
+        symm = True
+        mu = np.mean(effQuantic)
+         
+    
+        
+    if symm:
+        
+        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
+            # TDCR
+            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
+            p_nosingle2 = np.exp(-L*mu*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            p_single2 = 1-p_nosingle2
+            efficiency0_S = 1-p_nosingle**3+1-p_nosingle2**3
+            efficiency0_T = p_single**3+p_single2**3
+            efficiency0_D = 3*(p_single)**2-2*p_single**3+(3*(p_single2)**2-2*p_single2**3)
+            efficiency0_AB = (efficiency0_D+2*efficiency0_T)/3
+            efficiency0_BC = efficiency0_AB
+            efficiency0_AC = efficiency0_AB
+            
+            # CN
+            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
+            p_nosingle2 = np.exp(-L*mu*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            p_single2 = 1-p_nosingle2            
+            efficiency0_A2 = p_single+p_single2
+            efficiency0_B2 = efficiency0_A2
+            efficiency0_D2 = p_single**2+p_single2**2
+        else:
+            # TDCR
+            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
+            efficiency0_S = 1-p_nosingle**3
+            efficiency0_T = p_single**3
+            efficiency0_D = 3*(p_single)**2-2*efficiency0_T
+            efficiency0_AB = (efficiency0_D+2*efficiency0_T)/3
+            efficiency0_BC = efficiency0_AB
+            efficiency0_AC = efficiency0_AB
+            
+            # CN
+            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT            
+            efficiency0_A2 = p_single
+            efficiency0_B2 = efficiency0_A2
+            efficiency0_D2 = p_single**2
+    else:
+        if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
+            # TDCR            
+            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pC_nosingle = np.exp(-L[2]*mu[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
+            
+            pA_nosingle2 = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pA_single2 = 1-pA_nosingle2                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle2 = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pB_single2 = 1-pB_nosingle2                                    # probability to have at least 1 electrons in a PMT
+            pC_nosingle2 = np.exp(-L[2]*mu[2]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pC_single2 = 1-pC_nosingle2                                    # probability to have at least 1 electrons in a PMT
+            
+            efficiency0_A2 = pA_single+pA_single2
+            efficiency0_B2 = pB_single+pB_single2
+            efficiency0_AB = pA_single*pB_single+pA_single2*pB_single2
+            efficiency0_BC = pB_single*pC_single+pB_single2*pC_single2
+            efficiency0_AC = pA_single*pC_single+pA_single2*pC_single2
+            efficiency0_T = pA_single*pB_single*pC_single+pA_single2*pB_single2*pC_single2
+            efficiency0_D = pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single+(pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2)
+            #efficiency_S = pA_single+pB_single+pC_single-pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single-pA_single*pB_single*pC_single+(pA_single2+pB_single2+pC_single2-pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2-pA_single2*pB_single2*pC_single2)
+            efficiency0_S = 1-pA_nosingle*pB_nosingle*pC_nosingle+1-pA_nosingle2*pB_nosingle2*pC_nosingle2
+            
+            
+            # CN
+            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
+            
+            pA_nosingle2 = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            pA_single2 = 1-pA_nosingle2                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle2 = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            pB_single2 = 1-pB_nosingle2                                    # probability to have at least 1 electrons in a PMT
+
+            efficiency0_D2 = pA_single*pB_single+pA_single2*pB_single2
+        else:
+            # TDCR
+            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pC_nosingle = np.exp(-L[2]*mu[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
+                
+            efficiency0_A2 = pA_single
+            efficiency0_B2 = pB_single
+            efficiency0_AB = pA_single*pB_single
+            efficiency0_BC = pB_single*pC_single
+            efficiency0_AC = pA_single*pC_single
+            efficiency0_T = pA_single*pB_single*pC_single
+            efficiency0_D = efficiency0_AB+efficiency0_BC+efficiency0_AC-2*efficiency0_T
+            efficiency0_S = 1-pA_nosingle*pB_nosingle*pC_nosingle
+            
+            # CN
+            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT            
+            efficiency0_D2 = pA_single*pB_single
+            
+    return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
+
+
+def stochasticDepTD(diffP, PMTspace):
+    """
+    Generate the probability
+
+    Parameters
+    ----------
+    diffP : TYPE
+        DESCRIPTION.
+    PMTspace : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    """
+    detA = np.array([[2*(1+PMTspace), 0], [-(1+PMTspace), np.sqrt(3)*(1+PMTspace)]])
+    detB = np.array([[-(1+PMTspace), np.sqrt(3)*(1+PMTspace)], [-(1+PMTspace), -np.sqrt(3)*(1+PMTspace)]])
+    detC = np.array([[-(1+PMTspace), -np.sqrt(3)*(1+PMTspace)], [2*(1+PMTspace), 0]])
+
+    def simulate_photon_groups():
+        rho = 1 * np.sqrt(np.random.uniform(0, 1, 1))  # Radial distance
+        theta = np.random.uniform(0, 2 * np.pi, 1)     # Angular position
+        x = rho * np.cos(theta)
+        y = rho * np.sin(theta)
+        return x, y
+
+    def calculate_angle(O, det):
+        A=det[0]
+        B=det[1]
+        OA = (A[0] - O[0], A[1] - O[1]) # Vecteurs OA et OB
+        OB = (B[0] - O[0], B[1] - O[1])
+        dot_product = OA[0] * OB[0] + OA[1] * OB[1] # Produit scalaire OA . OB
+        norm_OA = math.sqrt((OA[0]**2 + OA[1]**2)[0]) # Normes des vecteurs OA et OB
+        norm_OB = math.sqrt((OB[0]**2 + OB[1]**2)[0])
+        cos_angle = dot_product / (norm_OA * norm_OB) # Cosinus de l'angle
+        angle_rad = math.acos(cos_angle[0]) # Angle en radians
+        angle_deg = math.degrees(angle_rad) # Convertir en degrés
+        return angle_deg
+
+    x, y = simulate_photon_groups()
+
+    pa=(1-diffP)*calculate_angle([x, y], detA)/360+diffP/3
+    pb=(1-diffP)*calculate_angle([x, y], detB)/360+diffP/3
+    pc=(1-diffP)*calculate_angle([x, y], detC)/360+diffP/3
+        
+    return pa, pb, pc
+
+# Di = []; Ti = []
+# n=1000000
+# for i in range(n):
+#     A = stochasticDepTD(1, 0)
+#     B = np.random.poisson(2)
+#     n_phPMT = np.random.multinomial(B, A) # sample the number of photons in each PMTs (TDCR configuration)
+#     nA=np.random.binomial(n_phPMT[0],0.25) # sample the conversion to photoelectrons PMT A
+#     nB=np.random.binomial(n_phPMT[1],0.25) # sample the conversion to photoelectrons PMT B
+#     nC=np.random.binomial(n_phPMT[2],0.25) # sample the conversion to photoelectrons PMT C
+#     Di.append(sum([nA>0, nB>0, nC>0])>1)
+#     Ti.append(sum([nA>0, nB>0, nC>0])>2)
+# D = sum(Di)/n
+# uD = D/np.sqrt(sum(Di))#np.sqrt(n)
+# T = sum(Ti)/n
+# uT = T/np.sqrt(sum(Ti))#/np.sqrt(n)
+# print(D, uD)
+# print(T, uT)
+
+def stochasticDepCN(diffP, PMTspace):
+    def simulate_photon_groups():
+        rho = 1 * np.sqrt(np.random.uniform(0, 1, 1))  # Radial distance
+        theta = np.random.uniform(0, 2 * np.pi, 1)     # Angular position
+        x = rho * np.cos(theta)
+        y = rho * np.sin(theta)
+        return x, y
+    
+    def calculate_angle(O):
+        OA = (-1-PMTspace - O[0], 0 - O[1]) # Vecteurs OA et OB
+        OB = (1+PMTspace - O[0], 0 - O[1])
+        dot_product = OA[0] * OB[0] + OA[1] * OB[1] # Produit scalaire OA . OB
+        norm_OA = math.sqrt((OA[0]**2 + OA[1]**2)[0]) # Normes des vecteurs OA et OB
+        norm_OB = math.sqrt((OB[0]**2 + OB[1]**2)[0])
+        cos_angle = dot_product / (norm_OA * norm_OB) # Cosinus de l'angle
+        angle_rad = math.acos(cos_angle[0]) # Angle en radians
+        angle_deg = math.degrees(angle_rad) # Convertir en degrés
+        return angle_deg
+    
+    x, y = simulate_photon_groups()
+
+    if np.random.randint(0, high=2)==0:
+        pa=(1-diffP)*calculate_angle([x, y])/360+diffP/2
+        pb=1-pa
+    else:
+        pb=(1-diffP)*calculate_angle([x, y])/360+diffP/2
+        pa=1-pb        
+        
+    return pa, pb
+
+
+def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic, optionModel=optionModel, diffP = diffP, PMTspace = PMTspace, dispParam=False):
+    """
+    Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
+
+    Parameters
+    ----------
+    L : float or tuple
+        If L is float, then L is the global free parameter. If L is tuple, then L is a triplet of free parameters. unit keV-1
+    e_quenching : list
+        List of quenched deposited energies from prompt particles in keV.
+    e_quenching2 : list
+        List of quenched deposited energies from delayed particles in keV.
+    t1 : float
+        decay time of the delayed transitions in s.
+    evenement : interger
+        number of pulses per decay (prompt (1), prompt + delayed (2)).
+    extDT : float
+        extended dead time of the system in ns.
+    measTime : float
+        measurement time in minutes.
+
+    Returns
+    -------
+    efficiency0_S : float
+        detection probability of single event.
+    efficiency0_D : float
+        detection probability of double coincidences.
+    efficiency0_T : float
+        detection probability of triple coincidences.
+    efficiency0_AB : float
+        detection probability of coincidences between channels A and B.
+    efficiency0_BC : float
+        detection probability of coincidences between channels B and C.
+    efficiency0_AC : float
+        detection probability of coincidences between channels A and C.
+    efficiency0_D2 : float
+        detection probability of coincidences in a C/N system.
+
+    """
+    mu = effQuantic
+        
+    if type(L) == float:
+        L = [L, L, L]
+    
+    if dispParam: print(f"EffQ = {mu} - model = {optionModel} - diffP = {diffP} - PMTspace = {PMTspace}")
+    
+    def stochasOpticModel(e_q, L, mu):
+        n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of photoelectrons
+        
+        n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)) # sample the number of scintillation photons
+        
+        pTD = stochasticDepTD(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (TDCR configuration)
+        n_phPMT = np.random.multinomial(n_ph, pTD) # sample the number of photons in each PMTs (TDCR configuration)
+        n_e[0]=np.random.binomial(n_phPMT[0],mu[0]) # sample the conversion to photoelectrons PMT A
+        n_e[1]=np.random.binomial(n_phPMT[1],mu[1]) # sample the conversion to photoelectrons PMT B
+        n_e[2]=np.random.binomial(n_phPMT[2],mu[2]) # sample the conversion to photoelectrons PMT C
+        
+        pCN = stochasticDepCN(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (C/N configuration)
+        n_phPMTCN = np.random.multinomial(n_ph, pCN) # sample the number of photons in each PMTs (C/N configuration)
+        n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu[0]) # sample the conversion to photoelectrons PMT A
+        n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu[1]) # sample the conversion to photoelectrons PMT B
+        
+        return n_e, n_eCN        
+    
+    def Pmodel(e_q, pTD_ideal, pCN_ideal, L, mu):
+        n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of photoelectrons
+        
+        n_e[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*pTD_ideal[0]) # sample the conversion to photoelectrons PMT A
+        n_e[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*pTD_ideal[1]) # sample the conversion to photoelectrons PMT B
+        n_e[2] = np.random.poisson(sum(np.asarray(e_q))*L[2]*mu[2]*pTD_ideal[2]) # sample the conversion to photoelectrons PMT C
+        n_eCN[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*pCN_ideal[0]) # sample the conversion to photoelectrons PMT A
+        n_eCN[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*pCN_ideal[1]) # sample the conversion to photoelectrons PMT B
+        
+        return n_e, n_eCN
+     
+    
+    efficiency0_S = 0;    efficiency0_T = 0;    efficiency0_D = 0
+    efficiency0_AB = 0;    efficiency0_BC = 0;    efficiency0_AC = 0
+    efficiency0_D2 = 0;
+    # n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
+    if optionModel == "stochastic-dependence":
+        n_e, n_eCN = stochasOpticModel(e_quenching, L, mu)
+    elif optionModel == "poisson":
+        n_e, n_eCN = Pmodel(e_quenching, [1/3, 1/3, 1/3], [1/2, 1/2], L, mu)
+    else:
+        print("unknown model")        
+            
+    if sum(n_e>0)>0: efficiency0_S =1
+    if sum(n_e>0)>1: efficiency0_D =1
+    if sum(n_e>0)>2: efficiency0_T =1
+    if n_e[0]>0 and n_e[1]>0: efficiency0_AB =1 
+    if n_e[1]>0 and n_e[2]>0: efficiency0_BC =1 
+    if n_e[0]>0 and n_e[2]>0: efficiency0_AC =1
+    if sum(n_eCN>1)>1: efficiency0_D2 =1
+    
+    if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
+        if optionModel == "stochastic-dependence":
+            n_e2, n_e2CN = stochasOpticModel(e_quenching2, L, mu)
+        elif optionModel == "poisson":
+            n_e2, n_e2CN = Pmodel(e_quenching2, [1/3, 1/3, 1/3], [1/2, 1/2], L, mu) 
+        else:
+            print("unknown model")        
+        
+        if sum(n_e2>0)>0: efficiency0_S +=1
+        if sum(n_e2>0)>1: efficiency0_D +=1
+        if sum(n_e2>0)>2: efficiency0_T +=1
+        if n_e2[0]>0 and n_e2[1]>0: efficiency0_AB +=1 
+        if n_e2[1]>0 and n_e2[2]>0: efficiency0_BC +=1 
+        if n_e2[0]>0 and n_e2[2]>0: efficiency0_AC +=1
+        if sum(n_e2CN>1)>1: efficiency0_D2 +=1           
+                    
+    return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
+
+
+def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
+    """
+    Calculate detection efficiencies from list of detection probabilities per decays.
+
+    Parameters
+    ----------
+    efficiency0_S : float
+        detection probability of single event.
+    efficiency0_D : float
+        detection probability of double coincidences.
+    efficiency0_T : float
+        detection probability of triple coincidences.
+    efficiency0_AB : float
+        detection probability of coincidences between channels A and B.
+    efficiency0_BC : float
+        detection probability of coincidences between channels B and C.
+    efficiency0_AC : float
+        detection probability of coincidences between channels A and C.
+    efficiency0_D2 : float
+        detection probability of coincidences in a C/N system.
+    N : interger
+        number of simulated decays.
+
+    Returns
+    -------
+    mean_efficiency_S : float
+        detection efficiency of single event.
+    std_efficiency_S : float
+        standard uncertainty of detection efficiency of single event.
+    mean_efficiency_D : float
+        detection efficiency of double coincidences.
+    std_efficiency_D : float
+        standard uncertainty of detection efficiency of double coincidences.
+    mean_efficiency_T : float
+        detection efficiency of triple coincidences.
+    std_efficiency_T : float
+        standard uncertainty of detection efficiency of triple coincidences.
+    mean_efficiency_AB : float
+        detection efficiency of coincidences between channels A and B.
+    std_efficiency_AB : float
+        standard uncertainty of detection efficiency of coincidences between channels A and B.
+    mean_efficiency_BC : float
+        detection efficiency of coincidences between channels B and C.
+    std_efficiency_BC : float
+        standard uncertainty of Ddetection efficiency of coincidences between channels B and C.
+    mean_efficiency_AC : float
+        detection efficiency of coincidences between channels A and C.
+    std_efficiency_AC : float
+        standard uncertainty of detection efficiency of coincidences between channels A and C.
+    mean_efficiency_D2 : float
+        detection efficiency of coincidences in a C/N system.
+    std_efficiency_D2 : float
+        standard uncertainty of detection efficiency of coincidences in a C/N system.
+
+    """
+    mean_efficiency_S = np.mean(efficiency_S)
+    std_efficiency_S = np.std(efficiency_S)/np.sqrt(N)
+    mean_efficiency_D = np.mean(efficiency_D)
+    std_efficiency_D = np.std(efficiency_D)/np.sqrt(N)
+    mean_efficiency_T = np.mean(efficiency_T) # average
+    std_efficiency_T = np.std(efficiency_T)/np.sqrt(N)   # standard deviation
+    mean_efficiency_AB = np.mean(efficiency_AB)
+    std_efficiency_AB = np.std(efficiency_AB)/np.sqrt(N)
+    mean_efficiency_BC = np.mean(efficiency_BC)
+    std_efficiency_BC = np.std(efficiency_BC)/np.sqrt(N)
+    mean_efficiency_AC = np.mean(efficiency_AC)
+    std_efficiency_AC = np.std(efficiency_AC)/np.sqrt(N)
+    
+    mean_efficiency_D2 = np.mean(efficiency_D2)
+    std_efficiency_D2 = np.std(efficiency_D2)/np.sqrt(N)
+
+    return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_AB, std_efficiency_AB, mean_efficiency_BC, std_efficiency_BC, mean_efficiency_AC, std_efficiency_AC, mean_efficiency_D2, std_efficiency_D2
+    
+
+def readRecQuenchedEnergies():
+    temp_dir = tempfile.gettempdir()
+    recfile3 = os.path.join(temp_dir, "Temp_E2.txt")
+    with open(recfile3, "r") as file:
+        Epromt, Edelayed = [], []
+        decaym = -1
+        e_quenching = []; e_quenching2 = []; evenement=1; t1=0
+        for line in file:
+            if line[0] != "#":
+                line = line.split(' ')
+                line = [element for element in line if element != ""]
+                decay = int(line[2])                
+                if decay != decaym:
+                    if decay>0:
+                        Epromt.append(sum(e_quenching))
+                        Edelayed.append(sum(e_quenching2))
+                        
+                        
+                        energy = float(line[1])*1e-3
+                        t1 = float(line[4])
+                        decaym = decay
+                        e_quenching = []; e_quenching2 = []
+                        evenement=1
+                        e_quenching.append(energy)
+                else:
+                    energy = float(line[1])*1e-3
+                    t1 = float(line[4])
+                    # print(decay, energy, t1, extDT)
+                    if t1 > tau*1e-9:
+                        evenement = evenement + 1
+                        e_quenching2.append(energy)
+                    else:
+                        e_quenching.append(energy)
+    return Epromt, Edelayed
+
+
+
+
+# N = 1e7
+# buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
+# buildBetaSpectra('C-14', 16, N, prt=True); print('C-14 - done')
+# buildBetaSpectra('S-35', 16, N, prt=True); print('S-35 - done')
+# buildBetaSpectra('Ca-45', 16, N, prt=True); print('Ca-45 - done')
+# buildBetaSpectra('Ni-63', 16, N, prt=True); print('Ni-63 - done')
+# buildBetaSpectra('Sr-89', 16, N, prt=True); print('Sr-89 - done')
+# buildBetaSpectra('Sr-90', 16, N, prt=True); print('Sr-90 - done')
+# buildBetaSpectra('Tc-99', 16, N, prt=True); print('Tc-99 - done')
+# buildBetaSpectra('Pm-147', 16, N, prt=True); print('Pm-147 - done')
+# buildBetaSpectra('Pu-241', 16, N, prt=True); print('Pu-241 - done')
+# buildBetaSpectra('Co-60', 16, N, prt=True); print('Co-60 - done')
+

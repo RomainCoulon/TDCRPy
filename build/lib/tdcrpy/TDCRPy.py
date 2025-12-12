@@ -10,13 +10,14 @@ Bureau International des Poids et Mesures
 
 ## IMPORT PYTHON MODULES
 import tdcrpy.TDCR_model_lib as tl
-# import TDCR_model_lib as tl
-# import tdcrpy.TDCR_model_lib as tl
 import importlib.resources
 from importlib.resources import files
 import configparser
 import numpy as np
 from tqdm import tqdm
+import tempfile
+import os
+import scipy.optimize as opt
 
 def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=False):
          
@@ -83,108 +84,241 @@ def relaxAtom(daughter_relax,particle_vec,energy_vec,rad,Display=False,uncData=F
                 relaxation = False
     return particle_vec, energy_vec
 
-def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=False, barp=False,uncData=False):
+def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smodel=True, record = False, readRecHist = False, uncData = False, fullMC = False):
     """
-    This is the main function of the TDCRPy package running the Monte-Carlo Triple-to-Double Coincidence Ratio model.
+    This is the main function of the TDCRPy package.
     The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides), a given volume of scintillator V and a given Birks constant kB. 
-    
-    It can operates in two modes:
        
-       --> In mode="eff", it calculates the efficiency of the TDCR system as a function of a value (triplet) of free parameter(s) L, the measurement data is not used;
-       
-       --> In mode="res", it calculates the residual of the TDCR model parametrized by a value (or triplet) of free parameter(s) L and the measurement data TD, TAB, TBC, TAC.
-    
-    also, two configuration can be set:
-       
-        --> mode2="sym", where symmetry is considered between the 3 photomultiplier tubes - here L is a scalar and only the global TDCR value TD is used as measurement data.
-        
-        --> mode2="asym", where an asymmetry between the 3 photomultiplier tubes is possible - here L is a triplet and only the specific TDCR values TAB, TBC, TAC are used as measurement data.
-    
     The parmeter N sets the number of Monte-Carlo trails used for the estimation. Each MC trial corresponds to a simulated radiactive decay.
     TDCRPY() used a set of fonctions from the tdcrpy.TDCR_model_lib module.
     
     Advanced settings can be configured in the config.toml file.
     
-       --> By default Y = True so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set Y = False.
-       
-       --> If you would like to change the number of bins nE to discretize the linear energy space for quenching calculation, you can change nE_electron and nE_alpha parameters for respectively electrons and alpha particles.
-       
-       --> By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the density, the mean charge number Z and the mean mass number A of the scintillator.
-       
-    
     Parameters
     ----------
-    L : Float (if mode2="sym") or a tuple (if mode2="asym")
-        Free parameter in keV-1.
-    TD : float
-        triple-to-double coincidence ratio. Not consider if mode2="asym". Not consider if mode2="asym".
-    TAB : float
-        triple-to-double coincidence ratio (coincidences between channel A and B). Not consider if mode2="sym".
-    TBC : float
-        triple-to-double coincidence ratio (coincidences between channel B and C). Not consider if mode2="sym".
-    TAC : float
-        triple-to-double coincidence ratio (coincidences between channel A and C). Not consider if mode2="sym".
+    L : Float or tuple
+        If L is float, then L is the global free parameter. If L is tuple, then L is a triplet of free parameters. unit keV-1
     Rad : string
         List of radionuclides (eg. "H-3, Co-60").
     pmf_1 : string
         list of probability of each radionuclide (eg. "0.8, 0.2").
     N : integer
-        Number of Monte-Carlo trials. recommanded N>10000 (see JCGM 101). Not applied in the case of pure beta emitting radionuclides.
+        Number of Monte-Carlo trials. recommanded N>10000 (see JCGM 101). Not applied in the case of the analytical model.
     kB : float
         Birks constant in cm/keV.
     V : float
         volume of the scintillator in ml.
     mode : string
-        "res" to return the residual, "eff" to return efficiencies.
-    mode2 : string
-        "sym" for symetrical model, "asym" for symetrical model.
+        "eff" to return efficiencies, "dis" to return list of decay events.
     Display : Boolean, optional
         "True" to display details on the decay sampling. The default is False.
     barp : Boolean, optional
         "True" to display the calculation progress. The default is True.
+    record : Boolean, optional
+        "True" to record details of decay events. The default is False.
+    Smodel : Boolean, optional
+        "True" to run the stochastic TDCR model. False to run the analytical caclulation (available only for pure beta emitters).
     
     Returns
     -------
-    res : float
-        Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode="res")
     mean_efficiency_S : float
-        Estimation of the efficiency of single counting events. (only in mode="eff")
+        Estimation of the efficiency of single counting events.
     std_efficiency_S : float
-        Standard uncertainty from calculation associated with the estimation of the efficiency of single counting events. (only in mode="eff")
+        Standard uncertainty from calculation associated with the estimation of the efficiency of single counting events.
     mean_efficiency_D : float
-        Estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
+        Estimation of the efficiency of logic sum of double coincidences.
     std_efficiency_D : float
-        Standard uncertainty from calculation associated with the estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
+        Standard uncertainty from calculation associated with the estimation of the efficiency of logic sum of double coincidences.
     mean_efficiency_T : float
-        Estimation of the efficiency of triple coincidences. (only in mode="eff")
+        Estimation of the efficiency of triple coincidences.
     std_efficiency_T : float
-        Standard uncertainty from calculation associated with the estimation of the efficiency of triple coincidences. (only in mode="eff")    
+        Standard uncertainty from calculation associated with the estimation of the efficiency of triple coincidences.
+    mean_efficiency_AB : float
+        detection efficiency of coincidences between channels A and B.
+    std_efficiency_AB : float
+        standard uncertainty of detection efficiency of coincidences between channels A and B.
+    mean_efficiency_BC : float
+        detection efficiency of coincidences between channels B and C.
+    std_efficiency_BC : float
+        standard uncertainty of Ddetection efficiency of coincidences between channels B and C.
+    mean_efficiency_AC : float
+        detection efficiency of coincidences between channels A and C.
+    std_efficiency_AC : float
+        standard uncertainty of detection efficiency of coincidences between channels A and C.
+    mean_efficiency_D2 : float
+        detection efficiency of coincidences in a C/N system.
+    std_efficiency_D2 : float
+        standard uncertainty of detection efficiency of coincidences in a C/N system.
     """
+    
+    if isinstance(L, (tuple, list)):
+        symm = False
+    else:
+        symm = True
+    
+    
+    if record:
+        temp_dir = tempfile.gettempdir()
+        recfile1 = os.path.join(temp_dir, "Temp_E0.txt")
+        header_content1 = """# TDCRPy output: inital energies from nuclear decays
+# Column 1: KPAR (1=electron, 2=photon, 3=positron, 4=alpha)
+# Column 2: Energy in eV  (> ECNUC)
+# Column 3: Decay number mod 100, two digits
+# Column 4: Cascade number mod 10, one digit
+# Column 5: Particle age in seconds (since decay started)
+# 2            3  4 5
+"""
+        with open(recfile1, 'w') as file: file.write(header_content1)
+
+        recfile2 = os.path.join(temp_dir, "Temp_E1.txt")
+        header_content2 = """# TDCRPy output: deposited energies from nuclear decays
+# Column 1: KPAR (1=electron, 2=photon, 3=positron, 4=alpha)
+# Column 2: Energy in eV  (> ECNUC)
+# Column 3: Decay number mod 100, two digits
+# Column 4: Cascade number mod 10, one digit
+# Column 5: Particle age in seconds (since decay started)
+# 2            3  4 5
+"""
+        with open(recfile2, "w") as file: file.write(header_content2)
+
+        recfile3 = os.path.join(temp_dir, "Temp_E2.txt")
+        header_content3 = """# TDCRPy output: deposited quenched energies from nuclear decays
+# Column 1: KPAR (1=electron, 2=photon, 3=positron, 4=alpha)
+# Column 2: Energy in eV  (> ECNUC)
+# Column 3: Decay number mod 100, two digits
+# Column 4: Cascade number mod 10, one digit
+# Column 5: Particle age in seconds (since decay started)
+# 2            3  4 5
+"""
+        with open(recfile3, "w") as file: file.write(header_content3)
+        
+        header_content4 = """# TDCRPy output: detection probabilities
+# Column 1: Decay number mod 100, two digits
+# Column 2: detection probability of single events
+# Column 3: detection probability if double coincidences
+# Column 4: detection probability if triple coincidences
+# 2 3 4
+"""
+        recfile4 = os.path.join(temp_dir, "Temp_E3.txt")
+        with open(recfile4, "w") as file: file.write(header_content4)
+            
     if barp: tl.display_header()
     config = configparser.ConfigParser()
     with importlib.resources.as_file(files('tdcrpy').joinpath('config.toml')) as data_path:
         file_conf = data_path       
     config.read(file_conf)
     tau=config["Inputs"].getfloat("tau")
-    Y=config["Inputs"].getboolean("Y")
-    radListPureBeta=config["Inputs"].get("radListPureBeta")
-    radListPureBeta=radListPureBeta.replace(" ","")
-    radListPureBeta=radListPureBeta.split(',')
-    X = Rad in radListPureBeta
-    if X:
-        nElist=config["Inputs"].get("nE")
-        nElist=nElist.split(',')
-        nElist = [int(i) for i in nElist]
-    if X and Y:
+    extDT=config["Inputs"].getfloat("extDT")
+    measTime=config["Inputs"].getfloat("measTime")
+    micCorr=config["Inputs"].getboolean("micCorr")
+    radListPureBeta = ["H-3", "C-14", "S-35", "Ca-45", "Ni-63", "Sr-89", "Sr-90", "Tc-99", "Pm-147", "Pu-241"]
+    if (Rad in radListPureBeta) and (not Smodel):
+        nElist = [7000, 1000, 1000, 500, 2000, 500, 200, 500, 1000, 7000] # discretization
         inE = radListPureBeta.index(Rad)
         nE = nElist[inE]
-        print(f"Analytical model used for {Rad}")
-        out=tl.modelAnalytical(L,TD,TAB,TBC,TAC,Rad,kB,V,mode,mode2,nE)
-        if mode == "res":
-            return out
+        # print(f"Analytical model used for {Rad}")
+        out=tl.modelAnalytical(L,1,1,1,1,Rad,kB,V,mode,symm,nE)
         if mode == "eff":
             return out[0], 0, out[1], 0, out[2], 0
+    elif (not Smodel) and (not Rad in radListPureBeta):
+        # print("cannot be processed by the analytical model.")
+        # print(f"Analytical model used for {Rad}")
+        out=tl.modelAnalytical(L,1,1,1,1,Rad,kB,V,mode,symm,1000)
+        if mode == "eff":
+            return out[0], 0, out[1], 0, out[2], 0
+    
+    elif readRecHist:
+        efficiency_A2 = []
+        efficiency_B2 = []
+        efficiency_S = []
+        efficiency_D = []
+        efficiency_D2 = []
+        efficiency_T = []
+        efficiency_AB = []
+        efficiency_BC = []
+        efficiency_AC = []
+        
+        temp_dir = tempfile.gettempdir()
+        recfile3 = os.path.join(temp_dir, "Temp_E2.txt")
+
+        with open(recfile3, "r") as file:
+   
+            decaym = -1
+            e_quenching = []; e_quenching2 = []; evenement=1; t1=0
+            for line in file:
+                if line[0] != "#":
+                    line = line.split(' ')
+                    line = [element for element in line if element != ""]
+                    decay = int(line[2])
+                    
+                    if decay != decaym:
+                        if decay>0:
+                            # print(decay-1,e_quenching,e_quenching2, evenement)
+                            if fullMC:
+                                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+                            else:
+                                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+                            efficiency_S.append(efficiency0_S)
+                            efficiency_T.append(efficiency0_T)
+                            efficiency_D.append(efficiency0_D)
+                            efficiency_AB.append(efficiency0_AB)
+                            efficiency_BC.append(efficiency0_BC)
+                            efficiency_AC.append(efficiency0_AC)
+                            efficiency_D2.append(efficiency0_D2)
+                            
+                            # print(efficiency0_D, "\n")
+                        
+                        energy = float(line[1])*1e-3
+                        t1 = float(line[4])
+                        decaym = decay
+                        # print(decay, energy, t1, extDT)
+                        e_quenching = []; e_quenching2 = []
+                        evenement=1
+                        e_quenching.append(energy)
+                    else:
+                        energy = float(line[1])*1e-3
+                        t1 = float(line[4])
+                        # print(decay, energy, t1, extDT)
+                        if t1 > tau*1e-9:
+                            evenement = evenement + 1
+                            e_quenching2.append(energy)
+                        else:
+                            e_quenching.append(energy)
+            
+            if fullMC:
+                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+            else:
+                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+            
+            efficiency_S.append(efficiency0_S)
+            efficiency_T.append(efficiency0_T)
+            efficiency_D.append(efficiency0_D)
+            efficiency_AB.append(efficiency0_AB)
+            efficiency_BC.append(efficiency0_BC)
+            efficiency_AC.append(efficiency0_AC)
+            efficiency_D2.append(efficiency0_D2)
+                            
+            # print(efficiency_D)
+            outEff = tl.efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N)
+            if mode == "eff": return outEff
+            if mode == "dis": return efficiency_S, efficiency_D, efficiency_T, efficiency_D2
+                
+
+            # temp1, temp2, temp3, temp4 = tl.read_temp_files()
+            # ee_vec = tl.energyVectors3(temp3)
+            # # to be continued
+    
     else:
+        efficiency_A2 = []
+        efficiency_B2 = []
+        efficiency_S = []
+        efficiency_D = []
+        efficiency_D2 = []
+        efficiency_T = []
+        efficiency_AB = []
+        efficiency_BC = []
+        efficiency_AC = []
+        
         nE_electron = config["Inputs"].getint("nE_electron")
         nE_alpha = config["Inputs"].getint("nE_alpha")
         Rad=Rad.replace(" ","")
@@ -238,18 +372,10 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             u_prob_trans.append(out_PenNuc[16])
             trans_halfLife.append(out_PenNuc[15])
         # print("\n",trans_halfLife)
-        
-        efficiency_S = []
-        efficiency_D = []
-        efficiency_T = []
-        efficiency_AB = []
-        efficiency_BC = []
-        efficiency_AC = []
-
-        
+                
         if barp and not Display: NN = tqdm(range(N), desc="Processing", unit=" decays")
         else: NN = range(N)
-        for i in NN: # Main Loop - Monte Carlo trials
+        for idec in NN: # Main Loop - Monte Carlo trials
             particle_vec=[]
             energy_vec=[]
             '''
@@ -259,7 +385,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             '''
             index_rad = tl.sampling(pmf_1)
             rad_i = Rad[index_rad]
-            if Display: print("\n\n Trial ",str(i+1),"- Sampled radionuclide: ", rad_i)
+            if Display: print("\n\n Trial ",str(idec+1),"- Sampled radionuclide: ", rad_i)
                   
             
             '''
@@ -332,7 +458,7 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
             while levelOftheDaughter > 0:                                                # Go on the loop while the daughter nucleus is a its fundamental level (energy 0)
                 i_level = levelNumber[index_rad][iDaughter].index([levelOftheDaughter])  # Find the position in the daughter level vector
                 
-                t1 = np.random.exponential(trans_halfLife[index_rad][iDaughter][i_level][0], size=1)[0]
+                t1 = np.random.exponential(trans_halfLife[index_rad][iDaughter][i_level][0]/np.log(2), size=1)[0]
 
                 # test whether the decay occurs within the coincidence resolving time or not
                 if t1 > tau*1e-9: 
@@ -501,12 +627,12 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 
             if Display:
                 print("\n\t ATOMIC RECOMBINATION--Prompt")
-                for i, p in enumerate(particle_vec):
+                for idisp, p in enumerate(particle_vec):
                     if p[:4] != "Atom":
                         if p=="beta" or p=="beta+":
-                            print(f'\t\t {p} transition of energy = {energy_vec[i]}, keV')
+                            print(f'\t\t {p} transition of energy = {energy_vec[idisp]}, keV')
                         else:
-                            print(f"\t\t emitted {p} of energy = {round(energy_vec[i],3)} keV")
+                            print(f"\t\t emitted {p} of energy = {round(energy_vec[idisp],3)} keV")
                     else:
                         print(f'\t\t an electron left the {p[5:]} shell')  
             
@@ -520,12 +646,12 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
 
                 if Display:
                     print("\n\t ATOMIC RECOMBINATION--Delay")
-                    for i, p in enumerate(particle_vec2):
+                    for idisp, p in enumerate(particle_vec2):
                         if p[:4] != "Atom":
                             if p=="beta" or p=="beta+":
-                                print(f'\t\t {p} transition of energy = {energy_vec2[i]}, keV')
+                                print(f'\t\t {p} transition of energy = {energy_vec2[idisp]}, keV')
                             else:
-                                print(f"\t\t emitted {p} of energy = {round(energy_vec2[i],3)} keV")
+                                print(f"\t\t emitted {p} of energy = {round(energy_vec2[idisp],3)} keV")
                         else:
                             print(f'\t\t an electron left the {p[5:]} shell')
     
@@ -536,322 +662,658 @@ def TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=Fals
                 '''
             if ("beta" in particle_vec) or ("beta+" in particle_vec):
                 if Display: print("\n\t EMISSION OF BETA PARTICLES")   
-            for i, p in enumerate(particle_vec):
+            for ipart, p in enumerate(particle_vec):
                 if p == "beta":
                     e_b,p_b = tl.readBetaShape(rad_i,"beta-",level_before_trans)   # read the data of BetaShape
-                    index_beta_energy = tl.sampling(p_b)                           # sampling energy of beta
-                    particle_vec[i] = "electron"
-                    energy_vec[i] = e_b[index_beta_energy]
-                    if Display: print(f"\t\t emitted {p} of energy = {round(energy_vec[i],3)} keV")
+                    index_beta_energy = tl.sampling(p_b)                           # sampling in PDF
+                    particle_vec[ipart] = "electron"
+                    energy_vec[ipart] = e_b[index_beta_energy]
+                    if Display: print(f"\t\t emitted {p} of energy = {round(energy_vec[ipart],3)} keV")
                         
                 if p == "beta+":
                     e_b,p_b = tl.readBetaShape(rad_i,"beta+",level_before_trans)
-                    index_beta_energy = tl.sampling(p_b)
-                    particle_vec[i] = "positron"
-                    energy_vec[i] = e_b[index_beta_energy]
+                    index_beta_energy = tl.sampling(p_b)                          # sampling in PDF
+                    particle_vec[ipart] = "positron"
+                    energy_vec[ipart] = e_b[index_beta_energy]
                     particle_vec.append("gamma")
                     particle_vec.append("gamma")
                     energy_vec.append(511)
                     energy_vec.append(511)
-                    if Display: print(f"\t\t emitted {p} of energy = {round(energy_vec[i],3)} keV")
+                    if Display: print(f"\t\t emitted {p} of energy = {round(energy_vec[ipart],3)} keV")
             #energy_vec_initial = energy_vec    
             energy_vec_initial = energy_vec.copy()
+            
+            
+            
+            """
+            ==========================================================
+            III.a.1 record initial energies in file
+            ==========================================================
+            """
+            if record:
+                with open(recfile1, "a") as file:
+                    # t1w=0
+                    for irec, p in enumerate(particle_vec):
+                        writeOn = True
+                        
+                        if p == "electron" or ("Auger" in p): col1 = "1"
+                        elif p == "gamma" or ("X" in p): col1 = "2"
+                        elif p == "positron": col1 = "3"
+                        elif p == "alpha": col1 = "4"
+                        else: writeOn = False
+
+                        # if ('t1' in globals()) or ('t1' in locals()): t1w+=t1
+                        
+                        if writeOn:
+                            if idec<10:
+                                file.write(f"{col1} {energy_vec[irec]*1e3:.6E}  {idec} 1 0\n")
+                            else:
+                                file.write(f"{col1} {energy_vec[irec]*1e3:.6E} {idec} 1 0\n")
+                    
+                    if evenement != 1:
+                        for irec, p in enumerate(particle_vec2):
+                            writeOn = True
+                            
+                            if p == "electron" or ("Auger" in p): col1 = "1"
+                            elif p == "gamma" or ("X" in p): col1 = "2"
+                            elif p == "positron": col1 = "3"
+                            elif p == "alpha": col1 = "4"
+                            else: writeOn = False
+    
+                            # if ('t1' in globals()) or ('t1' in locals()): t1w+=t1
+                            
+                            if writeOn:
+                                if idec<10:
+                                    file.write(f"{col1} {energy_vec2[irec]*1e3:.6E}  {idec} 1 {t1:.6E}\n")
+                                else:
+                                    file.write(f"{col1} {energy_vec2[irec]*1e3:.6E} {idec} 1 {t1:.6E}\n")
+                           
+            
+            
             '''
             ==========================================================
                 III.b INTERACTION RAYONNEMENT/MATIERE
             ==========================================================
             '''
 
-            for i, p in enumerate(particle_vec):
+            for ipart, p in enumerate(particle_vec):
                 if p == "electron":
-                    energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
+                    energy_vec[ipart] = tl.energie_dep_beta2(energy_vec[ipart],v=V)
         
                 if p == "beta+":
-                    energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
+                    energy_vec[ipart] = tl.energie_dep_beta2(energy_vec[ipart],v=V)
         
                 if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                    p0 = particle_vec[i]
-                    Ei = energy_vec[i]
+                    p0 = particle_vec[ipart]
+                    Ei = energy_vec[ipart]
                     Ed = tl.energie_dep_gamma2(Ei,v=V)          # sampling energy free from photon
                     if Ei == Ed: # effet photoelectrique
                         energie_ele_emis,lacune_ph,element_ph = tl.interaction_scintillation(Ed)
                         particule_emise_ph,energie_par_emise_ph,posi_lacune_ph,par_emise_ph = tl.relaxation_atom_ph(lacune_ph,element_ph,v=V)
                         particle_vec = particle_vec + par_emise_ph
-                        energy_vec_initial[i]=energie_ele_emis
-                        energy_vec[i]=energie_ele_emis # energie du photoélectron primaire
+                        energy_vec_initial[ipart]=energie_ele_emis
+                        energy_vec[ipart]=energie_ele_emis # energie du photoélectron primaire
                         energy_vec_initial = energy_vec_initial + energie_par_emise_ph
                         energy_vec = energy_vec + energie_par_emise_ph
                     elif Ed == Ei - 1022:           # creation de paire
                         #particle_vec[i] = 'electron'
                         E_e = (Ei-1022)/2
-                        energy_vec[i] =  E_e#tl.energie_dep_beta2(E_e,v=V)
+                        energy_vec[ipart] =  E_e#tl.energie_dep_beta2(E_e,v=V)
                         particle_vec.append("positron")
                         energy_vec.append(E_e)#tl.energie_dep_beta2(E_e,v=V))
                     else: # diffusion Compton
-                        energy_vec[i]=Ed
-                    particle_vec[i] = "electron"
+                        energy_vec[ipart]=Ed
+                    particle_vec[ipart] = "electron"
                         
                 if "Auger" in p:
-                    particle_vec[i] = "electron"
-                    energy_vec[i] = tl.energie_dep_beta2(energy_vec[i],v=V)
+                    particle_vec[ipart] = "electron"
+                    energy_vec[ipart] = tl.energie_dep_beta2(energy_vec[ipart],v=V)
             
             if Display:
                 print("\n\t INTERACTION--Prompt \n\t Summary of the energy deposited by charged particles")
-                for i, p  in enumerate(particle_vec):
-                    if p[:4] != "Atom" and energy_vec[i]!=0:
-                        if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL": (f"\t\t the {p0} gives {energy_vec[i]} keV to a recoil electron")
-                        else: print(f"\t\t {p} of energy = {round(energy_vec[i],3)} keV")
+                for ipart, p  in enumerate(particle_vec):
+                    if p[:4] != "Atom" and energy_vec[ipart]!=0:
+                        if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL": (f"\t\t the {p0} gives {energy_vec[ipart]} keV to a recoil electron")
+                        else: print(f"\t\t {p} of energy = {round(energy_vec[ipart],3)} keV")
                         
             
             if evenement!=1:
                 energy_vec_initial2 = energy_vec2.copy()
-                for i, p in enumerate(particle_vec2):
+                for ipart, p in enumerate(particle_vec2):
                     if p == "electron":
-                        energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
+                        energy_vec2[ipart] = tl.energie_dep_beta2(energy_vec2[ipart],v=V)
         
                     if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL":
-                        p0 = particle_vec2[i]
-                        Ei_2 = energy_vec2[i]
+                        p0 = particle_vec2[ipart]
+                        Ei_2 = energy_vec2[ipart]
                         Ed_2 = tl.energie_dep_gamma2(Ei_2,v=V)          # sampling energy free from photon
                         if Ei_2 == Ed_2:        # effet photon-electrique
                             energie_ele_emis2,lacune_ph2,element_ph2 = tl.interaction_scintillation(Ed_2)
                             particule_emise_ph2,energie_par_emise_ph2,posi_lacune_ph2,par_emise_ph2 = tl.relaxation_atom_ph(lacune_ph2,element_ph2,v=V)
-                            energy_vec2[i]=energie_ele_emis2
-                            energy_vec_initial2[i]=energie_ele_emis2
+                            energy_vec2[ipart]=energie_ele_emis2
+                            energy_vec_initial2[ipart]=energie_ele_emis2
                             energy_vec2 = energy_vec2 + energie_par_emise_ph2
                             energy_vec_initial2 = energy_vec_initial2 + energie_par_emise_ph2
                             particle_vec2 = particle_vec2 + par_emise_ph2
                         elif Ed_2 == Ei_2 - 1022:   # creation de paire
-                            #particle_vec2[i] = 'electron'
+                            #particle_vec2[ipart] = 'electron'
                             E_e = (Ei_2-1022)/2
-                            energy_vec2[i] =  E_e#tl.energie_dep_beta2(E_e,v=V)
+                            energy_vec2[ipart] =  E_e#tl.energie_dep_beta2(E_e,v=V)
                             particle_vec2.append("positron")
                             energy_vec2.append(E_e)#tl.energie_dep_beta2(E_e,v=V))
                         else: # diffusion Compton
-                            energy_vec2[i]=Ed_2    
-                        particle_vec2[i] = "electron"
+                            energy_vec2[ipart]=Ed_2    
+                        particle_vec2[ipart] = "electron"
                         if Display:
-                            print(f"\t\t {p0} give energy {energy_vec2[i]} keV to electron")
+                            print(f"\t\t {p0} give energy {energy_vec2[ipart]} keV to electron")
                             
                         
                     if "Auger" in p:
-                        particle_vec2[i] = "electron"
-                        energy_vec2[i] = tl.energie_dep_beta2(energy_vec2[i],v=V)
+                        particle_vec2[ipart] = "electron"
+                        energy_vec2[ipart] = tl.energie_dep_beta2(energy_vec2[ipart],v=V)
                 
                 if Display:
                     print("\n\t INTERACTION--Delay \n\t Summary of the energy deposited by charged particles")
-                    for i, p  in enumerate(particle_vec2):
-                        if p[:4] != "Atom" and energy_vec2[i]!=0:
-                            if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL": (f"\t\t the {p0} gives {energy_vec2[i]} keV to a recoil electron")
-                            else: print(f"\t\t {p} of energy = {round(energy_vec2[i],3)} keV")
+                    for ipart, p  in enumerate(particle_vec2):
+                        if p[:4] != "Atom" and energy_vec2[ipart]!=0:
+                            if p == "gamma" or p == "XKA" or p == "XKB" or p == "XL": (f"\t\t the {p0} gives {energy_vec2[ipart]} keV to a recoil electron")
+                            else: print(f"\t\t {p} of energy = {round(energy_vec2[ipart],3)} keV")
                 
-                '''
-                ====================
-                IV. LA SCINTILLATION
-                Calculation of the scintillation quenching with the Birks Model
-                ====================
-                '''
+            """
+            ==========================================================
+            III.b.1 record deposited energies in file
+            ==========================================================
+            """
+            if record:
+                with open(recfile2, "a") as file:
+                    # t1w=0
+                    for irec, p in enumerate(particle_vec):
+                        writeOn = True
+                        
+                        if p == "electron" or ("Auger" in p): col1 = "1"
+                        elif p == "gamma" or ("X" in p): col1 = "2"
+                        elif p == "positron": col1 = "3"
+                        elif p == "alpha": col1 = "4"
+                        else: writeOn = False
+
+                        # if ('t1' in globals()) or ('t1' in locals()): t1w+=t1
+                        
+                        if writeOn:
+                            if idec<10:
+                                file.write(f"{col1} {energy_vec[irec]*1e3:.6E}  {idec} 1 0\n")
+                            else:
+                                file.write(f"{col1} {energy_vec[irec]*1e3:.6E} {idec} 1 0\n")
+                    
+                    if evenement != 1:
+                        for irec, p in enumerate(particle_vec2):
+                            writeOn = True
+                            
+                            if p == "electron" or ("Auger" in p): col1 = "1"
+                            elif p == "gamma" or ("X" in p): col1 = "2"
+                            elif p == "positron": col1 = "3"
+                            elif p == "alpha": col1 = "4"
+                            else: writeOn = False
+    
+                            # if ('t1' in globals()) or ('t1' in locals()): t1w+=t1
+                            
+                            if writeOn:
+                                if idec<10:
+                                    file.write(f"{col1} {energy_vec2[irec]*1e3:.6E}  {idec} 1 {t1:.6E}\n")
+                                else:
+                                    file.write(f"{col1} {energy_vec2[irec]*1e3:.6E} {idec} 1 {t1:.6E}\n")
+                
+                
+            '''
+            ====================
+            IV. LA SCINTILLATION
+            Calculation of the scintillation quenching with the Birks Model
+            ====================
+            '''
             if Display: print(f"\n\t SCINTILLATION--Prompt \n\t\t Birks constant = {kB} cm/keV\n\t Summary of the estimation of quenched energies")
             e_quenching=[]
-            for i, p in enumerate(particle_vec):
+            for ipart, p in enumerate(particle_vec):
                 if p == "alpha":
-                    energy_vec[i] = tl.Em_a(energy_vec[i],kB,nE_alpha)
-                    e_quenching.append(energy_vec[i])
+                    energy_vec[ipart] = tl.Em_a(energy_vec[ipart],kB,nE_alpha)
+                    e_quenching.append(energy_vec[ipart])
                 elif p == "electron" or p == "positron":
-                    energy_vec[i] = tl.Em_e(energy_vec_initial[i]*1e3,energy_vec[i]*1e3,kB*1e3,nE_electron)*1e-3
-                    e_quenching.append(energy_vec[i])
+                    energy_vec[ipart] = tl.Em_e(energy_vec_initial[ipart]*1e3,energy_vec[ipart]*1e3,kB*1e3,nE_electron)*1e-3
+                    if micCorr: energy_vec[ipart] = energy_vec[ipart]*tl.micelleLoss(energy_vec_initial[ipart])
+                    e_quenching.append(energy_vec[ipart])
                 else:
                     e_quenching.append(0)
             if Display: print("\t\t Birks constant = ", kB, ' cm/keV')
             if Display:
-                for i, p in enumerate(particle_vec):
+                for ipart, p in enumerate(particle_vec):
                     #print(e_quenching[i])
-                    if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", np.round(e_quenching[i],3), "keV")
+                    if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", np.round(e_quenching[ipart],3), "keV")
             
             if evenement!=1:
                 if Display: print(f"\n\t SCINTILLATION--Delayed \n\t\t Birks constant = {kB} cm/keV\n\t Summary of the estimation of quenched energies")
                 e_quenching2=[]
-                for i, p in enumerate(particle_vec2):
+                for ipart, p in enumerate(particle_vec2):
                     if p == "alpha":
-                        energy_vec2[i] = tl.Em_a(energy_vec2[i],kB,nE_alpha)
-                        e_quenching2.append(energy_vec2[i])
+                        energy_vec2[ipart] = tl.Em_a(energy_vec2[ipart],kB,nE_alpha)
+                        e_quenching2.append(energy_vec2[ipart])
                     elif p == "electron" or p == "positron":
-                        energy_vec2[i] = tl.Em_e(energy_vec_initial2[i]*1e3,energy_vec2[i]*1e3,kB*1e3,nE_electron)*1e-3
-                        e_quenching2.append(energy_vec2[i])
+                        energy_vec2[ipart] = tl.Em_e(energy_vec_initial2[ipart]*1e3,energy_vec2[ipart]*1e3,kB*1e3,nE_electron)*1e-3
+                        if micCorr: energy_vec2[ipart] = energy_vec2[ipart]*tl.micelleLoss(energy_vec_initial2[ipart])
+                        e_quenching2.append(energy_vec2[ipart])
                     else:
                         e_quenching2.append(0) 
                 if Display:
-                    for i, p in enumerate(particle_vec2):
-                        if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", round(e_quenching2[i],3), "keV")       
+                    for ipart, p in enumerate(particle_vec2):
+                        if p[:4] != "Atom": print(f"\t\t quenched energy of {p} = ", round(e_quenching2[ipart],3), "keV")
+            
+            
+            """
+            ==========================================================
+            IV.1 record deposited quenched energies in file
+            ==========================================================
+            """
+            if record:
+                with open(recfile3, "a") as file:
+                    # t1w=0
+                    for irec, p in enumerate(particle_vec):
+                        writeOn = True
+                        
+                        if p == "electron" or ("Auger" in p): col1 = "1"
+                        elif p == "gamma" or ("X" in p): col1 = "2"
+                        elif p == "positron": col1 = "3"
+                        elif p == "alpha": col1 = "4"
+                        else: writeOn = False
+
+                        # if ('t1' in globals()) or ('t1' in locals()): t1w+=t1
+                        
+                        if writeOn:
+                            if idec<10:
+                                file.write(f"{col1} {e_quenching[irec]*1e3:.6E}  {idec} 1 0\n")
+                            else:
+                                file.write(f"{col1} {e_quenching[irec]*1e3:.6E} {idec} 1 0\n")
+                    
+                    if evenement != 1:
+                        for irec, p in enumerate(particle_vec2):
+                            writeOn = True
+                            
+                            if p == "electron" or ("Auger" in p): col1 = "1"
+                            elif p == "gamma" or ("X" in p): col1 = "2"
+                            elif p == "positron": col1 = "3"
+                            elif p == "alpha": col1 = "4"
+                            else: writeOn = False
+    
+                            # if ('t1' in globals()) or ('t1' in locals()): t1w+=t1
+                            
+                            if writeOn:
+                                if idec<10:
+                                    file.write(f"{col1} {e_quenching2[irec]*1e3:.6E}  {idec} 1 {t1:.6E}\n")
+                                else:
+                                    file.write(f"{col1} {e_quenching2[irec]*1e3:.6E} {idec} 1 {t1:.6E}\n")
+            
+            
                 
             '''
             ====================
             V. LE MESURE TDCR
             ====================
-            '''            
-            if mode2=="sym":
-                if evenement !=1:
-                    p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                    p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
-                    p_nosingle2 = np.exp(-L*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
-                    p_single2 = 1-p_nosingle2 
-                    efficiency_S.append(p_single+p_single2)
-                    efficiency_T.append(p_single**3+p_single2**3)
-                    efficiency_D.append(3*(p_single)**2-2*p_single**3+(3*(p_single2)**2-2*p_single2**3))
-                    if Display: print(f"\n\t COUNTING--Sym \n\t\t Free parameter = {L} keV-1 \n\t Summary of TDCR measurement (prompt)")
-                    if Display: print("\t\t Free parameter = ", L, "keV-1")
-                    if Display: print("\t\t Efficiency of single events = ", round(p_single,5))
-                    if Display: print("\t\t Efficiency of double events = ", round(3*(p_single)**2-2*p_single**3,5))
-                    if Display: print("\t\t Efficiency of triple events = ", round(p_single**3,5))
-                    if Display: print("\t Summary of TDCR measurement (delayed)")
-                    if Display: print("\t\t Efficiency of single events = ", round(p_single2,5))
-                    if Display: print("\t\t Efficiency of double events = ", round(3*(p_single2)**2-2*p_single2**3,5))
-                    if Display: print("\t\t Efficiency of triple events = ", round(p_single2**3,5))
-                    if Display: print("\t Summary of TDCR measurement (prompt + delayed)")
-                    if Display: print("\t\t Efficiency of single events = ", round(p_single+p_single2,5))
-                    if Display: print("\t\t Efficiency of double events = ", round(3*(p_single)**2-2*p_single**3+(3*(p_single2)**2-2*p_single2**3),5))
-                    if Display: print("\t\t Efficiency of triple events = ", round(p_single**3+p_single2**3,5))
-                else:
-                    p_nosingle = np.exp(-L*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                    p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
-                    efficiency_S.append(p_single)
-                    efficiency_T.append(p_single**3)
-                    efficiency_D.append(3*(p_single)**2-2*efficiency_T[-1])
-                    if Display: print(f"\n\t COUNTING--Sym \n\t\t Free parameter = {L} keV-1 \n\t Summary of TDCR measurement (prompt)")
-                    if Display: print("\t\t Efficiency of single events = ", round(efficiency_S[-1],5))
-                    if Display: print("\t\t Efficiency of double events = ", round(efficiency_D[-1],5))
-                    if Display: print("\t\t Efficiency of triple events = ", round(efficiency_T[-1],5))                    
-                                    
-            elif mode2=="asym":
-                if evenement !=1:
-                    pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                    pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-                    pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                    pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
-                    pC_nosingle = np.exp(-L[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                    pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
-                    
-                    pA_nosingle2 = np.exp(-L[0]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
-                    pA_single2 = 1-pA_nosingle2                                    # probability to have at least 1 electrons in a PMT
-                    pB_nosingle2 = np.exp(-L[1]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
-                    pB_single2 = 1-pB_nosingle2                                    # probability to have at least 1 electrons in a PMT
-                    pC_nosingle2 = np.exp(-L[2]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
-                    pC_single2 = 1-pC_nosingle2                                    # probability to have at least 1 electrons in a PMT
-                    
-                    efficiency_AB.append(pA_single*pB_single+pA_single2*pB_single2)
-                    efficiency_BC.append(pB_single*pC_single+pB_single2*pC_single2)
-                    efficiency_AC.append(pA_single*pC_single+pA_single2*pC_single2)
-                    efficiency_T.append(pA_single*pB_single*pC_single+pA_single2*pB_single2*pC_single2)
-                    efficiency_D.append(pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single+(pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2))
-                    efficiency_S.append(pA_single+pB_single+pC_single-pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single-pA_single*pB_single*pC_single+(pA_single2+pB_single2+pC_single2-pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2-pA_single2*pB_single2*pC_single2))
-                    
-                    if Display: print(f"\n\t COUNTING--Asym \n\t\t Free parameters (A,B,C) = {L[0]},{L[1]},{L[2]} keV-1 \n\t Summary of TDCR measurement (prompt)")
-                    #if Display: print("\t Summary of TDCR measurement (prompt)")
-                    if Display: print("\t\t Efficiency of single events: ", round(pA_single+pB_single+pC_single-pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single-pA_single*pB_single*pC_single,5))
-                    if Display: print("\t\t Efficiency of double events: ", round(pA_single*pB_single+pB_single*pC_single+pA_single*pC_single-2*pA_single*pB_single*pC_single,5))
-                    if Display: print("\t\t Efficiency of triple events: ", round(pA_single*pB_single*pC_single,5))
-                    if Display: print("\t Summary of TDCR measurement (delayed)")
-                    if Display: print("\t\t Efficiency of single events: ", round(pA_single2+pB_single2+pC_single2-pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2-pA_single2*pB_single2*pC_single2,5))
-                    if Display: print("\t\t Efficiency of double events: ", round(pA_single2*pB_single2+pB_single2*pC_single2+pA_single2*pC_single2-2*pA_single2*pB_single2*pC_single2,5))
-                    if Display: print("\t\t Efficiency of triple events: ", round(pA_single2*pB_single2*pC_single2,5))
-                else:
-                    pA_nosingle = np.exp(-L[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                    pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-                    pB_nosingle = np.exp(-L[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                    pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
-                    pC_nosingle = np.exp(-L[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
-                    pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
-                        
-                    efficiency_AB.append(pA_single*pB_single)
-                    efficiency_BC.append(pB_single*pC_single)
-                    efficiency_AC.append(pA_single*pC_single)
-                    efficiency_T.append(pA_single*pB_single*pC_single)
-                    efficiency_D.append(efficiency_AB[-1]+efficiency_BC[-1]+efficiency_AC[-1]-2*efficiency_T[-1])
-                    efficiency_S.append(pA_single+pB_single+pC_single-efficiency_D[-1]-efficiency_T[-1])
-                    if Display: print(f"\n\t COUNTING--Asym \n\t\t Free parameters (A,B,C) = {L[0]},{L[1]},{L[2]} keV-1 \n\t Summary of TDCR measurement (prompt)")
-                    if Display: print("\t\t Free parameter PMT A: ", L[0], "keV-1")
-                    if Display: print("\t\t Free parameter PMT B: ", L[1], "keV-1")
-                    if Display: print("\t\t Free parameter PMT C: ", L[2], "keV-1")
-                    if Display: print("\t\t Efficiency of single events: ", round(efficiency_S[-1],5))
-                    if Display: print("\t\t Efficiency of double events: ", round(efficiency_D[-1],5))
-                    if Display: print("\t\t Efficiency of triple events: ", round(efficiency_T[-1],5))                    
+            '''
+            if evenement == 1: e_quenching2 = 0; t1=0
+            if fullMC:
+                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+            else:
+                efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
+            efficiency_S.append(efficiency0_S)
+            efficiency_T.append(efficiency0_T)
+            efficiency_D.append(efficiency0_D)
+            efficiency_AB.append(efficiency0_AB)
+            efficiency_BC.append(efficiency0_BC)
+            efficiency_AC.append(efficiency0_AC)            
+            efficiency_D2.append(efficiency0_D2)
+         
 
-
+            """
+            ==========================================================
+            V.1 record detection probabilities in file
+            ==========================================================
+            """
+            if record:
+                with open(recfile4, "a") as file:
+                    if symm:
+                        file.write(f"{idec} {efficiency_S[-1]} {efficiency_D[-1]} {efficiency_T[-1]}\n")
+                    else:
+                        file.write(f"{idec} {efficiency_S[-1]} {efficiency_D[-1]} {efficiency_T[-1]} {efficiency_AB[-1]} {efficiency_BC[-1]} {efficiency_AC[-1]}\n")
+            
         '''
         ====================
         VI. CALCULATION OF THE FINAL ESTIMATORS
         ====================
         '''
-        mean_efficiency_T = np.mean(efficiency_T) # average
-        std_efficiency_T = np.std(efficiency_T)/np.sqrt(N)   # standard deviation
-        std_efficiency_T = np.sqrt(std_efficiency_T**2+1e-8) # combined with uncertainty due to quenching calculation
-        mean_efficiency_D = np.mean(efficiency_D)
-        std_efficiency_D = np.std(efficiency_D)/np.sqrt(N)
-        std_efficiency_D = np.sqrt(std_efficiency_D**2+1e-8)
-        mean_efficiency_S = np.mean(efficiency_S)
-        std_efficiency_S = np.std(efficiency_S)/np.sqrt(N)
-        std_efficiency_S = np.sqrt(std_efficiency_S**2+1e-8)
-        
-        if mode2=="sym":
-            TDCR_calcul = mean_efficiency_T/mean_efficiency_D
-        elif mode2=="asym":
-            mean_efficiency_AB = np.mean(efficiency_AB)
-            std_efficiency_AB = np.std(efficiency_AB)/np.sqrt(N)
-            mean_efficiency_BC = np.mean(efficiency_BC)
-            std_efficiency_BC = np.std(efficiency_BC)/np.sqrt(N)
-            mean_efficiency_AC = np.mean(efficiency_AC)
-            std_efficiency_AC = np.std(efficiency_AC)/np.sqrt(N)
-            TDCR_calcul = mean_efficiency_T/mean_efficiency_D
-            TABmodel = mean_efficiency_T/mean_efficiency_AB
-            TBCmodel = mean_efficiency_T/mean_efficiency_BC
-            TACmodel = mean_efficiency_T/mean_efficiency_AC
-        
-        if mode2=="sym":
-            res=(TDCR_calcul-TD)**2
-        elif mode2=="asym":
-            res=(TAB-TABmodel)**2+(TBC-TBCmodel)**2+(TAC-TACmodel)**2
-        
-        if mode == "res":
-            return res
+        mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_AB, std_efficiency_AB, mean_efficiency_BC, std_efficiency_BC, mean_efficiency_AC, std_efficiency_AC, mean_efficiency_D2, std_efficiency_D2 = tl.efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N)
+                        
         if mode == "eff":
-            if N<200:
-                print("Warning. too low number of MC trials - inaccurate estimation")
-                return mean_efficiency_S, 1, mean_efficiency_D, 1, mean_efficiency_T, 1
-            else:
-                return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T
+            return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_AB, std_efficiency_AB, mean_efficiency_BC, std_efficiency_BC, mean_efficiency_AC, std_efficiency_AC, mean_efficiency_D2, std_efficiency_D2
         if mode =="dis":
-            return efficiency_S, efficiency_D, efficiency_T    
+            return efficiency_S, efficiency_D, efficiency_T, efficiency_D2
+
+def objectFct(L, TD, Rad, pmf_1, N, kB, V):
+    """
+    Objective function to minimize in order the estimate the detection efficiencies based on the measurements.
+
+    Parameters
+    ----------
+    L : float or tuple
+        If L is float, then L is the global free parameter. If L is tuple, then L is a triplet of free parameters. unit keV-1
+    TD : float or tuple
+        measurements. If TD is float, then TD is the measured TDCR parameter. If TD is tuple, then TD must contain the global TDCR parameter followed by specific ones (T/B, T/AB, T/BC, T/AC)
+    Rad : string
+        List of radionuclides (eg. "H-3, Co-60").
+    pmf_1 : string
+        list of probability of each radionuclide (eg. "0.8, 0.2").
+    N : integer
+        Number of Monte-Carlo trials. recommanded N>10000 (see JCGM 101). Not applied in the case of the analytical model.
+    kB : float
+        Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml.
+
+    Returns
+    -------
+    res : float
+        The residual value.
+
+    """
+    
+    if isinstance(TD, (tuple, list)):
+        symm = False
+    else:
+        symm = True
+        
+    if symm:
+        eff_model = TDCRPy(L, Rad, pmf_1, N, kB, V, readRecHist = True)
+        TDCR_calcul = eff_model[4]/eff_model[2]
+        res=(TDCR_calcul-TD)**2
+    else:
+        eff_model = TDCRPy(L, Rad, pmf_1, N, kB, V, readRecHist = True)
+        TAB_calcul = eff_model[4]/eff_model[6]
+        TBC_calcul = eff_model[4]/eff_model[8]
+        TAC_calcul = eff_model[4]/eff_model[10]
+        res=(TD[1]-TAB_calcul)**2+(TD[2]-TBC_calcul)**2+(TD[3]-TAC_calcul)**2        
+    
+    return res
+
+def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds=[0.1, 10]):
+    """
+    Caclulation of the efficiency of a TDCR system based on the model TDCRPy.
+    This function includes optimization procedures from scipy.
+
+    Parameters
+    ----------
+    TD : float or tuple
+        measurements. If TD is float, then TD is the measured TDCR parameter. If TD is tuple, then TD must contain the global TDCR parameter followed by specific ones (T/B, T/AB, T/BC, T/AC)
+    Rad : string
+        List of radionuclides (eg. "H-3, Co-60").
+    pmf_1 : string
+        list of probability of each radionuclide (eg. "0.8, 0.2").
+    kB : float
+        Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml.
+    N : interger, optional
+        number of Monte-Carlo trials. The default is 10000.
+    maxiter : interger, optional
+        maximum number of iterations of the optimization procedures
+    xatol : float
+        convergence parameter of the Nelder Mead optimisation
+    disp : Boolean
+        to display detailed results of the procedure. Default is False.
+
+    Returns
+    -------
+    L0 : float
+        global free parameter.
+    L : tuple
+        free parameters (relevant for the asymetric model).
+    eff_S : float
+        counting efficiency of single events.
+    u_eff_S : float
+        standard uncertainty of eff_S.
+    eff_D : float
+        counting efficiency of double coincidences.
+    u_eff_D : float
+        standard uncertainty of eff_D.
+    eff_T : float
+        counting efficiency of triple coincidences.
+    u_eff_T : float
+        standard uncertainty of eff_T.
+    eff_AB : float
+        counting efficiency of coincidences AB.
+    u_eff_AB : float
+        standard uncertainty of eff_AB.
+    eff_BC : float
+        counting efficiency of coincidences BC.
+    u_eff_BC : float
+        standard uncertainty of eff_BC.
+    eff_AC : float
+        counting efficiency of coincidences AC.
+    u_eff_AC : float
+        standard uncertainty of eff_AC.    
+    eff_D : float
+        counting efficiency of double coincidences in C/N configuation (not relevant).
+    u_eff_D : float
+        standard uncertainty of eff_D in C/N configuation (not relevant).
+
+    """
+    if isinstance(TD, (tuple, list)):
+        symm = False
+    else:
+        symm = True
+    
+    TDCRPy(L, Rad, pmf_1, N, kB, V, record = True)
+       
+    if symm: r=opt.minimize_scalar(objectFct, args=(TD, Rad, pmf_1, N, kB, V), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+    else: r=opt.minimize_scalar(objectFct, args=(TD[0], Rad, pmf_1, N, kB, V), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+    L0=r.x
+    L=(L0, L0, L0)
+    print(f"global free parameter = {L0} keV-1")
+    
+    if not symm:
+        r=opt.minimize(objectFct, L, args=(TD, Rad, pmf_1, N, kB, V), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
+        L=r.x
+        print(f"free parameters = {L} keV-1")   
+
+    if symm: out=TDCRPy(L0, Rad, pmf_1, N, kB, V, readRecHist = True)
+    else: out=TDCRPy(L, Rad, pmf_1, N, kB, V, readRecHist = True)
+    eff_S = out[0]
+    u_eff_S = out[1]
+    eff_D = out[2]
+    u_eff_D = out[3]
+    eff_T = out[4]
+    u_eff_T = out[5]
+    eff_AB = out[6]
+    u_eff_AB = out[7]
+    eff_BC = out[8]
+    u_eff_BC = out[9]
+    eff_AC = out[10]
+    u_eff_AC = out[11]
+    eff_D2 = out[12]
+    u_eff_D2 = out[13]
+    
+    return L0, L, eff_S, u_eff_S, eff_D, u_eff_D, eff_T, u_eff_T, eff_AB, u_eff_AB, eff_BC, u_eff_BC, eff_AC, u_eff_AC, eff_D2, u_eff_D2
+
+
+def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds=[0.1, 10]):
+    """
+    Caclulation of the efficiency of a TDCR system based on the model TDCRPy (analytical model).
+    This function includes optimization procedures from scipy.
+
+    Parameters
+    ----------
+    TD : float or tuple
+        measurements. If TD is float, then TD is the measured TDCR parameter. If TD is tuple, then TD must contain the global TDCR parameter followed by specific ones (T/D, T/AB, T/BC, T/AC)
+    Rad : string
+        List of radionuclides (eg. "H-3, Co-60").
+    pmf_1 : string
+        list of probability of each radionuclide (eg. "0.8, 0.2").
+    kB : float
+        Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml.
+    maxiter : interger, optional
+        maximum number of iterations of the optimization procedures
+    xatol : float
+        convergence parameter of the Nelder Mead optimisation
+    disp : Boolean
+        to display detailed results of the procedure. Default is False.
+
+    Returns
+    -------
+    L0 : float
+        global free parameter.
+    L : tuple
+        free parameters (relevant for the asymetric model).
+    eff_S : float
+        counting efficiency of single events.
+    u_eff_S : float
+        standard uncertainty of eff_S.
+    eff_D : float
+        counting efficiency of double coincidences.
+    u_eff_D : float
+        standard uncertainty of eff_D.
+    eff_T : float
+        counting efficiency of triple coincidences.
+    u_eff_T : float
+        standard uncertainty of eff_T.
+    eff_AB : float
+        counting efficiency of coincidences AB.
+    u_eff_AB : float
+        standard uncertainty of eff_AB.
+    eff_BC : float
+        counting efficiency of coincidences BC.
+    u_eff_BC : float
+        standard uncertainty of eff_BC.
+    eff_AC : float
+        counting efficiency of coincidences AC.
+    u_eff_AC : float
+        standard uncertainty of eff_AC.    
+    eff_D : float
+        counting efficiency of double coincidences in C/N configuation (not relevant).
+    u_eff_D : float
+        standard uncertainty of eff_D in C/N configuation (not relevant).
+
+    """
+    if isinstance(TD, (tuple, list)):
+        symm = False
+    else:
+        symm = True
+
+    if symm: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD, TD, TD, TD, Rad, kB, V, "res", 1e3), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+    else: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+    L0=r.x
+    L=(L0, L0, L0)
+    print(f"global free parameter = {L0} keV-1")
+    
+    if not symm:
+        r=opt.minimize(tl.modelAnalytical, L, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
+        L=r.x
+        print(f"free parameters = {L} keV-1")   
+
+    if symm: out=tl.modelAnalytical(L, TD, TD, TD, TD, Rad, kB, V, "eff", 1e3)
+    else: out=tl.modelAnalytical(L, TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "eff", 1e3)
+    eff_S = out[0]
+    eff_D = out[1]
+    eff_T = out[2]
+    # u_eff_S = out[1]
+    # eff_D = out[2]
+    # u_eff_D = out[3]
+    # eff_T = out[4]
+    # u_eff_T = out[5]
+    # eff_AB = out[6]
+    # u_eff_AB = out[7]
+    # eff_BC = out[8]
+    # u_eff_BC = out[9]
+    # eff_AC = out[10]
+    # u_eff_AC = out[11]
+    
+    return L0, L, eff_S, eff_D, eff_T #, u_eff_T, eff_AB, u_eff_AB, eff_BC, u_eff_BC, eff_AC, u_eff_AC, u_eff_S, u_eff_D, 
+
+
+
+# mode = "eff"                # ask for efficiency calculation
+# Rad="Cu-67"                 # radionuclides
+# pmf_1="1"                   # relatives fractions of the radionulides
+# N = 1000                    # number of Monte Carlo trials
+# kB =1.0e-5                  # Birks constant in cm keV-1
+# V = 10                      # volume of scintillator in mL
+# L=np.logspace(-1,2,num=100) # free parameter in keV-1
+
+# Record decay histories in temporary files
+# TDCRPy(L[0], Rad, pmf_1, N, kB, V, mode, Display=True)
+# TDCRPy(L[0], Rad, pmf_1, N, kB, V, mode, barp=False, record=True, fullMC=False)
+# TDCRPy(100, Rad, pmf_1, N, kB, V, mode, barp=False, record=True, fullMC=True)
+
+# effS, u_effS, effD, u_effD, effT, u_effT, effD2, u_effD2 = [], [],[], [],[], [], [], []
+# for l in tqdm(L, desc="free parameters ", unit=" iterations"):
+#   out = TDCRPy(l, Rad, pmf_1, N, kB, V, mode, readRecHist=True, fullMC=False)
+#   effS.append(out[2])
+#   u_effS.append(out[3])
+#   effD.append(out[2])
+#   u_effD.append(out[3])
+#   effT.append(out[4])
+#   u_effT.append(out[5])
+#   effD2.append(out[12])
+#   u_effD2.append(out[13])
+
+# effS=np.asarray(effS)
+# effT=np.asarray(effT)
+# effD=np.asarray(effD)
+# effD2=np.asarray(effD2)
+# u_effS=np.asarray(u_effS)
+# u_effT=np.asarray(u_effT)
+# u_effD=np.asarray(u_effD)
+# u_effD2=np.asarray(u_effD2)
+
+# tdcr=effT/effD
+# u_tdcr=np.sqrt(u_effD**2*effT**2/effD**4+u_effT**2/effD**2)
+
+# import matplotlib.pyplot as plt
+# plt.figure("efficiency vs free parameter")
+# plt.clf()
+# plt.errorbar(L,effD,yerr=u_effD,fmt="-k",label="double coincidences")
+# plt.errorbar(L,effT,yerr=u_effT,fmt="-r",label="triple coincidences")
+# plt.errorbar(L,effD2,yerr=u_effD2,fmt="-g",label="double coincidences (CIEMAT/NIST)")
+# plt.xscale('log')
+# plt.xlabel(r'$L$ /keV$^{-1}$', fontsize=14)
+# plt.ylabel(r'$\epsilon$', fontsize=14)
+# plt.legend()
+
+# plt.figure("efficiency vs TDCR")
+# plt.clf()
+# plt.errorbar(tdcr,effD,xerr=u_tdcr,yerr=u_effD,fmt="-k")
+# #plt.xscale('log')
+# plt.xlabel(r'$R_T/R_D$', fontsize=14)
+# plt.ylabel(r'$\epsilon_{D}$', fontsize=14)
+# plt.show()
+
 
 # L = 1
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# Rad="Fe-55"
+# # L = (1.1, 1.05, 1.15)
+# # TD = 0.977667386529166
+# # TD = (0.9767359812638453, 0.9925429293804757, 0.991829757077315, 0.9919970813639295) # source 1
+# # TD = (0.9768862920127371, 0.9928478299182348, 0.9912531441227223, 0.9924249578285456) # source 2
+# # TD = (0.9769014488454436, 0.9918130431206161, 0.9920156754198314, 0.9927119011073454) # source 3
+# TD = (0.9764032345164899, 0.9928417189012709, 0.9911455450383777, 0.9920402844839974) # source 4
+# Rad="Tc-99"
 # pmf_1="1"
-# N = 10
-# kB =1.0e-5
-# V = 10
+# N = 10000
+# kB =1.4e-5
+# V = 16
 # mode = "eff"
-# mode2 = "sym"
-
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
 
 
-# L = 1
-# TD = 0.977667386529166
-# TAB = 0.992232838598821
-# TBC = 0.992343419459002
-# TAC = 0.99275350064608
-# Rad="Fe-55"
-# pmf_1="1"
-# N = 1000
-# kB =1.0e-5
-# V = 10
-# mode = "eff"
-# mode2 = "sym"
+# # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
+# # # print("result", out)
+# # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = True)
+# # # print("result", out)
 
-# out = TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2, Display=True, barp=False,uncData=False)
-# print("TDCR", out[4]/out[2])
-# print("Eff D", out[2])
-
+# outS = eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7)
+# outA = effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7)
+# print(outS)
+# print(outA)

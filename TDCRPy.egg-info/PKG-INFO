@@ -1,13 +1,13 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: TDCRPy
-Version: 1.8.4
+Version: 2.16.2
 Summary: TDCR model
 Home-page: https://pypi.org/project/TDCRPy/
 Author: RomainCoulon (Romain Coulon)
 Author-email: <romain.coulon@bipm.org>
 Project-URL: Documentation, https://github.com/RomainCoulon/TDCRPy/
 Keywords: Python,TDCR,Monte-Carlo,radionuclide,scintillation,counting
-Classifier: Development Status :: 4 - Beta
+Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Natural Language :: English
@@ -17,313 +17,239 @@ Classifier: Operating System :: Unix
 Classifier: Operating System :: MacOS :: MacOS X
 Classifier: Operating System :: Microsoft :: Windows
 Classifier: Topic :: Scientific/Engineering :: Physics
+Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 License-File: LICENCE.md
+Requires-Dist: numpy
+Requires-Dist: tqdm
+Requires-Dist: setuptools
+Requires-Dist: scipy
+Requires-Dist: configparser
+Requires-Dist: importlib.resources
+Requires-Dist: matplotlib
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license-file
+Dynamic: project-url
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
 
 # TDCRPy
 
-`TDCRPy` is a Python code to calculate detection efficiency of a liquide scintillation counter using 3-photomultiplier tubes.
-The calculation is based on the photo-physical model called of the Triple-to-Double-Coincidence-Ratio method (TDCR) and a Monte-Carlo sampling allowing to adress complexe decay schemes and radionuclide mixtures.
+<div align="center">
 
-The code is developped and maintained by the BIPM (MIT license).
+<img src="docs/logo1.png" alt="TDCRPy Logo" width="200"/>
 
-## Installation
+**A Photo-Physical Stochastic Model for Liquid Scintillation Counting**
 
-`TDCRPy` requires that the following packages are installed in your `Python` environement.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+![Status](https://img.shields.io/badge/status-stable-green)
+![BIPM](https://img.shields.io/badge/maintained%20by-BIPM-005696)
+
+</div>
+
+---
+
+## 📖 Overview
+
+**TDCRPy** is a Python package developed and maintained by the **BIPM** (Bureau International des Poids et Mesures). It estimates detection efficiencies of liquid scintillation counters using the **TDCR** (Triple to Double Coincidence Ratio) or **CIEMAT/NIST** methods.
+
+The calculation is based on a photo-physical stochastic model, allowing users to address:
+* Complex decay schemes (Beta spectra via BetaShape).
+* Radionuclide mixtures.
+* Ionization quenching (Birks model).
+* Micelle effects in scintillator cocktails.
+* Dynamic efficiency evolution over time.
+
+Technical details can be found in:
+* [Coulon et al., Applied Radiation and Isotopes (2024)](https://doi.org/10.1016/j.apradiso.2024.111518)
+* [Coulon et al., BIPM Technical Report](http://dx.doi.org/10.13140/RG.2.2.15682.80321)
+
+---
+
+## 📦 Installation
+
+TDCRPy requires a standard Python scientific environment.
+
+### 1. Install Dependencies
+You can install the required libraries via `pip` or `conda`.
 
 ```shell
-pip install importlib.resources configparser numpy tqdm setuptools scipy
-```
-or in `conda` environement:
+# Using pip
+pip install numpy scipy configparser tqdm importlib-resources
 
-```shell
-conda install importlib.resources configparser numpy tqdm setuptools scipy
-```
+# Optional (for visualization and dynamic decay features)
+pip install opencv-python radioactivedecay matplotlib
+````
 
-Then, `TDCRPy` can be installed.
+### 2\. Install TDCRPy
 
 ```shell
 pip install TDCRPy
 ```
 
-To obtain the last version.
+To upgrade to the latest version:
 
 ```shell
 pip install TDCRPy --upgrade
 ```
 
-The module can be imported in your Python code such as.
+### 3\. Run Tests
 
-```python
-import tdcrpy
-```
-
-## Test
-
-To run the unit tests of the package:
+Verify the installation by running the unit tests:
 
 ```shell
 python -m unittest tdcrpy.test.test_tdcrpy
 ```
 
-or (using the coverage package)
+-----
 
-```shell
-coverage run -m unittest tdcrpy.test.test_tdcrpy
-coverage report -m
-```
+## ⚡ Quick Start
 
-## User guide
-
-At first, the TDCRPy module must be imported.
-
-```python
-import tdcrpy
-```
-
-### TDCRoptimize.eff()
-
-In practice, `TDCRoptimize.eff()` is the fonction used to estimate the counting efficiency of a TDCR system. It approximates the free parameter(s) `L` in order to minimize the residual estimated by `TDCRPy()` for a given set of measurement data. In `mode2 = "sym"`, the *golden section search technique* is applied with a maximum number of iterations of 20. In `mode2 = "asym"`, the *Nelder-Mead technique* is applied with a maximum number of iterations of 20.
-
-`TDCRoptimize.eff()` is parametrised by the following parameters:
-*  `TD` (type `float`) is the quotient of the triple coincidence count rate divided by the logic sum of the double coincidence count rate.
-*  `TAB` (type `float`) is the quotient of the triple coincidence count rate divided by the double coincidence count rate between the channel A and B.
-*  `TBC` (type `float`) is the quotient of the triple coincidence count rate divided by the double coincidence count rate between the channel B and C.
-*  `TAC` (type `float`) is the quotient of the triple coincidence count rate divided by the double coincidence count rate between the channel A and C.
-*  `rad` (type `string`) is the list of radionuclides contained in the solution, e.g. `"H-3"`, `"H-3, Co-60"`.
-*  `pmf_1` (type `string`) is the probability of each radionuclide contained in `rad`. If `rad = "H-3, Co-60"` and `pmf_1="0.8, 0.2"`, the solution contains 80 % of tritium and 20 % of cobalt 60.
-*  `kB` (type `float`) is the Birks constant caracterizing the scintillator. It is espressed in cm/keV.
-*  `V` (type `float`) is the volume in ml of the scintillator.
-*  `mode2` sets whether the TDCR system has to be considered symetrical `mode2="sym"` or not symetrical `mode2="asym"`.
-*  `N` (type `integer`) is the number of Monte-Carlo trials corresponding each, to a simulated nuclear decay in the scintillator. Monte-Carlo calculation is not used in the case of pure beta emitting radionuclides where the analytical model is implemented. It is an optional parameter set by default at `N = 10000`.
-*  `L` (type `float`) initial guess of the free parameter(s) in keV^-1^. It represents the number of photoelectrons produced by the PMTs per unit of ionisation energy released in the scintillator during a decay and in the abscence of scintillation quenching. It is set by default at `L = 1`.
-
-`TDCRoptimize.eff()` returns:
-*  the global free parameter *L*,
-*  the free parameters related to each channel (*L<sub>A</sub>*, *L<sub>B</sub>*, *L<sub>C</sub>*),
-*  the estimation of the counting efficiency of single events *S*,
-*  the standard uncertainty of the estimation of *S*,
-*  the estimation of the counting efficiency of double coincidences *D*,
-*  the standard uncertainty of the estimation of *D*,
-*  the estimation of the counting efficiency of triple coincidences *T*,
-*  the standard uncertainty of the estimation of *T*.
-
-Example with `mode2 = "sym"`: 
+Here is a basic example to estimate detection efficiencies for **Co-60** using a symmetric PMT configuration.
 
 ```python
 import tdcrpy
 
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Co-60"
-pmf_1="1"
-N = 250
-kB =1.0e-5
-V = 10
-mode2 = "sym"
+# --- 1. Define Parameters ---
+mode = "eff"           # Calculation mode
+L = 1.2                # Free parameter in keV^-1
+Rad = "Co-60"          # Radionuclide
+pmf_1 = "1"            # Relative fraction (100%)
+N = 1000               # Number of Monte Carlo trials
+kB = 1.0e-5            # Birks constant in cm keV^-1
+V = 10                 # Volume of scintillator in mL
 
-result = tdcrpy.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=N)
+# --- 2. Run Calculation ---
+result = tdcrpy.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, mode)
 
-print("Global free parameter = \t", round(result[0],4), " keV-1")
-print("Free parameter (PMT A) = \t", round(result[1][0],4) , " keV-1")
-print("Free parameter (PMT B) = \t", round(result[1][1],4) , " keV-1")
-print("Free parameter (PMT C) = \t", round(result[1][2],4) , " keV-1")
-print("efficiency S = \t", round(result[2],4), "+/-", round(result[3],4))
-print("efficiency D = \t", round(result[4],4), "+/-", round(result[5],4))
-print("efficiency T = \t", round(result[6],4), "+/-", round(result[7],4))
+# --- 3. Display Results ---
+print(f"Efficiency S (Single): {result[0]:.4f} +/- {result[1]:.4f}")
+print(f"Efficiency D (Double): {result[2]:.4f} +/- {result[3]:.4f}")
+print(f"Efficiency T (Triple): {result[4]:.4f} +/- {result[5]:.4f}")
+print(f"Efficiency D (CIEMAT/NIST): {result[12]:.4f} +/- {result[13]:.4f}")
 ```
 
-```Console
-Global free parameter = 	 1.3061  keV-1
-Free parameter (PMT A) = 	 1.3061  keV-1
-Free parameter (PMT B) = 	 1.3061  keV-1
-Free parameter (PMT C) = 	 1.3061  keV-1
-efficiency S = 	 0.979 +/- 0.0067
-efficiency D = 	 0.9833 +/- 0.0064
-efficiency T = 	 0.963 +/- 0.0096
-```
+### Calculate Free Parameter from Measured TDCR
 
-Example with `mode2 = "asym"`: 
+If you have an experimental TDCR value ($R_T/R_D$), you can reverse-calculate the free parameter $L$:
 
 ```python
-import tdcrpy
+TD = 0.9776  # Measured TDCR parameter
+result = tdcrpy.TDCRPy.eff(TD, Rad, pmf_1, kB, V)
 
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Co-60"
-pmf_1="1"
-N = 250
-kB =1.0e-5
-V = 10
-mode2 = "asym"
-
-result = tdcrpy.TDCRoptimize.eff(TD, TAB, TBC, TAC, Rad, pmf_1, kB, V, mode2, N=N)
-
-print("Global free parameter = \t", round(result[0],4), " keV-1")
-print("Free parameter (PMT A) = \t", round(result[1][0],4) , " keV-1")
-print("Free parameter (PMT B) = \t", round(result[1][1],4) , " keV-1")
-print("Free parameter (PMT C) = \t", round(result[1][2],4) , " keV-1")
-print("efficiency S = \t", round(result[2],4), "+/-", round(result[3],4))
-print("efficiency D = \t", round(result[4],4), "+/-", round(result[5],4))
-print("efficiency T = \t", round(result[6],4), "+/-", round(result[7],4))
+print(f"Global free parameter L = {result[0]:.4f} keV^-1")
 ```
 
-```Console
-Global free parameter = 	 1.3061  keV-1
-Free parameter (PMT A) = 	 1.3061  keV-1
-Free parameter (PMT B) = 	 1.3061  keV-1
-Free parameter (PMT C) = 	 1.3061  keV-1
-efficiency S = 	 0.979 +/- 0.0067
-efficiency D = 	 0.9833 +/- 0.0064
-efficiency T = 	 0.963 +/- 0.0096
-```
+-----
 
+## 🛠 Advanced Features
 
+### Asymmetric PMTs
 
-
-### TDCRPy()
-
-The main function of the TDCRPy module is `TDCRPy()` in which the Monte-Carlo Triple-to-Double Coincidence Ratio model is implemented. The computation is made for a given solution containing a radionuclide (or a mixture of radionuclides) `rad`, a given volume of scintillator `V` and a given Birks constant `kB`.
-
-It can operates in two modes:
-*  In `mode="eff"`, it calculates the efficiency of the TDCR system as a function of a value (or a triplet) of the free parameter(s) `L`. The measurement data is not used is this mode.
-*  In `mode="res"`, it calculates the residual of the TDCR model parametrized by a value (or triplet) of the free parameter(s) `L` and the measurement data `TD`, `TAB`, `TBC`, `TAC`. This residual is used in the optimisation procedure `tdcrpy.TDCRoptimize.eff()` that aims to estimate the dection efficiency of the TDCR system (see above).
-
-Also, two configurations can be set:
-
-* In `mode2="sym"`, the symmetry is considered between the 3 photomultiplier tubes (PMTs). Here, the free parameter `L` is a scalar and only the global TDCR value `TD` is used as measurement data.
-* In `mode2="asym"`, a possible asymmetry between the 3 photomultiplier tubes is considered in the model. Here, the free parameter `L` is a triplet corresponding to each PMTs and only the specific TDCR values `TAB`, `TBC` and `TAC` are used as measurement data.
-
-The parmeter `N` sets the number of Monte-Carlo trails used for the estimation. Each MC trial corresponds to a simulated radiactive decay.
-
-TDCRPy() is parametrised by the following parameters:
-*  `L` is the free parameter(s) in keV^-1^. It represents the number of photoelectrons produced by the PMTs per unit of ionisation energy released in the scintillator during a decay without considering the scintillation quenching. It is of type `float` when `mode2="sym"` and of type `tuple` or `list` when `mode2="asym"`.
-*  `TD` (type `float`) is the quotient of the triple coincidence count rate divided by the logic sum of the double coincidence count rate.
-*  `TAB` (type `float`) is the quotient of the triple coincidence count rate divided by the double coincidence count rate between the channel A and B.
-*  `TBC` (type `float`) is the quotient of the triple coincidence count rate divided by the double coincidence count rate between the channel B and C.
-*  `TAC` (type `float`) is the quotient of the triple coincidence count rate divided by the double coincidence count rate between the channel A and C.
-*  `rad` (type `string`) is the list of radionuclides contained in the solution, e.g. `"H-3"`, `"H-3, Co-60"`.
-*  `pmf_1` (type `string`) is the probability of each radionuclide contained in `rad`. If `rad = "H-3, Co-60"` and `pmf_1="0.8, 0.2"`, the solution contains 80 % of tritium and 20 % of cobalt 60.
-*  `N` (type `integer`) is the number of Monte-Carlo trials corresponding each to a simulated nuclear decay in the scintillator. Monte-Carlo calculation is not used in the case of pure beta emitting radionuclides where the analytical model is implemented.
-*  `kB` (type `float`) is the Birks constant caracterizing the scintillator. It is espressed in cm/keV.
-*  `V` (type `float`) is the volume in ml of the scintillator.
-*  `mode` sets the type of output: `mode="res"` to return the residual, `mode="eff"` to return efficiencies.
-*  `mode2` sets whether the TDCR system has to be considered as symetrical by the model `mode2="sym"` or not symetrical `mode2="asym"`.
-*  `Display` (type `boolean`) is an optional parameter set by default, `Display=False`. If `Display=True`, detailed on the simulated decays are displayed.
-*  `barp` (type `boolean`) is an optional parameter set by default, `barp=False`. If `barp=True`, the progression bar of the calculation is displayed.
-
-
-In  `mode="eff"`, `TDCRPy()` returns a `tuple` composed of:
-*  the estimation of the counting efficiency of single events *S*,
-*  the standard uncertainty of the estimation of *S*,
-*  the estimation of the counting efficiency of double coincidences *D*,
-*  the standard uncertainty of the estimation of *D*,
-*  the estimation of the counting efficiency of triple coincidences *T*,
-*  the standard uncertainty of the estimation of *T*,
-
-Example: 
+TDCRPy supports calculations where the quantum efficiency differs between PMTs. Pass a tuple for the free parameter $L$:
 
 ```python
-import tdcrpy
+# L for (PMT A, PMT B, PMT C)
+L = (1.1, 1.3, 1.2) 
+result = tdcrpy.TDCRPy.TDCRPy(L, "Co-60", "1", 1000, 1.0e-5, 10)
 
-L = 1.5
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Co-60"
-pmf_1="1"
-N = 100
-kB =1.0e-5
-V = 10
-mode = "eff"
-mode2 = "sym"
-
-result = tdcrpy.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2)
-
-print("efficiency S = ", round(result[0],4), "+/-", round(result[1],4))
-print("efficiency D = ", round(result[2],4), "+/-", round(result[3],4))
-print("efficiency T = ", round(result[4],4), "+/-", round(result[5],4))
+# Efficiencies for specific pairs (AB, BC, AC) are available in the result tuple
+print(f"Efficiency AB: {result[6]:.4f}")
 ```
 
-```Console
-efficiency S =  0.9875 +/- 0.007
-efficiency D =  0.9903 +/- 0.0072
-efficiency T =  0.9749 +/- 0.0121
-```
+### Radionuclide Mixtures
 
-In  `mode="res"`, TDCRPy() returns the residuals *R* (type `float`) of the TDCR model for the given value of the free parameter `L`.
-
-Example: 
+Simulate mixtures by providing comma-separated nuclides and their relative fractions.
 
 ```python
-import tdcrpy
+# Example: 80% Co-60 and 20% H-3
+Rad = "Co-60, H-3"
+pmf_1 = "0.8, 0.2" 
 
-L = 1.5
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Co-60"
-pmf_1="1"
-N = 100
-kB =1.0e-5
-V = 10
-mode = "res"
-mode2 = "sym"
-
-result = tdcrpy.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2)
-
-print("R = ",result)
+result = tdcrpy.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V)
 ```
 
-```Console
-R =  9.72238771394384e-06
-```
+### Dynamic Decay & Efficiency
 
-When a triplet of free parameters is considered, `L` is of type `tuple` and `mode2 = "asym"`. It must be noted that the calculation time is three times higher than in the symetrical model. 
-
-Example: 
+Combine `TDCRPy` with `radioactivedecay` to simulate how efficiency changes as a sample decays (e.g., Mo-99/Tc-99m).
 
 ```python
-import tdcrpy
+import radioactivedecay as rd
+import tdcrpy as td
+import numpy as np
 
-L = (1.5, 1.2, 1.4)
-TD = 0.977667386529166
-TAB = 0.992232838598821
-TBC = 0.992343419459002
-TAC = 0.99275350064608
-Rad="Co-60"
-pmf_1="1"
-N = 100
-kB =1.0e-5
-V = 10
-mode = "res"
-mode2 = "asym"
+# Define inventory
+rad_t0 = rd.Inventory({'Mo-99': 1}, 'Bq')
 
-result = tdcrpy.TDCRPy.TDCRPy(L, TD, TAB, TBC, TAC, Rad, pmf_1, N, kB, V, mode, mode2)
+# Decay for 30 hours
+rad_t1 = rad_t0.decay(30.0, 'h')
 
-print("R = ",result)
+# Calculate current composition for TDCRPy
+A_t1 = rad_t1.activities('Bq')
+total_activity = sum(A_t1.values())
+
+# Format strings for TDCRPy
+nuclides = ", ".join([k for k, v in A_t1.items() if v > 0])
+fractions = ", ".join([str(v/total_activity) for k, v in A_t1.items() if v > 0])
+
+# Run simulation
+result = td.TDCRPy.TDCRPy(1.0, nuclides, fractions, 1000, 1e-5, 10, "eff")
 ```
 
-```Console
-R =  1.4353680366705997e-05
+-----
+
+## ⚙️ Configuration & Physics
+
+You can customize the underlying physics model using `tdcrpy.TDCR_model_lib`.
+
+To view current settings:
+
+```python
+import tdcrpy as td
+td.TDCR_model_lib.readParameters(disp=True)
 ```
 
-By default, the Monte-Carlo model is not applied for the following list radionuclides when used solely (not in a mixture): ^3^H, ^14^C, ^35^S, ^45^Ca, ^63^Ni, ^89^Sr, ^90^Sr, ^99^Tc, ^147^Pm, ^241^Pu. In the latter cases, the analytical model is applied and the calculation time does not dependent to the parameter `N`.
+### Common Configurations
 
-### Advance settings
+| Parameter | Method | Description |
+| :--- | :--- | :--- |
+| **Electron Bins** | `modifynE_electron(n)` | Integration bins for electrons (default: 1000) |
+| **Alpha Bins** | `modifynE_alpha(n)` | Integration bins for alpha particles (default: 1000) |
+| **Density** | `modifyDensity(rho)` | Scintillator density in g/cm³ (default: 0.96) |
+| **Mean Z / A** | `modifyZ(z)`, `modifyA(a)` | Mean atomic/mass numbers of the cocktail |
+| **Micelle Effect** | `modifyMicCorr(bool)` | Activate reverse micelle correction (default: False) |
+| **Micelle Size** | `modifyDiam_micelle(d)` | Diameter in nm (default: 2.0) |
+| **Dead Time** | `modifyDeadTime(t)` | Extended dead time in µs (default: 10) |
+| **Coincidence Time** | `modifyTau(ns)` | Resolving time in ns (default: 50) |
 
-An advanced setting can be configured in the `config.toml` file for functions `TDCRPy.TDCRPy()` and `TDCRoptimize.eff()`. In this file:
-*  By default `Y = True` so that the analytical model is applied for solution containing only pure beta emitting radionuclides. If you would like to apply the MC calculation also for these nuclides, set `Y = False`.
-*  The list of radionuclides for which the analytical model is applied is defined by default such as `radListPureBeta = H-3, C-14, S-35, Ca-45, Ni-63, Sr-89, Sr-90, Tc-99, Pm-147, Pu-241`.
-*  The number of bins to discretize the linear energy space for quenching calculation for the radionuclides listed above has been set to induce an error from numerical approximation below 10^-4^. Thus the parameter `nE = 7000, 1000, 1000, 500, 2000, 50, 200, 500, 1000, 7000`.
-*  In the case of Monte-Carlo calculation, the number of bins to discretize the linear energy space for quenching calculation can be adjusted. `nE_electron` and `nE_alpha` parameters for respectively electrons and alpha particles are respectiveley set by default such as `nE_electron = 1000`
-and `nE_alpha = 1000`. These values ensure an error on quenched energy estimation from numerical approximation below 10^-3^.
-* By default the calculation is set for Ultima-Gold cocktail mixed with a small amount of aqueous solution. You can adapt for a specific scintillator by changing the `density` (default `density=0.96`), the mean charge number `Z` (default `Z=5.2`) and the mean mass number `A` (default `A=11.04`) of the scintillator.
-* To optimize the speed of the Monte-Carlo calculation, a spline interpolation on precalculated quenched energy is applied. The parameter `depthSpline` (default `depthSpline = 5`) sets the number of bins on each side of the energy point on which the interpolation is applied. The parameter `Einterp` (default `Einterp = 1`) set the energy (in keV) above which the interpolation is applied.
-       
+-----
+
+## 📚 Citations
+
+If you use **TDCRPy** in your work, please cite the following:
+
+> **Validation of the TDCRPy code for liquid scintillation counting** \> R. Coulon, P. Cassette, B. Sabot  
+> *Applied Radiation and Isotopes* (2024)  
+> DOI: [10.1016/j.apradiso.2024.111518](https://doi.org/10.1016/j.apradiso.2024.111518)
+
+> **TDCRPy: A Python code to estimate detection efficiencies** \> R. Coulon  
+> *BIPM Technical Report* \> DOI: [10.13140/RG.2.2.15682.80321](http://dx.doi.org/10.13140/RG.2.2.15682.80321)
+
+-----
+
+## ⚖️ License
+
+This project is licensed under the **MIT License**.
+
+Copyright © BIPM (Bureau International des Poids et Mesures).
+
+
+
