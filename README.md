@@ -191,6 +191,7 @@ td.TDCR_model_lib.readParameters(disp=True)
 ## Tutorials
 
 > [Use the stochastic model for all nuclides](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/tuturial.ipynb)
+
 > [Use the analytical model for pure beta emitters](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/analyticalModel.ipynb)
 
 -----
