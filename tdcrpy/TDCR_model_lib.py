@@ -1213,7 +1213,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                 beta_2_low = 1 - (1 / gamma**2)
                 if beta_2_low <= 0: return 0
                 # Joy-Luo Logarithm
-                stop_num = np.log(1.166 * (e + k * I_ev) / I_ev)
+                stop_num = np.log(1.166 * (e + k * I*1e6) / (I_ev*1e6))
                 dEdx = (0.1535 / beta_2) * (Z / A) * stop_num * rho 
         else:
             dEdx=0
