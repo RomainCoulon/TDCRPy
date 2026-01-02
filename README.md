@@ -188,18 +188,21 @@ td.TDCR_model_lib.readParameters(disp=True)
 | **Dead Time** | `modifyDeadTime(t)` | Extended dead time in µs (default: 10) |
 | **Coincidence Time** | `modifyTau(ns)` | Resolving time in ns (default: 50) |
 
+## Tutorials
+
+> [Use the stochastic model for all nuclides](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/tuturial.ipynb)
+
+> [Use the analytical model for pure beta emitters](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/analyticalModel.ipynb)
+
 -----
 
 ## 📚 Citations
 
 If you use **TDCRPy** in your work, please cite the following:
 
-> **Validation of the TDCRPy code for liquid scintillation counting** \> R. Coulon, P. Cassette, B. Sabot  
+> **TDCRPy: A python package for TDCR measurements** \> R. Coulon, J. Hu  
 > *Applied Radiation and Isotopes* (2024)  
 > DOI: [10.1016/j.apradiso.2024.111518](https://doi.org/10.1016/j.apradiso.2024.111518)
-
-> **TDCRPy: A Python code to estimate detection efficiencies** \> R. Coulon  
-> *BIPM Technical Report* \> DOI: [10.13140/RG.2.2.15682.80321](http://dx.doi.org/10.13140/RG.2.2.15682.80321)
 
 -----
 

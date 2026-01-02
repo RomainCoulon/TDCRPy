@@ -338,12 +338,35 @@ def readParameters(disp=False):
     PMTspace = inputs.getfloat("PMTspace")
     
     if disp:
-        print(f"density = {RHO} g/cm3")
-        print(f"Z = {Z:.4f}, A = {A:.4f}")
-        print(f"Atomic fraction: H={pH:.4f}, C={pC:.4f}, N={pN:.4f}, O={pO:.4f}")
-        print(f"                 P={pP:.4f}, S={pS:.4f}, Na={pNa:.4f}, Cl={pCl:.4f}")
-        print(f"acqueous fraction = {fAq} (Type: {solvantType}, {solvantConc} mol/L)")
-        print(f"quantum efficiency = {effQuantic}")
+        print("QUENCHING NUMERICAL CALCULATION")
+        print("\tNumber of bins to discretize")
+        print("\tthe linear energy space")
+        print("\tfor quenching calculation:")
+        print(f"\tfor electrons = {nE_electron} bins")
+        print(f"\tfor alphas = {nE_alpha} bins")
+
+        print("\nPROPERTIES OF THE SCINTILLATOR")
+        print(f"\tLiquid scintillation cocktail = {lsCocktail()}")
+        print(f"\tacqueous fraction = {fAq} (Type: {solvantType}, {solvantConc} mol/L)")
+        print(f"\tDensity = {RHO} g/cm3")
+        print(f"\tZ = {Z:.4f}, A = {A:.4f}")
+        print(f"\tAtomic fraction: H={pH:.4f}, C={pC:.4f}, N={pN:.4f}, O={pO:.4f}")
+        print(f"\t                 P={pP:.4f}, S={pS:.4f}, Na={pNa:.4f}, Cl={pCl:.4f}")
+        if micCorr:
+            print("\tMicelle correction activated")
+            print(f"\tDensity = {diam_micelle} nm")
+        else:
+            print("\tMicelle correction not activated")
+
+        print("\nOPTICAL PROPERTIES")
+        print(f"\tQuantum efficiency of PMT A = {effQuantic[0]:.3f}")
+        print(f"\tQuantum efficiency of PMT B = {effQuantic[1]:.3f}")
+        print(f"\tQuantum efficiency of PMT C = {effQuantic[2]:.3f}")
+
+        print("\nPROPERTIES OF THE COUNTER")
+        print(f"\tCoincidence resolving time = {tau} ns")
+        print(f"\tExtended dead time = {extDT} µs")
+        print(f"\tMeasurement time = {measTime} min")
     
     # Added solvantType and solvantConc to return tuple
     return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
