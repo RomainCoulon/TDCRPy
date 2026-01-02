@@ -1136,7 +1136,7 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 
 #========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
 
-def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
+def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel='tan_xia'):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
     At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
@@ -1175,9 +1175,9 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
 
     """
     # e:eV ;rho: g.cm-3
-    mc_2 = 0.511 #MeV
-    I = 65e-6 #MeV
-    NA = 6.02e23
+    mc_2 = 0.5109989 #MeV
+    I = 64.7e-6 #MeV
+    NA = 6.022e23
     ahc = 1.437e-13   #MeV.cm
     if e>=20000:
         e1 = e*1e-6 #MeV
@@ -1197,10 +1197,24 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
         #if T<1:sr=0
         dEdx = (sc + sr)*rho  #MeV.cm-1
     else:
-            if e>emin:
+        if e > emin:
+            if spmodel=='tan_xia':
                 dEdx=float(file[int(e)]) #MeV.cm-1
-            else:
-                dEdx=0
+            elif spmodel == 'joy_luo':
+                # Joy and Luo (1989) Modification
+                # Units: Result in MeV/cm (conversion factor 785 is for eV/A)
+                # We use the standard collision formula but with the E+kI correction
+                k = 0.85
+                # Simplified Joy-Luo collision term in MeV/cm
+                # 0.1535 is a constant including 2*pi*re^2*me*c^2
+                gamma = (e + mc_2*1e6) / (mc_2*1e6)
+                beta_2_low = 1 - (1 / gamma**2)
+                if beta_2_low <= 0: return 0
+                # Joy-Luo Logarithm
+                stop_num = np.log(1.166 * (e + k * I_ev) / I_ev)
+                dEdx = (0.1535 / beta_2) * (Z / A) * stop_num * rho 
+        else:
+            dEdx=0
     if dEdx<0:
         dEdx=0
     return dEdx    
