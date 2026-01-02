@@ -3161,7 +3161,9 @@ def buildBetaSpectra(rad, V, N, prt=False):
             for i, b in enumerate(bins):
                 if i==len(bins)-1: file.write(f"{b}\t{0}\n")
                 else: file.write(f"{b}\t{p2[i]}\n")
-        print("file written in local")        
+        print("file written in local")
+    else:
+        return bins[:-1], p2
                 
 def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic):
     """
