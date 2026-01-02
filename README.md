@@ -194,12 +194,9 @@ td.TDCR_model_lib.readParameters(disp=True)
 
 If you use **TDCRPy** in your work, please cite the following:
 
-> **Validation of the TDCRPy code for liquid scintillation counting** \> R. Coulon, J. Hu  
+> **TDCRPy: A python package for TDCR measurements** \> R. Coulon, J. Hu  
 > *Applied Radiation and Isotopes* (2024)  
 > DOI: [10.1016/j.apradiso.2024.111518](https://doi.org/10.1016/j.apradiso.2024.111518)
-
-> **TDCRPy: A Python code to estimate detection efficiencies** \> R. Coulon  
-> *BIPM Technical Report* \> DOI: [10.13140/RG.2.2.15682.80321](http://dx.doi.org/10.13140/RG.2.2.15682.80321)
 
 -----
 
