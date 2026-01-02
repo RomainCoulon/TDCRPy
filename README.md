@@ -194,6 +194,8 @@ td.TDCR_model_lib.readParameters(disp=True)
 
 > [Use the analytical model for pure beta emitters](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/analyticalModel.ipynb)
 
+> [Modify the parameters of the model](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/changeParameters.ipynb)
+
 -----
 
 ## 📚 Citations
