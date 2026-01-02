@@ -188,6 +188,11 @@ td.TDCR_model_lib.readParameters(disp=True)
 | **Dead Time** | `modifyDeadTime(t)` | Extended dead time in µs (default: 10) |
 | **Coincidence Time** | `modifyTau(ns)` | Resolving time in ns (default: 50) |
 
+## Tutorials
+
+> [Use the stochastic model for all nuclides](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/tuturial.ipynb)
+> [Use the analytical model for pure beta emitters](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/analyticalModel.ipynb)
+
 -----
 
 ## 📚 Citations
