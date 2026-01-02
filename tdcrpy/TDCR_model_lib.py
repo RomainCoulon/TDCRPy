@@ -297,6 +297,7 @@ def readParameters(disp=False):
 
     nE_electron = inputs.getint("nE_electron")
     nE_alpha = inputs.getint("nE_alpha")
+    sp_model = inputs.get("sp_model")
     tau = inputs.getint("tau")
     extDT = inputs.getfloat("extDT")
     measTime = inputs.getfloat("measTime")
@@ -372,12 +373,13 @@ def readParameters(disp=False):
     return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
             diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
             optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl,
-            solvantType, solvantConc)
+            solvantType, solvantConc, sp_model)
 
 # --- MODIFY FUNCTIONS ---
 
 def modifynE_electron(x): update_config_value("nE_electron", x)
 def modifynE_alpha(x): update_config_value("nE_alpha", x)
+def modifysp_model(x): update_config_value("sp_model", x)
 def modifyDensity(x): update_config_value("density", x)
 def modifyZ(x): update_config_value("Z", x)
 def modifyA(x): update_config_value("A", x)
@@ -469,7 +471,7 @@ def resetConfFile():
 # Read current parameters
 (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
  diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
- optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc) = readParameters()
+ optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc, sp_model) = readParameters()
 
 # Calculate normalized atomic array (if needed for legacy code)
 p_atom = np.array([pH, pC, pN, pO, pP, pS, pNa, pCl])
@@ -1136,7 +1138,7 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 
 #========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
 
-def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel='tan_xia'):
+def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
     At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
