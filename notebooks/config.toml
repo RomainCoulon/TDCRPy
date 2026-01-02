@@ -1,0 +1,70 @@
+## This is the configuration file of the TDCRPy code
+
+[Inputs]
+## QUENCHING
+# Number of bins to discretize the linear energy space for quenching calculation
+# to achieve a relative standard uncertainty below 1e-4 on the estimated quenched energy: nE_electron = nE_alpha = 10000
+# to achieve a relative standard uncertainty below 1e-3 on the estimated quenched energy: nE_electron = nE_alpha = 1000
+nE_electron = 1000
+nE_alpha = 1000
+
+## PROPERTIES OF THE SCINTILLATOR
+# Select a specific LS cocktail, possible choices:
+# Ultima Gold
+# Ultima Gold LLT
+# Hionic-Fluor
+# Water
+# Or use default value entering False
+ls_cocktail = False
+## Ultima Gold (Default)
+## Type of solvant HCl, HNO3 or Water
+solvantType = HCl
+## Sovant concentration in mol/L
+solvantConc = 0.1
+# density of the scintillator (LS cocktail + aqueous solution)
+density = 0.96
+# mean charge number of the scintillator (LS cocktail + aqueous solution)
+Z = 5.2
+# mean mass number of the scintillator (LS cocktail + aqueous solution)
+A = 11.04
+# atomic probability
+pH = 0.578772
+pC = 0.338741
+pN = 0.000302
+pO = 0.082022
+pP = 0.000092
+pS = 0.000000
+pNa = 0.000000
+pCl = 0.000071
+# properties on reverse micelles
+# applied reverse micelle correction
+micCorr = True
+# diameter of the micelles in nm (possible values: 0.5, 1.0, 2.0, 3.0, 4.0)
+diam_micelle = 2
+# acqueous fraction of the scintillator
+fAq = 0.1
+
+## OPTICAL PROPERTIES
+# Quantum efficiency
+effQuantum = 0.25, 0.25, 0.25
+# Optical MC model
+optionModel = stochastic-dependence
+# fraction of diffused scintillation photons
+diffP = 1.0
+# relative distance from vials border to PMT entrance
+PMTspace = 0.1
+
+## PROPERTIES OF THE COUNTER
+# Coincidence resolving time (ns)
+tau = 50
+# Extended dead time (µs)
+extDT = 10
+# Measurement time (minutes)
+measTime = 20
+
+## INTERPOLATION TO ESTIMATE THE QUENCHED ENERGY
+# depth (number of indexes on each side of the energy point) on which the spline interpolation is done.
+depthSpline = 5
+# energy (in keV) above which interpolation is applied.
+Einterp_a = 100
+Einterp_e = 1.5
