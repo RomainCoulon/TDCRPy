@@ -297,6 +297,7 @@ def readParameters(disp=False):
 
     nE_electron = inputs.getint("nE_electron")
     nE_alpha = inputs.getint("nE_alpha")
+    sp_model = inputs.get("sp_model")
     tau = inputs.getint("tau")
     extDT = inputs.getfloat("extDT")
     measTime = inputs.getfloat("measTime")
@@ -372,12 +373,13 @@ def readParameters(disp=False):
     return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
             diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
             optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl,
-            solvantType, solvantConc)
+            solvantType, solvantConc, sp_model)
 
 # --- MODIFY FUNCTIONS ---
 
 def modifynE_electron(x): update_config_value("nE_electron", x)
 def modifynE_alpha(x): update_config_value("nE_alpha", x)
+def modifysp_model(x): update_config_value("sp_model", x)
 def modifyDensity(x): update_config_value("density", x)
 def modifyZ(x): update_config_value("Z", x)
 def modifyA(x): update_config_value("A", x)
@@ -469,7 +471,7 @@ def resetConfFile():
 # Read current parameters
 (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
  diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
- optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc) = readParameters()
+ optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc, sp_model) = readParameters()
 
 # Calculate normalized atomic array (if needed for legacy code)
 p_atom = np.array([pH, pC, pN, pO, pP, pS, pNa, pCl])
@@ -1136,7 +1138,7 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 
 #========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
 
-def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
+def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
     At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
@@ -1175,9 +1177,9 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
 
     """
     # e:eV ;rho: g.cm-3
-    mc_2 = 0.511 #MeV
-    I = 65e-6 #MeV
-    NA = 6.02e23
+    mc_2 = 0.5109989 #MeV
+    I = 64.7e-6 #MeV
+    NA = 6.022e23
     ahc = 1.437e-13   #MeV.cm
     if e>=20000:
         e1 = e*1e-6 #MeV
@@ -1197,10 +1199,24 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
         #if T<1:sr=0
         dEdx = (sc + sr)*rho  #MeV.cm-1
     else:
-            if e>emin:
+        if e > emin:
+            if spmodel=='tan_xia':
                 dEdx=float(file[int(e)]) #MeV.cm-1
-            else:
-                dEdx=0
+            elif spmodel == 'joy_luo':
+                # Joy and Luo (1989) Modification
+                # Units: Result in MeV/cm (conversion factor 785 is for eV/A)
+                # We use the standard collision formula but with the E+kI correction
+                k = 0.85
+                # Simplified Joy-Luo collision term in MeV/cm
+                # 0.1535 is a constant including 2*pi*re^2*me*c^2
+                gamma = (e + mc_2*1e6) / (mc_2*1e6)
+                beta_2 = 1 - (1 / gamma**2)
+                if beta_2 <= 0: return 0
+                # Joy-Luo Logarithm
+                stop_num = np.log(1.166 * (e + k * I*1e6) / (I*1e6))
+                dEdx = (0.1535 / beta_2) * (Z / A) * stop_num * rho 
+        else:
+            dEdx=0
     if dEdx<0:
         dEdx=0
     return dEdx    
