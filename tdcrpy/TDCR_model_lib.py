@@ -1210,8 +1210,8 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                 # Simplified Joy-Luo collision term in MeV/cm
                 # 0.1535 is a constant including 2*pi*re^2*me*c^2
                 gamma = (e + mc_2*1e6) / (mc_2*1e6)
-                beta_2_low = 1 - (1 / gamma**2)
-                if beta_2_low <= 0: return 0
+                beta_2 = 1 - (1 / gamma**2)
+                if beta_2 <= 0: return 0
                 # Joy-Luo Logarithm
                 stop_num = np.log(1.166 * (e + k * I*1e6) / (I*1e6))
                 dEdx = (0.1535 / beta_2) * (Z / A) * stop_num * rho 
