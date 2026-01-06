@@ -1225,7 +1225,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                 else:
                     # Joy-Luo Logarithm - note: I is in MeV, e is in eV
                     stop_num = np.log(1.166 * (e * 1e-6 + k * I) / I)  # Convert e to MeV
-                    dEdx = (0.1535 / beta_2) * (Z / A) * stop_num * rho  # MeV.cm-1
+                    dEdx = (0.1535 / beta_2) * (Z / A) * stop_num * rho * 1.982 # MeV.cm-1 plus fit to Bethe
             elif spmodel == 'marchal':
                 # Based on Range-Energy relation R = A * E^n
                 # Marchal typically used R(E) for efficiency calculation.
@@ -1278,7 +1278,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                 #A3 = 0.005
                 # This function peaks around 100 eV and falls as E^-0.6
                 #dEdx = rho * (A1 * e*1e-6) / (e*1e-6**A2 + A3)
-                dEdx = rho * (e*1e-6)**-1.1 * 1.55496 # to fit Bethe
+                dEdx = (rho * (e*1e-6)**-1.1) * 0.0544236 # to fit Bethe
             elif spmodel == 'rao_reddy':
                 # Rao and Reddy proposed an "Effective Charge" and "Effective Atomic Number"
                 # modification to the Bethe formula.
@@ -1297,7 +1297,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                 # S (MeV/cm) = dE/dR_linear = dE/dR_mass * rho
                 
                 S_mass = (1.0 / (a * n)) * (e*1e-6**(1 - n)) # MeV / (mg/cm2)
-                dEdx = S_mass * (rho) # Convert to MeV/cm
+                dEdx = S_mass * (rho) * 6.5e-3 # Convert to MeV/cm and fit to Beth
         else:
             dEdx=0
     if dEdx<0:
