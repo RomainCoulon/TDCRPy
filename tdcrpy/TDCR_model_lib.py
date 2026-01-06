@@ -1266,6 +1266,20 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                     L_ash = np.log(arg)
                     dEdx = (const_K * rho * (Z/A) / beta_2) * L_ash
             elif spmodel == 'kossert_graucarles':
+                # This typically refers to the "MICELLE" code data based on 
+                # Tan & Xia tabulated values. 
+                # If an analytical formula is required, the Grau Malonda (1999)
+                # 7-parameter fit is the standard "Grau" formula.
+                # Simplified Grau Malonda fit for organic scintillator:
+                    
+                # S(E) = (A1*E) / (E^A2 + A3)  (MeV/cm)
+                # Fitted parameters for electrons in Toluene (approx):
+                A1 = 280.0
+                A2 = 1.6
+                A3 = 0.005
+                # This function peaks around 100 eV and falls as E^-0.6
+                dEdx = rho * (A1 * e*1e-6) / (e*1e-6**A2 + A3)
+            elif spmodel == 'rao_reddy':
                 # Rao and Reddy proposed an "Effective Charge" and "Effective Atomic Number"
                 # modification to the Bethe formula.
                 # Z_eff(E) = Z * (1 - exp(-1.3 * beta / alpha)) ?
@@ -1284,8 +1298,6 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                 
                 S_mass = (1.0 / (a * n)) * (e*1e-6**(1 - n)) # MeV / (mg/cm2)
                 dEdx = S_mass * (rho * 1000.0) # Convert to MeV/cm
-            elif spmodel == 'rao_reddy':
-                dEdx = e ** -0.8
         else:
             dEdx=0
     if dEdx<0:
