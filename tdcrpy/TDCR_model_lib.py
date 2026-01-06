@@ -1141,8 +1141,7 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
-    At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
-    
+        
     Refs:
         
         [1] https://doi.org/10.1016/0020-708x(82)90244-7
@@ -1153,7 +1152,6 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
         
         [4] ICRU Report 37, Stopping Powers for Electrons and Positrons
         
-        [5] https://doi.org/10.1016/j.apradiso.2011.08.012
         
     Parameters
     ----------
@@ -1211,6 +1209,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     else:
         if e > emin:
             if spmodel=='tan_xia':
+                # https://doi.org/10.1016/j.apradiso.2011.08.012
                 dEdx=float(file[int(e)]) #MeV.cm-1
             elif spmodel == 'joy_luo':
                 # Joy and Luo (1989) Modification
@@ -1239,7 +1238,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                 # Bethe at 0.1 MeV ~ 3.8 MeV/cm for Toluene
                 # 3.8 = C * (0.1)**-0.5 => 3.8 = C * 3.16 => C ~ 1.2
                 # Using calibrated constant for organic scintillator:
-                C_marchal = 1.35 
+                C_marchal = 1.35 * 2.6983521 # 2.6983521 to fit with Bethe
                 dEdx = C_marchal * rho * (e*1e-6)**(-0.5)
             elif spmodel == 'ashley':
                 # J.C. Ashley's "Optical-Data Model" approximation for organic insulators.
@@ -1258,13 +1257,13 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                     # S = A * E^0.5 or E^1.0 depending on regime. 
                     # For LSC, S ~ E^1.0 is often used for < 100 eV.
                     # Here we use the "Ashley-Anderson" type fit:
-                    dEdx = 180.0 * (e*1e-6**0.75) * rho # Heuristic organic fit
+                    dEdx = 180.0 * (e*1e-6**0.75) * rho * 386.07286 # Heuristic organic fit
                 else:
                     # High energy approaches Bethe
                     arg = (1.166 * e*1e-6) / (chi * I)
                     if arg <= 1: arg = 1.001
                     L_ash = np.log(arg)
-                    dEdx = (const_K * rho * (Z/A) / beta_2) * L_ash
+                    dEdx = (const_K * rho * (Z/A) / beta_2) * L_ash * 386.07286 # correction to fit Bethe
             elif spmodel == 'kossert_graucarles':
                 # This typically refers to the "MICELLE" code data based on 
                 # Tan & Xia tabulated values. 
@@ -1274,11 +1273,12 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                     
                 # S(E) = (A1*E) / (E^A2 + A3)  (MeV/cm)
                 # Fitted parameters for electrons in Toluene (approx):
-                A1 = 280.0
-                A2 = 1.6
-                A3 = 0.005
+                #A1 = 280.0
+                #A2 = 1.6
+                #A3 = 0.005
                 # This function peaks around 100 eV and falls as E^-0.6
-                dEdx = rho * (A1 * e*1e-6) / (e*1e-6**A2 + A3)
+                #dEdx = rho * (A1 * e*1e-6) / (e*1e-6**A2 + A3)
+                dEdx = rho * (e*1e-6)**-1.1 * 1.55496 # to fit Bethe
             elif spmodel == 'rao_reddy':
                 # Rao and Reddy proposed an "Effective Charge" and "Effective Atomic Number"
                 # modification to the Bethe formula.
@@ -1297,7 +1297,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                 # S (MeV/cm) = dE/dR_linear = dE/dR_mass * rho
                 
                 S_mass = (1.0 / (a * n)) * (e*1e-6**(1 - n)) # MeV / (mg/cm2)
-                dEdx = S_mass * (rho * 1000.0) # Convert to MeV/cm
+                dEdx = S_mass * (rho) # Convert to MeV/cm
         else:
             dEdx=0
     if dEdx<0:
