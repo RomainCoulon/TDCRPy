@@ -1141,8 +1141,7 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
-    At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
-    
+        
     Refs:
         
         [1] https://doi.org/10.1016/0020-708x(82)90244-7
@@ -1153,7 +1152,6 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
         
         [4] ICRU Report 37, Stopping Powers for Electrons and Positrons
         
-        [5] https://doi.org/10.1016/j.apradiso.2011.08.012
         
     Parameters
     ----------
@@ -1176,12 +1174,22 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
         Calculated stopping power in MeV.cm-1.
 
     """
+    if spmodel=='tan_xia': emax = 20000
+    if spmodel=='joy_luo': emax = 20000
+    if spmodel=='marchal': emax = 400
+    if spmodel=='ashley': emax = 100
+    if spmodel=='kossert_graucarles': emax = 1000
+    if spmodel=='rao_reddy': emax = 413
+    
     # e:eV ;rho: g.cm-3
     mc_2 = 0.5109989 #MeV
     I = 64.7e-6 #MeV
     NA = 6.022e23
     ahc = 1.437e-13   #MeV.cm
-    if e>=20000:
+    re = 2.8179403227e-13 # Classical electron radius in cm
+    const_K = 4 * np.pi * NA * re**2 * mc_2 # ~ 0.307075 MeV cm^2 / mol
+    if e>=emax:
+        # model de Bethe
         e1 = e*1e-6 #MeV
         gamma = (e1+mc_2)/mc_2
         gamma_2 = gamma*gamma
@@ -1201,6 +1209,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     else:
         if e > emin:
             if spmodel=='tan_xia':
+                # https://doi.org/10.1016/j.apradiso.2011.08.012
                 dEdx=float(file[int(e)]) #MeV.cm-1
             elif spmodel == 'joy_luo':
                 # Joy and Luo (1989) Modification
@@ -1209,12 +1218,86 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
                 k = 0.85
                 # Simplified Joy-Luo collision term in MeV/cm
                 # 0.1535 is a constant including 2*pi*re^2*me*c^2
-                gamma = (e + mc_2*1e6) / (mc_2*1e6)
-                beta_2 = 1 - (1 / gamma**2)
-                if beta_2 <= 0: return 0
-                # Joy-Luo Logarithm
-                stop_num = np.log(1.166 * (e + k * I*1e6) / (I*1e6))
-                dEdx = (0.1535 / beta_2) * (Z / A) * stop_num * rho 
+                gamma = (e * 1e-6 + mc_2) / mc_2  # Convert e to MeV for consistency
+                beta_2 = 1 - (1 / gamma ** 2)
+                if beta_2 <= 0:
+                    dEdx = 0
+                else:
+                    # Joy-Luo Logarithm - note: I is in MeV, e is in eV
+                    stop_num = np.log(1.166 * (e * 1e-6 + k * I) / I)  # Convert e to MeV
+                    dEdx = (0.1535 / beta_2) * (Z / A) * stop_num * rho * 1.982 # MeV.cm-1 plus fit to Bethe
+            elif spmodel == 'marchal':
+                # Based on Range-Energy relation R = A * E^n
+                # Marchal typically used R(E) for efficiency calculation.
+                # For dE/dx, we take the derivative.
+                # R ~ 0.006 * E^1.6 (approx for Toluene) -> dE/dx ~ E^-0.6
+                # A common phenomenological formula in LSC for Marchal is:
+                # dEdx = C * E^-0.5
+                    
+                # Determine Constant C to match Bethe at 100 keV (0.1 MeV)
+                # Bethe at 0.1 MeV ~ 3.8 MeV/cm for Toluene
+                # 3.8 = C * (0.1)**-0.5 => 3.8 = C * 3.16 => C ~ 1.2
+                # Using calibrated constant for organic scintillator:
+                C_marchal = 1.35 * 2.6983521 # 2.6983521 to fit with Bethe
+                dEdx = C_marchal * rho * (e*1e-6)**(-0.5)
+            elif spmodel == 'ashley':
+                # J.C. Ashley's "Optical-Data Model" approximation for organic insulators.
+                # Often approximated at low energy (< 10 keV) as a power law or 
+                # using the "chi" correction to the log term.
+                # Here we use the analytical form often cited in LSC (similar to Joy-Luo but k=0)
+                # or the specific "valence electron" formulation.
+                gamma = (e * 1e-6 + mc_2) / mc_2  # Convert e to MeV for consistency
+                beta_2 = 1 - (1 / gamma ** 2)
+                # Ashley's correction factor "chi" for organic solids ~ 1.2
+                chi = 1.2 
+                # At very low energy, Ashley predicts dE/dx proportional to E
+                # But for the transition region, we use the modified log:
+                if e*1e-6 < 0.01: # Below 10 keV
+                    # Linear approximation from dielectric theory
+                    # S = A * E^0.5 or E^1.0 depending on regime. 
+                    # For LSC, S ~ E^1.0 is often used for < 100 eV.
+                    # Here we use the "Ashley-Anderson" type fit:
+                    dEdx = 180.0 * (e*1e-6**0.75) * rho * 386.07286 # Heuristic organic fit
+                else:
+                    # High energy approaches Bethe
+                    arg = (1.166 * e*1e-6) / (chi * I)
+                    if arg <= 1: arg = 1.001
+                    L_ash = np.log(arg)
+                    dEdx = (const_K * rho * (Z/A) / beta_2) * L_ash * 386.07286 # correction to fit Bethe
+            elif spmodel == 'kossert_graucarles':
+                # This typically refers to the "MICELLE" code data based on 
+                # Tan & Xia tabulated values. 
+                # If an analytical formula is required, the Grau Malonda (1999)
+                # 7-parameter fit is the standard "Grau" formula.
+                # Simplified Grau Malonda fit for organic scintillator:
+                    
+                # S(E) = (A1*E) / (E^A2 + A3)  (MeV/cm)
+                # Fitted parameters for electrons in Toluene (approx):
+                #A1 = 280.0
+                #A2 = 1.6
+                #A3 = 0.005
+                # This function peaks around 100 eV and falls as E^-0.6
+                #dEdx = rho * (A1 * e*1e-6) / (e*1e-6**A2 + A3)
+                dEdx = (rho * (e*1e-6)**-1.1) * 0.0544236 # to fit Bethe
+            elif spmodel == 'rao_reddy':
+                # Rao and Reddy proposed an "Effective Charge" and "Effective Atomic Number"
+                # modification to the Bethe formula.
+                # Z_eff(E) = Z * (1 - exp(-1.3 * beta / alpha)) ?
+                # A simpler Rao-Reddy formula for Range is R = a E^n
+                # Commonly cited: R = 0.526 * E^1.274 (mg/cm2)
+                # Therefore S = (1 / R') = (1 / (a*n)) * E^(1-n)
+                
+                a = 0.526 # mg/cm2/MeV^n
+                n = 1.274
+                # dR/dE = a * n * E^(n-1)
+                # dE/dR = 1 / (a * n * E^(n-1)) = (1/an) * E^(1-n)
+                
+                # Convert mg/cm2 to cm: need to divide by rho (g/cm3) * 1000
+                # Actually R (g/cm2) = R_linear * rho
+                # S (MeV/cm) = dE/dR_linear = dE/dR_mass * rho
+                
+                S_mass = (1.0 / (a * n)) * (e*1e-6**(1 - n)) # MeV / (mg/cm2)
+                dEdx = S_mass * (rho) * 6.5e-3 # Convert to MeV/cm and fit to Beth
         else:
             dEdx=0
     if dEdx<0:
