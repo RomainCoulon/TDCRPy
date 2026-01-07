@@ -298,6 +298,7 @@ def readParameters(disp=False):
     nE_electron = inputs.getint("nE_electron")
     nE_alpha = inputs.getint("nE_alpha")
     sp_model = inputs.get("sp_model")
+    chou_param = inputs.getfloat("chou_param")
     tau = inputs.getint("tau")
     extDT = inputs.getfloat("extDT")
     measTime = inputs.getfloat("measTime")
@@ -346,6 +347,7 @@ def readParameters(disp=False):
         print(f"\tfor electrons = {nE_electron} bins")
         print(f"\tthe stopping power model at low energy = {sp_model}")
         print(f"\tfor alphas = {nE_alpha} bins")
+        print(f"\tChou quenching parameter {chou_param} cm2/MeV2")
 
         print("\nPROPERTIES OF THE SCINTILLATOR")
         print(f"\tLiquid scintillation cocktail = {lsCocktail()}")
@@ -374,13 +376,14 @@ def readParameters(disp=False):
     return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
             diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
             optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl,
-            solvantType, solvantConc, sp_model)
+            solvantType, solvantConc, sp_model, chou_param)
 
 # --- MODIFY FUNCTIONS ---
 
 def modifynE_electron(x): update_config_value("nE_electron", x)
 def modifynE_alpha(x): update_config_value("nE_alpha", x)
 def modifysp_model(x): update_config_value("sp_model", x)
+def modifyChou_param(x): update_config_value("chou_param", x)
 def modifyDensity(x): update_config_value("density", x)
 def modifyZ(x): update_config_value("Z", x)
 def modifyA(x): update_config_value("A", x)
@@ -472,7 +475,7 @@ def resetConfFile():
 # Read current parameters
 (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
  diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
- optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc, sp_model) = readParameters()
+ optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc, sp_model, chou_param) = readParameters()
 
 # Calculate normalized atomic array (if needed for legacy code)
 p_atom = np.array([pH, pC, pN, pO, pP, pS, pNa, pCl])
@@ -1470,7 +1473,7 @@ def readBetaSpectra(rad):
 
 #============================  Fonction quenching  =====================================
 
-def E_quench_e(ei,ed,kB,nE,kC=0):
+def E_quench_e(ei,ed,kB,nE,kC=chou_param):
     """
     This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching.
     It also include the possibility to account biomolecular quenching with the Chou model.
