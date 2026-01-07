@@ -7,6 +7,9 @@
 # to achieve a relative standard uncertainty below 1e-3 on the estimated quenched energy: nE_electron = nE_alpha = 1000
 nE_electron = 1000
 nE_alpha = 1000
+# stopping power model below 20 keV. could be two types the default tan_xia 
+# or other models: the joy_luo, marchal, ashley, kossert_graucarles, rao_reddy
+sp_model = tan_xia
 
 ## PROPERTIES OF THE SCINTILLATOR
 # Select a specific LS cocktail, possible choices:
