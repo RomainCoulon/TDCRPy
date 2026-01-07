@@ -10,6 +10,8 @@ nE_alpha = 1000
 # stopping power model below 20 keV. could be two types the default tan_xia 
 # or other models: the joy_luo, marchal, ashley, kossert_graucarles, rao_reddy
 sp_model = tan_xia
+# Chou quenching parameter to account bimolecular quenching processes (in cm2/MeV2).
+chou_param = 0
 
 ## PROPERTIES OF THE SCINTILLATOR
 # Select a specific LS cocktail, possible choices:
