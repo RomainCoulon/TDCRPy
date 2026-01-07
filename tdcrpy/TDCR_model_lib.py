@@ -1175,6 +1175,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
         Calculated stopping power in MeV.cm-1.
 
     """
+    emax = 20000
     if spmodel=='tan_xia': emax = 20000
     if spmodel=='joy_luo': emax = 20000
     if spmodel=='marchal': emax = 400
@@ -1469,9 +1470,10 @@ def readBetaSpectra(rad):
 
 #============================  Fonction quenching  =====================================
 
-def E_quench_e(ei,ed,kB,nE):
+def E_quench_e(ei,ed,kB,nE,kC=0):
     """
-    This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching
+    This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching.
+    It also include the possibility to account biomolecular quenching with the Chou model.
     
     Parameters
     ----------
@@ -1483,6 +1485,8 @@ def E_quench_e(ei,ed,kB,nE):
         Birks constant in cm/MeV.
     nE : integer 
         number of points of the energy linear space
+    kC : float
+        Chou quenching parameter in cm2/MeV2. Deafault kC = 0
     
     Returns
     -------
@@ -1495,7 +1499,7 @@ def E_quench_e(ei,ed,kB,nE):
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
-        q += delta/(1+kB*stoppingpower(i))
+        q += delta/(1+kB*stoppingpower(i)+kC*stoppingpower(i)**2)
     return q
 
 
