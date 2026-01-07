@@ -344,6 +344,7 @@ def readParameters(disp=False):
         print("\tthe linear energy space")
         print("\tfor quenching calculation:")
         print(f"\tfor electrons = {nE_electron} bins")
+        print(f"\tthe stopping power model at low energy = {sp_model}")
         print(f"\tfor alphas = {nE_alpha} bins")
 
         print("\nPROPERTIES OF THE SCINTILLATOR")
