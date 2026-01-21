@@ -1197,7 +1197,7 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
     print(f"global free parameter = {L0} keV-1")
     if not symm:
         if cerenkov:
-            r=opt.minimize(tl.modelCerenkov, args=(TD[0], TD[1], TD[2], TD[3], Rad, "res"), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
+            r=opt.minimize(tl.modelCerenkov, L, args=(TD[0], TD[1], TD[2], TD[3], Rad, "res"), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
         else:
             r=opt.minimize(tl.modelAnalytical, L, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
         L=r.x
@@ -1220,7 +1220,6 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
     # eff_AB = out[6]
     # u_eff_AB = out[7]
     # eff_BC = out[8]
-    # u_eff_BC = out[9]
     # eff_AC = out[10]
     # u_eff_AC = out[11]
     
@@ -1228,7 +1227,8 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
 
 
 
-# mode = "eff"                # ask for efficiency calculation
+# mode = "eff"                # ask for efficiency calc
+    # u_eff_BC = out[9]ulation
 # Rad="Cu-67"                 # radionuclides
 # pmf_1="1"                   # relatives fractions of the radionulides
 # N = 1000                    # number of Monte Carlo trials
