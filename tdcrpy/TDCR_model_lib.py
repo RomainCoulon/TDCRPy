@@ -20,6 +20,7 @@ import zipfile as zf
 import re
 import os
 import scipy.interpolate as  interp
+from scipy.integrate import cumulative_trapezoid
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import tempfile
@@ -3747,7 +3748,141 @@ def readRecQuenchedEnergies():
     return Epromt, Edelayed
 
 
+def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n=1.341, lambda_range=(300,650), alpha=(0.79,0.79,0.79)):
+    """
+    TDCR Cerenkov model using the Frank-Tamm relationship and a custom Stopping Power function.
 
+    Parameters
+    ----------
+    L : float or tuple
+        Free parameter (scaling factor related to quantum efficiency/geometry).
+    TD, TAB, TBC, TAC : float
+        Measured coincidence ratios.
+    rad : string
+        Radionuclide (e.g., "Lu-177").
+    mode : string
+        "res" for residuals, "eff" for efficiencies.
+    rho : float
+        Density of the medium in g/cm3 (passed to stoppingpower).
+    Z : float
+        Mean charge number (passed to stoppingpower).
+    A : float
+        Mean mass number (passed to stoppingpower).
+    n : float
+        Refractive index of the medium.
+    V : float
+        Volume (placeholder for standard TDCR signatures).
+    alpha : tuple
+        Anisotropy coefficients (a1, a2, a3).
+        0.79 for glass and polyethylen according to Grau Malonda and Grau Carles (1998) Appl. Radiat. Isot. 49, 1049–1053
+    lambda_min : float
+        lower limit wavelenght PMT sensitivity (300 for bialkali) (160 )
+    lambda_max : float
+        Upper limit wavelenght PMT sensitivity (650 for bialkali) (630 )        
+
+    Returns
+    -------
+    res or (eff_S, eff_D, eff_T)
+    """
+
+    # 1. Constants and Spectrum
+    alpha_FS = 1.0 / 137.036  # Fine-structure constant
+    z = 1.0                   # Charge of beta particle 
+    mec2 = 511.0 # Electron rest mass in keV
+    e_keV, p = readBetaSpectra(rad) # e in keV, p is probability density
+    e_keV = np.asarray(e_keV)
+    e_eV = e_keV*1e3 # Convert keV to eV
+    e_MeV = e_keV*1e-3 # Convert keV to MeV 
+    l_min_cm = lambda_range[0] * 1e-7
+    l_max_cm = lambda_range[1] * 1e-7 # Convert wavelengths from nm to cm
+    
+    # Calculate the Frank-Tamm Pre-factor (Photons per cm for beta=1)
+    # Factor = 2 * pi * z^2 * alpha * (1/l_min - 1/l_max)
+    ft_constant = 2 * np.pi * (z**2) * alpha_FS * (1.0/l_min_cm - 1.0/l_max_cm)
+    
+    # 2. Calculate Stopping Power (S) for the spectrum
+    # The stoppingpower function expects Energy in eV and returns MeV/cm.
+    # We iterate over 'e' (keV) to build the stopping power array.
+    dEdx_list = []
+    for energy_ev in e_eV:
+            dEdx_list.append(stoppingpower(energy_ev, rho=rho, Z=Z, A=A, spmodel="tan_xia"))
+    dEdx = np.array(dEdx_list) # Units: MeV/cm
+
+    # 3. Calculate Frank-Tamm Factor
+    # 3.1. Calculate the phase velocity beta for every energy point
+    gamma = (e_keV + mec2) / mec2
+    beta = np.sqrt(1.0 - 1.0 / (gamma**2))
+    
+    # Threshold condition: beta * n > 1
+    beta_thresh = 1.0 / n
+    kinematic_factor = np.zeros_like(e_keV) # The (1 - 1/(beta*n)^2) part
+    mask = beta > beta_thresh
+    kinematic_factor[mask] = 1.0 - (1.0 / ((beta[mask] * n)**2))
+
+    # --- 4. Calculate Integrated Yield (m_ck) ---
+    # dN/dx = ft_constant * kinematic_factor
+    # We need total N = Integral [ (dN/dx) * (dx/dE) ] dE
+    # dx/dE = 1 / S(E)  (where S(E) is stopping power in MeV/cm)
+    
+    # Integrand = (Photons/cm) / (MeV/cm) = Photons / MeV
+    with np.errstate(divide='ignore', invalid='ignore'):
+        integrand = (ft_constant * kinematic_factor) / dEdx
+    integrand[~np.isfinite(integrand)] = 0.0
+
+    # Integrate cumulatively from 0 to E
+    # We use e * 0.001 to convert dE step from keV to MeV to match dEdx (MeV/cm)
+    m_ck = cumulative_trapezoid(integrand, x=e_MeV, initial=0)
+
+    # 5. TDCR Efficiency Calculation
+    if isinstance(L, (float, np.float64, int)):
+        L_A, L_B, L_C = L, L, L    
+    else: # L is a tuple/list of 3 PMT efficiencies
+        L_A, L_B, L_C = L
+    a1, a2, a3 = alpha # Anisotropy factors
+    
+    # Calculate Poisson parameter mu for each PMT
+    mu_A = L_A * m_ck * a1 / 3.0 
+    mu_B = L_B * m_ck * a2 / 3.0 
+    mu_C = L_C * m_ck * a3 / 3.0 
+    
+    # Detection probabilities for each PMT
+    qA = 1 - np.exp(-mu_A)
+    qB = 1 - np.exp(-mu_B)
+    qC = 1 - np.exp(-mu_C)
+    
+    # Coincidence Efficiencies
+    eff_AB = np.sum(p * qA * qB)
+    eff_BC = np.sum(p * qB * qC)
+    eff_AC = np.sum(p * qA * qC)
+    eff_T  = np.sum(p * qA * qB * qC)
+    
+    # Logical Sum of Doubles
+    eff_D = eff_AB + eff_BC + eff_AC - 2 * eff_T
+    # Logical Sum of Singles (Union)
+    eff_S = np.sum(p * (qA + qB + qC - (qA*qB + qB*qC + qA*qC) + qA*qB*qC))
+
+    if any(x == 0 for x in [eff_AB, eff_BC, eff_AC]):
+        res = 1e9
+        eff_S, eff_D, eff_T = 0, 0, 0
+    else:
+        TABmodel = eff_T / eff_AB
+        TBCmodel = eff_T / eff_BC
+        TACmodel = eff_T / eff_AC
+        
+        res = (TAB - TABmodel)**2 + (TBC - TBCmodel)**2 + (TAC - TACmodel)**2
+
+    if mode == "res":
+        return res
+    elif mode == "eff":
+        return eff_S, eff_D, eff_T
+
+
+# results = modelCerenkov(1.0, 1, 1, 1, 1, "Sr-89", rho=1.0, Z=7.5, A=14.8, n=1.341, alpha=(1,1,1), mode="eff")
+# print(results)
+
+###
+# BUILD BETA SPECTRA FROM BETASHAPE TO ACCOUNT FOR WALL EFFECT
+###
 
 # N = 1e7
 # buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
