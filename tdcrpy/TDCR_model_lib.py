@@ -658,6 +658,7 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as dat
 #with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     sH3 = data_path / 'Spectra_for_analytical_model/dep_spectrum_H-3.txt'
     sC14 = data_path / 'Spectra_for_analytical_model/dep_spectrum_C-14.txt'
+    sP32 = data_path / 'Spectra_for_analytical_model/dep_spectrum_P-32.txt'
     sS35 = data_path / 'Spectra_for_analytical_model/dep_spectrum_S-35.txt'
     sCa45 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Ca-45.txt'
     sNi63 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Ni-63.txt'
@@ -1451,6 +1452,7 @@ def readBetaSpectra(rad):
     
     if rad == "H-3": file_path = sH3
     elif rad == "C-14": file_path = sC14
+    elif rad == "P-32": file_path = sP32
     elif rad == "S-35": file_path = sS35
     elif rad == "Ca-45": file_path = sCa45
     elif rad == "Ni-63": file_path = sNi63
@@ -3249,6 +3251,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
     
     if rad == "H-3": file_path = sH3
     elif rad == "C-14": file_path = sC14
+    elif rad == "P-32": file_path = sP32
     elif rad == "S-35": file_path = sS35
     elif rad == "Ca-45": file_path = sCa45
     elif rad == "Ni-63": file_path = sNi63
@@ -3751,7 +3754,7 @@ def readRecQuenchedEnergies():
     return Epromt, Edelayed
 
 
-def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n=1.341, lambda_range=(300,650), alpha=(0.79,0.79,0.79)):
+def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n=1.341, lambda_range=(300,650), alpha=(1,1,1)):
     """
     TDCR Cerenkov model using the Frank-Tamm relationship and a custom Stopping Power function.
 
@@ -3871,8 +3874,11 @@ def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n
         TABmodel = eff_T / eff_AB
         TBCmodel = eff_T / eff_BC
         TACmodel = eff_T / eff_AC
-        
-        res = (TAB - TABmodel)**2 + (TBC - TBCmodel)**2 + (TAC - TACmodel)**2
+        TDmodel = eff_T / eff_D
+        if isinstance(L, (float, np.float64, int)):
+            res = (TD - TDmodel)**2
+        else:
+            res = (TAB - TABmodel)**2 + (TBC - TBCmodel)**2 + (TAC - TACmodel)**2
 
     if mode == "res":
         return res
@@ -3890,6 +3896,7 @@ def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n
 # N = 1e7
 # buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
 # buildBetaSpectra('C-14', 16, N, prt=True); print('C-14 - done')
+# buildBetaSpectra('P-32', 16, N, prt=True); print('P-32 - done')
 # buildBetaSpectra('S-35', 16, N, prt=True); print('S-35 - done')
 # buildBetaSpectra('Ca-45', 16, N, prt=True); print('Ca-45 - done')
 # buildBetaSpectra('Ni-63', 16, N, prt=True); print('Ni-63 - done')
