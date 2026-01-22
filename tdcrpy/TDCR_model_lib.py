@@ -3754,7 +3754,7 @@ def readRecQuenchedEnergies():
     return Epromt, Edelayed
 
 
-def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n=1.341, lambda_range=(300,650), alpha=(0.79,0.79,0.79)):
+def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n=1.341, lambda_range=(300,650), alpha=(1,1,1)):
     """
     TDCR Cerenkov model using the Frank-Tamm relationship and a custom Stopping Power function.
 
@@ -3874,8 +3874,11 @@ def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n
         TABmodel = eff_T / eff_AB
         TBCmodel = eff_T / eff_BC
         TACmodel = eff_T / eff_AC
-        
-        res = (TAB - TABmodel)**2 + (TBC - TBCmodel)**2 + (TAC - TACmodel)**2
+        TDmodel = eff_T / eff_D
+        if isinstance(L, (float, np.float64, int)):
+            res = (TD - TDmodel)**2
+        else:
+            res = (TAB - TABmodel)**2 + (TBC - TBCmodel)**2 + (TAC - TACmodel)**2
 
     if mode == "res":
         return res
