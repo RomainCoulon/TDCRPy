@@ -668,6 +668,7 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as dat
     sPm147 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pm-147.txt'
     sPu241 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pu-241.txt'
     sCo60 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Co-60.txt'
+    sZr93 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Zr-93.txt'
     
 # import stopping power data for electron
 with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
@@ -1462,6 +1463,7 @@ def readBetaSpectra(rad):
     elif rad == "Pm-147": file_path = sPm147
     elif rad == "Pu-241": file_path = sPu241
     elif rad == "Co-60": file_path = sCo60
+    elif rad == "Zr-93": file_path = sZr93
 
     with open(file_path, "r") as file:
         for line in file:
@@ -3261,6 +3263,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
     elif rad == "Pm-147": file_path = sPm147
     elif rad == "Pu-241": file_path = sPu241
     elif rad == "Co-60": file_path = sCo60
+    elif rad == "Zr-93": file_path = sZr93
     
     if prt:
         with open(file_path, "w") as file:
@@ -3896,7 +3899,7 @@ def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n
 # N = 1e7
 # buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
 # buildBetaSpectra('C-14', 16, N, prt=True); print('C-14 - done')
-# buildBetaSpectra('P-32', 16, N, prt=True); print('P-32 - done')
+# buildB•etaSpectra('P-32', 16, N, prt=True); print('P-32 - done')
 # buildBetaSpectra('S-35', 16, N, prt=True); print('S-35 - done')
 # buildBetaSpectra('Ca-45', 16, N, prt=True); print('Ca-45 - done')
 # buildBetaSpectra('Ni-63', 16, N, prt=True); print('Ni-63 - done')
@@ -3906,4 +3909,5 @@ def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n
 # buildBetaSpectra('Pm-147', 16, N, prt=True); print('Pm-147 - done')
 # buildBetaSpectra('Pu-241', 16, N, prt=True); print('Pu-241 - done')
 # buildBetaSpectra('Co-60', 16, N, prt=True); print('Co-60 - done')
+# buildBetaSpectra('Zr-93', 16, N, prt=True); print('Co-60 - done')
 
