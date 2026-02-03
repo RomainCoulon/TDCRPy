@@ -3070,8 +3070,6 @@ def relaxation_atom_ph(lacune,element,v):
     
     return particule_emise,energie_par_emise,posi_lacune,par_emise  
 
-
-
 def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
     """
     TDCR analytical model that is used for pure beta emitting radionuclides
@@ -3104,11 +3102,11 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
     -------
     res : float
         Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode="res")
-    mean_efficiency_S : float
+    eff_S : float
         Estimation of the efficiency of single counting events. (only in mode="eff")
-    mean_efficiency_D : float
+    eff_D : float
         Estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
-    mean_efficiency_T : float
+    eff_T : float
         Estimation of the efficiency of triple coincidences. (only in mode="eff")
     
     """
@@ -3125,6 +3123,7 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
         eff_S = sum(p*(1-np.exp(-L*em/3)))
         eff_T = sum(p*(1-np.exp(-L*em/3))**3)
         eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
+        # eff_D2 = sum(p*(3*(1-np.exp(-L*em/2))**2))
         TDCR_calcul=eff_T/eff_D
         res=(TDCR_calcul-TD)**2
     else:
@@ -3136,6 +3135,7 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
         eff_AC = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[2]*em/3))) 
         eff_T = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))
         eff_D = eff_AB+eff_BC+eff_AC-2*eff_T
+        # eff_D2 = sum(p*(1-np.exp(-L[0]*em/2))*(1-np.exp(-L[1]*em/2)))
         # eff_D = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
         eff_S = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))-(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
         TABmodel = eff_T/eff_AB
@@ -3147,7 +3147,54 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
         return res
     if mode == "eff":
         return eff_S, eff_D, eff_T
+
+def modelAnalyticalCN(L,rad,kB,V,ne):
+    """
+    CIEMAT/NIST analytical model
     
+    Parameters
+    ----------
+    L : float or tuple
+        free parameter(s).
+    rad : string
+        radionuclide (eg. "Na-22").
+    kB : float
+        Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml. run only for 10 ml
+    nE : integer
+         Number of bins for the quenching function.
+    
+    
+    Returns
+    -------
+    eff_A : float
+        Estimation of the efficiency of PMT A.
+    eff_B : float
+        Estimation of the efficiency of PMT B.
+    eff_D : float
+        Estimation of the efficiency of double coincidences.
+    
+    """
+    # e, p = readBetaShape(rad, 'beta-', 'tot')
+    e, p = readBetaSpectra(rad)
+    em=np.empty(len(e))
+    for i, ei in enumerate(e):
+        #em[i] = E_quench_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
+        em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
+        
+    if type(L)==float or isinstance(L, np.float64):
+        eff_A = sum(p*(1-np.exp(-L*em/2)))
+        eff_B = sum(p*(1-np.exp(-L*em/2)))
+        eff_D = sum(p*((1-np.exp(-L*em/2))**2))
+    else:
+        eff_A = sum(p*(1-np.exp(-L[0]*em/2)))
+        eff_B = sum(p*(1-np.exp(-L[1]*em/2)))
+        eff_D = sum(p*(1-np.exp(-L[0]*em/2))*(1-np.exp(-L[1]*em/2)))
+        
+    return eff_A, eff_B, eff_D
+
+
 def clear_terminal():
     """Function to clear the terminal screen
     """
