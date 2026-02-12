@@ -87,6 +87,13 @@ COCKTAIL_DATA = {
          'w': normalizeDic({'H': 0.0990, 'C': 0.7600, 'O': 0.1400, 'P': 0.0010, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
          'rho': 0.96
     },
+    'ProSafe LT+': {
+        # Low Tritium / High Water uptake formulation
+        # High surfactant load -> Higher O (approx 13-14%), Lower C (approx 76%)
+        # Similar profile to Ultima Gold LLT
+        'w': normalizeDic({'H': 0.0990, 'C': 0.7600, 'O': 0.1380, 'P': 0.0015, 'N': 0.0010, 'S': 0.0005, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96 
+    },
     'Water': {
         'w': {'H': 0.111894, 'C': 0.0, 'O': 0.888106, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
         'rho': 0.9982
