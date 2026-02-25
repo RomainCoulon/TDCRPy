@@ -87,6 +87,13 @@ COCKTAIL_DATA = {
          'w': normalizeDic({'H': 0.0990, 'C': 0.7600, 'O': 0.1400, 'P': 0.0010, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
          'rho': 0.96
     },
+    'ProSafe LT+': {
+        # Low Tritium / High Water uptake formulation
+        # High surfactant load -> Higher O (approx 13-14%), Lower C (approx 76%)
+        # Similar profile to Ultima Gold LLT
+        'w': normalizeDic({'H': 0.0990, 'C': 0.7600, 'O': 0.1380, 'P': 0.0015, 'N': 0.0010, 'S': 0.0005, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96 
+    },
     'Water': {
         'w': {'H': 0.111894, 'C': 0.0, 'O': 0.888106, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
         'rho': 0.9982
@@ -99,6 +106,60 @@ COCKTAIL_DATA = {
         'w': {'H': 0.1006, 'C': 0.8994, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
         'rho': 0.876
     },
+    # ---------------------------------------------------------
+    # ABSORBERS & SPECIALTY COCKTAILS
+    # ---------------------------------------------------------
+    
+    # Carbo-Sorb E (Carbon Dioxide Absorber)
+    # Based on SDS: ~100% 3-methoxypropylamine (C4H11NO)
+    # Calculated exactly from the C4H11NO molecular weight (89.14 g/mol)
+    'Carbo-Sorb E': {
+        'w': normalizeDic({'H': 0.1244, 'C': 0.5390, 'O': 0.1795, 'P': 0.0, 'N': 0.1571, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.873  # Density of pure 3-methoxypropylamine at 20°C
+    },
+
+    # ---------------------------------------------------------
+    # PICO-FLUOR FAMILY
+    # ---------------------------------------------------------
+
+    # Pico-Fluor 40 (Classical)
+    # Pseudocumene-based (1,2,4-Trimethylbenzene) with high surfactant load for 40% water capacity.
+    # Estimated from SDS (Pseudocumene + Ethoxylated Alkylphenols). 
+    # Profile is similar to Insta-Gel Plus due to the high water-holding requirement.
+    'Pico-Fluor 40': {
+        'w': normalizeDic({'H': 0.0980, 'C': 0.7200, 'O': 0.1800, 'P': 0.0, 'N': 0.0020, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.91  # Typical density for high-surfactant pseudocumene mixtures
+    },
+    
+    # Pico-Fluor Plus (Modern / NPE-Free)
+    # Unlike classical Pico-Fluor, the "Plus" version is NPE-free and often relies 
+    # on a safer solvent base (like DIN) with a different surfactant package.
+    # Composition estimated from NPE-free high-efficiency specifications.
+    'Pico-Fluor Plus': {
+        'w': normalizeDic({'H': 0.1000, 'C': 0.7800, 'O': 0.1180, 'P': 0.0010, 'N': 0.0010, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96 
+    },
+    
+    # ---------------------------------------------------------
+    # CARBON DIOXIDE TRAPPING COCKTAILS
+    # ---------------------------------------------------------
+
+    # Permafluor E+ (Pure Scintillator)
+    # Pseudocumene-based (80-100%) with 1-methoxy-2-propanol (10-20%)
+    # Estimated at 85% / 15% mass ratio from Revvity SDS
+    'Permafluor E+': {
+        'w': normalizeDic({'H': 0.1023, 'C': 0.8445, 'O': 0.0533, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.900 
+    },
+
+    # Carbo-Sorb / Permafluor Mixture (1:1 Volumetric)
+    # Standard 1:1 v/v mixture used for counting trapped 14CO2.
+    # Calculated using densities: CS (0.873) and PF (0.900) -> Mass ratio ~ 49.2% / 50.8%
+    'Carbo-Sorb/Permafluor (1:1)': {
+        'w': normalizeDic({'H': 0.1132, 'C': 0.6941, 'O': 0.1154, 'P': 0.0, 'N': 0.0774, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.886 # Calculated using inverse density mixing rule
+    },
+    
     'PXE': {
         'w': {'H': 0.0863, 'C': 0.9137, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
         'rho': 0.985
@@ -3070,8 +3131,6 @@ def relaxation_atom_ph(lacune,element,v):
     
     return particule_emise,energie_par_emise,posi_lacune,par_emise  
 
-
-
 def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
     """
     TDCR analytical model that is used for pure beta emitting radionuclides
@@ -3104,11 +3163,11 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
     -------
     res : float
         Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode="res")
-    mean_efficiency_S : float
+    eff_S : float
         Estimation of the efficiency of single counting events. (only in mode="eff")
-    mean_efficiency_D : float
+    eff_D : float
         Estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
-    mean_efficiency_T : float
+    eff_T : float
         Estimation of the efficiency of triple coincidences. (only in mode="eff")
     
     """
@@ -3125,6 +3184,7 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
         eff_S = sum(p*(1-np.exp(-L*em/3)))
         eff_T = sum(p*(1-np.exp(-L*em/3))**3)
         eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
+        # eff_D2 = sum(p*(3*(1-np.exp(-L*em/2))**2))
         TDCR_calcul=eff_T/eff_D
         res=(TDCR_calcul-TD)**2
     else:
@@ -3136,6 +3196,7 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
         eff_AC = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[2]*em/3))) 
         eff_T = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))
         eff_D = eff_AB+eff_BC+eff_AC-2*eff_T
+        # eff_D2 = sum(p*(1-np.exp(-L[0]*em/2))*(1-np.exp(-L[1]*em/2)))
         # eff_D = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
         eff_S = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))-(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
         TABmodel = eff_T/eff_AB
@@ -3147,7 +3208,54 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
         return res
     if mode == "eff":
         return eff_S, eff_D, eff_T
+
+def modelAnalyticalCN(L,rad,kB,V,ne):
+    """
+    CIEMAT/NIST analytical model
     
+    Parameters
+    ----------
+    L : float or tuple
+        free parameter(s).
+    rad : string
+        radionuclide (eg. "Na-22").
+    kB : float
+        Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml. run only for 10 ml
+    nE : integer
+         Number of bins for the quenching function.
+    
+    
+    Returns
+    -------
+    eff_A : float
+        Estimation of the efficiency of PMT A.
+    eff_B : float
+        Estimation of the efficiency of PMT B.
+    eff_D : float
+        Estimation of the efficiency of double coincidences.
+    
+    """
+    # e, p = readBetaShape(rad, 'beta-', 'tot')
+    e, p = readBetaSpectra(rad)
+    em=np.empty(len(e))
+    for i, ei in enumerate(e):
+        #em[i] = E_quench_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
+        em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
+        
+    if type(L)==float or isinstance(L, np.float64):
+        eff_A = sum(p*(1-np.exp(-L*em/2)))
+        eff_B = sum(p*(1-np.exp(-L*em/2)))
+        eff_D = sum(p*((1-np.exp(-L*em/2))**2))
+    else:
+        eff_A = sum(p*(1-np.exp(-L[0]*em/2)))
+        eff_B = sum(p*(1-np.exp(-L[1]*em/2)))
+        eff_D = sum(p*(1-np.exp(-L[0]*em/2))*(1-np.exp(-L[1]*em/2)))
+        
+    return eff_A, eff_B, eff_D
+
+
 def clear_terminal():
     """Function to clear the terminal screen
     """
