@@ -106,6 +106,60 @@ COCKTAIL_DATA = {
         'w': {'H': 0.1006, 'C': 0.8994, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
         'rho': 0.876
     },
+    # ---------------------------------------------------------
+    # ABSORBERS & SPECIALTY COCKTAILS
+    # ---------------------------------------------------------
+    
+    # Carbo-Sorb E (Carbon Dioxide Absorber)
+    # Based on SDS: ~100% 3-methoxypropylamine (C4H11NO)
+    # Calculated exactly from the C4H11NO molecular weight (89.14 g/mol)
+    'Carbo-Sorb E': {
+        'w': normalizeDic({'H': 0.1244, 'C': 0.5390, 'O': 0.1795, 'P': 0.0, 'N': 0.1571, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.873  # Density of pure 3-methoxypropylamine at 20°C
+    },
+
+    # ---------------------------------------------------------
+    # PICO-FLUOR FAMILY
+    # ---------------------------------------------------------
+
+    # Pico-Fluor 40 (Classical)
+    # Pseudocumene-based (1,2,4-Trimethylbenzene) with high surfactant load for 40% water capacity.
+    # Estimated from SDS (Pseudocumene + Ethoxylated Alkylphenols). 
+    # Profile is similar to Insta-Gel Plus due to the high water-holding requirement.
+    'Pico-Fluor 40': {
+        'w': normalizeDic({'H': 0.0980, 'C': 0.7200, 'O': 0.1800, 'P': 0.0, 'N': 0.0020, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.91  # Typical density for high-surfactant pseudocumene mixtures
+    },
+    
+    # Pico-Fluor Plus (Modern / NPE-Free)
+    # Unlike classical Pico-Fluor, the "Plus" version is NPE-free and often relies 
+    # on a safer solvent base (like DIN) with a different surfactant package.
+    # Composition estimated from NPE-free high-efficiency specifications.
+    'Pico-Fluor Plus': {
+        'w': normalizeDic({'H': 0.1000, 'C': 0.7800, 'O': 0.1180, 'P': 0.0010, 'N': 0.0010, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96 
+    },
+    
+    # ---------------------------------------------------------
+    # CARBON DIOXIDE TRAPPING COCKTAILS
+    # ---------------------------------------------------------
+
+    # Permafluor E+ (Pure Scintillator)
+    # Pseudocumene-based (80-100%) with 1-methoxy-2-propanol (10-20%)
+    # Estimated at 85% / 15% mass ratio from Revvity SDS
+    'Permafluor E+': {
+        'w': normalizeDic({'H': 0.1023, 'C': 0.8445, 'O': 0.0533, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.900 
+    },
+
+    # Carbo-Sorb / Permafluor Mixture (1:1 Volumetric)
+    # Standard 1:1 v/v mixture used for counting trapped 14CO2.
+    # Calculated using densities: CS (0.873) and PF (0.900) -> Mass ratio ~ 49.2% / 50.8%
+    'Carbo-Sorb/Permafluor (1:1)': {
+        'w': normalizeDic({'H': 0.1132, 'C': 0.6941, 'O': 0.1154, 'P': 0.0, 'N': 0.0774, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.886 # Calculated using inverse density mixing rule
+    },
+    
     'PXE': {
         'w': {'H': 0.0863, 'C': 0.9137, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
         'rho': 0.985

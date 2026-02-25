@@ -16,9 +16,24 @@ chou_param = 0
 ## PROPERTIES OF THE SCINTILLATOR
 # Select a specific LS cocktail, possible choices:
 # Ultima Gold
+# Ultima Gold XR
+# Ultima Gold AB
 # Ultima Gold LLT
+# Insta-Gel Plus
 # Hionic-Fluor
+# ProSafe+
+# ProSafe HC+
+# ProSafe TS+
+# ProSafe LT+
 # Water
+# Toluene
+# Pseudocumene
+# Carbo-Sorb E
+# Pico-Fluor 40
+# Pico-Fluor Plus
+# Permafluor E+
+# Carbo-Sorb/Permafluor (1:1)
+# PXE
 # Or use default value entering False
 ls_cocktail = False
 ## Ultima Gold (Default)
