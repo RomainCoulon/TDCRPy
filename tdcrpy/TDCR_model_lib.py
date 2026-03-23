@@ -13,7 +13,7 @@ Bureau International des Poids et Mesures
 """
 import importlib.resources
 from importlib.resources import files
-import pkg_resources
+from importlib.metadata import version
 import configparser
 import numpy as np
 import zipfile as zf
@@ -3268,7 +3268,7 @@ def display_header():
     """ Function to display the header.
     """
     clear_terminal()
-    version = pkg_resources.get_distribution("tdcrpy").version
+    ver = version("tdcrpy")
     header_text = r'''
  ______  ______  ______ _______  ________
 |__  __||  ___ \|  ___||  ___ | |  ____ |
@@ -3281,7 +3281,7 @@ def display_header():
  |______________________________________________/     
 
 '''
-    header_text2 = "version "+version+"\n\
+    header_text2 = "version "+ver+"\n\
 BIPM 2023 - license MIT \n\
 distribution: https://pypi.org/project/TDCRPy \n\
 developement: https://github.com/RomainCoulon/TDCRPy \n\n\
