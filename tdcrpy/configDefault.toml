@@ -58,7 +58,7 @@ pNa = 0.000000
 pCl = 0.000071
 # properties on reverse micelles
 # applied reverse micelle correction
-micCorr = True
+micCorr = False
 # diameter of the micelles in nm (possible values: 0.5, 1.0, 2.0, 3.0, 4.0)
 diam_micelle = 2
 # acqueous fraction of the scintillator
