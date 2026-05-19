@@ -1,0 +1,36 @@
+ 93NB    93MO EC DECAY (4000 Y)                                                 
+ 93NB T  Auger electrons and X ray energies and emission intensities:           
+ 93NB T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 93NB T                                                                         
+ 93NB T        16.5213            21       4     XKA2                           
+ 93NB T        16.6152            40       6     XKA1                           
+ 93NB T                                                                         
+ 93NB T        18.6065        |]                 XKB3                           
+ 93NB T        18.6227        |]  10.4    16     XKB1                           
+ 93NB T        18.78          |]                 XKB5II                         
+ 93NB T                                                                         
+ 93NB T        18.953         |]                 XKB2                           
+ 93NB T        18.981         |]  1.56    24     XKB4                           
+ 93NB T                                                                         
+ 93NB T        1.9-2.66           5.6      5     XL (total)                     
+ 93NB T        1.9                0.149   14     XLL                            
+ 93NB T         -                 4.00    44     XLA                            
+ 93NB T                           0.036    5     XLC                            
+ 93NB T         -                 1.41    19     XLB                            
+ 93NB T         -2.66             0.061    8     XLG                            
+ 93NB T                                                                         
+ 93NB T        13.49-14.14    |]                 KLL AUGER                      
+ 93NB T        15.79-16.58    |]  24       4     KLX AUGER                      
+ 93NB T        18.02-18.91    |]                 KXY AUGER                      
+ 93NB T        1.4-2.6            158     12     L AUGER                        
+ 93MO  P 0.0         5/2+              4000 Y    800            405       3     
+ 93NB  N 1.0         1.0       1         1.0                                    
+ 93NB  L 0           9/2+               STABLE                                  
+ 93NB  E                       12      1211.3                   12        12 2  
+ 93NB2 E CK=0.8631    9$CL=0.1113    3$CM=0.0256    1                           
+ 93NB  L 30.77     2 1/2-              16.13 Y   14                             
+ 93NB  E                       88      1210                     88        12 1U 
+ 93NB2 E CK=0.8404    9$CL=0.1292    3$CM=0.0304    1                           
+ 93NB  G 30.77     2 0.00050  7                        1.79E5  5                
+ 93NB2 G KC=2.62E4    8$LC=1.216E5  36$MC=2.69E4    8$NC=3.93E3   12            
+ 93NB3 G OC=76.0     23                                                         
