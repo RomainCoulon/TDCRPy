@@ -12,7 +12,12 @@
  93NB T        18.953         |]                 XKB2                           
  93NB T        18.981         |]  1.56    24     XKB4                           
  93NB T                                                                         
- 93NB T        1.9-2.66           5.6      5     XL                                    
+ 93NB T        1.9-2.66           5.6      5     XL (total)                     
+ 93NB T        1.9                0.149   14     XLL                            
+ 93NB T         -                 4.00    44     XLA                            
+ 93NB T                           0.036    5     XLC                            
+ 93NB T         -                 1.41    19     XLB                            
+ 93NB T         -2.66             0.061    8     XLG                            
  93NB T                                                                         
  93NB T        13.49-14.14    |]                 KLL AUGER                      
  93NB T        15.79-16.58    |]  24       4     KLX AUGER                      
