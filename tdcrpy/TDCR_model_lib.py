@@ -140,6 +140,15 @@ COCKTAIL_DATA = {
         'rho': 0.96 
     },
     
+    'Aqualight Beta': {
+        # Manufactured by Hidex. DIN-based multi-purpose cocktail.
+        # SDS indicates DIN (~60%), NPEs (20-40%), and Phosphate Esters (5-10%).
+        # The elemental profile is estimated based on this ratio, resulting in 
+        # a high Oxygen content and measurable Phosphorus.
+        'w': normalizeDic({'H': 0.0980, 'C': 0.7500, 'O': 0.1470, 'P': 0.0050, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96  # Typical density for DIN/NPE blends at 20°C
+    },
+    
     # ---------------------------------------------------------
     # CARBON DIOXIDE TRAPPING COCKTAILS
     # ---------------------------------------------------------
