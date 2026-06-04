@@ -182,7 +182,7 @@ COCKTAIL_DATA = {
 def calculate_aqueous_fractions(solvantType, conc_mol_L):
     """
     Calculates the mass fractions (w_i) of the aqueous phase based on 
-    the solvent type (HCl, HNO3, or Water) and concentration.
+    the solvent type (HCl, HNO3, NaOH, or Water) and concentration.
     """
     # Default to pure water if no type specified
     if not solvantType or solvantType == "False" or solvantType == "None" or solvantType == "Water":
@@ -197,42 +197,38 @@ def calculate_aqueous_fractions(solvantType, conc_mol_L):
     MW_O = ATOMIC_WEIGHTS['O']
     MW_N = ATOMIC_WEIGHTS['N']
     MW_Cl = ATOMIC_WEIGHTS['Cl']
+    MW_Na = ATOMIC_WEIGHTS.get('Na', 22.990) # Fetch Sodium
     
     MW_Water = 2*MW_H + MW_O
     
-    # Calculate Acid contributions
+    # Calculate Solute (Acid/Base) contributions
     if solvantType == "HCl":
-        MW_Acid = MW_H + MW_Cl
-        # Elements in Acid molecule: 1 H, 1 Cl
-        acid_elements = {'H': 1 * MW_H / MW_Acid, 'Cl': 1 * MW_Cl / MW_Acid}
+        MW_Solute = MW_H + MW_Cl
+        solute_elements = {'H': 1 * MW_H / MW_Solute, 'Cl': 1 * MW_Cl / MW_Solute}
         
     elif solvantType == "HNO3":
-        MW_Acid = MW_H + MW_N + 3*MW_O
-        # Elements in Acid molecule: 1 H, 1 N, 3 O
-        acid_elements = {'H': 1 * MW_H / MW_Acid, 'N': 1 * MW_N / MW_Acid, 'O': 3 * MW_O / MW_Acid}
+        MW_Solute = MW_H + MW_N + 3*MW_O
+        solute_elements = {'H': 1 * MW_H / MW_Solute, 'N': 1 * MW_N / MW_Solute, 'O': 3 * MW_O / MW_Solute}
+        
+    elif solvantType == "NaOH":
+        MW_Solute = MW_Na + MW_O + MW_H
+        solute_elements = {'Na': 1 * MW_Na / MW_Solute, 'O': 1 * MW_O / MW_Solute, 'H': 1 * MW_H / MW_Solute}
+        
     else:
         # Fallback to water if unknown string
         return COCKTAIL_DATA['Water']['w']
 
     # Mixing Calculation (Approximate Density ~ 1000 g/L for the solution base)
-    # Mass of Acid in 1 L = Conc (mol/L) * MW_Acid (g/mol)
-    mass_acid = conc * MW_Acid
-    
-    # Approximation: Assume total mass of 1L solution is roughly 1000g + mass_acid (or simply 1000g total).
-    # Standard LSC approximation: 1L of dilute acid ~ 1000g total mass. 
-    # Mass of water = Total Mass - Mass Acid.
-    # We will assume a baseline density of 1.0 kg/L for the conversion unless high conc.
+    mass_solute = conc * MW_Solute
     total_mass_solution = 1000.0 
     
-    # Safety clamp: if acid mass > total mass (impossible physical conc), return pure acid
-    if mass_acid >= total_mass_solution:
-        mass_water = 0
-        w_acid = 1.0
+    # Safety clamp
+    if mass_solute >= total_mass_solution:
+        w_solute = 1.0
     else:
-        mass_water = total_mass_solution - mass_acid
-        w_acid = mass_acid / total_mass_solution
+        w_solute = mass_solute / total_mass_solution
 
-    w_water = 1.0 - w_acid
+    w_water = 1.0 - w_solute
 
     # Combine Elements
     w_aqueous = {}
@@ -244,12 +240,13 @@ def calculate_aqueous_fractions(solvantType, conc_mol_L):
     w_aqueous['H'] = w_water * w_H_water
     w_aqueous['O'] = w_water * w_O_water
     
-    # 2. Contribution from Acid
-    for el, w_el_in_acid in acid_elements.items():
-        w_aqueous[el] = w_aqueous.get(el, 0.0) + (w_acid * w_el_in_acid)
+    # 2. Contribution from Solute
+    for el, w_el_in_solute in solute_elements.items():
+        w_aqueous[el] = w_aqueous.get(el, 0.0) + (w_solute * w_el_in_solute)
 
     # Normalize to ensure sum is exactly 1.0
     return normalizeDic(w_aqueous)
+
 # print(calculate_aqueous_fractions("HCl", 0.1))
 
 def calculate_lsc_mixture_properties(cocktail_name, aqueous_mass_fraction, solvantType, solvantConc):
