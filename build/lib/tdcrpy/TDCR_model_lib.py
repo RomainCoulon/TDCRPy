@@ -13,18 +13,20 @@ Bureau International des Poids et Mesures
 """
 import importlib.resources
 from importlib.resources import files
-import pkg_resources
+from importlib.metadata import version
 import configparser
 import numpy as np
 import zipfile as zf
 import re
 import os
 import scipy.interpolate as  interp
+from scipy.integrate import cumulative_trapezoid
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import tempfile
 import math
 import shutil
+from numba import njit, prange
 
 # --- GLOBAL CONFIG SETUP ---
 config = configparser.ConfigParser()
@@ -86,6 +88,13 @@ COCKTAIL_DATA = {
          'w': normalizeDic({'H': 0.0990, 'C': 0.7600, 'O': 0.1400, 'P': 0.0010, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
          'rho': 0.96
     },
+    'ProSafe LT+': {
+        # Low Tritium / High Water uptake formulation
+        # High surfactant load -> Higher O (approx 13-14%), Lower C (approx 76%)
+        # Similar profile to Ultima Gold LLT
+        'w': normalizeDic({'H': 0.0990, 'C': 0.7600, 'O': 0.1380, 'P': 0.0015, 'N': 0.0010, 'S': 0.0005, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96 
+    },
     'Water': {
         'w': {'H': 0.111894, 'C': 0.0, 'O': 0.888106, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
         'rho': 0.9982
@@ -98,6 +107,69 @@ COCKTAIL_DATA = {
         'w': {'H': 0.1006, 'C': 0.8994, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
         'rho': 0.876
     },
+    # ---------------------------------------------------------
+    # ABSORBERS & SPECIALTY COCKTAILS
+    # ---------------------------------------------------------
+    
+    # Carbo-Sorb E (Carbon Dioxide Absorber)
+    # Based on SDS: ~100% 3-methoxypropylamine (C4H11NO)
+    # Calculated exactly from the C4H11NO molecular weight (89.14 g/mol)
+    'Carbo-Sorb E': {
+        'w': normalizeDic({'H': 0.1244, 'C': 0.5390, 'O': 0.1795, 'P': 0.0, 'N': 0.1571, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.873  # Density of pure 3-methoxypropylamine at 20°C
+    },
+
+    # ---------------------------------------------------------
+    # PICO-FLUOR FAMILY
+    # ---------------------------------------------------------
+
+    # Pico-Fluor 40 (Classical)
+    # Pseudocumene-based (1,2,4-Trimethylbenzene) with high surfactant load for 40% water capacity.
+    # Estimated from SDS (Pseudocumene + Ethoxylated Alkylphenols). 
+    # Profile is similar to Insta-Gel Plus due to the high water-holding requirement.
+    'Pico-Fluor 40': {
+        'w': normalizeDic({'H': 0.0980, 'C': 0.7200, 'O': 0.1800, 'P': 0.0, 'N': 0.0020, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.91  # Typical density for high-surfactant pseudocumene mixtures
+    },
+    
+    # Pico-Fluor Plus (Modern / NPE-Free)
+    # Unlike classical Pico-Fluor, the "Plus" version is NPE-free and often relies 
+    # on a safer solvent base (like DIN) with a different surfactant package.
+    # Composition estimated from NPE-free high-efficiency specifications.
+    'Pico-Fluor Plus': {
+        'w': normalizeDic({'H': 0.1000, 'C': 0.7800, 'O': 0.1180, 'P': 0.0010, 'N': 0.0010, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96 
+    },
+    
+    'Aqualight Beta': {
+        # Manufactured by Hidex. DIN-based multi-purpose cocktail.
+        # SDS indicates DIN (~60%), NPEs (20-40%), and Phosphate Esters (5-10%).
+        # The elemental profile is estimated based on this ratio, resulting in 
+        # a high Oxygen content and measurable Phosphorus.
+        'w': normalizeDic({'H': 0.0980, 'C': 0.7500, 'O': 0.1470, 'P': 0.0050, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.96  # Typical density for DIN/NPE blends at 20°C
+    },
+    
+    # ---------------------------------------------------------
+    # CARBON DIOXIDE TRAPPING COCKTAILS
+    # ---------------------------------------------------------
+
+    # Permafluor E+ (Pure Scintillator)
+    # Pseudocumene-based (80-100%) with 1-methoxy-2-propanol (10-20%)
+    # Estimated at 85% / 15% mass ratio from Revvity SDS
+    'Permafluor E+': {
+        'w': normalizeDic({'H': 0.1023, 'C': 0.8445, 'O': 0.0533, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.900 
+    },
+
+    # Carbo-Sorb / Permafluor Mixture (1:1 Volumetric)
+    # Standard 1:1 v/v mixture used for counting trapped 14CO2.
+    # Calculated using densities: CS (0.873) and PF (0.900) -> Mass ratio ~ 49.2% / 50.8%
+    'Carbo-Sorb/Permafluor (1:1)': {
+        'w': normalizeDic({'H': 0.1132, 'C': 0.6941, 'O': 0.1154, 'P': 0.0, 'N': 0.0774, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0}),
+        'rho': 0.886 # Calculated using inverse density mixing rule
+    },
+    
     'PXE': {
         'w': {'H': 0.0863, 'C': 0.9137, 'O': 0.0, 'P': 0.0, 'N': 0.0, 'S': 0.0, 'Na': 0.0, 'Cl': 0.0},
         'rho': 0.985
@@ -111,7 +183,7 @@ COCKTAIL_DATA = {
 def calculate_aqueous_fractions(solvantType, conc_mol_L):
     """
     Calculates the mass fractions (w_i) of the aqueous phase based on 
-    the solvent type (HCl, HNO3, or Water) and concentration.
+    the solvent type (HCl, HNO3, NaOH, or Water) and concentration.
     """
     # Default to pure water if no type specified
     if not solvantType or solvantType == "False" or solvantType == "None" or solvantType == "Water":
@@ -126,42 +198,38 @@ def calculate_aqueous_fractions(solvantType, conc_mol_L):
     MW_O = ATOMIC_WEIGHTS['O']
     MW_N = ATOMIC_WEIGHTS['N']
     MW_Cl = ATOMIC_WEIGHTS['Cl']
+    MW_Na = ATOMIC_WEIGHTS.get('Na', 22.990) # Fetch Sodium
     
     MW_Water = 2*MW_H + MW_O
     
-    # Calculate Acid contributions
+    # Calculate Solute (Acid/Base) contributions
     if solvantType == "HCl":
-        MW_Acid = MW_H + MW_Cl
-        # Elements in Acid molecule: 1 H, 1 Cl
-        acid_elements = {'H': 1 * MW_H / MW_Acid, 'Cl': 1 * MW_Cl / MW_Acid}
+        MW_Solute = MW_H + MW_Cl
+        solute_elements = {'H': 1 * MW_H / MW_Solute, 'Cl': 1 * MW_Cl / MW_Solute}
         
     elif solvantType == "HNO3":
-        MW_Acid = MW_H + MW_N + 3*MW_O
-        # Elements in Acid molecule: 1 H, 1 N, 3 O
-        acid_elements = {'H': 1 * MW_H / MW_Acid, 'N': 1 * MW_N / MW_Acid, 'O': 3 * MW_O / MW_Acid}
+        MW_Solute = MW_H + MW_N + 3*MW_O
+        solute_elements = {'H': 1 * MW_H / MW_Solute, 'N': 1 * MW_N / MW_Solute, 'O': 3 * MW_O / MW_Solute}
+        
+    elif solvantType == "NaOH":
+        MW_Solute = MW_Na + MW_O + MW_H
+        solute_elements = {'Na': 1 * MW_Na / MW_Solute, 'O': 1 * MW_O / MW_Solute, 'H': 1 * MW_H / MW_Solute}
+        
     else:
         # Fallback to water if unknown string
         return COCKTAIL_DATA['Water']['w']
 
     # Mixing Calculation (Approximate Density ~ 1000 g/L for the solution base)
-    # Mass of Acid in 1 L = Conc (mol/L) * MW_Acid (g/mol)
-    mass_acid = conc * MW_Acid
-    
-    # Approximation: Assume total mass of 1L solution is roughly 1000g + mass_acid (or simply 1000g total).
-    # Standard LSC approximation: 1L of dilute acid ~ 1000g total mass. 
-    # Mass of water = Total Mass - Mass Acid.
-    # We will assume a baseline density of 1.0 kg/L for the conversion unless high conc.
+    mass_solute = conc * MW_Solute
     total_mass_solution = 1000.0 
     
-    # Safety clamp: if acid mass > total mass (impossible physical conc), return pure acid
-    if mass_acid >= total_mass_solution:
-        mass_water = 0
-        w_acid = 1.0
+    # Safety clamp
+    if mass_solute >= total_mass_solution:
+        w_solute = 1.0
     else:
-        mass_water = total_mass_solution - mass_acid
-        w_acid = mass_acid / total_mass_solution
+        w_solute = mass_solute / total_mass_solution
 
-    w_water = 1.0 - w_acid
+    w_water = 1.0 - w_solute
 
     # Combine Elements
     w_aqueous = {}
@@ -173,12 +241,13 @@ def calculate_aqueous_fractions(solvantType, conc_mol_L):
     w_aqueous['H'] = w_water * w_H_water
     w_aqueous['O'] = w_water * w_O_water
     
-    # 2. Contribution from Acid
-    for el, w_el_in_acid in acid_elements.items():
-        w_aqueous[el] = w_aqueous.get(el, 0.0) + (w_acid * w_el_in_acid)
+    # 2. Contribution from Solute
+    for el, w_el_in_solute in solute_elements.items():
+        w_aqueous[el] = w_aqueous.get(el, 0.0) + (w_solute * w_el_in_solute)
 
     # Normalize to ensure sum is exactly 1.0
     return normalizeDic(w_aqueous)
+
 # print(calculate_aqueous_fractions("HCl", 0.1))
 
 def calculate_lsc_mixture_properties(cocktail_name, aqueous_mass_fraction, solvantType, solvantConc):
@@ -297,6 +366,8 @@ def readParameters(disp=False):
 
     nE_electron = inputs.getint("nE_electron")
     nE_alpha = inputs.getint("nE_alpha")
+    sp_model = inputs.get("sp_model")
+    chou_param = inputs.getfloat("chou_param")
     tau = inputs.getint("tau")
     extDT = inputs.getfloat("extDT")
     measTime = inputs.getfloat("measTime")
@@ -338,23 +409,50 @@ def readParameters(disp=False):
     PMTspace = inputs.getfloat("PMTspace")
     
     if disp:
-        print(f"density = {RHO} g/cm3")
-        print(f"Z = {Z:.4f}, A = {A:.4f}")
-        print(f"Atomic fraction: H={pH:.4f}, C={pC:.4f}, N={pN:.4f}, O={pO:.4f}")
-        print(f"                 P={pP:.4f}, S={pS:.4f}, Na={pNa:.4f}, Cl={pCl:.4f}")
-        print(f"acqueous fraction = {fAq} (Type: {solvantType}, {solvantConc} mol/L)")
-        print(f"quantum efficiency = {effQuantic}")
+        print("QUENCHING NUMERICAL CALCULATION")
+        print("\tNumber of bins to discretize")
+        print("\tthe linear energy space")
+        print("\tfor quenching calculation:")
+        print(f"\tfor electrons = {nE_electron} bins")
+        print(f"\tthe stopping power model at low energy = {sp_model}")
+        print(f"\tfor alphas = {nE_alpha} bins")
+        print(f"\tChou quenching parameter {chou_param} cm2/MeV2")
+
+        print("\nPROPERTIES OF THE SCINTILLATOR")
+        print(f"\tLiquid scintillation cocktail = {lsCocktail()}")
+        print(f"\tacqueous fraction = {fAq} (Type: {solvantType}, {solvantConc} mol/L)")
+        print(f"\tDensity = {RHO} g/cm3")
+        print(f"\tZ = {Z:.4f}, A = {A:.4f}")
+        print(f"\tAtomic fraction: H={pH:.4f}, C={pC:.4f}, N={pN:.4f}, O={pO:.4f}")
+        print(f"\t                 P={pP:.4f}, S={pS:.4f}, Na={pNa:.4f}, Cl={pCl:.4f}")
+        if micCorr:
+            print("\tMicelle correction activated")
+            print(f"\tDensity = {diam_micelle} nm")
+        else:
+            print("\tMicelle correction not activated")
+
+        print("\nOPTICAL PROPERTIES")
+        print(f"\tQuantum efficiency of PMT A = {effQuantic[0]:.3f}")
+        print(f"\tQuantum efficiency of PMT B = {effQuantic[1]:.3f}")
+        print(f"\tQuantum efficiency of PMT C = {effQuantic[2]:.3f}")
+
+        print("\nPROPERTIES OF THE COUNTER")
+        print(f"\tCoincidence resolving time = {tau} ns")
+        print(f"\tExtended dead time = {extDT} µs")
+        print(f"\tMeasurement time = {measTime} min")
     
     # Added solvantType and solvantConc to return tuple
     return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
             diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
             optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl,
-            solvantType, solvantConc)
+            solvantType, solvantConc, sp_model, chou_param)
 
 # --- MODIFY FUNCTIONS ---
 
 def modifynE_electron(x): update_config_value("nE_electron", x)
 def modifynE_alpha(x): update_config_value("nE_alpha", x)
+def modifysp_model(x): update_config_value("sp_model", x)
+def modifyChou_param(x): update_config_value("chou_param", x)
 def modifyDensity(x): update_config_value("density", x)
 def modifyZ(x): update_config_value("Z", x)
 def modifyA(x): update_config_value("A", x)
@@ -446,7 +544,7 @@ def resetConfFile():
 # Read current parameters
 (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
  diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
- optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc) = readParameters()
+ optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc, sp_model, chou_param) = readParameters()
 
 # Calculate normalized atomic array (if needed for legacy code)
 p_atom = np.array([pH, pC, pN, pO, pP, pS, pNa, pCl])
@@ -628,6 +726,7 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as dat
 #with importlib.resources.path('tdcrpy', 'MCNP-MATRIX') as data_path:
     sH3 = data_path / 'Spectra_for_analytical_model/dep_spectrum_H-3.txt'
     sC14 = data_path / 'Spectra_for_analytical_model/dep_spectrum_C-14.txt'
+    sP32 = data_path / 'Spectra_for_analytical_model/dep_spectrum_P-32.txt'
     sS35 = data_path / 'Spectra_for_analytical_model/dep_spectrum_S-35.txt'
     sCa45 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Ca-45.txt'
     sNi63 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Ni-63.txt'
@@ -637,6 +736,7 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as dat
     sPm147 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pm-147.txt'
     sPu241 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pu-241.txt'
     sCo60 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Co-60.txt'
+    sZr93 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Zr-93.txt'
     
 # import stopping power data for electron
 with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
@@ -1113,11 +1213,10 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 
 #========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
 
-def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
+def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
-    At low energy - between 10 eV and 20 keV - the model from Tan and Xia [5] is implemented.
-    
+        
     Refs:
         
         [1] https://doi.org/10.1016/0020-708x(82)90244-7
@@ -1128,7 +1227,6 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
         
         [4] ICRU Report 37, Stopping Powers for Electrons and Positrons
         
-        [5] https://doi.org/10.1016/j.apradiso.2011.08.012
         
     Parameters
     ----------
@@ -1151,12 +1249,23 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
         Calculated stopping power in MeV.cm-1.
 
     """
+    emax = 20000
+    if spmodel=='tan_xia': emax = 20000
+    if spmodel=='joy_luo': emax = 20000
+    if spmodel=='marchal': emax = 400
+    if spmodel=='ashley': emax = 100
+    if spmodel=='kossert_graucarles': emax = 1000
+    if spmodel=='rao_reddy': emax = 413
+    
     # e:eV ;rho: g.cm-3
-    mc_2 = 0.511 #MeV
-    I = 65e-6 #MeV
-    NA = 6.02e23
+    mc_2 = 0.5109989 #MeV
+    I = 64.7e-6 #MeV
+    NA = 6.022e23
     ahc = 1.437e-13   #MeV.cm
-    if e>=20000:
+    re = 2.8179403227e-13 # Classical electron radius in cm
+    const_K = 4 * np.pi * NA * re**2 * mc_2 # ~ 0.307075 MeV cm^2 / mol
+    if e>=emax:
+        # model de Bethe
         e1 = e*1e-6 #MeV
         gamma = (e1+mc_2)/mc_2
         gamma_2 = gamma*gamma
@@ -1174,10 +1283,99 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f):
         #if T<1:sr=0
         dEdx = (sc + sr)*rho  #MeV.cm-1
     else:
-            if e>emin:
+        if e > emin:
+            if spmodel=='tan_xia':
+                # https://doi.org/10.1016/j.apradiso.2011.08.012
                 dEdx=float(file[int(e)]) #MeV.cm-1
-            else:
-                dEdx=0
+            elif spmodel == 'joy_luo':
+                # Joy and Luo (1989) Modification
+                # Units: Result in MeV/cm (conversion factor 785 is for eV/A)
+                # We use the standard collision formula but with the E+kI correction
+                k = 0.85
+                # Simplified Joy-Luo collision term in MeV/cm
+                # 0.1535 is a constant including 2*pi*re^2*me*c^2
+                gamma = (e * 1e-6 + mc_2) / mc_2  # Convert e to MeV for consistency
+                beta_2 = 1 - (1 / gamma ** 2)
+                if beta_2 <= 0:
+                    dEdx = 0
+                else:
+                    # Joy-Luo Logarithm - note: I is in MeV, e is in eV
+                    stop_num = np.log(1.166 * (e * 1e-6 + k * I) / I)  # Convert e to MeV
+                    dEdx = (0.1535 / beta_2) * (Z / A) * stop_num * rho * 1.982 # MeV.cm-1 plus fit to Bethe
+            elif spmodel == 'marchal':
+                # Based on Range-Energy relation R = A * E^n
+                # Marchal typically used R(E) for efficiency calculation.
+                # For dE/dx, we take the derivative.
+                # R ~ 0.006 * E^1.6 (approx for Toluene) -> dE/dx ~ E^-0.6
+                # A common phenomenological formula in LSC for Marchal is:
+                # dEdx = C * E^-0.5
+                    
+                # Determine Constant C to match Bethe at 100 keV (0.1 MeV)
+                # Bethe at 0.1 MeV ~ 3.8 MeV/cm for Toluene
+                # 3.8 = C * (0.1)**-0.5 => 3.8 = C * 3.16 => C ~ 1.2
+                # Using calibrated constant for organic scintillator:
+                C_marchal = 1.35 * 2.6983521 # 2.6983521 to fit with Bethe
+                dEdx = C_marchal * rho * (e*1e-6)**(-0.5)
+            elif spmodel == 'ashley':
+                # J.C. Ashley's "Optical-Data Model" approximation for organic insulators.
+                # Often approximated at low energy (< 10 keV) as a power law or 
+                # using the "chi" correction to the log term.
+                # Here we use the analytical form often cited in LSC (similar to Joy-Luo but k=0)
+                # or the specific "valence electron" formulation.
+                gamma = (e * 1e-6 + mc_2) / mc_2  # Convert e to MeV for consistency
+                beta_2 = 1 - (1 / gamma ** 2)
+                # Ashley's correction factor "chi" for organic solids ~ 1.2
+                chi = 1.2 
+                # At very low energy, Ashley predicts dE/dx proportional to E
+                # But for the transition region, we use the modified log:
+                if e*1e-6 < 0.01: # Below 10 keV
+                    # Linear approximation from dielectric theory
+                    # S = A * E^0.5 or E^1.0 depending on regime. 
+                    # For LSC, S ~ E^1.0 is often used for < 100 eV.
+                    # Here we use the "Ashley-Anderson" type fit:
+                    dEdx = 180.0 * (e*1e-6**0.75) * rho * 386.07286 # Heuristic organic fit
+                else:
+                    # High energy approaches Bethe
+                    arg = (1.166 * e*1e-6) / (chi * I)
+                    if arg <= 1: arg = 1.001
+                    L_ash = np.log(arg)
+                    dEdx = (const_K * rho * (Z/A) / beta_2) * L_ash * 386.07286 # correction to fit Bethe
+            elif spmodel == 'kossert_graucarles':
+                # This typically refers to the "MICELLE" code data based on 
+                # Tan & Xia tabulated values. 
+                # If an analytical formula is required, the Grau Malonda (1999)
+                # 7-parameter fit is the standard "Grau" formula.
+                # Simplified Grau Malonda fit for organic scintillator:
+                    
+                # S(E) = (A1*E) / (E^A2 + A3)  (MeV/cm)
+                # Fitted parameters for electrons in Toluene (approx):
+                #A1 = 280.0
+                #A2 = 1.6
+                #A3 = 0.005
+                # This function peaks around 100 eV and falls as E^-0.6
+                #dEdx = rho * (A1 * e*1e-6) / (e*1e-6**A2 + A3)
+                dEdx = (rho * (e*1e-6)**-1.1) * 0.0544236 # to fit Bethe
+            elif spmodel == 'rao_reddy':
+                # Rao and Reddy proposed an "Effective Charge" and "Effective Atomic Number"
+                # modification to the Bethe formula.
+                # Z_eff(E) = Z * (1 - exp(-1.3 * beta / alpha)) ?
+                # A simpler Rao-Reddy formula for Range is R = a E^n
+                # Commonly cited: R = 0.526 * E^1.274 (mg/cm2)
+                # Therefore S = (1 / R') = (1 / (a*n)) * E^(1-n)
+                
+                a = 0.526 # mg/cm2/MeV^n
+                n = 1.274
+                # dR/dE = a * n * E^(n-1)
+                # dE/dR = 1 / (a * n * E^(n-1)) = (1/an) * E^(1-n)
+                
+                # Convert mg/cm2 to cm: need to divide by rho (g/cm3) * 1000
+                # Actually R (g/cm2) = R_linear * rho
+                # S (MeV/cm) = dE/dR_linear = dE/dR_mass * rho
+                
+                S_mass = (1.0 / (a * n)) * (e*1e-6**(1 - n)) # MeV / (mg/cm2)
+                dEdx = S_mass * (rho) * 6.5e-3 # Convert to MeV/cm and fit to Beth
+        else:
+            dEdx=0
     if dEdx<0:
         dEdx=0
     return dEdx    
@@ -1323,6 +1521,7 @@ def readBetaSpectra(rad):
     
     if rad == "H-3": file_path = sH3
     elif rad == "C-14": file_path = sC14
+    elif rad == "P-32": file_path = sP32
     elif rad == "S-35": file_path = sS35
     elif rad == "Ca-45": file_path = sCa45
     elif rad == "Ni-63": file_path = sNi63
@@ -1332,6 +1531,7 @@ def readBetaSpectra(rad):
     elif rad == "Pm-147": file_path = sPm147
     elif rad == "Pu-241": file_path = sPu241
     elif rad == "Co-60": file_path = sCo60
+    elif rad == "Zr-93": file_path = sZr93
 
     with open(file_path, "r") as file:
         for line in file:
@@ -1346,9 +1546,10 @@ def readBetaSpectra(rad):
 
 #============================  Fonction quenching  =====================================
 
-def E_quench_e(ei,ed,kB,nE):
+def E_quench_e(ei,ed,kB,nE,kC=chou_param):
     """
-    This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching
+    This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching.
+    It also include the possibility to account biomolecular quenching with the Chou model.
     
     Parameters
     ----------
@@ -1360,6 +1561,8 @@ def E_quench_e(ei,ed,kB,nE):
         Birks constant in cm/MeV.
     nE : integer 
         number of points of the energy linear space
+    kC : float
+        Chou quenching parameter in cm2/MeV2. Deafault kC = 0
     
     Returns
     -------
@@ -1372,7 +1575,7 @@ def E_quench_e(ei,ed,kB,nE):
     delta = e_dis[2] - e_dis[1]
     q = 0
     for i in e_dis:
-        q += delta/(1+kB*stoppingpower(i))
+        q += delta/(1+kB*stoppingpower(i)+kC*stoppingpower(i)**2)
     return q
 
 
@@ -1580,6 +1783,113 @@ def micelleLoss(E,*, fAq=fAq, diam_micelle=diam_micelle, e_vec=micelle_E, data=m
     micDiam = np.array([0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0]) #nm
     S=np.interp(E*1e3, e_vec, micelle_S[:,np.argwhere(micDiam==diam_micelle)[0][0]])*(1-fAq)/0.9
     return S
+
+# New Micelle Treatment
+
+# 1. JIT-compiled helper functions (fastmath=True allows C-level float optimizations)
+@njit(fastmath=True)
+def calc_range_numba(E_keV):
+    if E_keV <= 0.0: return 0.0
+    return 40.0 * (E_keV ** 1.75)
+
+@njit(fastmath=True)
+def calc_energy_numba(R_nm):
+    if R_nm <= 0.0: return 0.0
+    return (R_nm / 40.0) ** (1.0 / 1.75)
+
+# 2. The Core Monte Carlo Kernel compiled to machine code
+# Using parallel=True and prange allows multi-threading across your CPU cores
+@njit(fastmath=True, parallel=True)
+def _mc_kernel(E0_keV, r_d_nm, f_w, is_hydrophilic, num_samples):
+    E_deposited_act = np.zeros(num_samples)
+    lambda_act = (4.0 / 3.0) * r_d_nm * (1.0 - f_w) / f_w
+    
+    # prange distributes the particle histories across available CPU threads
+    for i in prange(num_samples):
+        R = calc_range_numba(E0_keV)
+        if R <= 0.0:
+            continue
+            
+        phase_is_active = not is_hydrophilic
+        
+        # ---------------------------------------------------------
+        # ETAPE 1 : Positionnement initial
+        # ---------------------------------------------------------
+        if is_hydrophilic:
+            # Native random generation inside Numba is extremely fast
+            u1 = np.random.rand()
+            r_pos = r_d_nm * (u1 ** (1.0 / 3.0))
+            cos_theta = np.random.uniform(-1.0, 1.0)
+            
+            b = 2.0 * r_pos * cos_theta
+            c = (r_pos ** 2) - (r_d_nm ** 2)
+            delta = max((b ** 2) - (4.0 * c), 0.0)
+            d_esc = (-b + np.sqrt(delta)) / 2.0
+            
+            R -= d_esc
+            phase_is_active = True
+            
+        # ---------------------------------------------------------
+        # ETAPE 2 : Transport markovien
+        # ---------------------------------------------------------
+        e_act_particle = 0.0
+        
+        while R > 0.0:
+            u_rand = np.random.uniform(1e-10, 1.0)
+            
+            if phase_is_active:
+                d_step = -lambda_act * np.log(u_rand)
+            else:
+                d_step = 2.0 * r_d_nm * np.sqrt(u_rand)
+                
+            actual_dist = min(d_step, R)
+            
+            if phase_is_active:
+                E_in = calc_energy_numba(R)
+                E_out = calc_energy_numba(R - actual_dist)
+                e_act_particle += (E_in - E_out)
+                
+            R -= actual_dist
+            phase_is_active = not phase_is_active
+            
+        E_deposited_act[i] = e_act_particle
+        
+    return E_deposited_act
+
+# 3. The Python Wrapper for TDCRPy
+def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle, f_w=fAq, tracer_type="hydrophilic", num_samples=1):
+    """
+    E in keV
+    """
+    if E <= 0:
+        return 0.0, 0.0, np.zeros(num_samples)
+        
+    if f_w > 1.0:
+        f_w = f_w / 100.0
+    f_w = np.clip(f_w, 0.0, 1.0)
+    
+    if f_w == 0.0:
+        arr = np.full(num_samples, E)
+        return E, 0.0, arr
+    if f_w == 1.0:
+        return 0.0, 0.0, np.zeros(num_samples)
+        
+    is_hydro = (tracer_type == "hydrophilic")
+    
+    # Call the JIT compiled kernel
+    # Note: The first execution will take ~1 second as it compiles to C. 
+    # All subsequent calls will be nearly instantaneous.
+    E_deposited_act = _mc_kernel(float(E), float(r_d_nm), float(f_w), is_hydro, int(num_samples))
+    
+    if num_samples==1:
+        return E_deposited_act[0]
+    else:
+        return np.mean(E_deposited_act), np.std(E_deposited_act), E_deposited_act
+
+# out0 = micelleLoss(50)*50
+# out1 = pure_mc_efficient_energy_numba(50, tracer_type = "lipophilic")
+# out = pure_mc_efficient_energy_numba(50, tracer_type = "hydrophilic")
+# print(out0, out1, out)
 
 
 #============================================================================================
@@ -2390,9 +2700,11 @@ def read_ENDF_photon(atom,z=z_endf_ph):
     elif atom == 'P':
         name = "photoat-015_P_000.txt"    
     elif atom == 'S':
-        name = "photoat-016_S_000.txt"
+        name = "photoat-001_H_000.txt"
+        # name = "photoat-016_S_000.txt"
     elif atom == 'Na':
-        name = "photoat-011_Na_000.txt"    
+        name = "photoat-001_H_000.txt"
+        # name = "photoat-011_Na_000.txt"    
     elif atom == 'Cl':
         name = "photoat-017_Cl_000.txt"
         
@@ -2636,10 +2948,6 @@ def interaction_scintillation(e_p, p_atom=p_atom):
         lacune = 'Atom_M'
    
     return e_ele_emis,lacune,element
-
-
-
-
 
 
 def read_ENDF_RA(atom,z=z_endf_ar):
@@ -2937,8 +3245,6 @@ def relaxation_atom_ph(lacune,element,v):
     
     return particule_emise,energie_par_emise,posi_lacune,par_emise  
 
-
-
 def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
     """
     TDCR analytical model that is used for pure beta emitting radionuclides
@@ -2971,11 +3277,11 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
     -------
     res : float
         Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode="res")
-    mean_efficiency_S : float
+    eff_S : float
         Estimation of the efficiency of single counting events. (only in mode="eff")
-    mean_efficiency_D : float
+    eff_D : float
         Estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
-    mean_efficiency_T : float
+    eff_T : float
         Estimation of the efficiency of triple coincidences. (only in mode="eff")
     
     """
@@ -2992,6 +3298,7 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
         eff_S = sum(p*(1-np.exp(-L*em/3)))
         eff_T = sum(p*(1-np.exp(-L*em/3))**3)
         eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
+        # eff_D2 = sum(p*(3*(1-np.exp(-L*em/2))**2))
         TDCR_calcul=eff_T/eff_D
         res=(TDCR_calcul-TD)**2
     else:
@@ -3003,6 +3310,7 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
         eff_AC = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[2]*em/3))) 
         eff_T = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))
         eff_D = eff_AB+eff_BC+eff_AC-2*eff_T
+        # eff_D2 = sum(p*(1-np.exp(-L[0]*em/2))*(1-np.exp(-L[1]*em/2)))
         # eff_D = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
         eff_S = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))-(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
         TABmodel = eff_T/eff_AB
@@ -3014,7 +3322,54 @@ def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
         return res
     if mode == "eff":
         return eff_S, eff_D, eff_T
+
+def modelAnalyticalCN(L,rad,kB,V,ne):
+    """
+    CIEMAT/NIST analytical model
     
+    Parameters
+    ----------
+    L : float or tuple
+        free parameter(s).
+    rad : string
+        radionuclide (eg. "Na-22").
+    kB : float
+        Birks constant in cm/keV.
+    V : float
+        volume of the scintillator in ml. run only for 10 ml
+    nE : integer
+         Number of bins for the quenching function.
+    
+    
+    Returns
+    -------
+    eff_A : float
+        Estimation of the efficiency of PMT A.
+    eff_B : float
+        Estimation of the efficiency of PMT B.
+    eff_D : float
+        Estimation of the efficiency of double coincidences.
+    
+    """
+    # e, p = readBetaShape(rad, 'beta-', 'tot')
+    e, p = readBetaSpectra(rad)
+    em=np.empty(len(e))
+    for i, ei in enumerate(e):
+        #em[i] = E_quench_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
+        em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
+        
+    if type(L)==float or isinstance(L, np.float64):
+        eff_A = sum(p*(1-np.exp(-L*em/2)))
+        eff_B = sum(p*(1-np.exp(-L*em/2)))
+        eff_D = sum(p*((1-np.exp(-L*em/2))**2))
+    else:
+        eff_A = sum(p*(1-np.exp(-L[0]*em/2)))
+        eff_B = sum(p*(1-np.exp(-L[1]*em/2)))
+        eff_D = sum(p*(1-np.exp(-L[0]*em/2))*(1-np.exp(-L[1]*em/2)))
+        
+    return eff_A, eff_B, eff_D
+
+
 def clear_terminal():
     """Function to clear the terminal screen
     """
@@ -3027,7 +3382,7 @@ def display_header():
     """ Function to display the header.
     """
     clear_terminal()
-    version = pkg_resources.get_distribution("tdcrpy").version
+    ver = version("tdcrpy")
     header_text = r'''
  ______  ______  ______ _______  ________
 |__  __||  ___ \|  ___||  ___ | |  ____ |
@@ -3040,7 +3395,7 @@ def display_header():
  |______________________________________________/     
 
 '''
-    header_text2 = "version "+version+"\n\
+    header_text2 = "version "+ver+"\n\
 BIPM 2023 - license MIT \n\
 distribution: https://pypi.org/project/TDCRPy \n\
 developement: https://github.com/RomainCoulon/TDCRPy \n\n\
@@ -3120,6 +3475,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
     
     if rad == "H-3": file_path = sH3
     elif rad == "C-14": file_path = sC14
+    elif rad == "P-32": file_path = sP32
     elif rad == "S-35": file_path = sS35
     elif rad == "Ca-45": file_path = sCa45
     elif rad == "Ni-63": file_path = sNi63
@@ -3129,6 +3485,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
     elif rad == "Pm-147": file_path = sPm147
     elif rad == "Pu-241": file_path = sPu241
     elif rad == "Co-60": file_path = sCo60
+    elif rad == "Zr-93": file_path = sZr93
     
     if prt:
         with open(file_path, "w") as file:
@@ -3140,7 +3497,9 @@ def buildBetaSpectra(rad, V, N, prt=False):
             for i, b in enumerate(bins):
                 if i==len(bins)-1: file.write(f"{b}\t{0}\n")
                 else: file.write(f"{b}\t{p2[i]}\n")
-        print("file written in local")        
+        print("file written in local")
+    else:
+        return bins[:-1], p2
                 
 def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic):
     """
@@ -3620,11 +3979,149 @@ def readRecQuenchedEnergies():
     return Epromt, Edelayed
 
 
+def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n=1.341, lambda_range=(300,650), alpha=(1,1,1)):
+    """
+    TDCR Cerenkov model using the Frank-Tamm relationship and a custom Stopping Power function.
 
+    Parameters
+    ----------
+    L : float or tuple
+        Free parameter (scaling factor related to quantum efficiency/geometry).
+    TD, TAB, TBC, TAC : float
+        Measured coincidence ratios.
+    rad : string
+        Radionuclide (e.g., "Lu-177").
+    mode : string
+        "res" for residuals, "eff" for efficiencies.
+    rho : float
+        Density of the medium in g/cm3 (passed to stoppingpower).
+    Z : float
+        Mean charge number (passed to stoppingpower).
+    A : float
+        Mean mass number (passed to stoppingpower).
+    n : float
+        Refractive index of the medium.
+    V : float
+        Volume (placeholder for standard TDCR signatures).
+    alpha : tuple
+        Anisotropy coefficients (a1, a2, a3).
+        0.79 for glass and polyethylen according to Grau Malonda and Grau Carles (1998) Appl. Radiat. Isot. 49, 1049–1053
+    lambda_min : float
+        lower limit wavelenght PMT sensitivity (300 for bialkali) (160 )
+    lambda_max : float
+        Upper limit wavelenght PMT sensitivity (650 for bialkali) (630 )        
+
+    Returns
+    -------
+    res or (eff_S, eff_D, eff_T)
+    """
+
+    # 1. Constants and Spectrum
+    alpha_FS = 1.0 / 137.036  # Fine-structure constant
+    z = 1.0                   # Charge of beta particle 
+    mec2 = 511.0 # Electron rest mass in keV
+    e_keV, p = readBetaSpectra(rad) # e in keV, p is probability density
+    e_keV = np.asarray(e_keV)
+    e_eV = e_keV*1e3 # Convert keV to eV
+    e_MeV = e_keV*1e-3 # Convert keV to MeV 
+    l_min_cm = lambda_range[0] * 1e-7
+    l_max_cm = lambda_range[1] * 1e-7 # Convert wavelengths from nm to cm
+    
+    # Calculate the Frank-Tamm Pre-factor (Photons per cm for beta=1)
+    # Factor = 2 * pi * z^2 * alpha * (1/l_min - 1/l_max)
+    ft_constant = 2 * np.pi * (z**2) * alpha_FS * (1.0/l_min_cm - 1.0/l_max_cm)
+    
+    # 2. Calculate Stopping Power (S) for the spectrum
+    # The stoppingpower function expects Energy in eV and returns MeV/cm.
+    # We iterate over 'e' (keV) to build the stopping power array.
+    dEdx_list = []
+    for energy_ev in e_eV:
+            dEdx_list.append(stoppingpower(energy_ev, rho=rho, Z=Z, A=A, spmodel="tan_xia"))
+    dEdx = np.array(dEdx_list) # Units: MeV/cm
+
+    # 3. Calculate Frank-Tamm Factor
+    # 3.1. Calculate the phase velocity beta for every energy point
+    gamma = (e_keV + mec2) / mec2
+    beta = np.sqrt(1.0 - 1.0 / (gamma**2))
+    
+    # Threshold condition: beta * n > 1
+    beta_thresh = 1.0 / n
+    kinematic_factor = np.zeros_like(e_keV) # The (1 - 1/(beta*n)^2) part
+    mask = beta > beta_thresh
+    kinematic_factor[mask] = 1.0 - (1.0 / ((beta[mask] * n)**2))
+
+    # --- 4. Calculate Integrated Yield (m_ck) ---
+    # dN/dx = ft_constant * kinematic_factor
+    # We need total N = Integral [ (dN/dx) * (dx/dE) ] dE
+    # dx/dE = 1 / S(E)  (where S(E) is stopping power in MeV/cm)
+    
+    # Integrand = (Photons/cm) / (MeV/cm) = Photons / MeV
+    with np.errstate(divide='ignore', invalid='ignore'):
+        integrand = (ft_constant * kinematic_factor) / dEdx
+    integrand[~np.isfinite(integrand)] = 0.0
+
+    # Integrate cumulatively from 0 to E
+    # We use e * 0.001 to convert dE step from keV to MeV to match dEdx (MeV/cm)
+    m_ck = cumulative_trapezoid(integrand, x=e_MeV, initial=0)
+
+    # 5. TDCR Efficiency Calculation
+    if isinstance(L, (float, np.float64, int)):
+        L_A, L_B, L_C = L, L, L    
+    else: # L is a tuple/list of 3 PMT efficiencies
+        L_A, L_B, L_C = L
+    a1, a2, a3 = alpha # Anisotropy factors
+    
+    # Calculate Poisson parameter mu for each PMT
+    mu_A = L_A * m_ck * a1 / 3.0 
+    mu_B = L_B * m_ck * a2 / 3.0 
+    mu_C = L_C * m_ck * a3 / 3.0 
+    
+    # Detection probabilities for each PMT
+    qA = 1 - np.exp(-mu_A)
+    qB = 1 - np.exp(-mu_B)
+    qC = 1 - np.exp(-mu_C)
+    
+    # Coincidence Efficiencies
+    eff_AB = np.sum(p * qA * qB)
+    eff_BC = np.sum(p * qB * qC)
+    eff_AC = np.sum(p * qA * qC)
+    eff_T  = np.sum(p * qA * qB * qC)
+    
+    # Logical Sum of Doubles
+    eff_D = eff_AB + eff_BC + eff_AC - 2 * eff_T
+    # Logical Sum of Singles (Union)
+    eff_S = np.sum(p * (qA + qB + qC - (qA*qB + qB*qC + qA*qC) + qA*qB*qC))
+
+    if any(x == 0 for x in [eff_AB, eff_BC, eff_AC]):
+        res = 1e9
+        eff_S, eff_D, eff_T = 0, 0, 0
+    else:
+        TABmodel = eff_T / eff_AB
+        TBCmodel = eff_T / eff_BC
+        TACmodel = eff_T / eff_AC
+        TDmodel = eff_T / eff_D
+        if isinstance(L, (float, np.float64, int)):
+            res = (TD - TDmodel)**2
+        else:
+            res = (TAB - TABmodel)**2 + (TBC - TBCmodel)**2 + (TAC - TACmodel)**2
+
+    if mode == "res":
+        return res
+    elif mode == "eff":
+        return eff_S, eff_D, eff_T
+
+
+# results = modelCerenkov(1.0, 1, 1, 1, 1, "Sr-89", rho=1.0, Z=7.5, A=14.8, n=1.341, alpha=(1,1,1), mode="eff")
+# print(results)
+
+###
+# BUILD BETA SPECTRA FROM BETASHAPE TO ACCOUNT FOR WALL EFFECT
+###
 
 # N = 1e7
 # buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
 # buildBetaSpectra('C-14', 16, N, prt=True); print('C-14 - done')
+# buildB•etaSpectra('P-32', 16, N, prt=True); print('P-32 - done')
 # buildBetaSpectra('S-35', 16, N, prt=True); print('S-35 - done')
 # buildBetaSpectra('Ca-45', 16, N, prt=True); print('Ca-45 - done')
 # buildBetaSpectra('Ni-63', 16, N, prt=True); print('Ni-63 - done')
@@ -3634,4 +4131,5 @@ def readRecQuenchedEnergies():
 # buildBetaSpectra('Pm-147', 16, N, prt=True); print('Pm-147 - done')
 # buildBetaSpectra('Pu-241', 16, N, prt=True); print('Pu-241 - done')
 # buildBetaSpectra('Co-60', 16, N, prt=True); print('Co-60 - done')
+# buildBetaSpectra('Zr-93', 16, N, prt=True); print('Co-60 - done')
 

@@ -7,13 +7,33 @@
 # to achieve a relative standard uncertainty below 1e-3 on the estimated quenched energy: nE_electron = nE_alpha = 1000
 nE_electron = 1000
 nE_alpha = 1000
+# stopping power model below 20 keV. could be two types the default tan_xia 
+# or other models: the joy_luo, marchal, ashley, kossert_graucarles, rao_reddy
+sp_model = tan_xia
+# Chou quenching parameter to account bimolecular quenching processes (in cm2/MeV2).
+chou_param = 0
 
 ## PROPERTIES OF THE SCINTILLATOR
 # Select a specific LS cocktail, possible choices:
 # Ultima Gold
+# Ultima Gold XR
+# Ultima Gold AB
 # Ultima Gold LLT
+# Insta-Gel Plus
 # Hionic-Fluor
+# ProSafe+
+# ProSafe HC+
+# ProSafe TS+
+# ProSafe LT+
 # Water
+# Toluene
+# Pseudocumene
+# Carbo-Sorb E
+# Pico-Fluor 40
+# Pico-Fluor Plus
+# Permafluor E+
+# Carbo-Sorb/Permafluor (1:1)
+# PXE
 # Or use default value entering False
 ls_cocktail = False
 ## Ultima Gold (Default)
@@ -38,7 +58,7 @@ pNa = 0.000000
 pCl = 0.000071
 # properties on reverse micelles
 # applied reverse micelle correction
-micCorr = True
+micCorr = False
 # diameter of the micelles in nm (possible values: 0.5, 1.0, 2.0, 3.0, 4.0)
 diam_micelle = 2
 # acqueous fraction of the scintillator
