@@ -1862,7 +1862,10 @@ def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle, f_w=fAq, tracer_ty
     E in keV
     """
     if E <= 0:
-        return 0.0, 0.0, np.zeros(num_samples)
+        if num_samples==1:
+            return 0.0
+        else:
+            return 0.0, 0.0, np.zeros(num_samples)
         
     if f_w > 1.0:
         f_w = f_w / 100.0
@@ -1870,9 +1873,15 @@ def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle, f_w=fAq, tracer_ty
     
     if f_w == 0.0:
         arr = np.full(num_samples, E)
-        return E, 0.0, arr
+        if num_samples==1:
+            return E
+        else:
+            return E, 0.0, arr
     if f_w == 1.0:
-        return 0.0, 0.0, np.zeros(num_samples)
+        if num_samples==1:
+            return 0.0
+        else:
+            return 0.0, 0.0, np.zeros(num_samples)
         
     is_hydro = (tracer_type == "hydrophilic")
     
@@ -1888,8 +1897,8 @@ def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle, f_w=fAq, tracer_ty
 
 # out0 = micelleLoss(50)*50
 # out1 = pure_mc_efficient_energy_numba(50, tracer_type = "lipophilic")
-# out = pure_mc_efficient_energy_numba(50, tracer_type = "hydrophilic")
-# print(out0, out1, out)
+# out = pure_mc_efficient_energy_numba(0, tracer_type = "hydrophilic")
+# print(out)
 
 
 #============================================================================================

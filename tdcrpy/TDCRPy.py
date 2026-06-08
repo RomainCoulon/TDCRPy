@@ -288,6 +288,7 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
             if fullMC:
                 efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
             else:
+                print(e_quenching)
                 efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 = tl.detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime)
             
             efficiency_S.append(efficiency0_S)
@@ -1287,20 +1288,22 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
 # plt.show()
 
 
-# L = 1
-# # L = (1.1, 1.05, 1.15)
-# # TD = 0.977667386529166
-# # TD = (0.9767359812638453, 0.9925429293804757, 0.991829757077315, 0.9919970813639295) # source 1
-# # TD = (0.9768862920127371, 0.9928478299182348, 0.9912531441227223, 0.9924249578285456) # source 2
-# # TD = (0.9769014488454436, 0.9918130431206161, 0.9920156754198314, 0.9927119011073454) # source 3
-# TD = (0.9764032345164899, 0.9928417189012709, 0.9911455450383777, 0.9920402844839974) # source 4
-# Rad="Tc-99"
-# pmf_1="1"
-# N = 10000
-# kB =1.4e-5
-# V = 16
-# mode = "eff"
+L = 0.1
+# L = (1.1, 1.05, 1.15)
+# TD = 0.977667386529166
+# TD = (0.9767359812638453, 0.9925429293804757, 0.991829757077315, 0.9919970813639295) # source 1
+# TD = (0.9768862920127371, 0.9928478299182348, 0.9912531441227223, 0.9924249578285456) # source 2
+# TD = (0.9769014488454436, 0.9918130431206161, 0.9920156754198314, 0.9927119011073454) # source 3
+TD = (0.9764032345164899, 0.9928417189012709, 0.9911455450383777, 0.9920402844839974) # source 4
+Rad="Tc-99"
+pmf_1="1"
+N = 10000
+kB =1.4e-5
+V = 16
+mode = "eff"
+tl.modifyMicCorr(True)
 
+out = TDCRPy(L, Rad, "1", N, kB, V, "eff", barp=True)
 
 # # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
 # # # print("result", out)
