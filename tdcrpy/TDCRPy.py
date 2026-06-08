@@ -877,7 +877,8 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                     e_quenching.append(energy_vec[ipart])
                 elif p == "electron" or p == "positron":
                     energy_vec[ipart] = tl.Em_e(energy_vec_initial[ipart]*1e3,energy_vec[ipart]*1e3,kB*1e3,nE_electron)*1e-3
-                    if micCorr: energy_vec[ipart] = energy_vec[ipart]*tl.micelleLoss(energy_vec_initial[ipart])
+                    if micCorr: energy_vec[ipart] = tl.pure_mc_efficient_energy_numba(energy_vec[ipart])
+                    # if micCorr: energy_vec[ipart] = energy_vec[ipart]*tl.micelleLoss(energy_vec_initial[ipart])
                     e_quenching.append(energy_vec[ipart])
                 else:
                     e_quenching.append(0)
@@ -896,7 +897,8 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                         e_quenching2.append(energy_vec2[ipart])
                     elif p == "electron" or p == "positron":
                         energy_vec2[ipart] = tl.Em_e(energy_vec_initial2[ipart]*1e3,energy_vec2[ipart]*1e3,kB*1e3,nE_electron)*1e-3
-                        if micCorr: energy_vec2[ipart] = energy_vec2[ipart]*tl.micelleLoss(energy_vec_initial2[ipart])
+                        if micCorr: energy_vec2[ipart] = tl.pure_mc_efficient_energy_numba(energy_vec2[ipart])
+                        # if micCorr: energy_vec2[ipart] = energy_vec2[ipart]*tl.micelleLoss(energy_vec_initial2[ipart])
                         e_quenching2.append(energy_vec2[ipart])
                     else:
                         e_quenching2.append(0) 

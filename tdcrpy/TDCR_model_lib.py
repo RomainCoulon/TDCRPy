@@ -26,6 +26,7 @@ from tqdm import tqdm
 import tempfile
 import math
 import shutil
+from numba import njit, prange
 
 # --- GLOBAL CONFIG SETUP ---
 config = configparser.ConfigParser()
@@ -1782,6 +1783,113 @@ def micelleLoss(E,*, fAq=fAq, diam_micelle=diam_micelle, e_vec=micelle_E, data=m
     micDiam = np.array([0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0]) #nm
     S=np.interp(E*1e3, e_vec, micelle_S[:,np.argwhere(micDiam==diam_micelle)[0][0]])*(1-fAq)/0.9
     return S
+
+# New Micelle Treatment
+
+# 1. JIT-compiled helper functions (fastmath=True allows C-level float optimizations)
+@njit(fastmath=True)
+def calc_range_numba(E_keV):
+    if E_keV <= 0.0: return 0.0
+    return 40.0 * (E_keV ** 1.75)
+
+@njit(fastmath=True)
+def calc_energy_numba(R_nm):
+    if R_nm <= 0.0: return 0.0
+    return (R_nm / 40.0) ** (1.0 / 1.75)
+
+# 2. The Core Monte Carlo Kernel compiled to machine code
+# Using parallel=True and prange allows multi-threading across your CPU cores
+@njit(fastmath=True, parallel=True)
+def _mc_kernel(E0_keV, r_d_nm, f_w, is_hydrophilic, num_samples):
+    E_deposited_act = np.zeros(num_samples)
+    lambda_act = (4.0 / 3.0) * r_d_nm * (1.0 - f_w) / f_w
+    
+    # prange distributes the particle histories across available CPU threads
+    for i in prange(num_samples):
+        R = calc_range_numba(E0_keV)
+        if R <= 0.0:
+            continue
+            
+        phase_is_active = not is_hydrophilic
+        
+        # ---------------------------------------------------------
+        # ETAPE 1 : Positionnement initial
+        # ---------------------------------------------------------
+        if is_hydrophilic:
+            # Native random generation inside Numba is extremely fast
+            u1 = np.random.rand()
+            r_pos = r_d_nm * (u1 ** (1.0 / 3.0))
+            cos_theta = np.random.uniform(-1.0, 1.0)
+            
+            b = 2.0 * r_pos * cos_theta
+            c = (r_pos ** 2) - (r_d_nm ** 2)
+            delta = max((b ** 2) - (4.0 * c), 0.0)
+            d_esc = (-b + np.sqrt(delta)) / 2.0
+            
+            R -= d_esc
+            phase_is_active = True
+            
+        # ---------------------------------------------------------
+        # ETAPE 2 : Transport markovien
+        # ---------------------------------------------------------
+        e_act_particle = 0.0
+        
+        while R > 0.0:
+            u_rand = np.random.uniform(1e-10, 1.0)
+            
+            if phase_is_active:
+                d_step = -lambda_act * np.log(u_rand)
+            else:
+                d_step = 2.0 * r_d_nm * np.sqrt(u_rand)
+                
+            actual_dist = min(d_step, R)
+            
+            if phase_is_active:
+                E_in = calc_energy_numba(R)
+                E_out = calc_energy_numba(R - actual_dist)
+                e_act_particle += (E_in - E_out)
+                
+            R -= actual_dist
+            phase_is_active = not phase_is_active
+            
+        E_deposited_act[i] = e_act_particle
+        
+    return E_deposited_act
+
+# 3. The Python Wrapper for TDCRPy
+def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle, f_w=fAq, tracer_type="hydrophilic", num_samples=1):
+    """
+    E in keV
+    """
+    if E <= 0:
+        return 0.0, 0.0, np.zeros(num_samples)
+        
+    if f_w > 1.0:
+        f_w = f_w / 100.0
+    f_w = np.clip(f_w, 0.0, 1.0)
+    
+    if f_w == 0.0:
+        arr = np.full(num_samples, E)
+        return E, 0.0, arr
+    if f_w == 1.0:
+        return 0.0, 0.0, np.zeros(num_samples)
+        
+    is_hydro = (tracer_type == "hydrophilic")
+    
+    # Call the JIT compiled kernel
+    # Note: The first execution will take ~1 second as it compiles to C. 
+    # All subsequent calls will be nearly instantaneous.
+    E_deposited_act = _mc_kernel(float(E), float(r_d_nm), float(f_w), is_hydro, int(num_samples))
+    
+    if num_samples==1:
+        return E_deposited_act[0]
+    else:
+        return np.mean(E_deposited_act), np.std(E_deposited_act), E_deposited_act
+
+# out0 = micelleLoss(50)*50
+# out1 = pure_mc_efficient_energy_numba(50, tracer_type = "lipophilic")
+# out = pure_mc_efficient_energy_numba(50, tracer_type = "hydrophilic")
+# print(out0, out1, out)
 
 
 #============================================================================================
