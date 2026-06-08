@@ -877,7 +877,8 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                     e_quenching.append(energy_vec[ipart])
                 elif p == "electron" or p == "positron":
                     energy_vec[ipart] = tl.Em_e(energy_vec_initial[ipart]*1e3,energy_vec[ipart]*1e3,kB*1e3,nE_electron)*1e-3
-                    if micCorr: energy_vec[ipart] = energy_vec[ipart]*tl.micelleLoss(energy_vec_initial[ipart])
+                    if micCorr: energy_vec[ipart] = tl.pure_mc_efficient_energy_numba(energy_vec[ipart])
+                    # if micCorr: energy_vec[ipart] = energy_vec[ipart]*tl.micelleLoss(energy_vec_initial[ipart])
                     e_quenching.append(energy_vec[ipart])
                 else:
                     e_quenching.append(0)
@@ -896,7 +897,8 @@ def TDCRPy(L, Rad, pmf_1, N, kB, V, mode="eff", Display=False, barp=False, Smode
                         e_quenching2.append(energy_vec2[ipart])
                     elif p == "electron" or p == "positron":
                         energy_vec2[ipart] = tl.Em_e(energy_vec_initial2[ipart]*1e3,energy_vec2[ipart]*1e3,kB*1e3,nE_electron)*1e-3
-                        if micCorr: energy_vec2[ipart] = energy_vec2[ipart]*tl.micelleLoss(energy_vec_initial2[ipart])
+                        if micCorr: energy_vec2[ipart] = tl.pure_mc_efficient_energy_numba(energy_vec2[ipart])
+                        # if micCorr: energy_vec2[ipart] = energy_vec2[ipart]*tl.micelleLoss(energy_vec_initial2[ipart])
                         e_quenching2.append(energy_vec2[ipart])
                     else:
                         e_quenching2.append(0) 
@@ -1139,7 +1141,7 @@ def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False,
     return L0, L, eff_S, u_eff_S, eff_D, u_eff_D, eff_T, u_eff_T, eff_AB, u_eff_AB, eff_BC, u_eff_BC, eff_AC, u_eff_AC, eff_D2, u_eff_D2
 
 
-def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds=[0.1, 10]):
+def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds=[0.1, 10], cerenkov=False):
     """
     Caclulation of the efficiency of a TDCR system based on the model TDCRPy (analytical model).
     This function includes optimization procedures from scipy.
@@ -1160,8 +1162,12 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
         maximum number of iterations of the optimization procedures
     xatol : float
         convergence parameter of the Nelder Mead optimisation
-    disp : Boolean
+    disp : boolean
         to display detailed results of the procedure. Default is False.
+    Lbounds : list
+        boundaries of the free parameter for the optimisation procedure. Default is [0.1, 10].
+    cerenkov : boolean
+        set whether the Cerenkov model is used or by default the scintillation model.
 
     Returns
     -------
@@ -1171,52 +1177,40 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
         free parameters (relevant for the asymetric model).
     eff_S : float
         counting efficiency of single events.
-    u_eff_S : float
-        standard uncertainty of eff_S.
     eff_D : float
         counting efficiency of double coincidences.
-    u_eff_D : float
-        standard uncertainty of eff_D.
     eff_T : float
         counting efficiency of triple coincidences.
-    u_eff_T : float
-        standard uncertainty of eff_T.
-    eff_AB : float
-        counting efficiency of coincidences AB.
-    u_eff_AB : float
-        standard uncertainty of eff_AB.
-    eff_BC : float
-        counting efficiency of coincidences BC.
-    u_eff_BC : float
-        standard uncertainty of eff_BC.
-    eff_AC : float
-        counting efficiency of coincidences AC.
-    u_eff_AC : float
-        standard uncertainty of eff_AC.    
-    eff_D : float
-        counting efficiency of double coincidences in C/N configuation (not relevant).
-    u_eff_D : float
-        standard uncertainty of eff_D in C/N configuation (not relevant).
 
     """
     if isinstance(TD, (tuple, list)):
         symm = False
     else:
         symm = True
-
-    if symm: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD, TD, TD, TD, Rad, kB, V, "res", 1e3), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
-    else: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+    
+    if cerenkov:
+        if symm: r=opt.minimize_scalar(tl.modelCerenkov, args=(TD, TD, TD, TD, Rad, "res"), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+        else: r=opt.minimize_scalar(tl.modelCerenkov, args=(TD[0], TD[1], TD[2], TD[3], Rad, "res"), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+    else:
+        if symm: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD, TD, TD, TD, Rad, kB, V, "res", 1e3), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
+        else: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
     L0=r.x
     L=(L0, L0, L0)
     print(f"global free parameter = {L0} keV-1")
-    
     if not symm:
-        r=opt.minimize(tl.modelAnalytical, L, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
+        if cerenkov:
+            r=opt.minimize(tl.modelCerenkov, L, args=(TD[0], TD[1], TD[2], TD[3], Rad, "res"), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
+        else:
+            r=opt.minimize(tl.modelAnalytical, L, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
         L=r.x
         print(f"free parameters = {L} keV-1")   
 
-    if symm: out=tl.modelAnalytical(L, TD, TD, TD, TD, Rad, kB, V, "eff", 1e3)
-    else: out=tl.modelAnalytical(L, TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "eff", 1e3)
+    if cerenkov:
+        if symm: out=tl.modelCerenkov(L, TD, TD, TD, TD, Rad, "eff")
+        else: out=tl.modelCerenkov(L, TD[0], TD[1], TD[2], TD[3], Rad, "eff")
+    else:
+        if symm: out=tl.modelAnalytical(L, TD, TD, TD, TD, Rad, kB, V, "eff", 1e3)
+        else: out=tl.modelAnalytical(L, TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "eff", 1e3)
     eff_S = out[0]
     eff_D = out[1]
     eff_T = out[2]
@@ -1228,7 +1222,6 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
     # eff_AB = out[6]
     # u_eff_AB = out[7]
     # eff_BC = out[8]
-    # u_eff_BC = out[9]
     # eff_AC = out[10]
     # u_eff_AC = out[11]
     
@@ -1236,7 +1229,8 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
 
 
 
-# mode = "eff"                # ask for efficiency calculation
+# mode = "eff"                # ask for efficiency calc
+    # u_eff_BC = out[9]ulation
 # Rad="Cu-67"                 # radionuclides
 # pmf_1="1"                   # relatives fractions of the radionulides
 # N = 1000                    # number of Monte Carlo trials
