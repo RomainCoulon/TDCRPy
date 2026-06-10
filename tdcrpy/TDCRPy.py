@@ -1115,12 +1115,12 @@ def eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7, disp=False,
     else: r=opt.minimize_scalar(objectFct, args=(TD[0], Rad, pmf_1, N, kB, V), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
     L0=r.x
     L=(L0, L0, L0)
-    print(f"global free parameter = {L0} keV-1")
+    # print(f"global free parameter = {L0} keV-1")
     
     if not symm:
         r=opt.minimize(objectFct, L, args=(TD, Rad, pmf_1, N, kB, V), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
         L=r.x
-        print(f"free parameters = {L} keV-1")   
+        # print(f"free parameters = {L} keV-1")   
 
     if symm: out=TDCRPy(L0, Rad, pmf_1, N, kB, V, readRecHist = True)
     else: out=TDCRPy(L, Rad, pmf_1, N, kB, V, readRecHist = True)
@@ -1197,14 +1197,14 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
         else: r=opt.minimize_scalar(tl.modelAnalytical, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='bounded', bounds = (Lbounds[0], Lbounds[1]), options={'disp': disp, 'maxiter':maxiter})
     L0=r.x
     L=(L0, L0, L0)
-    print(f"global free parameter = {L0} keV-1")
+    # print(f"global free parameter = {L0} keV-1")
     if not symm:
         if cerenkov:
             r=opt.minimize(tl.modelCerenkov, L, args=(TD[0], TD[1], TD[2], TD[3], Rad, "res"), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
         else:
             r=opt.minimize(tl.modelAnalytical, L, args=(TD[0], TD[1], TD[2], TD[3], Rad, kB, V, "res", 1e3), method='nelder-mead',options={'xatol': xatol, 'disp': disp, 'maxiter':maxiter})
         L=r.x
-        print(f"free parameters = {L} keV-1")   
+        # print(f"free parameters = {L} keV-1")   
 
     if cerenkov:
         if symm: out=tl.modelCerenkov(L, TD, TD, TD, TD, Rad, "eff")
@@ -1290,25 +1290,25 @@ def effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7, disp=False, Lbounds
 
 # L = 0.1
 # # L = (1.1, 1.05, 1.15)
-# # TD = 0.977667386529166
-# # TD = (0.9767359812638453, 0.9925429293804757, 0.991829757077315, 0.9919970813639295) # source 1
-# # TD = (0.9768862920127371, 0.9928478299182348, 0.9912531441227223, 0.9924249578285456) # source 2
-# # TD = (0.9769014488454436, 0.9918130431206161, 0.9920156754198314, 0.9927119011073454) # source 3
-# TD = (0.9764032345164899, 0.9928417189012709, 0.9911455450383777, 0.9920402844839974) # source 4
+# TD = 0.977667386529166
+# # # TD = (0.9767359812638453, 0.9925429293804757, 0.991829757077315, 0.9919970813639295) # source 1
+# # # TD = (0.9768862920127371, 0.9928478299182348, 0.9912531441227223, 0.9924249578285456) # source 2
+# # # TD = (0.9769014488454436, 0.9918130431206161, 0.9920156754198314, 0.9927119011073454) # source 3
+# # TD = (0.9764032345164899, 0.9928417189012709, 0.9911455450383777, 0.9920402844839974) # source 4
 # Rad="Tc-99"
 # pmf_1="1"
 # N = 10000
 # kB =1.4e-5
 # V = 16
 # mode = "eff"
-# tl.modifyMicCorr(True)
+# # tl.modifyMicCorr(True)
 
-# out = TDCRPy(L, Rad, "1", N, kB, V, "eff", barp=True)
+# # out = TDCRPy(L, Rad, "1", N, kB, V, "eff", barp=False)
 
-# # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
-# # # print("result", out)
-# # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = True)
-# # # print("result", out)
+# # # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = True, readRecHist = False)
+# # # # print("result", out)
+# # # # out = TDCRPy(L, Rad, pmf_1, N, kB, V, Display = False, record = False, readRecHist = True)
+# # # # print("result", out)
 
 # outS = eff(TD, Rad, pmf_1, kB, V, N=10000, L=1, maxiter=20, xatol=1e-7)
 # outA = effA(TD, Rad, pmf_1, kB, V, L=1, maxiter=20, xatol=1e-7)

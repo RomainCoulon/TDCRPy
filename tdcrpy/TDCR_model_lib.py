@@ -396,6 +396,8 @@ def readParameters(disp=False):
     solvantType = inputs.get("solvantType", fallback="Water")
     solvantConc = inputs.getfloat("solvantConc_mol_L", fallback=0.0)
     
+    sigma_micelle = inputs.getfloat("sigma_micelle", fallback=0.0)
+    
     effQuantic0 = inputs.get("effQuantum")
     effQuantic = []
     if effQuantic0:
@@ -427,7 +429,7 @@ def readParameters(disp=False):
         print(f"\t                 P={pP:.4f}, S={pS:.4f}, Na={pNa:.4f}, Cl={pCl:.4f}")
         if micCorr:
             print("\tMicelle correction activated")
-            print(f"\tDensity = {diam_micelle} nm")
+            print(f"\tMicelle diameter = {diam_micelle} nm (Sigma = {sigma_micelle} nm)")
         else:
             print("\tMicelle correction not activated")
 
@@ -445,10 +447,10 @@ def readParameters(disp=False):
     return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
             diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
             optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl,
-            solvantType, solvantConc, sp_model, chou_param)
+            solvantType, solvantConc, sp_model, chou_param, sigma_micelle)
 
 # --- MODIFY FUNCTIONS ---
-
+def modifySigma_micelle(x): update_config_value("sigma_micelle", x)
 def modifynE_electron(x): update_config_value("nE_electron", x)
 def modifynE_alpha(x): update_config_value("nE_alpha", x)
 def modifysp_model(x): update_config_value("sp_model", x)
@@ -544,7 +546,8 @@ def resetConfFile():
 # Read current parameters
 (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
  diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
- optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, solvantType, solvantConc, sp_model, chou_param) = readParameters()
+ optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, 
+ solvantType, solvantConc, sp_model, chou_param, sigma_micelle) = readParameters()
 
 # Calculate normalized atomic array (if needed for legacy code)
 p_atom = np.array([pH, pC, pN, pO, pP, pS, pNa, pCl])
@@ -1786,7 +1789,7 @@ def micelleLoss(E,*, fAq=fAq, diam_micelle=diam_micelle, e_vec=micelle_E, data=m
 
 # New Micelle Treatment
 
-# 1. JIT-compiled helper functions (fastmath=True allows C-level float optimizations)
+# 1. JIT-compiled helper functions
 @njit(fastmath=True)
 def calc_range_numba(E_keV):
     if E_keV <= 0.0: return 0.0
@@ -1797,14 +1800,25 @@ def calc_energy_numba(R_nm):
     if R_nm <= 0.0: return 0.0
     return (R_nm / 40.0) ** (1.0 / 1.75)
 
+@njit(fastmath=True)
+def get_micelle_radius(r_mean, r_sigma):
+    """ Échantillonnage avec rejet (loi normale tronquée) """
+    if r_sigma <= 0.0:
+        return r_mean
+    r = -1.0
+    while r <= 0.0:
+        r = np.random.normal(r_mean, r_sigma)
+    return r
+
 # 2. The Core Monte Carlo Kernel compiled to machine code
-# Using parallel=True and prange allows multi-threading across your CPU cores
 @njit(fastmath=True, parallel=True)
-def _mc_kernel(E0_keV, r_d_nm, f_w, is_hydrophilic, num_samples):
+def _mc_kernel(E0_keV, r_d_nm, sigma_micelle, f_w, is_hydrophilic, num_samples):
     E_deposited_act = np.zeros(num_samples)
+    
+    # Le libre parcours moyen inter-micellaire repose sur le diamètre de Sauter,
+    # approximé ici par le rayon arithmétique moyen pour le modèle macroscopique.
     lambda_act = (4.0 / 3.0) * r_d_nm * (1.0 - f_w) / f_w
     
-    # prange distributes the particle histories across available CPU threads
     for i in prange(num_samples):
         R = calc_range_numba(E0_keV)
         if R <= 0.0:
@@ -1816,13 +1830,13 @@ def _mc_kernel(E0_keV, r_d_nm, f_w, is_hydrophilic, num_samples):
         # ETAPE 1 : Positionnement initial
         # ---------------------------------------------------------
         if is_hydrophilic:
-            # Native random generation inside Numba is extremely fast
+            current_r = get_micelle_radius(r_d_nm, sigma_micelle)
             u1 = np.random.rand()
-            r_pos = r_d_nm * (u1 ** (1.0 / 3.0))
+            r_pos = current_r * (u1 ** (1.0 / 3.0))
             cos_theta = np.random.uniform(-1.0, 1.0)
             
             b = 2.0 * r_pos * cos_theta
-            c = (r_pos ** 2) - (r_d_nm ** 2)
+            c = (r_pos ** 2) - (current_r ** 2)
             delta = max((b ** 2) - (4.0 * c), 0.0)
             d_esc = (-b + np.sqrt(delta)) / 2.0
             
@@ -1840,7 +1854,9 @@ def _mc_kernel(E0_keV, r_d_nm, f_w, is_hydrophilic, num_samples):
             if phase_is_active:
                 d_step = -lambda_act * np.log(u_rand)
             else:
-                d_step = 2.0 * r_d_nm * np.sqrt(u_rand)
+                # Tirage d'une nouvelle taille de micelle à chaque rencontre
+                current_r = get_micelle_radius(r_d_nm, sigma_micelle)
+                d_step = 2.0 * current_r * np.sqrt(u_rand)
                 
             actual_dist = min(d_step, R)
             
@@ -1857,7 +1873,7 @@ def _mc_kernel(E0_keV, r_d_nm, f_w, is_hydrophilic, num_samples):
     return E_deposited_act
 
 # 3. The Python Wrapper for TDCRPy
-def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle, f_w=fAq, tracer_type="hydrophilic", num_samples=1):
+def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle, sigma_r=sigma_micelle, f_w=fAq, tracer_type="hydrophilic", num_samples=1):
     """
     E in keV
     """
@@ -1885,10 +1901,7 @@ def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle, f_w=fAq, tracer_ty
         
     is_hydro = (tracer_type == "hydrophilic")
     
-    # Call the JIT compiled kernel
-    # Note: The first execution will take ~1 second as it compiles to C. 
-    # All subsequent calls will be nearly instantaneous.
-    E_deposited_act = _mc_kernel(float(E), float(r_d_nm), float(f_w), is_hydro, int(num_samples))
+    E_deposited_act = _mc_kernel(float(E), float(r_d_nm), float(sigma_r), float(f_w), is_hydro, int(num_samples))
     
     if num_samples==1:
         return E_deposited_act[0]

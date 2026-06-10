@@ -61,6 +61,8 @@ pCl = 0.000071
 micCorr = False
 # diameter of the micelles in nm (possible values: 0.5, 1.0, 2.0, 3.0, 4.0)
 diam_micelle = 2
+# standard deviation of the micelles diameters
+sigma_micelle = 1
 # acqueous fraction of the scintillator
 fAq = 0.1
 
