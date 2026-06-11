@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = "2.19.3"
+VERSION = "2.20.0"
 
 DESCRIPTION = "TDCR model"
 

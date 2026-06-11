@@ -1,39 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-TDCR_model_lib — Physics library for the TDCRPy package.
+Created on Mon Jan 23 16:04:46 2023
 
-This module provides all the physical sub-models used by
-:mod:`tdcrpy.TDCRPy`:
+Library of function of the TDCRpy code
 
-* **Nuclear-decay data I/O** — PenNuc, BetaShape, ENSDF readers.
-* **Stopping-power models** — Bethe, Tan–Xia, Joy–Luo, and others for
-  electrons; ASTAR tables for alpha particles.
-* **Quenching** — Birks integral for electrons (``Em_e``) and alpha
-  particles (``Em_a``).
-* **Radiation–matter interactions** — energy deposition for beta particles
-  (``energie_dep_beta2``) and photons (``energie_dep_gamma2``).
-* **Detection models** — analytical (``modelAnalytical``), semi-analytical
-  (``detectProbabilities``), fully stochastic (``detectProbabilitiesMC``),
-  and Čerenkov (``modelCerenkov``).
-* **Scintillator mixture properties** — cocktail database and Z/A
-  calculations.
-* **Configuration I/O** — ``readParameters``, ``modifyXxx`` helpers,
-  ``update_config_value``.
-
-Authors
--------
-Romain Coulon, Jialin Hu
-Bureau International des Poids et Mesures (BIPM)
-
-References
-----------
-Coulon et al., *Applied Radiation and Isotopes* (2024),
-https://doi.org/10.1016/j.apradiso.2024.111518
+@author: Romain Coulon, Jialin Hu
+Bureau International des Poids et Mesures
 """
 
-# ---------------------------------------------------------------------------
-# Standard-library and third-party imports
-# ---------------------------------------------------------------------------
+"""
+======= Import Python Module =======
+"""
 import importlib.resources
 from importlib.resources import files
 from importlib.metadata import version
@@ -42,7 +19,7 @@ import numpy as np
 import zipfile as zf
 import re
 import os
-import scipy.interpolate as interp
+import scipy.interpolate as  interp
 from scipy.integrate import cumulative_trapezoid
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -275,38 +252,11 @@ def calculate_aqueous_fractions(solvantType, conc_mol_L):
 
 def calculate_lsc_mixture_properties(cocktail_name, aqueous_mass_fraction, solvantType, solvantConc):
     """
-    Calculate elemental composition, density, effective charge number *Z*,
-    and effective mass number *A* for a liquid scintillation cocktail mixed
-    with an aqueous phase.
-
-    Parameters
-    ----------
-    cocktail_name : str
-        Name of the organic scintillation cocktail (must be a key in
-        :data:`COCKTAIL_DATA`).
-    aqueous_mass_fraction : float or str
-        Mass fraction of the aqueous phase in the mixture (0–1).
-    solvantType : str
-        Type of aqueous solvent: ``"Water"``, ``"HCl"``, ``"HNO3"``, or
-        ``"NaOH"``.
-    solvantConc : float
-        Molar concentration of the solute in the aqueous phase (mol L⁻¹).
-        Ignored when *solvantType* is ``"Water"``.
-
-    Returns
-    -------
-    dict or None
-        Dictionary with keys ``'density_g_cm3'``, ``'effective_Z'``,
-        ``'effective_A_g_mol'``, and ``'atomic_fractions'``, or ``None``
-        if *cocktail_name* is not in :data:`COCKTAIL_DATA`.
-
-    Notes
-    -----
-    Density is estimated using the inverse mixing rule.  Atomic fractions
-    are computed from mass fractions divided by atomic weights.
+    Calculates atomic fractions, density, effective Z, and effective A.
+    Takes into account the specific aqueous solvent composition.
     """
     if cocktail_name not in COCKTAIL_DATA:
-        return None  # BUG FIX: was returning False (falsy but confusing type)
+        return False
 
     cocktail_data = COCKTAIL_DATA[cocktail_name]
     W_aqueous = float(aqueous_mass_fraction)
@@ -564,7 +514,7 @@ def modifyLScocktail(cocktail_name, fAq, solvantType="Water", solvantConc=0.0):
     # 2. Calculate properties using the new solvent info
     lsc_results = calculate_lsc_mixture_properties(cocktail_name, fAq, solvantType, solvantConc)
     
-    if lsc_results is not None:
+    if lsc_results:
         # 3. Batch update all physical properties
         updates = {
             "density": lsc_results["density_g_cm3"],
@@ -587,20 +537,9 @@ def modifyLScocktail(cocktail_name, fAq, solvantType="Water", solvantConc=0.0):
         print(f"Warning: Cocktail '{cocktail_name}' not found. Config not updated.")
 
 def resetConfFile():
-    """
-    Reset the active configuration file to its factory defaults by
-    overwriting ``config.toml`` with the bundled ``configDefault.toml``.
-
-    .. warning::
-        The destination path is the ``config.toml`` inside the installed
-        ``tdcrpy`` package directory, **not** the current working
-        directory.  This ensures the reset works regardless of where the
-        script is executed from.
-    """
-    with importlib.resources.as_file(files("tdcrpy")) as data_path:
-        src = data_path / "configDefault.toml"
-        dst = data_path / "config.toml"   # BUG FIX: was writing to cwd
-        shutil.copyfile(src, dst)
+    with importlib.resources.as_file(files('tdcrpy')) as data_path:
+        file_configDefault = data_path / "configDefault.toml"
+        shutil.copyfile(file_configDefault, "config.toml")
 
 # --- INITIALIZATION ---
 
@@ -885,59 +824,53 @@ micelle_S = np.asarray(micelle_S)
    
 def normalise(p_x):
     """
-    Normalise a probability vector so that its elements sum to 1.
+    This function is used to ensure that the sum of probability is equal to 1.
 
     Parameters
     ----------
-    p_x : array-like of float
-        Raw (possibly un-normalised) probability vector.  Must be
-        non-empty and must not sum to zero.
+    p_x : list
+        vector of probabilities.
 
     Returns
     -------
-    p_array : numpy.ndarray of float
-        Normalised copy of *p_x* with ``sum(p_array) == 1``.
+    p : list
+        normalized probability vector.
 
-    Notes
-    -----
-    Single-element vectors are divided by their own value, which always
-    yields ``[1.0]``.  This matches the behaviour expected by
-    :func:`sampling`.
     """
-    p_array = np.asarray(p_x, dtype=float)
-    total = p_array.sum()
-    if total > 0.0:
-        p_array = p_array / total
-    return p_array
+    p_array = np.array(p_x)
+    if len(p_x)>1:
+        p_somme = sum(p_array)
+        if p_somme>0.0:
+            p_array = p_array/p_somme
+    else:
+        p_somme = p_x[0]
+        p_array = p_array/p_somme
+    p = list(p_array)
+    return p
 
 
 def sampling(p_x):
     """
-    Draw one sample index from a discrete probability distribution.
+    This function aims to sample in a pdf or a pmf
 
     Parameters
     ----------
-    p_x : array-like of float
-        Probability mass function (PMF) or probability density function
-        (PDF) of the discrete random variable *X*.  The values must be
-        non-negative and should sum to 1 (use :func:`normalise` if
-        needed).
+    p_x : float vector
+        Probability Density (or mass) Function (PDF or PMF) of the random variable x.
+
 
     Returns
     -------
-    i : int
-        Zero-based index of the sampled outcome.  For a PDF, the sampled
-        value lies in the bin ``[x[i], x[i+1])``.
-
-    Notes
-    -----
-    The implementation uses :func:`numpy.searchsorted` on the cumulative
-    sum, which is O(log n) and avoids a Python-level loop — roughly 50×
-    faster than the previous explicit loop for typical vector lengths.
+    i : integer
+        index in x pointing the sampled value of the random variable X. in case of pdf use i+1
     """
-    cf = np.cumsum(p_x)
-    trial = np.random.rand()
-    return int(np.searchsorted(cf, trial))
+
+    cf = np.cumsum(p_x) # Cummulative Density (or mass) Function (CDF or CMF)
+    trial = np.random.rand(1)[0] # trial ~ U(0,1)
+    
+    for i, p in enumerate(cf):
+        if p> trial: break
+    return i
 
 def readPenNuc2(rad,z1=z_PenNuc):
     '''
@@ -1319,11 +1252,13 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
         Calculated stopping power in MeV.cm-1.
 
     """
-    _emax_map = {
-        'tan_xia': 20000, 'joy_luo': 20000, 'marchal': 400,
-        'ashley': 100, 'kossert_graucarles': 1000, 'rao_reddy': 413,
-    }
-    emax = _emax_map.get(spmodel, 20000)
+    emax = 20000
+    if spmodel=='tan_xia': emax = 20000
+    if spmodel=='joy_luo': emax = 20000
+    if spmodel=='marchal': emax = 400
+    if spmodel=='ashley': emax = 100
+    if spmodel=='kossert_graucarles': emax = 1000
+    if spmodel=='rao_reddy': emax = 413
     
     # e:eV ;rho: g.cm-3
     mc_2 = 0.5109989 #MeV
@@ -3927,10 +3862,7 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
     elif optionModel == "poisson":
         n_e, n_eCN = Pmodel(e_quenching, [1/3, 1/3, 1/3], [1/2, 1/2], L, mu)
     else:
-        raise ValueError(
-            f"Unknown optical model '{optionModel}'. "
-            "Valid values are 'stochastic-dependence' and 'poisson'."
-        )
+        print("unknown model")        
             
     if sum(n_e>0)>0: efficiency0_S =1
     if sum(n_e>0)>1: efficiency0_D =1
@@ -3944,12 +3876,9 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, me
         if optionModel == "stochastic-dependence":
             n_e2, n_e2CN = stochasOpticModel(e_quenching2, L, mu)
         elif optionModel == "poisson":
-            n_e2, n_e2CN = Pmodel(e_quenching2, [1/3, 1/3, 1/3], [1/2, 1/2], L, mu)
+            n_e2, n_e2CN = Pmodel(e_quenching2, [1/3, 1/3, 1/3], [1/2, 1/2], L, mu) 
         else:
-            raise ValueError(
-                f"Unknown optical model '{optionModel}'. "
-                "Valid values are 'stochastic-dependence' and 'poisson'."
-            )
+            print("unknown model")        
         
         if sum(n_e2>0)>0: efficiency0_S +=1
         if sum(n_e2>0)>1: efficiency0_D +=1
@@ -4006,7 +3935,7 @@ def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_A
     mean_efficiency_BC : float
         detection efficiency of coincidences between channels B and C.
     std_efficiency_BC : float
-        Standard uncertainty of detection efficiency of coincidences between channels B and C.
+        standard uncertainty of Ddetection efficiency of coincidences between channels B and C.
     mean_efficiency_AC : float
         detection efficiency of coincidences between channels A and C.
     std_efficiency_AC : float
@@ -4037,73 +3966,38 @@ def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_A
     
 
 def readRecQuenchedEnergies():
-    """
-    Read the temporary quenched-energy record file (``Temp_E2.txt``) and
-    return per-decay total quenched energies, separated into prompt and
-    delayed components.
-
-    The coincidence resolving time *tau* is loaded from the active
-    configuration to decide whether a particle belongs to the prompt or
-    delayed event window.
-
-    Returns
-    -------
-    Epromt : list of float
-        Sum of quenched energies (keV) for the *prompt* window of each
-        recorded decay.
-    Edelayed : list of float
-        Sum of quenched energies (keV) for the *delayed* window of each
-        recorded decay.  Empty decays yield 0.
-
-    Notes
-    -----
-    The file is written by :func:`tdcrpy.TDCRPy.TDCRPy` when called with
-    ``record=True``.
-    """
-    # Reload tau from config so this function works independently of the
-    # module-level initialisation order.
-    import configparser as _cp
-    _cfg = _cp.ConfigParser()
-    with importlib.resources.as_file(files("tdcrpy").joinpath("config.toml")) as p:
-        _cfg.read(p)
-    tau_ns = _cfg["Inputs"].getfloat("tau")  # coincidence resolving time in ns
-
     temp_dir = tempfile.gettempdir()
     recfile3 = os.path.join(temp_dir, "Temp_E2.txt")
     with open(recfile3, "r") as file:
         Epromt, Edelayed = [], []
         decaym = -1
-        e_quenching: list = []
-        e_quenching2: list = []
-        evenement = 1
-        t1 = 0.0
-
+        e_quenching = []; e_quenching2 = []; evenement=1; t1=0
         for line in file:
-            if line.startswith("#"):
-                continue
-            parts = [x for x in line.split(" ") if x]
-            decay = int(parts[2])
-
-            if decay != decaym:
-                if decay > 0:
-                    Epromt.append(sum(e_quenching))
-                    Edelayed.append(sum(e_quenching2))
-
-                energy = float(parts[1]) * 1e-3
-                t1 = float(parts[4])
-                decaym = decay
-                e_quenching = [energy]
-                e_quenching2 = []
-                evenement = 1
-            else:
-                energy = float(parts[1]) * 1e-3
-                t1 = float(parts[4])
-                if t1 > tau_ns * 1e-9:
-                    evenement += 1
-                    e_quenching2.append(energy)
+            if line[0] != "#":
+                line = line.split(' ')
+                line = [element for element in line if element != ""]
+                decay = int(line[2])                
+                if decay != decaym:
+                    if decay>0:
+                        Epromt.append(sum(e_quenching))
+                        Edelayed.append(sum(e_quenching2))
+                        
+                        
+                        energy = float(line[1])*1e-3
+                        t1 = float(line[4])
+                        decaym = decay
+                        e_quenching = []; e_quenching2 = []
+                        evenement=1
+                        e_quenching.append(energy)
                 else:
-                    e_quenching.append(energy)
-
+                    energy = float(line[1])*1e-3
+                    t1 = float(line[4])
+                    # print(decay, energy, t1, extDT)
+                    if t1 > tau*1e-9:
+                        evenement = evenement + 1
+                        e_quenching2.append(energy)
+                    else:
+                        e_quenching.append(energy)
     return Epromt, Edelayed
 
 
@@ -4162,11 +4056,10 @@ def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n
     # 2. Calculate Stopping Power (S) for the spectrum
     # The stoppingpower function expects Energy in eV and returns MeV/cm.
     # We iterate over 'e' (keV) to build the stopping power array.
-    # Vectorised stopping-power calculation (avoids Python-level loop).
-    dEdx = np.array([
-        stoppingpower(energy_ev, rho=rho, Z=Z, A=A, spmodel="tan_xia")
-        for energy_ev in e_eV
-    ])  # Units: MeV/cm
+    dEdx_list = []
+    for energy_ev in e_eV:
+            dEdx_list.append(stoppingpower(energy_ev, rho=rho, Z=Z, A=A, spmodel="tan_xia"))
+    dEdx = np.array(dEdx_list) # Units: MeV/cm
 
     # 3. Calculate Frank-Tamm Factor
     # 3.1. Calculate the phase velocity beta for every energy point
@@ -4240,4 +4133,25 @@ def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n
         return eff_S, eff_D, eff_T
 
 
+# results = modelCerenkov(1.0, 1, 1, 1, 1, "Sr-89", rho=1.0, Z=7.5, A=14.8, n=1.341, alpha=(1,1,1), mode="eff")
+# print(results)
+
+###
+# BUILD BETA SPECTRA FROM BETASHAPE TO ACCOUNT FOR WALL EFFECT
+###
+
+# N = 1e7
+# buildBetaSpectra('H-3', 16, N, prt=True); print('H-3 - done')
+# buildBetaSpectra('C-14', 16, N, prt=True); print('C-14 - done')
+# buildB•etaSpectra('P-32', 16, N, prt=True); print('P-32 - done')
+# buildBetaSpectra('S-35', 16, N, prt=True); print('S-35 - done')
+# buildBetaSpectra('Ca-45', 16, N, prt=True); print('Ca-45 - done')
+# buildBetaSpectra('Ni-63', 16, N, prt=True); print('Ni-63 - done')
+# buildBetaSpectra('Sr-89', 16, N, prt=True); print('Sr-89 - done')
+# buildBetaSpectra('Sr-90', 16, N, prt=True); print('Sr-90 - done')
+# buildBetaSpectra('Tc-99', 16, N, prt=True); print('Tc-99 - done')
+# buildBetaSpectra('Pm-147', 16, N, prt=True); print('Pm-147 - done')
+# buildBetaSpectra('Pu-241', 16, N, prt=True); print('Pu-241 - done')
+# buildBetaSpectra('Co-60', 16, N, prt=True); print('Co-60 - done')
+# buildBetaSpectra('Zr-93', 16, N, prt=True); print('Co-60 - done')
 
