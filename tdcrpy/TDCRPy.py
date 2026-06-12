@@ -55,55 +55,19 @@ _PURE_BETA_NE = [7000, 1000, 1000, 500, 2000, 500, 200, 500, 1000, 7000]
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
-
 def _relax_atom(daughter_relax, particle_vec, energy_vec, rad,
                 display=False, unc_data=False):
     """
     Propagate atomic-shell relaxation cascades in-place.
-
-    After a vacancy is created (electron capture or internal conversion),
-    this function iteratively samples X-ray emissions and Auger electrons
-    until the atom has fully de-excited, updating *particle_vec* and
-    *energy_vec* accordingly.
-
-    Parameters
-    ----------
-    daughter_relax : str
-        Symbol of the daughter nucleus (e.g. ``"Co-60"``).
-    particle_vec : list of str
-        Mutable list of particle labels for the current decay event.
-        Shell-vacancy tokens (``"Atom_K"``, ``"Atom_L"``, ``"Atom_M"``)
-        are replaced or removed as relaxation proceeds.
-    energy_vec : list of float
-        Mutable list of particle energies (keV) paired with *particle_vec*.
-    rad : str
-        Parent radionuclide label, forwarded to
-        :func:`tdcrpy.TDCR_model_lib.relaxation_atom`.
-    display : bool, optional
-        If ``True``, print unresolved transition labels to stdout.
-        Default is ``False``.
-    unc_data : bool, optional
-        If ``True``, propagate nuclear-data uncertainties through
-        :func:`tdcrpy.TDCR_model_lib.relaxation_atom`. Default is ``False``.
-
-    Returns
-    -------
-    particle_vec : list of str
-        Updated particle-label list (same object as input).
-    energy_vec : list of float
-        Updated energy list (same object as input).
-
-    Notes
-    -----
-    The function modifies *particle_vec* and *energy_vec* **in place** and
-    also returns them for convenience.  Entries marked ``"Atom_K"``,
-    ``"Atom_L"``, or ``"Atom_M"`` signal shell vacancies; entries without
-    an ``"Atom_"`` prefix are physical particles.
+    Now correctly processes all secondary vacancies by dynamically checking list length.
     """
-    for i_part in range(len(particle_vec)):
+    i_part = 0
+    while i_part < len(particle_vec):
         shell = particle_vec[i_part]
+        
         # Only process shell-vacancy tokens.
         if not ("Atom_K" in shell or "Atom_L" in shell or "Atom_M" in shell):
+            i_part += 1
             continue
 
         relaxation = True
@@ -153,26 +117,157 @@ def _relax_atom(daughter_relax, particle_vec, energy_vec, rad,
                 particle_vec[i_part] = "Atom_L"
                 particle_vec.extend(["Atom_M", tf])
                 energy_vec.extend([0, ef])
-                # Loop again.
 
             elif tf == "Auger KXY":
                 particle_vec[i_part] = "Atom_M"
                 particle_vec.extend(["Atom_M", tf])
                 energy_vec.extend([0, ef])
                 relaxation = False
-
+                
             elif tf == "Auger L":
                 particle_vec[i_part] = "Atom_M"
                 particle_vec.extend(["Atom_M", tf])
                 energy_vec.extend([0, ef])
                 relaxation = False
 
-            else:
-                if display:
-                    print(f"\t\t undetermined X or Auger type = {tf}")
+            elif tf == "Auger M" or tf == "XM":
+                # Relaxation concludes
+                particle_vec[i_part] = "Atom_N"
+                particle_vec.append(tf)
+                energy_vec.append(ef)
                 relaxation = False
 
+            else:
+                # Unresolved transition edge-case
+                particle_vec[i_part] = "Atom_N"
+                particle_vec.append(tf)
+                energy_vec.append(ef)
+                relaxation = False
+                if display:
+                    print("Unresolved transition:", tf)
+                    
+        i_part += 1
+
     return particle_vec, energy_vec
+
+
+# def _relax_atom(daughter_relax, particle_vec, energy_vec, rad,
+#                 display=False, unc_data=False):
+#     """
+#     Propagate atomic-shell relaxation cascades in-place.
+
+#     After a vacancy is created (electron capture or internal conversion),
+#     this function iteratively samples X-ray emissions and Auger electrons
+#     until the atom has fully de-excited, updating *particle_vec* and
+#     *energy_vec* accordingly.
+
+#     Parameters
+#     ----------
+#     daughter_relax : str
+#         Symbol of the daughter nucleus (e.g. ``"Co-60"``).
+#     particle_vec : list of str
+#         Mutable list of particle labels for the current decay event.
+#         Shell-vacancy tokens (``"Atom_K"``, ``"Atom_L"``, ``"Atom_M"``)
+#         are replaced or removed as relaxation proceeds.
+#     energy_vec : list of float
+#         Mutable list of particle energies (keV) paired with *particle_vec*.
+#     rad : str
+#         Parent radionuclide label, forwarded to
+#         :func:`tdcrpy.TDCR_model_lib.relaxation_atom`.
+#     display : bool, optional
+#         If ``True``, print unresolved transition labels to stdout.
+#         Default is ``False``.
+#     unc_data : bool, optional
+#         If ``True``, propagate nuclear-data uncertainties through
+#         :func:`tdcrpy.TDCR_model_lib.relaxation_atom`. Default is ``False``.
+
+#     Returns
+#     -------
+#     particle_vec : list of str
+#         Updated particle-label list (same object as input).
+#     energy_vec : list of float
+#         Updated energy list (same object as input).
+
+#     Notes
+#     -----
+#     The function modifies *particle_vec* and *energy_vec* **in place** and
+#     also returns them for convenience.  Entries marked ``"Atom_K"``,
+#     ``"Atom_L"``, or ``"Atom_M"`` signal shell vacancies; entries without
+#     an ``"Atom_"`` prefix are physical particles.
+#     """
+#     for i_part in range(len(particle_vec)):
+#         shell = particle_vec[i_part]
+#         # Only process shell-vacancy tokens.
+#         if not ("Atom_K" in shell or "Atom_L" in shell or "Atom_M" in shell):
+#             continue
+
+#         relaxation = True
+#         while relaxation:
+#             tf, ef = tl.relaxation_atom(
+#                 daughter_relax, rad, particle_vec[i_part], uncData=unc_data
+#             )
+
+#             if tf == "XKA":
+#                 # K→L transition: vacancy moves to L shell.
+#                 particle_vec[i_part] = "Atom_L"
+#                 particle_vec.append(tf)
+#                 energy_vec.append(ef)
+
+#             elif tf == "XKB":
+#                 # K→M transition: vacancy moves to M shell.
+#                 particle_vec[i_part] = "Atom_M"
+#                 particle_vec.append(tf)
+#                 energy_vec.append(ef)
+#                 relaxation = False
+
+#             elif tf == "XL":
+#                 particle_vec[i_part] = "Atom_M"
+#                 particle_vec.append(tf)
+#                 energy_vec.append(ef)
+#                 relaxation = False
+
+#             elif tf == "Auger KLL":
+#                 # Two L-shell vacancies remain after KLL Auger.
+#                 particle_vec[i_part] = "Atom_L"
+#                 tf1, ef1 = tl.relaxation_atom(
+#                     daughter_relax, rad, "Atom_L", uncData=unc_data
+#                 )
+#                 particle_vec.append(tf)
+#                 energy_vec.append(ef)
+#                 particle_vec.append(tf1)
+#                 energy_vec.append(ef1)
+#                 if tf1 == "Auger L":
+#                     particle_vec.extend(["Atom_M", "Atom_M"])
+#                     energy_vec.extend([0, 0])
+#                 else:
+#                     particle_vec.append("Atom_M")
+#                     energy_vec.append(0)
+#                 # Loop again: the new Atom_L vacancy still needs relaxing.
+
+#             elif tf == "Auger KLX":
+#                 particle_vec[i_part] = "Atom_L"
+#                 particle_vec.extend(["Atom_M", tf])
+#                 energy_vec.extend([0, ef])
+#                 # Loop again.
+
+#             elif tf == "Auger KXY":
+#                 particle_vec[i_part] = "Atom_M"
+#                 particle_vec.extend(["Atom_M", tf])
+#                 energy_vec.extend([0, ef])
+#                 relaxation = False
+
+#             elif tf == "Auger L":
+#                 particle_vec[i_part] = "Atom_M"
+#                 particle_vec.extend(["Atom_M", tf])
+#                 energy_vec.extend([0, ef])
+#                 relaxation = False
+
+#             else:
+#                 if display:
+#                     print(f"\t\t undetermined X or Auger type = {tf}")
+#                 relaxation = False
+
+#     return particle_vec, energy_vec
 
 
 def _read_config():
