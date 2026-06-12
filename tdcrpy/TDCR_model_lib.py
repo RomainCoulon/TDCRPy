@@ -367,14 +367,20 @@ def calculate_lsc_mixture_properties(cocktail_name, aqueous_mass_fraction, solva
 """
 ======= CONFIGURATION I/O (Safe Implementation) =======
 """
+_CONFIG_CACHED = False
 
 def get_config_path():
     return files('tdcrpy').joinpath('config.toml')
 
 def read_config_object():
-    global config
+    global config, _CONFIG_CACHED
+    # Return immediately if already cached in memory
+    if _CONFIG_CACHED:
+        return
+        
     with importlib.resources.as_file(get_config_path()) as data_path:
         config.read(data_path)
+    _CONFIG_CACHED = True
 
 def save_config_object():
     with importlib.resources.as_file(get_config_path()) as data_path:
@@ -382,19 +388,24 @@ def save_config_object():
             config.write(configfile)
 
 def update_config_value(key, value, section="Inputs"):
+    global _CONFIG_CACHED
     read_config_object()
     if section not in config:
         config.add_section(section)
     config[section][key] = str(value)
     save_config_object()
+    # Invalidate cache so next read fetches fresh data, if needed
+    _CONFIG_CACHED = False 
 
 def update_config_batch(updates_dict, section="Inputs"):
+    global _CONFIG_CACHED
     read_config_object()
     if section not in config:
         config.add_section(section)
     for key, value in updates_dict.items():
         config[section][key] = str(value)
     save_config_object()
+    _CONFIG_CACHED = False
 
 # --- READING FUNCTIONS ---
 
