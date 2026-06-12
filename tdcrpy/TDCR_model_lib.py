@@ -207,8 +207,8 @@ def calculate_aqueous_fractions(solvantType, conc_mol_L):
     """
     Calculates the mass fractions (w_i) of the aqueous phase based on 
     the solvent type (HCl, HNO3, NaOH, or Water) and concentration.
+    Now accounts for dynamic density shifts from high molar concentrations.
     """
-    # Default to pure water if no type specified
     if not solvantType or solvantType == "False" or solvantType == "None" or solvantType == "Water":
         return COCKTAIL_DATA['Water']['w']
 
@@ -221,30 +221,30 @@ def calculate_aqueous_fractions(solvantType, conc_mol_L):
     MW_O = ATOMIC_WEIGHTS['O']
     MW_N = ATOMIC_WEIGHTS['N']
     MW_Cl = ATOMIC_WEIGHTS['Cl']
-    MW_Na = ATOMIC_WEIGHTS.get('Na', 22.990) # Fetch Sodium
-    
-    MW_Water = 2*MW_H + MW_O
+    MW_Na = ATOMIC_WEIGHTS.get('Na', 22.990) 
     
     # Calculate Solute (Acid/Base) contributions
     if solvantType == "HCl":
         MW_Solute = MW_H + MW_Cl
         solute_elements = {'H': 1 * MW_H / MW_Solute, 'Cl': 1 * MW_Cl / MW_Solute}
+        density_shift_factor = 16.3  # Approx g/L increase per M of HCl
         
     elif solvantType == "HNO3":
         MW_Solute = MW_H + MW_N + 3*MW_O
         solute_elements = {'H': 1 * MW_H / MW_Solute, 'N': 1 * MW_N / MW_Solute, 'O': 3 * MW_O / MW_Solute}
+        density_shift_factor = 32.0  # Approx g/L increase per M of HNO3
         
     elif solvantType == "NaOH":
         MW_Solute = MW_Na + MW_O + MW_H
         solute_elements = {'Na': 1 * MW_Na / MW_Solute, 'O': 1 * MW_O / MW_Solute, 'H': 1 * MW_H / MW_Solute}
+        density_shift_factor = 40.0  # Approx g/L increase per M of NaOH
         
     else:
-        # Fallback to water if unknown string
         return COCKTAIL_DATA['Water']['w']
 
-    # Mixing Calculation (Approximate Density ~ 1000 g/L for the solution base)
     mass_solute = conc * MW_Solute
-    total_mass_solution = 1000.0 
+    # Base water density + empirical density shift from solute concentration
+    total_mass_solution = 998.2 + (conc * density_shift_factor)
     
     # Safety clamp
     if mass_solute >= total_mass_solution:
@@ -254,21 +254,17 @@ def calculate_aqueous_fractions(solvantType, conc_mol_L):
 
     w_water = 1.0 - w_solute
 
-    # Combine Elements
     w_aqueous = {}
     
-    # 1. Contribution from Water
     w_H_water = COCKTAIL_DATA['Water']['w']['H']
     w_O_water = COCKTAIL_DATA['Water']['w']['O']
     
     w_aqueous['H'] = w_water * w_H_water
     w_aqueous['O'] = w_water * w_O_water
     
-    # 2. Contribution from Solute
     for el, w_el_in_solute in solute_elements.items():
         w_aqueous[el] = w_aqueous.get(el, 0.0) + (w_solute * w_el_in_solute)
 
-    # Normalize to ensure sum is exactly 1.0
     return normalizeDic(w_aqueous)
 
 # print(calculate_aqueous_fractions("HCl", 0.1))
