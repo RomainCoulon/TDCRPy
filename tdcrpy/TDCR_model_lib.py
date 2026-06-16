@@ -4245,6 +4245,3 @@ def modelCerenkov(L, TD, TAB, TBC, TAC, rad, mode, rho=1.017, Z=7.55, A=15.05, n
         return res
     elif mode == "eff":
         return eff_S, eff_D, eff_T
-
-
-
