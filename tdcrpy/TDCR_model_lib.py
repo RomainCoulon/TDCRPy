@@ -839,8 +839,8 @@ for i in range(np.size(data_ASTAR)):
 kB_a = [6e-6, 7e-6, 8e-6, 9e-6, 1e-5, 1.1e-5, 1.2e-5, 1.3e-5, 1.4e-5, 1.5e-5] # cm/MeV
 with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
 #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-    Ei_alpha_fid = open(data_path / "inputVecteurAlpha.txt")
-Ei_alpha = Ei_alpha_fid.readlines()
+    with open(data_path / "inputVecteurAlpha.txt") as Ei_alpha_fid:
+        Ei_alpha = Ei_alpha_fid.readlines()
 Ei_alpha = Ei_alpha[0].split(" ")
 Ei_alpha = [float(x) for x in Ei_alpha[:-1]]
 
@@ -849,8 +849,8 @@ for ikB in kB_a:
     with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
     #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
         tamptxt = "QuenchEnergyAlpha_"+str(ikB)+".txt"
-        fid = open(data_path / tamptxt)
-    line = fid.readlines()
+        with open(data_path / tamptxt) as fid:
+            line = fid.readlines()
     line = line[0].split(" ")
     line = [float(x) for x in line[:-1]]
     Em_alpha.append(line)
@@ -858,8 +858,8 @@ for ikB in kB_a:
 kB_e = [0.006, 0.007, 0.008, 0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015] # cm/MeV
 with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
 #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
-    Ei_electron_fid = open(data_path / "inputVecteurElectron.txt")
-Ei_electron = Ei_electron_fid.readlines()
+    with open(data_path / "inputVecteurElectron.txt") as Ei_electron_fid:
+        Ei_electron = Ei_electron_fid.readlines()
 Ei_electron = Ei_electron[0].split(" ")
 Ei_electron = [float(x) for x in Ei_electron[:-1]]
 
@@ -868,8 +868,8 @@ for ikB in kB_e:
     with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
     #with importlib.resources.path('tdcrpy', 'Quenching') as data_path:
         tamptxt = "QuenchEnergyElectron_"+str(ikB)+".txt"
-        fid = open(data_path / tamptxt)
-    line = fid.readlines()
+        with open(data_path / tamptxt) as fid:
+            line = fid.readlines()
     line = line[0].split(" ")
     line = [float(x) for x in line[:-1]]
     Em_electron.append(line)
@@ -878,8 +878,8 @@ for ikB in kB_e:
 micelle_E = []; micelle_S = []
 with importlib.resources.as_file(files('tdcrpy').joinpath('Micelle')) as data_path:
     tamptxt = "faq01.csv"
-    fid = open(data_path / tamptxt)
-line = fid.readlines()
+    with open(data_path / tamptxt) as fid:
+        line = fid.readlines()
 for iline in line:
     iline=iline.replace("\n","").split(";")
     micelle_E.append(float(iline[0]))
@@ -2010,8 +2010,8 @@ def read_matrice(path,niveau):
         formatted response matrix.
 
     """
-    f = open(path)
-    data = f.readlines()
+    with open(path) as f:
+        data = f.readlines()
     if niveau == 0:
         taille_x = 200
         taille_y = 1003

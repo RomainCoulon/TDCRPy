@@ -1,7 +1,11 @@
 numpy
-tqdm
-setuptools
 scipy
-configparser
-importlib.resources
 matplotlib
+tqdm
+numba
+setuptools
+
+[dev]
+pytest
+sphinx
+sphinx-rtd-theme

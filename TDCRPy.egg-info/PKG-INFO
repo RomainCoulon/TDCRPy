@@ -1,32 +1,34 @@
 Metadata-Version: 2.4
 Name: TDCRPy
-Version: 2.19.0
-Summary: TDCR model
-Home-page: https://pypi.org/project/TDCRPy/
-Author: RomainCoulon (Romain Coulon)
-Author-email: <romain.coulon@bipm.org>
+Version: 2.20.5
+Summary: TDCR model — Monte Carlo efficiency estimation for liquid scintillation counting
+Home-page: https://github.com/RomainCoulon/TDCRPy
+Author: Romain Coulon
+Author-email: romain.coulon@bipm.org
 Project-URL: Documentation, https://github.com/RomainCoulon/TDCRPy/
-Keywords: Python,TDCR,Monte-Carlo,radionuclide,scintillation,counting
+Project-URL: Bug Tracker, https://github.com/RomainCoulon/TDCRPy/issues
+Keywords: TDCR,Monte-Carlo,radionuclide,liquid scintillation,counting
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Natural Language :: English
 Classifier: Natural Language :: French
 Classifier: Programming Language :: Python :: 3
-Classifier: Operating System :: Unix
-Classifier: Operating System :: MacOS :: MacOS X
-Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: OS Independent
 Classifier: Topic :: Scientific/Engineering :: Physics
 Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 License-File: LICENCE.md
 Requires-Dist: numpy
-Requires-Dist: tqdm
-Requires-Dist: setuptools
 Requires-Dist: scipy
-Requires-Dist: configparser
-Requires-Dist: importlib.resources
 Requires-Dist: matplotlib
+Requires-Dist: tqdm
+Requires-Dist: numba
+Requires-Dist: setuptools
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: sphinx; extra == "dev"
+Requires-Dist: sphinx-rtd-theme; extra == "dev"
 Dynamic: author
 Dynamic: author-email
 Dynamic: classifier
@@ -36,6 +38,7 @@ Dynamic: home-page
 Dynamic: keywords
 Dynamic: license-file
 Dynamic: project-url
+Dynamic: provides-extra
 Dynamic: requires-dist
 Dynamic: requires-python
 Dynamic: summary
@@ -253,6 +256,4 @@ If you use **TDCRPy** in your work, please cite the following:
 This project is licensed under the **MIT License**.
 
 Copyright © BIPM (Bureau International des Poids et Mesures).
-
-
 
