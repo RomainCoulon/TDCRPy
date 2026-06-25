@@ -177,29 +177,70 @@ td.TDCR_model_lib.readParameters(disp=True)
 | Alpha bins | `modifynE_alpha(n)` | 1000 | — | Integration bins for alpha quenching |
 | Stopping power | `modifysp_model(m)` | `tan_xia` | — | Low-energy model (`tan_xia`, `joy_luo`, …) |
 | Birks parameter | `modifyChou_param(k)` | 0 | cm²/MeV² | Chou bimolecular quenching constant |
-| Density | `modifyDensity(ρ)` | 0.96 | g/cm³ | Scintillator density |
-| Mean Z / A | `modifyZ(z)`, `modifyA(a)` | 5.2 / 11.04 | — | Effective atomic/mass number |
-| Cocktail | `modifyLScocktail(name, fAq)` | False | — | LS cocktail + aqueous fraction |
+| Density | `modifyDensity(ρ)` | 0.98 | g/cm³ | Scintillator density (Ultima Gold) |
+| Mean Z / A | `modifyZ(z)`, `modifyA(a)` | 3.25 / 5.94 | — | Effective atomic/mass number |
+| Cocktail | `modifyLScocktail(name, fAq)` | `Ultima Gold` | — | LS cocktail + aqueous fraction |
 | Micelle correction | `modifyMicCorr(b)` | False | — | Activate reverse-micelle correction |
 | Micelle diameter | `modifyDiam_micelle(d)` | 2 | nm | Mean micelle diameter |
-| Quantum efficiency | `modifyEffQ(q)` | `0.1,0.1,0.1` | — | PMT quantum efficiencies (A, B, C) |
+| Quantum efficiency | `modifyEffQ(q)` | `0.25,0.25,0.25` | — | PMT quantum efficiencies (A, B, C) |
 | Optical transport | `modifyOpticalTransport(b)` | False | — | Enable full optical MC transport |
 | Resolving time | `modifyTau(τ)` | 50 | ns | Coincidence resolving time |
-| Dead time | `modifyDeadTime(t)` | 10 | µs | Extended dead time |
-| Measurement time | `modifyMeasTime(T)` | 20 | min | Measurement duration |
+| Dead time | `modifyDeadTime(t)` | 30 | µs | Extended dead time |
+| Measurement time | `modifyMeasTime(T)` | 60 | min | Measurement duration |
 
 ---
 
-## 📓 Tutorials
+## 📓 Notebooks
+
+### Getting started
 
 | Notebook | Description |
 | :--- | :--- |
-| [tuturial.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/tuturial.ipynb) | End-to-end stochastic model walkthrough |
-| [analyticalModel.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/analyticalModel.ipynb) | Analytical model for pure beta emitters |
-| [opticalTransport.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/opticalTransport.ipynb) | Semi-analytical vs optical MC transport |
-| [changeParameters.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/changeParameters.ipynb) | Modifying physics parameters |
-| [Co-60.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/Co-60.ipynb) | Co-60 efficiency calibration case study |
-| [functional_validation.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/functional_validation.ipynb) | Version validation across nuclides and models |
+| [tuturial.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/tuturial.ipynb) | **End-to-end tutorial**: fixed-L efficiencies, TDCR fitting (symmetric and asymmetric), radionuclide mixtures, full optical MC transport |
+| [changeParameters.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/changeParameters.ipynb) | **Configuration**: how to modify every physics parameter (quenching bins, stopping power model, cocktail, PMT efficiencies, dead time…) |
+
+### Detection models
+
+| Notebook | Description |
+| :--- | :--- |
+| [analyticalModel.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/analyticalModel.ipynb) | **Analytical model** (`effA`): fast beta-spectrum-based efficiency for pure β emitters; symmetric and asymmetric PMT configurations |
+| [CNmethod.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/CNmethod.ipynb) | **CIEMAT/NIST (C/N) method**: 2-PMT coincidence system efficiency using `modelAnalyticalCN` |
+| [cerenkovModel.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/cerenkovModel.ipynb) | **Čerenkov counting model**: Frank-Tamm-based efficiency for high-energy beta emitters |
+| [opticalTransport.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/opticalTransport.ipynb) | **Optical MC transport**: comparison of semi-analytical vs full photon-transport model (`opticalTransport=True`) for H-3, Fe-55, Co-60 |
+
+### Nuclide case studies
+
+| Notebook | Description |
+| :--- | :--- |
+| [H-3.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/H-3.ipynb) | **Tritium (H-3)**: low-energy pure β; analytical and stochastic efficiency, micelle correction effect |
+| [Co-60.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/Co-60.ipynb) | **Co-60**: γ-emitter with complex decay; analytical approximation vs full stochastic model |
+| [Fe-55.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/Fe-55.ipynb) | **Fe-55**: electron-capture nuclide producing Mn K-α X-rays and Auger electrons |
+| [Sr-90_Y-90.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/Sr-90_Y-90.ipynb) | **Sr-90/Y-90 mixture**: secular equilibrium of two pure β emitters (0.546 and 2.28 MeV endpoints) |
+| [Zr-93.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/Zr-93.ipynb) | **Zr-93**: β/EC branching ratio nuclide with X-ray emission |
+
+### Physics sub-models
+
+| Notebook | Description |
+| :--- | :--- |
+| [quenchingModel.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/quenchingModel.ipynb) | **Birks quenching**: quenched energy vs initial energy for electrons and α particles as a function of kB |
+| [stoppingPower.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/stoppingPower.ipynb) | **Stopping power models**: comparison of tan_xia, joy_luo, ashley and other models for electrons |
+| [readBetaSpectrum.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/readBetaSpectrum.ipynb) | **Beta spectra**: reading and visualising deposited-energy spectra from BetaShape + MCNP calculations |
+| [interaction.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/interaction.ipynb) | **Radiation–matter interactions**: photon and electron energy deposition via MCNP response matrices |
+
+### Advanced / experimental
+
+| Notebook | Description |
+| :--- | :--- |
+| [mixture.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/mixture.ipynb) | **Radionuclide mixtures**: efficiency of arbitrary multi-component samples with `pmf_1` fractions |
+| [efficiencyCuve.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/efficiencyCuve.ipynb) | **Efficiency curve (quench curve)**: eff_D and eff_T vs light yield L for a series of kB values |
+| [distrubutionTDCR.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/distrubutionTDCR.ipynb) | **TDCR distribution**: histogram of per-event efficiency values over MC trials; statistical characterisation |
+| [dynamicDecay.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/dynamicDecay.ipynb) | **Dynamic efficiency**: time-dependent efficiency during daughter-nuclide ingrowth (requires `radioactivedecay`) |
+
+### Validation
+
+| Notebook | Description |
+| :--- | :--- |
+| [functional_validation.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/functional_validation.ipynb) | **Cross-version validation**: compare two TDCRPy versions side-by-side for H-3, Fe-55, Co-60, Sr-90, Cd-109 across analytical and stochastic models; configurable `VERSION_REF` / `VERSION_NEW` |
 
 ---
 
