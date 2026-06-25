@@ -1459,6 +1459,8 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
 
 #====================  Fonction pour lire BetaShape   ========================================
 
+_readBetaShape_cache: dict = {}
+
 def readBetaShape(rad,mode,level,z=z_betashape,contH=False):
     """
     This funcion reads the beta spectra calculated by the code BetaShape and published in the DDEP web page.
@@ -1485,6 +1487,10 @@ def readBetaShape(rad,mode,level,z=z_betashape,contH=False):
         the probability density in keV-1.
     
     """
+
+    cache_key = (rad, mode, level, contH)
+    if cache_key in _readBetaShape_cache:
+        return _readBetaShape_cache[cache_key]
 
     Rad = rad.replace('-','')
     if level == 'tot':
@@ -1528,6 +1534,7 @@ def readBetaShape(rad,mode,level,z=z_betashape,contH=False):
     p.pop(-1)
     p /= sum(np.asarray(p)) # normalization
     p = list(p); e = list(e)
+    _readBetaShape_cache[cache_key] = (e, p)
     return e, p
 
 def readBetaShapeInfo(rad,mode,level,z=z_betashape):
@@ -1573,6 +1580,8 @@ def readBetaShapeInfo(rad,mode,level,z=z_betashape):
     return out
 
 
+_readBetaSpectra_cache: dict = {}
+
 def readBetaSpectra(rad):
     """
     This function reads the deposited energy distribution from beta particles.
@@ -1590,30 +1599,34 @@ def readBetaSpectra(rad):
     p : list
         probability density in keV-1.
 
+    Raises
+    ------
+    ValueError
+        If *rad* has no pre-computed beta spectrum file.
     """
-    e = []
-    p = []
-    
-    if rad == "H-3": file_path = sH3
-    elif rad == "C-14": file_path = sC14
-    elif rad == "P-32": file_path = sP32
-    elif rad == "S-35": file_path = sS35
-    elif rad == "Ca-45": file_path = sCa45
-    elif rad == "Ni-63": file_path = sNi63
-    elif rad == "Sr-89": file_path = sSr89
-    elif rad == "Sr-90": file_path = sSr90
-    elif rad == "Tc-99": file_path = sTc99
-    elif rad == "Pm-147": file_path = sPm147
-    elif rad == "Pu-241": file_path = sPu241
-    elif rad == "Co-60": file_path = sCo60
-    elif rad == "Zr-93": file_path = sZr93
+    if rad in _readBetaSpectra_cache:
+        return _readBetaSpectra_cache[rad]
 
+    _spectra_map = {
+        "H-3": sH3, "C-14": sC14, "P-32": sP32, "S-35": sS35,
+        "Ca-45": sCa45, "Ni-63": sNi63, "Sr-89": sSr89, "Sr-90": sSr90,
+        "Tc-99": sTc99, "Pm-147": sPm147, "Pu-241": sPu241,
+        "Co-60": sCo60, "Zr-93": sZr93,
+    }
+    if rad not in _spectra_map:
+        raise ValueError(
+            f"No pre-computed beta spectrum for '{rad}'. "
+            f"Available: {list(_spectra_map)}"
+        )
+    file_path = _spectra_map[rad]
+    e, p = [], []
     with open(file_path, "r") as file:
         for line in file:
             columns = line.strip().split('\t')
             if len(columns) >= 2:
                 e.append(float(columns[0]))
                 p.append(float(columns[1]))
+    _readBetaSpectra_cache[rad] = (e, p)
     return e, p
 
 
@@ -2288,12 +2301,12 @@ def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
         else:
             index = int(e_inci)-1
             
-        if v == 10: 
+        if v == 10:
             matrice = matrice10_1[1:,index]
             matrice0 = matrice10_1[0,index]
-        if v == 13: 
+        elif v == 13:
             matrice = matrice13_1[1:,index]
-            matrice0 = matrice13_1[0,index]        
+            matrice0 = matrice13_1[0,index]
         elif v == 16:
             matrice = matrice16_1[1:,index]
             matrice0 = matrice16_1[0,index]
@@ -2301,36 +2314,36 @@ def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
             matrice = (matrice16_1[1:,index]-matrice10_1[1:,index])*v/6 + (matrice10_1[1:,index]-(matrice16_1[1:,index]-matrice10_1[1:,index])*10/6)
             matrice0 = (matrice16_1[0,index]-matrice10_1[0,index])*v/6 + (matrice10_1[0,index]-(matrice16_1[0,index]-matrice10_1[0,index])*10/6)
         e = ed[:,0]
-    
+
     elif e_inci <= 2000:
         index = int((e_inci-200)/2)
-        if v == 10: 
+        if v == 10:
             matrice = matrice10_2[1:,index]
             matrice0 = matrice10_2[0,index]
-        if v == 13: 
+        elif v == 13:
             matrice = matrice13_2[1:,index]
-            matrice0 = matrice13_2[0,index]  
+            matrice0 = matrice13_2[0,index]
         elif v == 16:
             matrice = matrice16_2[1:,index]
             matrice0 = matrice16_2[0,index]
         else:
-            matrice = (matrice16_2[1:,index]-matrice10_2[1:,index])*v/6 + (matrice10_2[1:,index]-(matrice16_2[1:,index]-matrice10_2[1:,index])*10/6) 
-            matrice0 = (matrice16_2[0,index]-matrice10_2[0,index])*v/6 + (matrice10_2[0,index]-(matrice16_2[0,index]-matrice10_2[0,index])*10/6) 
+            matrice = (matrice16_2[1:,index]-matrice10_2[1:,index])*v/6 + (matrice10_2[1:,index]-(matrice16_2[1:,index]-matrice10_2[1:,index])*10/6)
+            matrice0 = (matrice16_2[0,index]-matrice10_2[0,index])*v/6 + (matrice10_2[0,index]-(matrice16_2[0,index]-matrice10_2[0,index])*10/6)
         e = ed[:,1]
 
     else:
         index = (int(e_inci)-2000)//10
-        if v == 10: 
+        if v == 10:
             matrice = matrice10_3[1:,index]
             matrice0 = matrice10_3[0,index]
-        if v == 13: 
+        elif v == 13:
             matrice = matrice13_3[1:,index]
-            matrice0 = matrice13_3[0,index]  
+            matrice0 = matrice13_3[0,index]
         elif v == 16:
             matrice = matrice16_3[1:,index]
             matrice0 = matrice16_3[0,index]
         else:
-            matrice = (matrice16_3[1:,index]-matrice10_3[1:,index])*v/6 + (matrice10_3[1:,index]-(matrice16_3[1:,index]-matrice10_3[1:,index])*10/6) 
+            matrice = (matrice16_3[1:,index]-matrice10_3[1:,index])*v/6 + (matrice10_3[1:,index]-(matrice16_3[1:,index]-matrice10_3[1:,index])*10/6)
             matrice0 = (matrice16_3[0,index]-matrice10_3[0,index])*v/6 + (matrice10_3[0,index]-(matrice16_3[0,index]-matrice10_3[0,index])*10/6)
         e = ed[:,2]
 
@@ -2342,44 +2355,6 @@ def energie_dep_beta2(e_inci,v,matrice10_1=Matrice10_e_1,matrice10_2=Matrice10_e
     if result  > e_inci: result = e_inci
     return result
 
-
-# def writeEffcurves(x,y,uy,rad,p,kB,SDT):
-#     """
-#     This function writes efficiency curves
-
-#     Parameters
-#     ----------
-#     x : list of floats
-#         Free parameters in keV-1.
-#     y : list of floats
-#         Efficiencies.
-#     uy : list of floats
-#         Standard uncertainties.
-#     rad : string
-#         Radionuclide "Ra-223".
-#     p : string
-#         relative fractions of a mixture.
-#     kB : float
-#         Birks constant in cm/keV.
-#     SDT : string
-#         Type of efficiency ('S', 'D' or 'T').
-
-#     Returns
-#     -------
-#     None.
-
-#     """
-#     if SDT == "S":
-#         file = open("EfficiencyCurves/"+''.join(rad)+"/EffS_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
-#     elif SDT == "D":
-#         file = open("EfficiencyCurves/"+''.join(rad)+"/EffD_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
-#     elif SDT == "T":
-#         file = open("EfficiencyCurves/"+''.join(rad)+"/EffT_"+''.join(rad)+'_'+''.join(str(p))+'_'+str(kB)+".txt","w")
-#     else:
-#         print("Warning: unknown profil type")
-#     for i, xi in enumerate(x):
-#         file.write(str(xi)+" "+str(y[i])+" "+str(uy[i])+"\n")
-#     file.close()
 
 #======================== read ENSDF ============================================
 def transf_name(rad):
@@ -2396,7 +2371,7 @@ def transf_name(rad):
         name of the radionuclide such as 'AG108' that match with PenNuc format.
 
     """
-    name_lis = re.split('(\d+)',rad)
+    name_lis = re.split(r'(\d+)', rad)
     RAD = name_lis[2]+name_lis[1]
     return RAD
 
@@ -3385,9 +3360,9 @@ def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
         pe = 1 - np.exp(-x)          # single-PMT detection probability
         # eff_S = P(at least one of 3 PMTs fires) = 1-(1-pe)^3
         # consistent with detectProbabilities: efficiency0_S = 1 - p_nosingle**3
-        eff_S = sum(p * (1 - (1 - pe) ** 3))
-        eff_T = sum(p * pe ** 3)
-        eff_D = sum(p * (3 * pe ** 2 - 2 * pe ** 3))
+        eff_S = np.dot(p, 1 - (1 - pe) ** 3)
+        eff_T = np.dot(p, pe ** 3)
+        eff_D = np.dot(p, 3 * pe ** 2 - 2 * pe ** 3)
         TDCR_calcul = eff_T / eff_D
         res = (TDCR_calcul - TD) ** 2
     else:
@@ -3396,14 +3371,14 @@ def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
         peA = 1 - np.exp(-L[0] * mu_A * em / 3)
         peB = 1 - np.exp(-L[1] * mu_B * em / 3)
         peC = 1 - np.exp(-L[2] * mu_C * em / 3)
-        eff_AB = sum(p * peA * peB)
-        eff_BC = sum(p * peB * peC)
-        eff_AC = sum(p * peA * peC)
-        eff_T  = sum(p * peA * peB * peC)
+        eff_AB = np.dot(p, peA * peB)
+        eff_BC = np.dot(p, peB * peC)
+        eff_AC = np.dot(p, peA * peC)
+        eff_T  = np.dot(p, peA * peB * peC)
         eff_D  = eff_AB + eff_BC + eff_AC - 2 * eff_T
-        eff_S  = sum(p * (peA + peB + peC
-                          - (eff_AB + eff_BC + eff_AC - 2 * eff_T)
-                          - eff_T))
+        eff_S  = np.dot(p, peA + peB + peC
+                           - (eff_AB + eff_BC + eff_AC - 2 * eff_T)
+                           - eff_T)
         TABmodel = eff_T / eff_AB
         TBCmodel = eff_T / eff_BC
         TACmodel = eff_T / eff_AC
@@ -3433,16 +3408,16 @@ def modelAnalyticalCN(L, rad, kB, V, ne, effQuantic=effQuantic):
     if type(L) == float or isinstance(L, np.float64):
         mu = np.mean(effQuantic)
         pe = 1 - np.exp(-L * mu * em / 2)
-        eff_A = sum(p * pe)
-        eff_B = sum(p * pe)
-        eff_D = sum(p * pe ** 2)
+        eff_A = np.dot(p, pe)
+        eff_B = np.dot(p, pe)
+        eff_D = np.dot(p, pe ** 2)
     else:
         mu_A, mu_B = effQuantic[0], effQuantic[1]
         peA = 1 - np.exp(-L[0] * mu_A * em / 2)
         peB = 1 - np.exp(-L[1] * mu_B * em / 2)
-        eff_A = sum(p * peA)
-        eff_B = sum(p * peB)
-        eff_D = sum(p * peA * peB)
+        eff_A = np.dot(p, peA)
+        eff_B = np.dot(p, peB)
+        eff_D = np.dot(p, peA * peB)
 
     return eff_A, eff_B, eff_D
 
@@ -3623,16 +3598,18 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
     else:
         symm = True
         mu = np.mean(effQuantic)
-         
-    
-        
+
+    # Pre-compute sums once to avoid repeated np.asarray + np.sum inside branches
+    eq  = float(np.sum(e_quenching))
+    eq2 = float(np.sum(e_quenching2)) if evenement != 1 else 0.0
+
     if symm:
         
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
             # TDCR
-            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            p_nosingle = np.exp(-L*mu*eq/3) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
-            p_nosingle2 = np.exp(-L*mu*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            p_nosingle2 = np.exp(-L*mu*eq2/3) # probability to have 0 electrons in a PMT
             p_single2 = 1-p_nosingle2
             efficiency0_S = 1-p_nosingle**3+1-p_nosingle2**3
             efficiency0_T = p_single**3+p_single2**3
@@ -3642,16 +3619,16 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             efficiency0_AC = efficiency0_AB
             
             # CN
-            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            p_nosingle = np.exp(-L*mu*eq/2) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
-            p_nosingle2 = np.exp(-L*mu*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            p_nosingle2 = np.exp(-L*mu*eq2/2) # probability to have 0 electrons in a PMT
             p_single2 = 1-p_nosingle2            
             efficiency0_A2 = p_single+p_single2
             efficiency0_B2 = efficiency0_A2
             efficiency0_D2 = p_single**2+p_single2**2
         else:
             # TDCR
-            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            p_nosingle = np.exp(-L*mu*eq/3) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT
             efficiency0_S = 1-p_nosingle**3
             efficiency0_T = p_single**3
@@ -3661,7 +3638,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             efficiency0_AC = efficiency0_AB
             
             # CN
-            p_nosingle = np.exp(-L*mu*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            p_nosingle = np.exp(-L*mu*eq/2) # probability to have 0 electrons in a PMT
             p_single = 1-p_nosingle                                    # probability to have at least 1 electrons in a PMT            
             efficiency0_A2 = p_single
             efficiency0_B2 = efficiency0_A2
@@ -3669,18 +3646,18 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
     else:
         if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
             # TDCR            
-            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pA_nosingle = np.exp(-L[0]*mu[0]*eq/3) # probability to have 0 electrons in a PMT
             pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*eq/3) # probability to have 0 electrons in a PMT
             pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pC_nosingle = np.exp(-L[2]*mu[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pC_nosingle = np.exp(-L[2]*mu[2]*eq/3) # probability to have 0 electrons in a PMT
             pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
             
-            pA_nosingle2 = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pA_nosingle2 = np.exp(-L[0]*mu[0]*eq2/3) # probability to have 0 electrons in a PMT
             pA_single2 = 1-pA_nosingle2                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle2 = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pB_nosingle2 = np.exp(-L[1]*mu[1]*eq2/3) # probability to have 0 electrons in a PMT
             pB_single2 = 1-pB_nosingle2                                    # probability to have at least 1 electrons in a PMT
-            pC_nosingle2 = np.exp(-L[2]*mu[2]*np.sum(np.asarray(e_quenching2))/3) # probability to have 0 electrons in a PMT
+            pC_nosingle2 = np.exp(-L[2]*mu[2]*eq2/3) # probability to have 0 electrons in a PMT
             pC_single2 = 1-pC_nosingle2                                    # probability to have at least 1 electrons in a PMT
             
             efficiency0_A2 = pA_single+pA_single2
@@ -3695,24 +3672,24 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             
             
             # CN
-            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pA_nosingle = np.exp(-L[0]*mu[0]*eq/2) # probability to have 0 electrons in a PMT
             pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*eq/2) # probability to have 0 electrons in a PMT
             pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
             
-            pA_nosingle2 = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            pA_nosingle2 = np.exp(-L[0]*mu[0]*eq2/2) # probability to have 0 electrons in a PMT
             pA_single2 = 1-pA_nosingle2                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle2 = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching2))/2) # probability to have 0 electrons in a PMT
+            pB_nosingle2 = np.exp(-L[1]*mu[1]*eq2/2) # probability to have 0 electrons in a PMT
             pB_single2 = 1-pB_nosingle2                                    # probability to have at least 1 electrons in a PMT
 
             efficiency0_D2 = pA_single*pB_single+pA_single2*pB_single2
         else:
             # TDCR
-            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pA_nosingle = np.exp(-L[0]*mu[0]*eq/3) # probability to have 0 electrons in a PMT
             pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*eq/3) # probability to have 0 electrons in a PMT
             pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pC_nosingle = np.exp(-L[2]*mu[2]*np.sum(np.asarray(e_quenching))/3) # probability to have 0 electrons in a PMT
+            pC_nosingle = np.exp(-L[2]*mu[2]*eq/3) # probability to have 0 electrons in a PMT
             pC_single = 1-pC_nosingle                                    # probability to have at least 1 electrons in a PMT
                 
             efficiency0_A2 = pA_single
@@ -3725,9 +3702,9 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
             efficiency0_S = 1-pA_nosingle*pB_nosingle*pC_nosingle
             
             # CN
-            pA_nosingle = np.exp(-L[0]*mu[0]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pA_nosingle = np.exp(-L[0]*mu[0]*eq/2) # probability to have 0 electrons in a PMT
             pA_single = 1-pA_nosingle                                    # probability to have at least 1 electrons in a PMT
-            pB_nosingle = np.exp(-L[1]*mu[1]*np.sum(np.asarray(e_quenching))/2) # probability to have 0 electrons in a PMT
+            pB_nosingle = np.exp(-L[1]*mu[1]*eq/2) # probability to have 0 electrons in a PMT
             pB_single = 1-pB_nosingle                                    # probability to have at least 1 electrons in a PMT            
             efficiency0_D2 = pA_single*pB_single
             
