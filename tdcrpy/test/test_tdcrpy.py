@@ -874,32 +874,31 @@ class TestValidatedAnalytical(unittest.TestCase):
                                msg=f'{rad} eff_T mismatch')
 
     def test_ref_H3_analytical(self):
-        # v2.20.7+ reference (L is photon yield, mu=0.1 applied internally)
+        # eff_S = 1-(1-pe)^3, consistent with stochastic detectProbabilities.
         self._check('H-3',
-                    exp_S=0.54533, exp_D=0.55985, exp_T=0.28875)
+                    exp_S=0.78739, exp_D=0.55985, exp_T=0.28875)
 
     def test_ref_Sr90_analytical(self):
         self._check('Sr-90',
-                    exp_S=0.98099, exp_D=0.98286, exp_T=0.96929)
+                    exp_S=0.99083, exp_D=0.98286, exp_T=0.96929)
 
     def test_ref_Co60_analytical(self):
         # Beta-spectrum approximation only (no gammas in analytical model).
         self._check('Co-60',
-                    exp_S=0.96167, exp_D=0.96555, exp_T=0.93753)
+                    exp_S=0.98192, exp_D=0.96555, exp_T=0.93753)
 
     def test_ref_H3_effA(self):
-        # L0 is now photon yield → 10× larger than the old photoelectron yield.
-        # Efficiencies are unchanged (same physical scenario).
+        # L0 = photon yield; eff_S = 1-(1-pe)^3 (at least one PMT fires).
         L0, _, eff_S, eff_D, eff_T = TDCRPy_mod.effA(0.5, 'H-3', '1', _KB, _V)
         self.assertAlmostEqual(L0,    8.5445, delta=0.05,  msg='H-3 L0 (photon yield)')
-        self.assertAlmostEqual(eff_S, 0.5317, delta=0.005, msg='H-3 eff_S')
+        self.assertAlmostEqual(eff_S, 0.7787, delta=0.005, msg='H-3 eff_S')
         self.assertAlmostEqual(eff_D, 0.5443, delta=0.005, msg='H-3 eff_D')
         self.assertAlmostEqual(eff_T, 0.2721, delta=0.005, msg='H-3 eff_T')
 
     def test_ref_Co60_effA(self):
         L0, _, eff_S, eff_D, eff_T = TDCRPy_mod.effA(0.977, 'Co-60', '1', _KB, _V)
         self.assertAlmostEqual(L0,    11.809, delta=0.10,  msg='Co-60 L0 (photon yield)')
-        self.assertAlmostEqual(eff_S, 0.9685, delta=0.005, msg='Co-60 eff_S')
+        self.assertAlmostEqual(eff_S, 0.9847, delta=0.005, msg='Co-60 eff_S')
         self.assertAlmostEqual(eff_D, 0.9716, delta=0.005, msg='Co-60 eff_D')
         self.assertAlmostEqual(eff_T, 0.9492, delta=0.005, msg='Co-60 eff_T')
 

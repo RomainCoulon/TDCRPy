@@ -3381,9 +3381,11 @@ def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
     if type(L) == float or isinstance(L, np.float64):
         # Symmetric: single mean quantum efficiency
         mu = np.mean(effQuantic)
-        x = L * mu * em / 3          # photoelectrons per PMT per decay
-        pe = 1 - np.exp(-x)
-        eff_S = sum(p * pe)
+        x = L * mu * em / 3          # mean photoelectrons per PMT per decay
+        pe = 1 - np.exp(-x)          # single-PMT detection probability
+        # eff_S = P(at least one of 3 PMTs fires) = 1-(1-pe)^3
+        # consistent with detectProbabilities: efficiency0_S = 1 - p_nosingle**3
+        eff_S = sum(p * (1 - (1 - pe) ** 3))
         eff_T = sum(p * pe ** 3)
         eff_D = sum(p * (3 * pe ** 2 - 2 * pe ** 3))
         TDCR_calcul = eff_T / eff_D
