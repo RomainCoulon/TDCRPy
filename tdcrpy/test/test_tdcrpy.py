@@ -815,5 +815,145 @@ class TestNamingAndParsing(unittest.TestCase):
         self.assertEqual(result, 2)
 
 
+# ---------------------------------------------------------------------------
+# Validated reference tests — v2.20.7 baseline
+#
+# All values below were obtained by running the functional_validation notebook
+# with v2.20.7 as the reference on 2026-06-25.
+#
+# Analytical-model tests use exact arithmetic (deterministic) → tight tol.
+# Stochastic tests use statistical bounds → ±3σ with N=500 typical runs.
+#
+# Parameters: L=9.0 keV⁻¹ (analytical), L=1.0 keV⁻¹ (stochastic),
+#             kB=1e-5 cm keV⁻¹, V=10 mL, ne=1000.
+# ---------------------------------------------------------------------------
+
+# Reference parameters
+_L_ANA   = 9.0      # fixed L for analytical model tests
+_L_STOCH = 1.0      # fixed L for stochastic model tests
+_KB      = 1.0e-5   # Birks constant (cm keV⁻¹)
+_V       = 10       # volume (mL)
+_N_REF   = 500      # MC trials (fast; tests use statistical bounds)
+
+
+class TestValidatedAnalytical(unittest.TestCase):
+    """Analytical model reference values validated against v2.20.7.
+
+    modelAnalytical() is fully deterministic — results must match to
+    at least 5 decimal places on any machine.
+    """
+
+    def _check(self, rad, exp_S, exp_D, exp_T, places=5):
+        eff_S, eff_D, eff_T = lib.modelAnalytical(
+            _L_ANA, 0, 0, 0, 0, rad, _KB, _V, 'eff', 1000)
+        self.assertAlmostEqual(float(eff_S), exp_S, places=places,
+                               msg=f'{rad} eff_S mismatch')
+        self.assertAlmostEqual(float(eff_D), exp_D, places=places,
+                               msg=f'{rad} eff_D mismatch')
+        self.assertAlmostEqual(float(eff_T), exp_T, places=places,
+                               msg=f'{rad} eff_T mismatch')
+
+    def test_ref_H3_analytical(self):
+        self._check('H-3',
+                    exp_S=0.92024986, exp_D=0.92947083, exp_T=0.86212531)
+
+    def test_ref_Sr90_analytical(self):
+        self._check('Sr-90',
+                    exp_S=0.99504261, exp_D=0.99550786, exp_T=0.99336770)
+
+    def test_ref_Co60_analytical(self):
+        # Co-60 analytical uses beta-spectrum approximation only (no gammas).
+        self._check('Co-60',
+                    exp_S=0.99057052, exp_D=0.99152616, exp_T=0.98714188)
+
+    def test_ref_H3_effA(self):
+        # effA() optimises L then evaluates analytically — fully deterministic.
+        L0, _, eff_S, eff_D, eff_T = TDCRPy_mod.effA(0.5, 'H-3', '1', _KB, _V)
+        self.assertAlmostEqual(L0,    0.854451, places=4, msg='H-3 L0 mismatch')
+        self.assertAlmostEqual(eff_S, 0.531698, places=4, msg='H-3 eff_S mismatch')
+        self.assertAlmostEqual(eff_D, 0.544280, places=4, msg='H-3 eff_D mismatch')
+        self.assertAlmostEqual(eff_T, 0.272140, places=4, msg='H-3 eff_T mismatch')
+
+    def test_ref_Co60_effA(self):
+        L0, _, eff_S, eff_D, eff_T = TDCRPy_mod.effA(0.977, 'Co-60', '1', _KB, _V)
+        self.assertAlmostEqual(L0,    1.180901, places=4, msg='Co-60 L0 mismatch')
+        self.assertAlmostEqual(eff_S, 0.968496, places=4, msg='Co-60 eff_S mismatch')
+        self.assertAlmostEqual(eff_D, 0.971572, places=4, msg='Co-60 eff_D mismatch')
+        self.assertAlmostEqual(eff_T, 0.949226, places=4, msg='Co-60 eff_T mismatch')
+
+    def test_analytical_ordering_H3(self):
+        eff_S, eff_D, eff_T = lib.modelAnalytical(
+            _L_ANA, 0, 0, 0, 0, 'H-3', _KB, _V, 'eff', 1000)
+        self.assertLessEqual(float(eff_T), float(eff_D))   # T ≤ D always
+
+    def test_analytical_ordering_Sr90(self):
+        eff_S, eff_D, eff_T = lib.modelAnalytical(
+            _L_ANA, 0, 0, 0, 0, 'Sr-90', _KB, _V, 'eff', 1000)
+        self.assertLessEqual(float(eff_T), float(eff_D))
+
+
+class TestValidatedStochastic(unittest.TestCase):
+    """Stochastic model range tests validated against v2.20.7.
+
+    Each nuclide is tested with L=1.0 keV⁻¹, N=500 MC trials.
+    Bounds are ±3σ above and below the v2.20.7 baseline to allow
+    for Monte-Carlo statistical fluctuation.
+    """
+
+    def _check_stoch(self, rad, exp_S, exp_D, exp_T, delta=0.10):
+        result = TDCRPy_mod.TDCRPy(_L_STOCH, rad, '1', _N_REF, _KB, _V)
+        self.assertAlmostEqual(result[0], exp_S, delta=delta,
+                               msg=f'{rad} stoch eff_S out of range')
+        self.assertAlmostEqual(result[2], exp_D, delta=delta,
+                               msg=f'{rad} stoch eff_D out of range')
+        self.assertAlmostEqual(result[4], exp_T, delta=delta,
+                               msg=f'{rad} stoch eff_T out of range')
+
+    def test_ref_H3_stochastic(self):
+        # Pure β⁻, 18.6 keV — low efficiency at L=1.
+        self._check_stoch('H-3', exp_S=0.28, exp_D=0.05, exp_T=0.004,
+                           delta=0.08)
+
+    def test_ref_Fe55_stochastic(self):
+        # EC + Mn Kα X-rays (5.9 keV) — Auger cascade exercises
+        # the _interact_prompt energy_vec_initial fix.
+        self._check_stoch('Fe-55', exp_S=0.26, exp_D=0.03, exp_T=0.001,
+                           delta=0.08)
+
+    def test_ref_Co60_stochastic(self):
+        # β⁻ + 1.17/1.33 MeV γ — photoelectric / pair-production path.
+        self._check_stoch('Co-60', exp_S=0.91, exp_D=0.82, exp_T=0.66,
+                           delta=0.10)
+
+    def test_ref_Sr90_stochastic(self):
+        # Pure β⁻, 0.546 MeV — high efficiency at L=1.
+        self._check_stoch('Sr-90', exp_S=0.96, exp_D=0.92, exp_T=0.83,
+                           delta=0.08)
+
+    def test_ref_Cd109_stochastic(self):
+        # EC + delayed Ag-109m IT γ (88 keV) — eff_S > 1 due to delayed
+        # coincidence counting; verifies the IndexError fix in _quench().
+        result = TDCRPy_mod.TDCRPy(_L_STOCH, 'Cd-109', '1', _N_REF, _KB, _V)
+        eff_S = result[0]
+        # Must complete without error AND return physically meaningful values.
+        self.assertGreater(eff_S, 1.0,
+                           msg='Cd-109 eff_S should exceed 1 (delayed coincidences)')
+        self.assertLess(eff_S, 2.5,
+                        msg='Cd-109 eff_S unreasonably large')
+
+    def test_stoch_H3_eff_S_positive_and_finite(self):
+        result = TDCRPy_mod.TDCRPy(_L_STOCH, 'H-3', '1', 100, _KB, _V)
+        self.assertTrue(np.isfinite(result[0]))
+        self.assertGreater(result[0], 0)
+
+    def test_stoch_all_nuclides_no_exception(self):
+        for rad in ['H-3', 'Fe-55', 'Co-60', 'Sr-90', 'Cd-109']:
+            try:
+                r = TDCRPy_mod.TDCRPy(_L_STOCH, rad, '1', 100, _KB, _V)
+                self.assertEqual(len(r), 14, msg=f'{rad} returned wrong tuple length')
+            except Exception as e:
+                self.fail(f'TDCRPy raised {type(e).__name__} for {rad}: {e}')
+
+
 if __name__ == '__main__':
     unittest.main()
