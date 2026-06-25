@@ -69,12 +69,11 @@ fAq = 0.1
 ## OPTICAL PROPERTIES
 # Quantum efficiency
 effQuantum = 0.25, 0.25, 0.25
-# Optical MC model
-optionModel = stochastic-dependence
-# fraction of diffused scintillation photons
-diffP = 1.0
-# relative distance from vials border to PMT entrance
-PMTspace = 0.1
+# Enable full optical Monte-Carlo transport (opticalTransport=True) instead of
+# the semi-analytical detection model. When True, photon emission, isotropic
+# propagation (equal splitting [1/3,1/3,1/3] for TDCR, [1/2,1/2] for C/N),
+# and photoelectron conversion are all sampled stochastically.
+opticalTransport = False
 
 ## PROPERTIES OF THE COUNTER
 # Coincidence resolving time (ns)

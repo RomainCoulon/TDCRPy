@@ -311,7 +311,7 @@ def TDCRPy(
     record=False,
     readRecHist=False,
     uncData=False,
-    fullMC=False,
+    opticalTransport=False,
     # Legacy capitalisation aliases kept for backward compatibility.
     Display=None,
 ):
@@ -364,10 +364,12 @@ def TDCRPy(
     uncData : bool, optional
         If ``True``, sample nuclear-data uncertainties for each trial
         (propagation of nuclear-data uncertainty).  Default is ``False``.
-    fullMC : bool, optional
-        If ``True``, use a fully stochastic photon-transport model
-        (:func:`~tdcrpy.TDCR_model_lib.detectProbabilitiesMC`) instead of
-        the semi-analytical default.  Default is ``False``.
+    opticalTransport : bool, optional
+        If ``True``, use the full optical Monte-Carlo transport model
+        (:func:`~tdcrpy.TDCR_model_lib.detectProbabilitiesMC`) — photons
+        are sampled, distributed equally across PMTs and converted to
+        photoelectrons stochastically.  Default is ``False`` (semi-analytical
+        detection model).
     Display : bool or None, optional
         *Deprecated alias* for *display*.  If not ``None``, overrides
         *display*.
@@ -457,7 +459,7 @@ def TDCRPy(
     # ------------------------------------------------------------------ #
     if readRecHist:
         return _run_from_history(
-            L, N, tau, ext_dt, meas_time, fullMC, mode
+            L, N, tau, ext_dt, meas_time, opticalTransport, mode
         )
 
     # ------------------------------------------------------------------ #
@@ -621,7 +623,7 @@ def TDCRPy(
             t1 = 0
 
         detect_fn = (
-            tl.detectProbabilitiesMC if fullMC else tl.detectProbabilities
+            tl.detectProbabilitiesMC if opticalTransport else tl.detectProbabilities
         )
         (
             eff0_S, eff0_D, eff0_T,
@@ -1072,7 +1074,7 @@ def _quench(particle_vec, energy_vec, energy_vec_initial,
     return e_quenching
 
 
-def _run_from_history(L, N, tau, ext_dt, meas_time, fullMC, mode):
+def _run_from_history(L, N, tau, ext_dt, meas_time, opticalTransport, mode):
     """
     Replay detection-probability computation from a previously recorded
     quenched-energy history file (``Temp_E2.txt``).
@@ -1089,8 +1091,8 @@ def _run_from_history(L, N, tau, ext_dt, meas_time, fullMC, mode):
         Extended dead time (µs).
     meas_time : float
         Measurement time (min).
-    fullMC : bool
-        Use the fully stochastic detection model when ``True``.
+    opticalTransport : bool
+        Use the full optical MC transport model when ``True``.
     mode : str
         ``"eff"`` or ``"dis"``.
 
@@ -1103,7 +1105,7 @@ def _run_from_history(L, N, tau, ext_dt, meas_time, fullMC, mode):
 
     eff_lists = {k: [] for k in ("S", "D", "T", "AB", "BC", "AC", "D2")}
     detect_fn = (
-        tl.detectProbabilitiesMC if fullMC else tl.detectProbabilities
+        tl.detectProbabilitiesMC if opticalTransport else tl.detectProbabilities
     )
 
     with open(recfile3, "r") as f:

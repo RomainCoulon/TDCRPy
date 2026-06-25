@@ -264,9 +264,9 @@ class TestScintillatorComposition(unittest.TestCase):
 class TestConfiguration(unittest.TestCase):
     """Tests for configuration I/O functions."""
 
-    def test_readParameters_returns_tuple_of_31(self):
+    def test_readParameters_returns_tuple_of_29(self):
         result = lib.readParameters()
-        self.assertEqual(len(result), 31)
+        self.assertEqual(len(result), 29)
 
     def test_readParameters_nE_electron_is_int(self):
         nE_electron = lib.readParameters()[0]
@@ -570,33 +570,12 @@ class TestPhysicsModels(unittest.TestCase):
         particules, energies, vacancies, par_type = lib.relaxation_atom_ph('Atom_K', 'H', 10)
         self.assertEqual(len(particules), 0)
 
-    def test_stochasticDepTD_returns_3_values(self):
-        pa, pb, pc = lib.stochasticDepTD(1.0, 0.1)
-        self.assertIsInstance(float(pa), float)
-        self.assertIsInstance(float(pb), float)
-        self.assertIsInstance(float(pc), float)
-
-    def test_stochasticDepTD_values_in_range(self):
-        for _ in range(10):
-            pa, pb, pc = lib.stochasticDepTD(1.0, 0.1)
-            self.assertGreaterEqual(float(pa), 0)
-            self.assertLessEqual(float(pa), 1)
-
-    def test_stochasticDepCN_returns_2_values(self):
-        pa, pb = lib.stochasticDepCN(1.0, 0.1)
-        self.assertIsInstance(float(pa), float)
-        self.assertIsInstance(float(pb), float)
-
-    def test_stochasticDepCN_values_in_range(self):
-        for _ in range(10):
-            pa, pb = lib.stochasticDepCN(1.0, 0.1)
-            self.assertGreaterEqual(float(pa), 0)
-            self.assertLessEqual(float(pa), 1)
-
-    def test_stochasticDepCN_sums_to_one(self):
-        for _ in range(10):
-            pa, pb = lib.stochasticDepCN(1.0, 0.1)
-            self.assertAlmostEqual(float(pa) + float(pb), 1.0, places=10)
+    def test_detectProbabilitiesMC_returns_7tuple(self):
+        # opticalTransport path — uniform photon splitting [1/3,1/3,1/3]
+        result = lib.detectProbabilitiesMC(1.0, [50.0], [0.0], 0, 1, 10, 20)
+        self.assertEqual(len(result), 7)
+        for v in result:
+            self.assertGreaterEqual(v, 0)
 
 
 class TestStoppingPowerVariants(unittest.TestCase):

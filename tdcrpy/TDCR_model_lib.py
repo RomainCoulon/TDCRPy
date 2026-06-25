@@ -47,7 +47,6 @@ from scipy.integrate import cumulative_trapezoid
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import tempfile
-import math
 import shutil
 from numba import njit, prange
 
@@ -463,10 +462,8 @@ def readParameters(disp=False):
             if iS and iS != 'None':
                 effQuantic.append(float(iS))
 
-    optionModel = inputs.get("optionModel")
-    diffP = inputs.getfloat("diffP")
-    PMTspace = inputs.getfloat("PMTspace")
-    
+    opticalTransport = inputs.getboolean("opticalTransport", fallback=False)
+
     if disp:
         print("QUENCHING NUMERICAL CALCULATION")
         print("\tNumber of bins to discretize")
@@ -494,16 +491,16 @@ def readParameters(disp=False):
         print(f"\tQuantum efficiency of PMT A = {effQuantic[0]:.3f}")
         print(f"\tQuantum efficiency of PMT B = {effQuantic[1]:.3f}")
         print(f"\tQuantum efficiency of PMT C = {effQuantic[2]:.3f}")
+        print(f"\tOptical transport (full MC) = {opticalTransport}")
 
         print("\nPROPERTIES OF THE COUNTER")
         print(f"\tCoincidence resolving time = {tau} ns")
         print(f"\tExtended dead time = {extDT} µs")
         print(f"\tMeasurement time = {measTime} min")
     
-    # Added solvantType and solvantConc to return tuple
-    return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
-            diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
-            optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl,
+    return (nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e,
+            diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic,
+            opticalTransport, pH, pC, pN, pO, pP, pS, pNa, pCl,
             solvantType, solvantConc, sp_model, chou_param, sigma_micelle)
 
 # --- MODIFY FUNCTIONS ---
@@ -552,9 +549,7 @@ def modifyDeadTime(x): update_config_value("extDT", x)
 def modifyMeasTime(x): update_config_value("measTime", x)
 def modifyMicCorr(x): update_config_value("micCorr", x)
 def modifyEffQ(x): update_config_value("effQuantum", x)
-def modifyOptModel(x): update_config_value("optionModel", x)
-def modifyDiffP(x): update_config_value("diffP", f"{x:.1f}")
-def modifyPMTspace(x): update_config_value("PMTspace", f"{x:.1f}")
+def modifyOpticalTransport(x): update_config_value("opticalTransport", x)
 
 def modifyLScocktail(cocktail_name, fAq, solvantType="Water", solvantConc=0.0):
     """
@@ -612,9 +607,9 @@ def resetConfFile():
 # --- INITIALIZATION ---
 
 # Read current parameters
-(nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e, 
- diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic, 
- optionModel, diffP, PMTspace, pH, pC, pN, pO, pP, pS, pNa, pCl, 
+(nE_electron, nE_alpha, RHO, Z, A, depthSpline, Einterp_a, Einterp_e,
+ diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic,
+ opticalTransport, pH, pC, pN, pO, pP, pS, pNa, pCl,
  solvantType, solvantConc, sp_model, chou_param, sigma_micelle) = readParameters()
 
 # Calculate normalized atomic array (if needed for legacy code)
@@ -3711,222 +3706,94 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
     return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2        
 
 
-def stochasticDepTD(diffP, PMTspace):
+def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement,
+                          extDT, measTime, effQuantic=effQuantic):
     """
-    Generate the probability
+    Full optical Monte-Carlo detection model for LS counting systems.
+
+    Each decay event is simulated by:
+    1. Sampling the total number of scintillation photons from a Poisson
+       distribution: n_ph ~ Poisson(L * mean(mu) * E_quenched).
+    2. Distributing photons equally among the three PMTs (TDCR) or two PMTs
+       (C/N) using a multinomial draw with uniform weights [1/3,1/3,1/3] or
+       [1/2,1/2].  Equal splitting is the baseline; more realistic geometric
+       transport can be added in a future version.
+    3. Converting photons to photoelectrons per PMT via independent binomial
+       draws with the PMT quantum efficiencies.
 
     Parameters
     ----------
-    diffP : TYPE
-        DESCRIPTION.
-    PMTspace : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-
-    """
-    detA = np.array([[2*(1+PMTspace), 0], [-(1+PMTspace), np.sqrt(3)*(1+PMTspace)]])
-    detB = np.array([[-(1+PMTspace), np.sqrt(3)*(1+PMTspace)], [-(1+PMTspace), -np.sqrt(3)*(1+PMTspace)]])
-    detC = np.array([[-(1+PMTspace), -np.sqrt(3)*(1+PMTspace)], [2*(1+PMTspace), 0]])
-
-    def simulate_photon_groups():
-        rho = 1 * np.sqrt(np.random.uniform(0, 1, 1))  # Radial distance
-        theta = np.random.uniform(0, 2 * np.pi, 1)     # Angular position
-        x = rho * np.cos(theta)
-        y = rho * np.sin(theta)
-        return x, y
-
-    def calculate_angle(O, det):
-        A=det[0]
-        B=det[1]
-        OA = (A[0] - O[0], A[1] - O[1]) # Vecteurs OA et OB
-        OB = (B[0] - O[0], B[1] - O[1])
-        dot_product = OA[0] * OB[0] + OA[1] * OB[1] # Produit scalaire OA . OB
-        norm_OA = math.sqrt((OA[0]**2 + OA[1]**2)[0]) # Normes des vecteurs OA et OB
-        norm_OB = math.sqrt((OB[0]**2 + OB[1]**2)[0])
-        cos_angle = dot_product / (norm_OA * norm_OB) # Cosinus de l'angle
-        angle_rad = math.acos(cos_angle[0]) # Angle en radians
-        angle_deg = math.degrees(angle_rad) # Convertir en degrés
-        return angle_deg
-
-    x, y = simulate_photon_groups()
-
-    pa=(1-diffP)*calculate_angle([x, y], detA)/360+diffP/3
-    pb=(1-diffP)*calculate_angle([x, y], detB)/360+diffP/3
-    pc=(1-diffP)*calculate_angle([x, y], detC)/360+diffP/3
-        
-    return pa, pb, pc
-
-# Di = []; Ti = []
-# n=1000000
-# for i in range(n):
-#     A = stochasticDepTD(1, 0)
-#     B = np.random.poisson(2)
-#     n_phPMT = np.random.multinomial(B, A) # sample the number of photons in each PMTs (TDCR configuration)
-#     nA=np.random.binomial(n_phPMT[0],0.25) # sample the conversion to photoelectrons PMT A
-#     nB=np.random.binomial(n_phPMT[1],0.25) # sample the conversion to photoelectrons PMT B
-#     nC=np.random.binomial(n_phPMT[2],0.25) # sample the conversion to photoelectrons PMT C
-#     Di.append(sum([nA>0, nB>0, nC>0])>1)
-#     Ti.append(sum([nA>0, nB>0, nC>0])>2)
-# D = sum(Di)/n
-# uD = D/np.sqrt(sum(Di))#np.sqrt(n)
-# T = sum(Ti)/n
-# uT = T/np.sqrt(sum(Ti))#/np.sqrt(n)
-# print(D, uD)
-# print(T, uT)
-
-def stochasticDepCN(diffP, PMTspace):
-    def simulate_photon_groups():
-        rho = 1 * np.sqrt(np.random.uniform(0, 1, 1))  # Radial distance
-        theta = np.random.uniform(0, 2 * np.pi, 1)     # Angular position
-        x = rho * np.cos(theta)
-        y = rho * np.sin(theta)
-        return x, y
-    
-    def calculate_angle(O):
-        OA = (-1-PMTspace - O[0], 0 - O[1]) # Vecteurs OA et OB
-        OB = (1+PMTspace - O[0], 0 - O[1])
-        dot_product = OA[0] * OB[0] + OA[1] * OB[1] # Produit scalaire OA . OB
-        norm_OA = math.sqrt((OA[0]**2 + OA[1]**2)[0]) # Normes des vecteurs OA et OB
-        norm_OB = math.sqrt((OB[0]**2 + OB[1]**2)[0])
-        cos_angle = dot_product / (norm_OA * norm_OB) # Cosinus de l'angle
-        angle_rad = math.acos(cos_angle[0]) # Angle en radians
-        angle_deg = math.degrees(angle_rad) # Convertir en degrés
-        return angle_deg
-    
-    x, y = simulate_photon_groups()
-
-    if np.random.randint(0, high=2)==0:
-        pa=(1-diffP)*calculate_angle([x, y])/360+diffP/2
-        pb=1-pa
-    else:
-        pb=(1-diffP)*calculate_angle([x, y])/360+diffP/2
-        pa=1-pb        
-        
-    return pa, pb
-
-
-def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic, optionModel=optionModel, diffP = diffP, PMTspace = PMTspace, dispParam=False):
-    """
-    Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
-
-    Parameters
-    ----------
-    L : float or tuple
-        If L is float, then L is the global free parameter. If L is tuple, then L is a triplet of free parameters. unit keV-1
-    e_quenching : list
-        List of quenched deposited energies from prompt particles in keV.
-    e_quenching2 : list
-        List of quenched deposited energies from delayed particles in keV.
+    L : float or list of float
+        Free parameter (photons keV⁻¹).  Scalar → symmetric; 3-list →
+        asymmetric per-PMT values.
+    e_quenching : list of float
+        Quenched deposited energies (keV) from the prompt event.
+    e_quenching2 : list of float
+        Quenched deposited energies (keV) from the delayed event.
     t1 : float
-        decay time of the delayed transitions in s.
-    evenement : interger
-        number of pulses per decay (prompt (1), prompt + delayed (2)).
+        Delay time of the second pulse (s).
+    evenement : int
+        1 = prompt only; 2 = prompt + delayed.
     extDT : float
-        extended dead time of the system in ns.
+        Extended dead time (µs).
     measTime : float
-        measurement time in minutes.
+        Measurement time (min).
+    effQuantic : list of float, optional
+        PMT quantum efficiencies [μ_A, μ_B, μ_C].
 
     Returns
     -------
-    efficiency0_S : float
-        detection probability of single event.
-    efficiency0_D : float
-        detection probability of double coincidences.
-    efficiency0_T : float
-        detection probability of triple coincidences.
-    efficiency0_AB : float
-        detection probability of coincidences between channels A and B.
-    efficiency0_BC : float
-        detection probability of coincidences between channels B and C.
-    efficiency0_AC : float
-        detection probability of coincidences between channels A and C.
-    efficiency0_D2 : float
-        detection probability of coincidences in a C/N system.
-
+    efficiency0_S, efficiency0_D, efficiency0_T,
+    efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 : int
+        Per-event detection flags (0 or 1; can be 2 for delayed case).
     """
     mu = effQuantic
-        
+
     if type(L) == float:
         L = [L, L, L]
-    
-    if dispParam: print(f"EffQ = {mu} - model = {optionModel} - diffP = {diffP} - PMTspace = {PMTspace}")
-    
-    def stochasOpticModel(e_q, L, mu):
-        n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of photoelectrons
-        
-        n_ph = np.random.poisson(sum(np.asarray(e_q))*np.mean(L)) # sample the number of scintillation photons
-        
-        pTD = stochasticDepTD(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (TDCR configuration)
-        n_phPMT = np.random.multinomial(n_ph, pTD) # sample the number of photons in each PMTs (TDCR configuration)
-        n_e[0]=np.random.binomial(n_phPMT[0],mu[0]) # sample the conversion to photoelectrons PMT A
-        n_e[1]=np.random.binomial(n_phPMT[1],mu[1]) # sample the conversion to photoelectrons PMT B
-        n_e[2]=np.random.binomial(n_phPMT[2],mu[2]) # sample the conversion to photoelectrons PMT C
-        
-        pCN = stochasticDepCN(diffP, PMTspace) # probabilities for photons to move towards the different PMTs (C/N configuration)
-        n_phPMTCN = np.random.multinomial(n_ph, pCN) # sample the number of photons in each PMTs (C/N configuration)
-        n_eCN[0]=np.random.binomial(n_phPMTCN[0],mu[0]) # sample the conversion to photoelectrons PMT A
-        n_eCN[1]=np.random.binomial(n_phPMTCN[1],mu[1]) # sample the conversion to photoelectrons PMT B
-        
-        return n_e, n_eCN        
-    
-    def Pmodel(e_q, pTD_ideal, pCN_ideal, L, mu):
-        n_e=np.zeros(3); n_eCN=np.zeros(2) # initilize the number of photoelectrons
-        
-        n_e[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*pTD_ideal[0]) # sample the conversion to photoelectrons PMT A
-        n_e[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*pTD_ideal[1]) # sample the conversion to photoelectrons PMT B
-        n_e[2] = np.random.poisson(sum(np.asarray(e_q))*L[2]*mu[2]*pTD_ideal[2]) # sample the conversion to photoelectrons PMT C
-        n_eCN[0] = np.random.poisson(sum(np.asarray(e_q))*L[0]*mu[0]*pCN_ideal[0]) # sample the conversion to photoelectrons PMT A
-        n_eCN[1] = np.random.poisson(sum(np.asarray(e_q))*L[1]*mu[1]*pCN_ideal[1]) # sample the conversion to photoelectrons PMT B
-        
+
+    def _sample_event(e_q):
+        """Sample photoelectron counts for one event."""
+        n_ph = np.random.poisson(float(np.sum(e_q)) * np.mean(L))
+
+        # TDCR: equal photon splitting among 3 PMTs
+        n_phPMT = np.random.multinomial(n_ph, [1/3, 1/3, 1/3])
+        n_e = np.array([
+            np.random.binomial(n_phPMT[0], mu[0]),
+            np.random.binomial(n_phPMT[1], mu[1]),
+            np.random.binomial(n_phPMT[2], mu[2]),
+        ])
+
+        # C/N: equal photon splitting among 2 PMTs
+        n_phPMTCN = np.random.multinomial(n_ph, [1/2, 1/2])
+        n_eCN = np.array([
+            np.random.binomial(n_phPMTCN[0], mu[0]),
+            np.random.binomial(n_phPMTCN[1], mu[1]),
+        ])
+
         return n_e, n_eCN
-     
-    
-    efficiency0_S = 0;    efficiency0_T = 0;    efficiency0_D = 0
-    efficiency0_AB = 0;    efficiency0_BC = 0;    efficiency0_AC = 0
-    efficiency0_D2 = 0;
-    # n_e = np.zeros(3); n_eCN = np.zeros(2); n_e2 = np.zeros(3); n_e2CN = np.zeros(2)
-    if optionModel == "stochastic-dependence":
-        n_e, n_eCN = stochasOpticModel(e_quenching, L, mu)
-    elif optionModel == "poisson":
-        n_e, n_eCN = Pmodel(e_quenching, [1/3, 1/3, 1/3], [1/2, 1/2], L, mu)
-    else:
-        raise ValueError(
-            f"Unknown optical model '{optionModel}'. "
-            "Valid values are 'stochastic-dependence' and 'poisson'."
-        )
-            
-    if sum(n_e>0)>0: efficiency0_S =1
-    if sum(n_e>0)>1: efficiency0_D =1
-    if sum(n_e>0)>2: efficiency0_T =1
-    if n_e[0]>0 and n_e[1]>0: efficiency0_AB =1 
-    if n_e[1]>0 and n_e[2]>0: efficiency0_BC =1 
-    if n_e[0]>0 and n_e[2]>0: efficiency0_AC =1
-    if sum(n_eCN>1)>1: efficiency0_D2 =1
-    
-    if evenement !=1 and t1 > extDT*1e-6 and t1 < measTime*60:
-        if optionModel == "stochastic-dependence":
-            n_e2, n_e2CN = stochasOpticModel(e_quenching2, L, mu)
-        elif optionModel == "poisson":
-            n_e2, n_e2CN = Pmodel(e_quenching2, [1/3, 1/3, 1/3], [1/2, 1/2], L, mu)
-        else:
-            raise ValueError(
-                f"Unknown optical model '{optionModel}'. "
-                "Valid values are 'stochastic-dependence' and 'poisson'."
-            )
-        
-        if sum(n_e2>0)>0: efficiency0_S +=1
-        if sum(n_e2>0)>1: efficiency0_D +=1
-        if sum(n_e2>0)>2: efficiency0_T +=1
-        if n_e2[0]>0 and n_e2[1]>0: efficiency0_AB +=1 
-        if n_e2[1]>0 and n_e2[2]>0: efficiency0_BC +=1 
-        if n_e2[0]>0 and n_e2[2]>0: efficiency0_AC +=1
-        if sum(n_e2CN>1)>1: efficiency0_D2 +=1           
-                    
-    return efficiency0_S, efficiency0_D, efficiency0_T, efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2         
+
+    def _score(n_e, n_eCN, acc):
+        """Accumulate detection flags into acc dict."""
+        if np.any(n_e > 0):       acc['S']  += 1
+        if np.sum(n_e > 0) > 1:   acc['D']  += 1
+        if np.sum(n_e > 0) > 2:   acc['T']  += 1
+        if n_e[0] > 0 and n_e[1] > 0: acc['AB'] += 1
+        if n_e[1] > 0 and n_e[2] > 0: acc['BC'] += 1
+        if n_e[0] > 0 and n_e[2] > 0: acc['AC'] += 1
+        if np.sum(n_eCN > 0) > 1:     acc['D2'] += 1
+
+    acc = dict(S=0, D=0, T=0, AB=0, BC=0, AC=0, D2=0)
+
+    n_e, n_eCN = _sample_event(e_quenching)
+    _score(n_e, n_eCN, acc)
+
+    if evenement != 1 and t1 > extDT * 1e-6 and t1 < measTime * 60:
+        n_e2, n_e2CN = _sample_event(e_quenching2)
+        _score(n_e2, n_e2CN, acc)
+
+    return (acc['S'], acc['D'], acc['T'],
+            acc['AB'], acc['BC'], acc['AC'], acc['D2'])         
 
 
 def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
