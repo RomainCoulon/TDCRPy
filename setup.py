@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 import os
 
-VERSION = "2.20.9"
+VERSION = "2.20.10"
 DESCRIPTION = "TDCR model — Monte Carlo efficiency estimation for liquid scintillation counting"
 
 # Read long description from README
