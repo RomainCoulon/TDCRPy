@@ -1319,8 +1319,8 @@ def eff(TD, Rad, pmf_1, kB, V,
     disp : bool, optional
         Pass ``True`` to print optimiser diagnostics.  Default is ``False``.
     Lbounds : tuple of float, optional
-        ``(lower, upper)`` bounds on *L* for the bounded scalar search.
-        Default is ``(0.1, 10)``.
+        ``(lower, upper)`` bounds on *L* (photons keV⁻¹) for the bounded
+        scalar search.  Default is ``(0.1, 100)``.
 
     Returns
     -------
@@ -1433,8 +1433,8 @@ def effA(TD, Rad, pmf_1, kB, V,
     disp : bool, optional
         Print optimiser diagnostics.  Default is ``False``.
     Lbounds : tuple of float, optional
-        ``(lower, upper)`` bounds for the scalar search.  Default is
-        ``(0.1, 10)``.
+        ``(lower, upper)`` bounds for the scalar search (photons keV⁻¹).
+        Default is ``(0.1, 100)``.
     cerenkov : bool, optional
         Use the Čerenkov model (:func:`~tdcrpy.TDCR_model_lib.modelCerenkov`)
         instead of the standard analytical model.  Default is ``False``.

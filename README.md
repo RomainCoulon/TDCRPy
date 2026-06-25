@@ -7,7 +7,8 @@
 **A Photo-Physical Stochastic Model for Liquid Scintillation Counting**
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![Version](https://img.shields.io/badge/version-2.20.11-green)
 ![Status](https://img.shields.io/badge/status-stable-green)
 ![BIPM](https://img.shields.io/badge/maintained%20by-BIPM-005696)
 
@@ -19,35 +20,26 @@
 
 **TDCRPy** is a Python package developed and maintained by the **BIPM** (Bureau International des Poids et Mesures). It estimates detection efficiencies of liquid scintillation counters using the **TDCR** (Triple to Double Coincidence Ratio) or **CIEMAT/NIST** methods.
 
-The calculation is based on a photo-physical stochastic model, allowing users to address:
-* Complex decay schemes (Beta spectra via BetaShape).
-* Radionuclide mixtures.
-* Ionization quenching (Birks model).
-* Micelle effects in scintillator cocktails.
-* Dynamic efficiency evolution over time.
+The calculation is based on a photo-physical stochastic Monte Carlo model, allowing users to address:
 
-Technical details can be found in:
-* [Coulon et al., Applied Radiation and Isotopes (2024)](https://doi.org/10.1016/j.apradiso.2024.111518)
+* Complex decay schemes (beta spectra via BetaShape, gamma interactions via MCNP matrices).
+* Radionuclide mixtures with arbitrary activity fractions.
+* Ionisation quenching via the Birks model (electrons and alpha particles).
+* Reverse micelle effects in cocktails used for aqueous samples.
+* Asymmetric PMT configurations (per-channel free parameters).
+* Dynamic efficiency evolution over time (with `radioactivedecay`).
+* Full optical Monte Carlo transport (`opticalTransport=True`).
+
+Technical details are described in:
+
+* [Coulon et al., *Applied Radiation and Isotopes* (2024)](https://doi.org/10.1016/j.apradiso.2024.111518)
 * [Coulon et al., BIPM Technical Report](http://dx.doi.org/10.13140/RG.2.2.15682.80321)
 
 ---
 
 ## 📦 Installation
 
-TDCRPy requires a standard Python scientific environment.
-
-### 1. Install Dependencies
-You can install the required libraries via `pip` or `conda`.
-
-```shell
-# Using pip
-pip install numpy scipy configparser tqdm importlib-resources
-
-# Optional (for visualization and dynamic decay features)
-pip install opencv-python radioactivedecay matplotlib
-````
-
-### 2\. Install TDCRPy
+TDCRPy requires Python ≥ 3.11 and a standard scientific environment.
 
 ```shell
 pip install TDCRPy
@@ -59,7 +51,7 @@ To upgrade to the latest version:
 pip install TDCRPy --upgrade
 ```
 
-### 3\. Run Tests
+### Run Tests
 
 Verify the installation by running the unit tests:
 
@@ -67,148 +59,161 @@ Verify the installation by running the unit tests:
 python -m unittest tdcrpy.test.test_tdcrpy
 ```
 
------
+---
 
 ## ⚡ Quick Start
 
-Here is a basic example to estimate detection efficiencies for **Co-60** using a symmetric PMT configuration.
+Estimate detection efficiencies for **Co-60** using the full stochastic model.
 
 ```python
 import tdcrpy
 
-# --- 1. Define Parameters ---
-mode = "eff"           # Calculation mode
-L = 1.2                # Free parameter in keV^-1
-Rad = "Co-60"          # Radionuclide
-pmf_1 = "1"            # Relative fraction (100%)
-N = 1000               # Number of Monte Carlo trials
-kB = 1.0e-5            # Birks constant in cm keV^-1
-V = 10                 # Volume of scintillator in mL
+L    = 1.2      # free parameter (photons keV⁻¹)
+Rad  = "Co-60"  # radionuclide
+pmf  = "1"      # activity fraction (100 %)
+N    = 10000    # Monte Carlo trials (≥ 10 000 recommended)
+kB   = 1.0e-5   # Birks constant (cm keV⁻¹)
+V    = 10       # scintillator volume (mL)
 
-# --- 2. Run Calculation ---
-result = tdcrpy.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V, mode)
+result = tdcrpy.TDCRPy.TDCRPy(L, Rad, pmf, N, kB, V)
 
-# --- 3. Display Results ---
-print(f"Efficiency S (Single): {result[0]:.4f} +/- {result[1]:.4f}")
-print(f"Efficiency D (Double): {result[2]:.4f} +/- {result[3]:.4f}")
-print(f"Efficiency T (Triple): {result[4]:.4f} +/- {result[5]:.4f}")
-print(f"Efficiency D (CIEMAT/NIST): {result[12]:.4f} +/- {result[13]:.4f}")
+print(f"eff_S = {result[0]:.4f} ± {result[1]:.4f}")   # single events
+print(f"eff_D = {result[2]:.4f} ± {result[3]:.4f}")   # double coincidences
+print(f"eff_T = {result[4]:.4f} ± {result[5]:.4f}")   # triple coincidences
 ```
 
-### Calculate Free Parameter from Measured TDCR
-
-If you have an experimental TDCR value ($R_T/R_D$), you can reverse-calculate the free parameter $L$:
+### Find L from a Measured TDCR Ratio
 
 ```python
-TD = 0.9776  # Measured TDCR parameter
-result = tdcrpy.TDCRPy.eff(TD, Rad, pmf_1, kB, V)
+TD = 0.9776   # measured T/D ratio
+result = tdcrpy.TDCRPy.eff(TD, Rad, pmf, kB, V)
 
-print(f"Global free parameter L = {result[0]:.4f} keV^-1")
+print(f"L = {result[0]:.4f} photons/keV")
+print(f"eff_T = {result[6]:.4f} ± {result[7]:.4f}")
 ```
 
------
+---
 
 ## 🛠 Advanced Features
 
-### Asymmetric PMTs
+### Asymmetric PMT Configuration
 
-TDCRPy supports calculations where the quantum efficiency differs between PMTs. Pass a tuple for the free parameter $L$:
+Pass a 3-tuple for the free parameter to model per-channel asymmetry:
 
 ```python
-# L for (PMT A, PMT B, PMT C)
-L = (1.1, 1.3, 1.2) 
-result = tdcrpy.TDCRPy.TDCRPy(L, "Co-60", "1", 1000, 1.0e-5, 10)
+L = (1.1, 1.3, 1.2)   # (L_A, L_B, L_C) in photons keV⁻¹
+result = tdcrpy.TDCRPy.TDCRPy(L, "Co-60", "1", N, kB, V)
 
-# Efficiencies for specific pairs (AB, BC, AC) are available in the result tuple
-print(f"Efficiency AB: {result[6]:.4f}")
+print(f"eff_AB = {result[6]:.4f}")   # A–B double coincidences
+print(f"eff_BC = {result[8]:.4f}")
+print(f"eff_AC = {result[10]:.4f}")
 ```
 
 ### Radionuclide Mixtures
 
-Simulate mixtures by providing comma-separated nuclides and their relative fractions.
+Provide comma-separated nuclides and their relative activity fractions:
 
 ```python
-# Example: 80% Co-60 and 20% H-3
-Rad = "Co-60, H-3"
-pmf_1 = "0.8, 0.2" 
-
-result = tdcrpy.TDCRPy.TDCRPy(L, Rad, pmf_1, N, kB, V)
+result = tdcrpy.TDCRPy.TDCRPy(L, "Co-60, H-3", "0.8, 0.2", N, kB, V)
 ```
 
-### Dynamic Decay & Efficiency
+### Analytical Model (Pure Beta Emitters)
 
-Combine `TDCRPy` with `radioactivedecay` to simulate how efficiency changes as a sample decays (e.g., Mo-99/Tc-99m).
+A faster, deterministic alternative for pure β⁻ nuclides:
+
+```python
+# Returns (L0, L_opt, eff_S, eff_D, eff_T)
+result = tdcrpy.TDCRPy.effA(TD, "H-3", "1", kB, V)
+
+print(f"L0 = {result[0]:.4f} photons/keV")
+print(f"eff_T = {result[4]:.4f}")
+```
+
+### Full Optical Monte Carlo Transport
+
+Enable stochastic photon-transport for each event: photons are sampled
+from a Poisson distribution, distributed equally among PMTs, and converted
+to photoelectrons via Binomial draws (quantum efficiency):
+
+```python
+result = tdcrpy.TDCRPy.TDCRPy(L, Rad, pmf, N, kB, V, opticalTransport=True)
+```
+
+### Dynamic Decay
+
+Combine with `radioactivedecay` to track efficiency as a sample decays:
 
 ```python
 import radioactivedecay as rd
 import tdcrpy as td
-import numpy as np
 
-# Define inventory
-rad_t0 = rd.Inventory({'Mo-99': 1}, 'Bq')
+inv0 = rd.Inventory({'Mo-99': 1.0}, 'Bq')
+inv1 = inv0.decay(30.0, 'h')          # decay 30 h
 
-# Decay for 30 hours
-rad_t1 = rad_t0.decay(30.0, 'h')
+acts  = inv1.activities('Bq')
+total = sum(acts.values())
+nucs  = ", ".join(k for k, v in acts.items() if v > 0)
+fracs = ", ".join(str(v / total) for k, v in acts.items() if v > 0)
 
-# Calculate current composition for TDCRPy
-A_t1 = rad_t1.activities('Bq')
-total_activity = sum(A_t1.values())
-
-# Format strings for TDCRPy
-nuclides = ", ".join([k for k, v in A_t1.items() if v > 0])
-fractions = ", ".join([str(v/total_activity) for k, v in A_t1.items() if v > 0])
-
-# Run simulation
-result = td.TDCRPy.TDCRPy(1.0, nuclides, fractions, 1000, 1e-5, 10, "eff")
+result = td.TDCRPy.TDCRPy(1.0, nucs, fracs, N, kB, V)
 ```
 
------
+---
 
 ## ⚙️ Configuration & Physics
 
-You can customize the underlying physics model using `tdcrpy.TDCR_model_lib`.
-
-To view current settings:
+Display the current physics settings:
 
 ```python
 import tdcrpy as td
 td.TDCR_model_lib.readParameters(disp=True)
 ```
 
-### Common Configurations
+### Configuration Reference
 
-| Parameter | Method | Description |
-| :--- | :--- | :--- |
-| **Electron Bins** | `modifynE_electron(n)` | Integration bins for electrons (default: 1000) |
-| **Alpha Bins** | `modifynE_alpha(n)` | Integration bins for alpha particles (default: 1000) |
-| **Density** | `modifyDensity(rho)` | Scintillator density in g/cm³ (default: 0.96) |
-| **Mean Z / A** | `modifyZ(z)`, `modifyA(a)` | Mean atomic/mass numbers of the cocktail |
-| **Micelle Effect** | `modifyMicCorr(bool)` | Activate reverse micelle correction (default: False) |
-| **Micelle Size** | `modifyDiam_micelle(d)` | Diameter in nm (default: 2.0) |
-| **Dead Time** | `modifyDeadTime(t)` | Extended dead time in µs (default: 10) |
-| **Coincidence Time** | `modifyTau(ns)` | Resolving time in ns (default: 50) |
+| Parameter | Setter | Default | Unit | Description |
+| :--- | :--- | :---: | :---: | :--- |
+| Electron bins | `modifynE_electron(n)` | 1000 | — | Integration bins for electron quenching |
+| Alpha bins | `modifynE_alpha(n)` | 1000 | — | Integration bins for alpha quenching |
+| Stopping power | `modifysp_model(m)` | `tan_xia` | — | Low-energy model (`tan_xia`, `joy_luo`, …) |
+| Birks parameter | `modifyChou_param(k)` | 0 | cm²/MeV² | Chou bimolecular quenching constant |
+| Density | `modifyDensity(ρ)` | 0.96 | g/cm³ | Scintillator density |
+| Mean Z / A | `modifyZ(z)`, `modifyA(a)` | 5.2 / 11.04 | — | Effective atomic/mass number |
+| Cocktail | `modifyLScocktail(name, fAq)` | False | — | LS cocktail + aqueous fraction |
+| Micelle correction | `modifyMicCorr(b)` | False | — | Activate reverse-micelle correction |
+| Micelle diameter | `modifyDiam_micelle(d)` | 2 | nm | Mean micelle diameter |
+| Quantum efficiency | `modifyEffQ(q)` | `0.1,0.1,0.1` | — | PMT quantum efficiencies (A, B, C) |
+| Optical transport | `modifyOpticalTransport(b)` | False | — | Enable full optical MC transport |
+| Resolving time | `modifyTau(τ)` | 50 | ns | Coincidence resolving time |
+| Dead time | `modifyDeadTime(t)` | 10 | µs | Extended dead time |
+| Measurement time | `modifyMeasTime(T)` | 20 | min | Measurement duration |
 
-## Tutorials
+---
 
-* [Use the stochastic model for all nuclides](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/tuturial.ipynb)
-* [Use the analytical model for pure beta emitters](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/analyticalModel.ipynb)
-* [Modify the parameters of the model](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/changeParameters.ipynb)
+## 📓 Tutorials
 
------
+| Notebook | Description |
+| :--- | :--- |
+| [tuturial.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/tuturial.ipynb) | End-to-end stochastic model walkthrough |
+| [analyticalModel.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/analyticalModel.ipynb) | Analytical model for pure beta emitters |
+| [opticalTransport.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/opticalTransport.ipynb) | Semi-analytical vs optical MC transport |
+| [changeParameters.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/changeParameters.ipynb) | Modifying physics parameters |
+| [Co-60.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/Co-60.ipynb) | Co-60 efficiency calibration case study |
+| [functional_validation.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/functional_validation.ipynb) | Version validation across nuclides and models |
 
-## 📚 Citations
+---
 
-If you use **TDCRPy** in your work, please cite the following:
+## 📚 Citation
 
-> **TDCRPy: A python package for TDCR measurements** \> R. Coulon, J. Hu  
+If you use **TDCRPy** in your work, please cite:
+
+> R. Coulon, J. Hu — **TDCRPy: A Python package for TDCR measurements**  
 > *Applied Radiation and Isotopes* (2024)  
 > DOI: [10.1016/j.apradiso.2024.111518](https://doi.org/10.1016/j.apradiso.2024.111518)
 
------
+---
 
 ## ⚖️ License
 
-This project is licensed under the **MIT License**.
-
+This project is licensed under the **MIT License**.  
 Copyright © BIPM (Bureau International des Poids et Mesures).
-

@@ -405,14 +405,57 @@ def update_config_batch(updates_dict, section="Inputs"):
 # --- READING FUNCTIONS ---
 
 def readEffQ0():
+    """Return the raw ``effQuantum`` string from config (e.g. ``'0.1, 0.1, 0.1'``)."""
     read_config_object()
     return config["Inputs"].get("effQuantum")
 
 def lsCocktail():
+    """Return the active LS cocktail name, or ``'False'`` if using defaults."""
     read_config_object()
     return config["Inputs"].get("ls_cocktail")
 
 def readParameters(disp=False):
+    """Load all physics and hardware parameters from ``config.toml``.
+
+    Parameters
+    ----------
+    disp : bool, optional
+        If ``True``, print a formatted summary of all loaded parameters.
+        Default is ``False``.
+
+    Returns
+    -------
+    tuple of 29 elements
+        In order:
+
+        * ``nE_electron`` (int) — integration bins for electron quenching
+        * ``nE_alpha`` (int) — integration bins for alpha quenching
+        * ``RHO`` (float) — scintillator density (g cm⁻³)
+        * ``Z`` (float) — mean effective atomic number
+        * ``A`` (float) — mean effective mass number
+        * ``depthSpline`` (int) — spline interpolation window half-width
+        * ``Einterp_a`` (float) — alpha interpolation threshold (keV)
+        * ``Einterp_e`` (float) — electron interpolation threshold (keV)
+        * ``diam_micelle`` (float) — mean micelle diameter (nm)
+        * ``fAq`` (float) — aqueous volume fraction
+        * ``tau`` (int) — coincidence resolving time (ns)
+        * ``extDT`` (float) — extended dead time (µs)
+        * ``measTime`` (float) — measurement time (min)
+        * ``micCorr`` (bool) — reverse-micelle correction flag
+        * ``effQuantic`` (list[float]) — PMT quantum efficiencies [A, B, C]
+        * ``opticalTransport`` (bool) — full optical MC transport flag
+        * ``pH, pC, pN, pO, pP, pS, pNa, pCl`` (float) — atomic fractions
+        * ``solvantType`` (str) — aqueous solvent type (``'HCl'``, ``'NaOH'``, …)
+        * ``solvantConc`` (float) — solvent molar concentration (mol L⁻¹)
+        * ``sp_model`` (str) — electron stopping-power model name
+        * ``chou_param`` (float) — Chou bimolecular quenching constant (cm² MeV⁻²)
+        * ``sigma_micelle`` (float) — std dev of micelle diameter (nm)
+
+    Raises
+    ------
+    ValueError
+        If the ``[Inputs]`` section is absent from ``config.toml``.
+    """
     read_config_object()
     
     if "Inputs" not in config:
@@ -504,18 +547,48 @@ def readParameters(disp=False):
             solvantType, solvantConc, sp_model, chou_param, sigma_micelle)
 
 # --- MODIFY FUNCTIONS ---
-def modifySigma_micelle(x): update_config_value("sigma_micelle", x)
-def modifynE_electron(x): update_config_value("nE_electron", x)
-def modifynE_alpha(x): update_config_value("nE_alpha", x)
-def modifysp_model(x): update_config_value("sp_model", x)
-def modifyChou_param(x): update_config_value("chou_param", x)
-def modifyDensity(x): update_config_value("density", x)
-def modifyZ(x): update_config_value("Z", x)
-def modifyA(x): update_config_value("A", x)
+# Each setter writes one value to config.toml and invalidates the in-memory cache.
+
+def modifySigma_micelle(x):
+    """Set the standard deviation of the micelle diameter distribution (nm)."""
+    update_config_value("sigma_micelle", x)
+
+def modifynE_electron(x):
+    """Set the number of energy bins for the electron Birks quenching integral."""
+    update_config_value("nE_electron", x)
+
+def modifynE_alpha(x):
+    """Set the number of energy bins for the alpha Birks quenching integral."""
+    update_config_value("nE_alpha", x)
+
+def modifysp_model(x):
+    """Set the low-energy electron stopping-power model (e.g. ``'tan_xia'``, ``'joy_luo'``)."""
+    update_config_value("sp_model", x)
+
+def modifyChou_param(x):
+    """Set the Chou bimolecular quenching parameter (cm² MeV⁻²)."""
+    update_config_value("chou_param", x)
+
+def modifyDensity(x):
+    """Set the scintillator mixture density (g cm⁻³)."""
+    update_config_value("density", x)
+
+def modifyZ(x):
+    """Set the effective mean atomic number *Z* of the scintillator."""
+    update_config_value("Z", x)
+
+def modifyA(x):
+    """Set the effective mean mass number *A* of the scintillator."""
+    update_config_value("A", x)
 
 def modifyAtmConc(x):
-    """
-    Accepts dict or array. Updates atomic fractions in config.
+    """Update elemental atomic fractions in config.
+
+    Parameters
+    ----------
+    x : dict or array-like
+        If a ``dict``, keys are element symbols (``'H'``, ``'C'``, …).
+        If an array, values must be in the order H, C, N, O, P, Cl.
     """
     if isinstance(x, dict):
         updates = {
@@ -537,19 +610,61 @@ def modifyAtmConc(x):
             "pO": f"{x[3]:.6f}", "pP": f"{x[4]:.6f}", "pCl": f"{x[5]:.6f}"
         })
 
-def modifyDepthSpline(x): update_config_value("depthSpline", x)
-def modifyEinterp_a(x): update_config_value("Einterp_a", int(x))
-def modifyEinterp_e(x): update_config_value("Einterp_e", x)
-def modifyDiam_micelle(x): update_config_value("diam_micelle", int(x))
-def modifyfAq(x): update_config_value("fAq", x)
-def modifySolvantType(x): update_config_value("solvantType", x)
-def modifySolvantConc(x): update_config_value("solvantConc_mol_L", x)
-def modifyTau(x): update_config_value("tau", x)
-def modifyDeadTime(x): update_config_value("extDT", x)
-def modifyMeasTime(x): update_config_value("measTime", x)
-def modifyMicCorr(x): update_config_value("micCorr", x)
-def modifyEffQ(x): update_config_value("effQuantum", x)
-def modifyOpticalTransport(x): update_config_value("opticalTransport", x)
+def modifyDepthSpline(x):
+    """Set the half-width of the spline interpolation window for quenching curves."""
+    update_config_value("depthSpline", x)
+
+def modifyEinterp_a(x):
+    """Set the energy threshold (keV) above which spline interpolation is used for alphas."""
+    update_config_value("Einterp_a", int(x))
+
+def modifyEinterp_e(x):
+    """Set the energy threshold (keV) above which spline interpolation is used for electrons."""
+    update_config_value("Einterp_e", x)
+
+def modifyDiam_micelle(x):
+    """Set the mean diameter of reverse micelles (nm). Must be 0.5, 1, 2, 3, or 4."""
+    update_config_value("diam_micelle", int(x))
+
+def modifyfAq(x):
+    """Set the aqueous volume fraction of the scintillator mixture (0–1)."""
+    update_config_value("fAq", x)
+
+def modifySolvantType(x):
+    """Set the aqueous solvent type (``'Water'``, ``'HCl'``, ``'HNO3'``, ``'NaOH'``)."""
+    update_config_value("solvantType", x)
+
+def modifySolvantConc(x):
+    """Set the molar concentration of the aqueous solvent (mol L⁻¹)."""
+    update_config_value("solvantConc_mol_L", x)
+
+def modifyTau(x):
+    """Set the coincidence resolving time (ns)."""
+    update_config_value("tau", x)
+
+def modifyDeadTime(x):
+    """Set the extended dead time (µs)."""
+    update_config_value("extDT", x)
+
+def modifyMeasTime(x):
+    """Set the measurement duration (min)."""
+    update_config_value("measTime", x)
+
+def modifyMicCorr(x):
+    """Enable or disable the reverse-micelle energy-loss correction (bool)."""
+    update_config_value("micCorr", x)
+
+def modifyEffQ(x):
+    """Set PMT quantum efficiencies as a comma-separated string, e.g. ``'0.1, 0.1, 0.1'``."""
+    update_config_value("effQuantum", x)
+
+def modifyOpticalTransport(x):
+    """Enable or disable full optical Monte Carlo transport (bool).
+
+    When ``True``, :func:`detectProbabilitiesMC` is used instead of the
+    semi-analytical :func:`detectProbabilities` model.
+    """
+    update_config_value("opticalTransport", x)
 
 def modifyLScocktail(cocktail_name, fAq, solvantType="Water", solvantConc=0.0):
     """
@@ -1706,7 +1821,7 @@ def run_interpolate(kB_vec, kB , Ev, Emv, E, m = depthSpline):
         Vector of quenched energies eV for electron and in keV for alpha (set by default)
     E : float
         Exact value of the input energy.
-    m : interger
+    m : integer
         depth (number of indexes on each side of the energy point) on which the spline interpolation is done.(Default. depthSpline)
         
 
@@ -1775,7 +1890,7 @@ def Em_a(E, kB, nE, Et = Einterp_a, kB_vec = kB_a):
         Input energy in keV
     kB : float
         Birks constant in cm/keV
-    nE : interger 
+    nE : integer 
         number of points of the energy linear space
     Et : float
         energy (in keV) above which interpolation is applied. (Default Et = Einterp)
@@ -1810,7 +1925,7 @@ def Em_e(Ei, Ed, kB, nE, Et = Einterp_e*1e3, kB_vec = kB_e):
         Deposited energy in eV        
     kB : float
         Birks constant in cm/MeV
-    nE : interger 
+    nE : integer 
         number of points of the energy linear space
     Et : float
         energy (in eV) above which interpolation is applied. (Default Et = Einterp)
@@ -3385,15 +3500,38 @@ def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
         return eff_S, eff_D, eff_T
 
 def modelAnalyticalCN(L, rad, kB, V, ne, effQuantic=effQuantic):
-    """
-    CIEMAT/NIST analytical model (2-PMT coincidence system).
+    """CIEMAT/NIST analytical model for a 2-PMT coincidence system.
 
-    L is the **photon yield** (keV⁻¹), consistent with the stochastic model.
-    The quantum efficiency from *effQuantic* converts it to photoelectron yield.
+    The free parameter *L* is the **photon yield** (photons keV⁻¹), consistent
+    with the stochastic model.  The quantum efficiency from *effQuantic*
+    converts it to a photoelectron yield internally.
+
+    Only valid for pure β⁻ emitters that have a pre-computed deposited-energy
+    spectrum (see :func:`readBetaSpectra`).
+
+    Parameters
+    ----------
+    L : float or list of float
+        Free parameter (photons keV⁻¹).  Scalar → symmetric; 2-list →
+        asymmetric ``[L_A, L_B]``.
+    rad : str
+        Radionuclide label (e.g. ``'H-3'``).
+    kB : float
+        Birks constant (cm keV⁻¹).
+    V : float
+        Scintillator volume (mL) — not used in the analytical calculation
+        but kept for API consistency.
+    ne : int
+        Number of energy bins for the quenching integral.
+    effQuantic : list of float, optional
+        PMT quantum efficiencies ``[μ_A, μ_B]``.
 
     Returns
     -------
-    eff_A, eff_B, eff_D : float
+    eff_A, eff_B : float
+        Single-PMT detection efficiencies.
+    eff_D : float
+        Double-coincidence detection efficiency.
     """
     e, p = readBetaSpectra(rad)
     em = np.empty(len(e))
@@ -3562,7 +3700,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
         List of quenched deposited energies from delayed particles in keV.
     t1 : float
         decay time of the delayed transitions in s.
-    evenement : interger
+    evenement : integer
         number of pulses per decay (prompt (1), prompt + delayed (2)).
     extDT : float
         extended dead time of the system in ns.
@@ -3797,59 +3935,44 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement,
 
 
 def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
-    """
-    Calculate detection efficiencies from list of detection probabilities per decays.
+    """Compute mean efficiencies and their standard uncertainties from per-decay detection flags.
 
     Parameters
     ----------
-    efficiency0_S : float
-        detection probability of single event.
-    efficiency0_D : float
-        detection probability of double coincidences.
-    efficiency0_T : float
-        detection probability of triple coincidences.
-    efficiency0_AB : float
-        detection probability of coincidences between channels A and B.
-    efficiency0_BC : float
-        detection probability of coincidences between channels B and C.
-    efficiency0_AC : float
-        detection probability of coincidences between channels A and C.
-    efficiency0_D2 : float
-        detection probability of coincidences in a C/N system.
-    N : interger
-        number of simulated decays.
+    efficiency_S : array-like of float
+        Per-decay detection flags for single events (S channel).
+    efficiency_D : array-like of float
+        Per-decay detection flags for the logical sum of double coincidences.
+    efficiency_T : array-like of float
+        Per-decay detection flags for triple coincidences.
+    efficiency_AB : array-like of float
+        Per-decay detection flags for AB double coincidences.
+    efficiency_BC : array-like of float
+        Per-decay detection flags for BC double coincidences.
+    efficiency_AC : array-like of float
+        Per-decay detection flags for AC double coincidences.
+    efficiency_D2 : array-like of float
+        Per-decay detection flags for the C/N double coincidences.
+    N : int
+        Number of simulated decays (used to normalise the standard uncertainty
+        as ``std / sqrt(N)``).
 
     Returns
     -------
-    mean_efficiency_S : float
-        detection efficiency of single event.
-    std_efficiency_S : float
-        standard uncertainty of detection efficiency of single event.
-    mean_efficiency_D : float
-        detection efficiency of double coincidences.
-    std_efficiency_D : float
-        standard uncertainty of detection efficiency of double coincidences.
-    mean_efficiency_T : float
-        detection efficiency of triple coincidences.
-    std_efficiency_T : float
-        standard uncertainty of detection efficiency of triple coincidences.
-    mean_efficiency_AB : float
-        detection efficiency of coincidences between channels A and B.
-    std_efficiency_AB : float
-        standard uncertainty of detection efficiency of coincidences between channels A and B.
-    mean_efficiency_BC : float
-        detection efficiency of coincidences between channels B and C.
-    std_efficiency_BC : float
-        Standard uncertainty of detection efficiency of coincidences between channels B and C.
-    mean_efficiency_AC : float
-        detection efficiency of coincidences between channels A and C.
-    std_efficiency_AC : float
-        standard uncertainty of detection efficiency of coincidences between channels A and C.
-    mean_efficiency_D2 : float
-        detection efficiency of coincidences in a C/N system.
-    std_efficiency_D2 : float
-        standard uncertainty of detection efficiency of coincidences in a C/N system.
-
+    mean_efficiency_S, std_efficiency_S : float
+        Mean and standard uncertainty for single-event efficiency.
+    mean_efficiency_D, std_efficiency_D : float
+        Mean and standard uncertainty for double-coincidence efficiency.
+    mean_efficiency_T, std_efficiency_T : float
+        Mean and standard uncertainty for triple-coincidence efficiency.
+    mean_efficiency_AB, std_efficiency_AB : float
+        Mean and standard uncertainty for AB coincidence efficiency.
+    mean_efficiency_BC, std_efficiency_BC : float
+        Mean and standard uncertainty for BC coincidence efficiency.
+    mean_efficiency_AC, std_efficiency_AC : float
+        Mean and standard uncertainty for AC coincidence efficiency.
+    mean_efficiency_D2, std_efficiency_D2 : float
+        Mean and standard uncertainty for C/N coincidence efficiency.
     """
     mean_efficiency_S = np.mean(efficiency_S)
     std_efficiency_S = np.std(efficiency_S)/np.sqrt(N)
