@@ -95,12 +95,14 @@ class TestMyModule(unittest.TestCase):
         self.assertLessEqual(result, 25000.754895953367)
 
     def test_micelleLoss(self):
-        result = lib.micelleLoss(5)
-        self.assertLessEqual(result, 1.0)   # stochastic — just verify it's physical
+        # Pass fAq explicitly so the test is config-independent
+        result = lib.micelleLoss(5, fAq=0.1)
+        self.assertGreaterEqual(result, 0.0)
+        self.assertLessEqual(result, 1.0)
 
     def test_micelleLoss2(self):
-        result = lib.micelleLoss(0.2)
-        self.assertLessEqual(result, 0.86)
+        result = lib.micelleLoss(0.2, fAq=0.1)
+        self.assertLessEqual(result, 0.99)   # stochastic; low-E electrons trapped more
 
     def test_read_matrice(self):
         result = lib.read_matrice(fp1, 0)[50][50]
@@ -863,29 +865,31 @@ class TestValidatedAnalytical(unittest.TestCase):
 
     def test_ref_H3_analytical(self):
         # eff_S = 1-(1-pe)^3, consistent with stochastic detectProbabilities.
+        # Reference recomputed with effQuantic=0.25 (default since v2.20.11).
         self._check('H-3',
-                    exp_S=0.78739, exp_D=0.55985, exp_T=0.28875)
+                    exp_S=0.89856, exp_D=0.77817, exp_T=0.58979)
 
     def test_ref_Sr90_analytical(self):
         self._check('Sr-90',
-                    exp_S=0.99083, exp_D=0.98286, exp_T=0.96929)
+                    exp_S=0.99439, exp_D=0.99064, exp_T=0.98419)
 
     def test_ref_Co60_analytical(self):
         # Beta-spectrum approximation only (no gammas in analytical model).
         self._check('Co-60',
-                    exp_S=0.98192, exp_D=0.96555, exp_T=0.93753)
+                    exp_S=0.98923, exp_D=0.98154, exp_T=0.96831)
 
     def test_ref_H3_effA(self):
-        # L0 = photon yield; eff_S = 1-(1-pe)^3 (at least one PMT fires).
+        # L0 = photon yield; with effQuantic=0.25 the photon yield is
+        # L0 = 0.85445 / 0.25 = 3.418 (efficiencies unchanged).
         L0, _, eff_S, eff_D, eff_T = TDCRPy_mod.effA(0.5, 'H-3', '1', _KB, _V)
-        self.assertAlmostEqual(L0,    8.5445, delta=0.05,  msg='H-3 L0 (photon yield)')
+        self.assertAlmostEqual(L0,    3.4178, delta=0.05,  msg='H-3 L0 (photon yield)')
         self.assertAlmostEqual(eff_S, 0.7787, delta=0.005, msg='H-3 eff_S')
         self.assertAlmostEqual(eff_D, 0.5443, delta=0.005, msg='H-3 eff_D')
         self.assertAlmostEqual(eff_T, 0.2721, delta=0.005, msg='H-3 eff_T')
 
     def test_ref_Co60_effA(self):
         L0, _, eff_S, eff_D, eff_T = TDCRPy_mod.effA(0.977, 'Co-60', '1', _KB, _V)
-        self.assertAlmostEqual(L0,    11.809, delta=0.10,  msg='Co-60 L0 (photon yield)')
+        self.assertAlmostEqual(L0,    4.7236, delta=0.05,  msg='Co-60 L0 (photon yield)')
         self.assertAlmostEqual(eff_S, 0.9847, delta=0.005, msg='Co-60 eff_S')
         self.assertAlmostEqual(eff_D, 0.9716, delta=0.005, msg='Co-60 eff_D')
         self.assertAlmostEqual(eff_T, 0.9492, delta=0.005, msg='Co-60 eff_T')

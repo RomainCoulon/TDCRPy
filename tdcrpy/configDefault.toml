@@ -7,7 +7,7 @@
 # to achieve a relative standard uncertainty below 1e-3 on the estimated quenched energy: nE_electron = nE_alpha = 1000
 nE_electron = 1000
 nE_alpha = 1000
-# stopping power model below 20 keV. could be two types the default tan_xia 
+# stopping power model below 20 keV. could be two types the default tan_xia
 # or other models: the joy_luo, marchal, ashley, kossert_graucarles, rao_reddy
 sp_model = tan_xia
 # Chou quenching parameter to account bimolecular quenching processes (in cm2/MeV2).
@@ -35,27 +35,28 @@ chou_param = 0
 # Carbo-Sorb/Permafluor (1:1)
 # PXE
 # Or use default value entering False
-ls_cocktail = False
-## Ultima Gold (Default)
-## Type of solvant HCl, HNO3 or Water
-solvantType = HCl
-## Sovant concentration in mol/L
-solvantConc = 0.1
-# density of the scintillator (LS cocktail + aqueous solution)
-density = 0.96
-# mean charge number of the scintillator (LS cocktail + aqueous solution)
-Z = 5.2
-# mean mass number of the scintillator (LS cocktail + aqueous solution)
-A = 11.04
-# atomic probability
-pH = 0.578772
-pC = 0.338741
-pN = 0.000302
-pO = 0.082022
-pP = 0.000092
-pS = 0.000000
-pNa = 0.000000
-pCl = 0.000071
+ls_cocktail = Ultima Gold
+## Type of solvant (HCl, HNO3, NaOH or Water)
+solvantType = Water
+## Solvent concentration in mol/L (0 for pure Water)
+solvantConc = 0.0
+# Aqueous fraction of the scintillator (0 = pure cocktail)
+fAq = 0.0
+# density of the scintillator — auto-computed from ls_cocktail + fAq
+density = 0.980000
+# mean charge number of the scintillator — auto-computed
+Z = 3.251556
+# mean mass number of the scintillator — auto-computed
+A = 5.944938
+# atomic probability — auto-computed from ls_cocktail + fAq
+pH = 0.569971
+pC = 0.390337
+pN = 0.000933
+pO = 0.035279
+pP = 0.002551
+pS = 0.000463
+pNa = 0.000465
+pCl = 0.000000
 # properties on reverse micelles
 # applied reverse micelle correction
 micCorr = False
@@ -63,11 +64,9 @@ micCorr = False
 diam_micelle = 2
 # standard deviation of the micelles diameters
 sigma_micelle = 1
-# acqueous fraction of the scintillator
-fAq = 0.1
 
 ## OPTICAL PROPERTIES
-# Quantum efficiency
+# Quantum efficiency of PMT A, B, C
 effQuantum = 0.25, 0.25, 0.25
 # Enable full optical Monte-Carlo transport (opticalTransport=True) instead of
 # the semi-analytical detection model. When True, photon emission, isotropic
@@ -79,9 +78,9 @@ opticalTransport = False
 # Coincidence resolving time (ns)
 tau = 50
 # Extended dead time (µs)
-extDT = 10
+extDT = 30
 # Measurement time (minutes)
-measTime = 20
+measTime = 60
 
 ## INTERPOLATION TO ESTIMATE THE QUENCHED ENERGY
 # depth (number of indexes on each side of the energy point) on which the spline interpolation is done.
