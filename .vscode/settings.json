@@ -1,4 +1,10 @@
 {
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
     "python-envs.defaultEnvManager": "ms-python.python:system",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["tdcrpy"],
+    "python.analysis.extraPaths": ["${workspaceFolder}"],
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "editor.formatOnSave": false
 }

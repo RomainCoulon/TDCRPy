@@ -678,15 +678,17 @@ def TDCRPy(
         # -------------------------------------------------------------- #
         # 8.4  Radiation–matter interaction (energy deposition)           #
         # -------------------------------------------------------------- #
-        particle_vec, energy_vec = _interact_prompt(particle_vec, energy_vec, V)
+        particle_vec, energy_vec, energy_vec_initial = _interact_prompt(
+            particle_vec, energy_vec, energy_vec_initial, V
+        )
         if display:
             _print_interaction("Prompt", particle_vec, energy_vec)
 
         energy_vec_initial2 = None
         if evenement != 1:
             energy_vec_initial2 = energy_vec2.copy()
-            particle_vec2, energy_vec2 = _interact_prompt(
-                particle_vec2, energy_vec2, V
+            particle_vec2, energy_vec2, energy_vec_initial2 = _interact_prompt(
+                particle_vec2, energy_vec2, energy_vec_initial2, V
             )
             if display:
                 _print_interaction("Delayed", particle_vec2, energy_vec2)
@@ -1037,27 +1039,40 @@ def _sample_beta_spectra(particle_vec, energy_vec, rad_i, level_before_trans, di
     return particle_vec, energy_vec
 
 
-def _interact_prompt(particle_vec, energy_vec, V):
+def _interact_prompt(particle_vec, energy_vec, energy_vec_initial, V):
     """
     Apply radiation–matter interactions (photoelectric, pair production,
     Compton scattering, beta/alpha energy deposition) to the particle list.
+
+    Also keeps *energy_vec_initial* consistent: secondary particles created
+    during interaction (Auger electrons, pair-production positrons) are
+    appended to *energy_vec_initial* with their pre-deposition kinetic
+    energy, matching the inline bookkeeping of the pre-2.20 code.
 
     Parameters
     ----------
     particle_vec : list of str
         Particle labels (modified in-place).
     energy_vec : list of float
-        Energies in keV (modified in-place).
+        Deposited energies in keV (modified in-place).
+    energy_vec_initial : list of float
+        Pre-interaction kinetic energies in keV (extended in-place for new
+        secondary particles; corrected in-place for photoelectrons).
     V : float
         Scintillator volume (mL).
 
     Returns
     -------
-    particle_vec, energy_vec : list
+    particle_vec, energy_vec, energy_vec_initial : list
         Updated lists.
     """
     for ipart, p in enumerate(particle_vec):
         if p in ("electron", "beta+"):
+            # Primary electrons: initial energy already in energy_vec_initial.
+            # Secondary Auger electrons appended mid-loop: set their initial KE
+            # before applying the deposition model.
+            if ipart >= len(energy_vec_initial):
+                energy_vec_initial.append(energy_vec[ipart])
             energy_vec[ipart] = tl.energie_dep_beta2(energy_vec[ipart], v=V)
             particle_vec[ipart] = "electron"
 
@@ -1066,20 +1081,28 @@ def _interact_prompt(particle_vec, energy_vec, V):
             Ed = tl.energie_dep_gamma2(Ei, v=V)
 
             if Ei == Ed:
-                # Photoelectric effect.
+                # Photoelectric effect: replace photon with photoelectron and
+                # secondary relaxation particles (Auger + X-rays).
                 e_pe, lacune, element = tl.interaction_scintillation(Ed)
                 _, e_sec, _, par_sec = tl.relaxation_atom_ph(lacune, element, v=V)
                 particle_vec[ipart] = "electron"
                 energy_vec[ipart] = e_pe
-                # Append secondary particles from atomic relaxation.
+                # Correct initial energy: photoelectron KE, not the photon energy.
+                energy_vec_initial[ipart] = e_pe
                 particle_vec.extend(par_sec)
                 energy_vec.extend(e_sec)
+                # Track initial KE for secondary particles (Auger KE, X-ray energy).
+                energy_vec_initial.extend(e_sec)
+
             elif Ed == Ei - 1022:
-                # Pair production.
+                # Pair production: electron + positron, each with (Ei-1022)/2 keV.
                 E_e = (Ei - 1022) / 2.0
                 energy_vec[ipart] = E_e
+                energy_vec_initial[ipart] = E_e
                 particle_vec.append("positron")
                 energy_vec.append(E_e)
+                energy_vec_initial.append(E_e)
+
             else:
                 # Compton scattering.
                 energy_vec[ipart] = Ed
@@ -1087,10 +1110,18 @@ def _interact_prompt(particle_vec, energy_vec, V):
             particle_vec[ipart] = "electron"
 
         elif "Auger" in p:
+            # Auger electron: save kinetic energy before deposition.
+            if ipart >= len(energy_vec_initial):
+                energy_vec_initial.append(energy_vec[ipart])
             energy_vec[ipart] = tl.energie_dep_beta2(energy_vec[ipart], v=V)
             particle_vec[ipart] = "electron"
 
-    return particle_vec, energy_vec
+        else:
+            # Non-scintillating particle (photon from relaxation, Atom_* vacancies).
+            if ipart >= len(energy_vec_initial):
+                energy_vec_initial.append(energy_vec[ipart])
+
+    return particle_vec, energy_vec, energy_vec_initial
 
 
 def _quench(particle_vec, energy_vec, energy_vec_initial,

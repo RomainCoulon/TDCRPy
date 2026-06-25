@@ -712,6 +712,51 @@ class TestTDCRPyMain(unittest.TestCase):
         self.assertGreater(L0, 0)
         self.assertGreater(eff_S, 0)
 
+    # ------------------------------------------------------------------
+    # Regression tests for bugs fixed in v2.20.6:
+    # _interact_prompt now propagates energy_vec_initial correctly for
+    # secondary particles (photoelectron, Auger, pair-production positron).
+    # ------------------------------------------------------------------
+
+    def test_TDCRPy_Co60_no_IndexError(self):
+        # Co-60 emits 1.17 / 1.33 MeV gammas.  Photoelectric and pair-
+        # production events add secondary particles to particle_vec beyond
+        # the length of energy_vec_initial, which triggered IndexError in
+        # _quench before the fix.  N=500 ensures the rare code path is hit.
+        result = TDCRPy_mod.TDCRPy(1.0, "Co-60", "1", 500, KB_TYPICAL, 10)
+        self.assertEqual(len(result), 14)
+        mean_S = result[0]
+        self.assertGreater(mean_S, 0.8)
+        self.assertLessEqual(mean_S, 1.0)
+
+    def test_TDCRPy_Co60_triple_le_double(self):
+        result = TDCRPy_mod.TDCRPy(1.0, "Co-60", "1", 300, KB_TYPICAL, 10)
+        mean_D, mean_T = result[2], result[4]
+        self.assertLessEqual(mean_T, mean_D + 1e-6)
+
+    def test_TDCRPy_Sr90_Y90_high_energy_beta(self):
+        # Y-90 beta endpoint 2.28 MeV — exercises the high-energy tail of
+        # the quenching interpolation and energy_vec_initial bookkeeping.
+        result = TDCRPy_mod.TDCRPy(1.0, "Sr-90, Y-90", "0.5, 0.5", 300, KB_TYPICAL, 10)
+        self.assertEqual(len(result), 14)
+        mean_S = result[0]
+        self.assertGreater(mean_S, 0.8)
+        self.assertLessEqual(mean_S, 1.0)
+
+    def test_TDCRPy_Fe55_EC_decay(self):
+        # Fe-55 decays by electron capture — exercises atomic relaxation
+        # (Mn K-alpha X-rays, Auger electrons) without beta emission.
+        result = TDCRPy_mod.TDCRPy(1.0, "Fe-55", "1", 300, KB_TYPICAL, 10)
+        self.assertEqual(len(result), 14)
+        self.assertGreater(result[0], 0)
+
+    def test_TDCRPy_effA_Co60(self):
+        # Analytical model for Co-60 (complex decay scheme).
+        L0, L_opt, eff_S, eff_D, eff_T = TDCRPy_mod.effA(
+            0.977, "Co-60", "1", KB_TYPICAL, 10)
+        self.assertGreater(L0, 0)
+        self.assertGreater(eff_S, 0.8)
+
 
 class TestQuenchingModels(unittest.TestCase):
     """Additional quenching model tests."""
