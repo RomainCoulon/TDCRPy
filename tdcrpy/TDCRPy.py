@@ -546,9 +546,14 @@ def TDCRPy(
             ne = _PURE_BETA_NE[_PURE_BETA_NUCLIDES.index(Rad)]
         else:
             ne = 1000
-        out = tl.modelAnalytical(L, 1, 1, 1, 1, Rad, kB, V, mode, symm, ne)
+        out = tl.modelAnalytical(L, 1, 1, 1, 1, Rad, kB, V, mode, ne)
         if mode == "eff":
-            return out[0], 0, out[1], 0, out[2], 0
+            eff_S, eff_D, eff_T = out
+            # AB = BC = AC in symmetric case: eff_AB = (eff_D + 2*eff_T) / 3
+            eff_AB = (eff_D + 2 * eff_T) / 3
+            return (eff_S, 0.0, eff_D, 0.0, eff_T, 0.0,
+                    eff_AB, 0.0, eff_AB, 0.0, eff_AB, 0.0,
+                    eff_D, 0.0)
         return out
 
     # ------------------------------------------------------------------ #
@@ -1384,7 +1389,7 @@ def objectFct(L, TD, Rad, pmf_1, N, kB, V):
 
 def eff(TD, Rad, pmf_1, kB, V,
         N=10000, L=1, maxiter=20, xatol=1e-7,
-        disp=False, Lbounds=(0.1, 10)):
+        disp=False, Lbounds=(0.1, 100)):
     """
     Determine the free parameter *L* and detection efficiencies from a
     measured TDCR ratio, using the full stochastic Monte Carlo model.
@@ -1508,7 +1513,7 @@ def eff(TD, Rad, pmf_1, kB, V,
 
 def effA(TD, Rad, pmf_1, kB, V,
          L=1, maxiter=20, xatol=1e-7,
-         disp=False, Lbounds=(0.1, 10),
+         disp=False, Lbounds=(0.1, 100),
          cerenkov=False):
     """
     Determine the free parameter *L* and detection efficiencies from a

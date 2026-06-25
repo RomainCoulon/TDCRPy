@@ -3339,128 +3339,109 @@ def relaxation_atom_ph(lacune,element,v):
     
     return particule_emise,energie_par_emise,posi_lacune,par_emise  
 
-def modelAnalytical(L,TD,TAB,TBC,TAC,rad,kB,V,mode,ne):
+def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
+                    effQuantic=effQuantic):
     """
-    TDCR analytical model that is used for pure beta emitting radionuclides
-    
+    TDCR analytical model for pure beta emitting radionuclides.
+
     Parameters
     ----------
     L : float or tuple
-        free parameter(s).
+        Free parameter in **photons keV⁻¹** (light yield), consistent with
+        the stochastic model.  For the symmetric case a scalar; for the
+        asymmetric case a 3-tuple ``(L_A, L_B, L_C)``.
     TD : float
-        triple-to-double coincidence ratio that was measured (logic sum).
-    TAB : float
-        triple-to-double coincidence ratio that was measured (channels A and B).
-    TBC : flat
-        triple-to-double coincidence ratio that was measured (channels B and C).
-    TAC : float
-        triple-to-double coincidence ratio that was measured (channels A and C).
-    rad : string
-        radionuclide (eg. "Na-22").
+        Measured triple-to-double ratio (logic sum).
+    TAB, TBC, TAC : float
+        Measured per-channel T/D ratios (used in asymmetric mode).
+    rad : str
+        Radionuclide label.
     kB : float
-        Birks constant in cm/keV.
+        Birks constant (cm keV⁻¹).
     V : float
-        volume of the scintillator in ml. run only for 10 ml
-    mode : string
-        "res" to return the residual, "eff" to return efficiencies.
-    nE : integer
-         Number of bins for the quenching function.
-    
-    
+        Scintillator volume (mL).
+    mode : str
+        ``"res"`` — return residual; ``"eff"`` — return efficiencies.
+    ne : int
+        Number of bins for the quenching integral.
+    effQuantic : list of float, optional
+        PMT quantum efficiencies [μ_A, μ_B, μ_C].  Defaults to the
+        module-level value loaded from config.
+
     Returns
     -------
-    res : float
-        Residuals of the model compared the measurement data for (a) given free parmeters L. (only in mode="res")
-    eff_S : float
-        Estimation of the efficiency of single counting events. (only in mode="eff")
-    eff_D : float
-        Estimation of the efficiency of logic sum of double coincidences. (only in mode="eff")
-    eff_T : float
-        Estimation of the efficiency of triple coincidences. (only in mode="eff")
-    
+    res : float  (mode="res")
+    eff_S, eff_D, eff_T : float  (mode="eff")
     """
-    
-    # e, p = readBetaShape(rad, 'beta-', 'tot')
     e, p = readBetaSpectra(rad)
-    em=np.empty(len(e))
+    em = np.empty(len(e))
     for i, ei in enumerate(e):
-        #em[i] = E_quench_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
-        em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
-        
-        
-    if type(L)==float or isinstance(L, np.float64):
-        eff_S = sum(p*(1-np.exp(-L*em/3)))
-        eff_T = sum(p*(1-np.exp(-L*em/3))**3)
-        eff_D = sum(p*(3*(1-np.exp(-L*em/3))**2-2*(1-np.exp(-L*em/3))**3))
-        # eff_D2 = sum(p*(3*(1-np.exp(-L*em/2))**2))
-        TDCR_calcul=eff_T/eff_D
-        res=(TDCR_calcul-TD)**2
+        em[i] = Em_e(ei * 1e3, ei * 1e3, kB * 1e3, ne) * 1e-3
+
+    if type(L) == float or isinstance(L, np.float64):
+        # Symmetric: single mean quantum efficiency
+        mu = np.mean(effQuantic)
+        x = L * mu * em / 3          # photoelectrons per PMT per decay
+        pe = 1 - np.exp(-x)
+        eff_S = sum(p * pe)
+        eff_T = sum(p * pe ** 3)
+        eff_D = sum(p * (3 * pe ** 2 - 2 * pe ** 3))
+        TDCR_calcul = eff_T / eff_D
+        res = (TDCR_calcul - TD) ** 2
     else:
-        # eff_A = sum(p*(1-np.exp(-L[0]*em/3)))
-        # eff_B = sum(p*(1-np.exp(-L[1]*em/3)))
-        # eff_C = sum(p*(1-np.exp(-L[2]*em/3)))
-        eff_AB = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3)))
-        eff_BC = sum(p*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))) 
-        eff_AC = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[2]*em/3))) 
-        eff_T = sum(p*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))
-        eff_D = eff_AB+eff_BC+eff_AC-2*eff_T
-        # eff_D2 = sum(p*(1-np.exp(-L[0]*em/2))*(1-np.exp(-L[1]*em/2)))
-        # eff_D = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
-        eff_S = sum(p*((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-((1-np.exp(-L[0]*em/3))+(1-np.exp(-L[1]*em/3))+(1-np.exp(-L[2]*em/3))-2*(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3)))-(1-np.exp(-L[0]*em/3))*(1-np.exp(-L[1]*em/3))*(1-np.exp(-L[2]*em/3))))
-        TABmodel = eff_T/eff_AB
-        TBCmodel = eff_T/eff_BC
-        TACmodel = eff_T/eff_AC
-        res=(TAB-TABmodel)**2+(TBC-TBCmodel)**2+(TAC-TACmodel)**2
-    
+        # Asymmetric: individual quantum efficiencies per PMT
+        mu_A, mu_B, mu_C = effQuantic[0], effQuantic[1], effQuantic[2]
+        peA = 1 - np.exp(-L[0] * mu_A * em / 3)
+        peB = 1 - np.exp(-L[1] * mu_B * em / 3)
+        peC = 1 - np.exp(-L[2] * mu_C * em / 3)
+        eff_AB = sum(p * peA * peB)
+        eff_BC = sum(p * peB * peC)
+        eff_AC = sum(p * peA * peC)
+        eff_T  = sum(p * peA * peB * peC)
+        eff_D  = eff_AB + eff_BC + eff_AC - 2 * eff_T
+        eff_S  = sum(p * (peA + peB + peC
+                          - (eff_AB + eff_BC + eff_AC - 2 * eff_T)
+                          - eff_T))
+        TABmodel = eff_T / eff_AB
+        TBCmodel = eff_T / eff_BC
+        TACmodel = eff_T / eff_AC
+        res = (TAB - TABmodel) ** 2 + (TBC - TBCmodel) ** 2 + (TAC - TACmodel) ** 2
+
     if mode == "res":
         return res
     if mode == "eff":
         return eff_S, eff_D, eff_T
 
-def modelAnalyticalCN(L,rad,kB,V,ne):
+def modelAnalyticalCN(L, rad, kB, V, ne, effQuantic=effQuantic):
     """
-    CIEMAT/NIST analytical model
-    
-    Parameters
-    ----------
-    L : float or tuple
-        free parameter(s).
-    rad : string
-        radionuclide (eg. "Na-22").
-    kB : float
-        Birks constant in cm/keV.
-    V : float
-        volume of the scintillator in ml. run only for 10 ml
-    nE : integer
-         Number of bins for the quenching function.
-    
-    
+    CIEMAT/NIST analytical model (2-PMT coincidence system).
+
+    L is the **photon yield** (keV⁻¹), consistent with the stochastic model.
+    The quantum efficiency from *effQuantic* converts it to photoelectron yield.
+
     Returns
     -------
-    eff_A : float
-        Estimation of the efficiency of PMT A.
-    eff_B : float
-        Estimation of the efficiency of PMT B.
-    eff_D : float
-        Estimation of the efficiency of double coincidences.
-    
+    eff_A, eff_B, eff_D : float
     """
-    # e, p = readBetaShape(rad, 'beta-', 'tot')
     e, p = readBetaSpectra(rad)
-    em=np.empty(len(e))
+    em = np.empty(len(e))
     for i, ei in enumerate(e):
-        #em[i] = E_quench_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
-        em[i] = Em_e(ei*1e3,ei*1e3,kB*1e3,ne)*1e-3
-        
-    if type(L)==float or isinstance(L, np.float64):
-        eff_A = sum(p*(1-np.exp(-L*em/2)))
-        eff_B = sum(p*(1-np.exp(-L*em/2)))
-        eff_D = sum(p*((1-np.exp(-L*em/2))**2))
+        em[i] = Em_e(ei * 1e3, ei * 1e3, kB * 1e3, ne) * 1e-3
+
+    if type(L) == float or isinstance(L, np.float64):
+        mu = np.mean(effQuantic)
+        pe = 1 - np.exp(-L * mu * em / 2)
+        eff_A = sum(p * pe)
+        eff_B = sum(p * pe)
+        eff_D = sum(p * pe ** 2)
     else:
-        eff_A = sum(p*(1-np.exp(-L[0]*em/2)))
-        eff_B = sum(p*(1-np.exp(-L[1]*em/2)))
-        eff_D = sum(p*(1-np.exp(-L[0]*em/2))*(1-np.exp(-L[1]*em/2)))
-        
+        mu_A, mu_B = effQuantic[0], effQuantic[1]
+        peA = 1 - np.exp(-L[0] * mu_A * em / 2)
+        peB = 1 - np.exp(-L[1] * mu_B * em / 2)
+        eff_A = sum(p * peA)
+        eff_B = sum(p * peB)
+        eff_D = sum(p * peA * peB)
+
     return eff_A, eff_B, eff_D
 
 

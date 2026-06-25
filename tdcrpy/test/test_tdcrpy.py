@@ -685,12 +685,15 @@ class TestTDCRPyMain(unittest.TestCase):
         eff_S = result[0]
         self.assertTrue(all(0 <= v <= 1 for v in eff_S))
 
-    @unittest.expectedFailure
     def test_TDCRPy_analytical_model(self):
-        # Known bug in TDCRPy.py:549 — modelAnalytical() is called with 11
-        # positional arguments but only accepts 10 (extra 'symm' arg passed).
-        result = TDCRPy_mod.TDCRPy(1.0, "H-3", "1", 100, KB_TYPICAL, 10, Smodel=False)
+        # Smodel=False: analytical model path, fixed in v2.20.8
+        # (extra 'symm' arg bug at TDCRPy.py:549 corrected).
+        # Returns 14-tuple with zero uncertainties (deterministic).
+        result = TDCRPy_mod.TDCRPy(9.0, "H-3", "1", 100, KB_TYPICAL, 10, Smodel=False)
         self.assertEqual(len(result), 14)
+        eff_S, _, eff_D, _, eff_T = result[0], result[1], result[2], result[3], result[4]
+        self.assertGreater(eff_S, 0)
+        self.assertLessEqual(eff_T, eff_D + 1e-9)
 
     def test_TDCRPy_higher_L_gives_higher_efficiency(self):
         res_low = TDCRPy_mod.TDCRPy(0.5, "H-3", "1", 150, KB_TYPICAL, 10)
@@ -857,6 +860,9 @@ class TestValidatedAnalytical(unittest.TestCase):
     differences without masking genuine regressions.
     """
 
+    # L = 9.0 photons/keV (consistent with stochastic model).
+    # With effQuantic=0.1 per PMT: L_photoelectron = 9.0 * 0.1 = 0.9 keV⁻¹.
+
     def _check(self, rad, exp_S, exp_D, exp_T, delta=0.001):
         eff_S, eff_D, eff_T = lib.modelAnalytical(
             _L_ANA, 0, 0, 0, 0, rad, _KB, _V, 'eff', 1000)
@@ -868,29 +874,31 @@ class TestValidatedAnalytical(unittest.TestCase):
                                msg=f'{rad} eff_T mismatch')
 
     def test_ref_H3_analytical(self):
+        # v2.20.7+ reference (L is photon yield, mu=0.1 applied internally)
         self._check('H-3',
-                    exp_S=0.92025, exp_D=0.92947, exp_T=0.86213)
+                    exp_S=0.54533, exp_D=0.55985, exp_T=0.28875)
 
     def test_ref_Sr90_analytical(self):
         self._check('Sr-90',
-                    exp_S=0.99504, exp_D=0.99551, exp_T=0.99337)
+                    exp_S=0.98099, exp_D=0.98286, exp_T=0.96929)
 
     def test_ref_Co60_analytical(self):
-        # Co-60 analytical uses beta-spectrum approximation only (no gammas).
+        # Beta-spectrum approximation only (no gammas in analytical model).
         self._check('Co-60',
-                    exp_S=0.99057, exp_D=0.99153, exp_T=0.98714)
+                    exp_S=0.96167, exp_D=0.96555, exp_T=0.93753)
 
     def test_ref_H3_effA(self):
-        # effA() deterministic: optimises L then evaluates analytically.
+        # L0 is now photon yield → 10× larger than the old photoelectron yield.
+        # Efficiencies are unchanged (same physical scenario).
         L0, _, eff_S, eff_D, eff_T = TDCRPy_mod.effA(0.5, 'H-3', '1', _KB, _V)
-        self.assertAlmostEqual(L0,    0.8544, delta=0.005, msg='H-3 L0')
+        self.assertAlmostEqual(L0,    8.5445, delta=0.05,  msg='H-3 L0 (photon yield)')
         self.assertAlmostEqual(eff_S, 0.5317, delta=0.005, msg='H-3 eff_S')
         self.assertAlmostEqual(eff_D, 0.5443, delta=0.005, msg='H-3 eff_D')
         self.assertAlmostEqual(eff_T, 0.2721, delta=0.005, msg='H-3 eff_T')
 
     def test_ref_Co60_effA(self):
         L0, _, eff_S, eff_D, eff_T = TDCRPy_mod.effA(0.977, 'Co-60', '1', _KB, _V)
-        self.assertAlmostEqual(L0,    1.1809, delta=0.01,  msg='Co-60 L0')
+        self.assertAlmostEqual(L0,    11.809, delta=0.10,  msg='Co-60 L0 (photon yield)')
         self.assertAlmostEqual(eff_S, 0.9685, delta=0.005, msg='Co-60 eff_S')
         self.assertAlmostEqual(eff_D, 0.9716, delta=0.005, msg='Co-60 eff_D')
         self.assertAlmostEqual(eff_T, 0.9492, delta=0.005, msg='Co-60 eff_T')
