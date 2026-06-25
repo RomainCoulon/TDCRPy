@@ -764,7 +764,15 @@ def _sample_nuclear_decay(
         print(f"\t Sampled daughter: {DaughterVec[index_rad][iDaughter]}")
 
     # ---- Branch sampling ----
-    branch_i = tl.sampling(tl.normalise(prob_branch[index_rad][iDaughter]))
+    # For pure isomeric-transition daughters (e.g. Tc-99m → Tc-99) all branch
+    # probabilities are zero because no primary particle is emitted before the
+    # IT cascade.  Sampling from an all-zero vector would be undefined; skip
+    # directly to the IT cascade via branch_i = 0 (which has p_branch = []).
+    branch_probs = prob_branch[index_rad][iDaughter]
+    if sum(branch_probs) > 0:
+        branch_i = tl.sampling(tl.normalise(branch_probs))
+    else:
+        branch_i = 0   # all branches are pure IT — no primary particle
     level_before_trans = 0.0
 
     if p_branch[index_rad][iDaughter][branch_i] != []:

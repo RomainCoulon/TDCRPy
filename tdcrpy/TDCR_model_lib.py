@@ -1054,7 +1054,10 @@ def sampling(p_x):
     """
     cf = np.cumsum(p_x)
     trial = np.random.rand()
-    return int(np.searchsorted(cf, trial))
+    # np.searchsorted can return len(cf) when trial >= cf[-1] due to
+    # floating-point rounding (cumulative sum falls just short of 1.0).
+    # Clamp to the last valid index to avoid IndexError in callers.
+    return min(int(np.searchsorted(cf, trial)), len(cf) - 1)
 
 def readPenNuc2(rad,z1=z_PenNuc):
     '''
