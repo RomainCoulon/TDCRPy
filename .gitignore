@@ -23,3 +23,7 @@ Thumbs.db
 # IDE
 .vscode/settings.json
 .idea/
+
+# Stray figure output from running notebooks/validation/functional_validation.ipynb
+# with the kernel cwd at the repo root instead of notebooks/validation/
+/validation_*.png

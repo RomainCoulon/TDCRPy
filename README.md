@@ -262,6 +262,12 @@ Notebooks are organised in subfolders by topic under [`notebooks/`](https://gith
 | [cocktailComposition.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/advanced/cocktailComposition.ipynb) | **Cocktail composition**: effect of aqueous fraction (H₂O / HCl) on detection efficiency for H-3 and Sr-90 |
 | [cocktailResponse.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/advanced/cocktailResponse.ipynb) | **Cocktail comparison**: eff_D for 12 commercial LS cocktails × 6 nuclides (H-3, C-14, Fe-55, Cr-51, Co-60, Cd-109) |
 
+### Sensitivity — [`notebooks/sensitivity/`](https://github.com/RomainCoulon/TDCRPy/tree/main/notebooks/sensitivity)
+
+| Notebook | Description |
+| :--- | :--- |
+| [parameterSensitivity.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/sensitivity/parameterSensitivity.ipynb) | **Parameter sensitivity study**: sweeps every tunable model parameter (L, kB, PMT quantum efficiency, cocktail composition, stopping-power model, quenching numerics, micelle correction, counting-chain parameters, optical transport, MC convergence) around its nominal value for H-3 and Sr-90, with a summary tornado chart |
+
 ### Validation — [`notebooks/validation/`](https://github.com/RomainCoulon/TDCRPy/tree/main/notebooks/validation)
 
 | Notebook | Description |
