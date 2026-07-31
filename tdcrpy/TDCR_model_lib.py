@@ -37,6 +37,7 @@ https://doi.org/10.1016/j.apradiso.2024.111518
 import importlib.resources
 from importlib.resources import files
 from importlib.metadata import version
+from functools import lru_cache
 import configparser
 import numpy as np
 import zipfile as zf
@@ -201,6 +202,163 @@ COCKTAIL_DATA = {
          'rho': 0.86
     }
 }
+
+# ---------------------------------------------------------------------------
+# Tan & Xia (2012) reference data for the low-energy electron stopping-power
+# model ('tan_xia'):
+# Tan Z., Xia Y., "Stopping power and mean free path for low-energy electrons
+# in ten scintillators over energy range of 20-20,000 eV", Applied Radiation
+# and Isotopes 70 (2012) 296-300. https://doi.org/10.1016/j.apradiso.2011.08.012
+# ---------------------------------------------------------------------------
+
+# Table 1: stoichiometric composition (atoms per formula unit, from which mass
+# fractions are derived below), reference density and mean ionisation
+# potential ("Calculated" column) for the 10 scintillators of the paper.
+TANXIA_COCKTAILS = {
+    'HS2':    {'atoms': {'C': 17.81, 'H': 25.37, 'N': 0.03, 'O': 1.59, 'P': 0.02, 'S': 0.07, 'Na': 0.08}, 'rho': 0.9931, 'I_eV': 63.6},
+    'HS3':    {'atoms': {'C': 19.91, 'H': 29.79, 'N': 0.06, 'O': 2.23}, 'rho': 0.9970, 'I_eV': 62.9},
+    'IGP':    {'atoms': {'C': 19.93, 'H': 31.29, 'N': 0.03, 'O': 2.79}, 'rho': 0.9535, 'I_eV': 63.0},
+    'UG':     {'atoms': {'C': 16.77, 'H': 24.92, 'N': 0.09, 'O': 1.48, 'P': 0.11, 'S': 0.01, 'Na': 0.02}, 'rho': 0.9845, 'I_eV': 63.1},
+    'UG-AB':  {'atoms': {'C': 18.66, 'H': 28.25, 'N': 0.02, 'O': 2.53, 'P': 0.01}, 'rho': 0.9800, 'I_eV': 63.1},
+    'UG-XR':  {'atoms': {'C': 18.18, 'H': 29.57, 'N': 0.04, 'O': 2.83, 'P': 0.09, 'S': 0.03, 'Na': 0.03}, 'rho': 0.9900, 'I_eV': 63.7},
+    'UG-LLT': {'atoms': {'C': 18.63, 'H': 28.17, 'N': 0.02, 'O': 2.54}, 'rho': 0.9830, 'I_eV': 63.2},
+    'UG-MV':  {'atoms': {'C': 17.01, 'H': 26.23, 'N': 0.04, 'O': 1.67, 'P': 0.09, 'S': 0.02, 'Na': 0.02}, 'rho': 0.9600, 'I_eV': 62.8},
+    'UG-F':   {'atoms': {'C': 15.99, 'H': 19.77, 'N': 0.02, 'P': 0.01}, 'rho': 0.9600, 'I_eV': 61.6},
+    'HF':     {'atoms': {'C': 10.83, 'H': 18.74, 'N': 0.05, 'O': 1.97, 'P': 0.18, 'S': 0.04, 'Na': 0.04}, 'rho': 0.9650, 'I_eV': 65.1},
+}
+
+# Direct name mapping between TDCRPy's COCKTAIL_DATA entries and the Tan & Xia
+# scintillators they are (nominally) the same product as.
+_TANXIA_DIRECT_MATCH = {
+    'Ultima Gold': 'UG',
+    'Ultima Gold XR': 'UG-XR',
+    'Ultima Gold AB': 'UG-AB',
+    'Ultima Gold LLT': 'UG-LLT',
+    'Insta-Gel Plus': 'IGP',
+    'Hionic-Fluor': 'HF',
+}
+
+# Table 2: electron stopping power (eV/Angstrom) at the tabulated energies (eV).
+_TANXIA_ENERGY_EV = [
+    20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100,
+    110, 120, 130, 140, 150, 160, 170, 180, 190, 200,
+    250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000,
+    1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000,
+    15000, 20000,
+]
+
+_TANXIA_SP_TABLE_eV_per_A = {
+    'HS2':    [0.1455, 0.2461, 0.3907, 0.5957, 0.8764, 1.2289, 1.6143, 1.9802, 2.2949, 2.5507, 2.7525, 2.9088, 3.0281, 3.1178, 3.1840, 3.2312, 3.2627,
+               3.2905, 3.2866, 3.2628, 3.2260, 3.1810, 3.1310, 3.0780, 3.0235, 2.9685, 2.9137,
+               2.6548, 2.4308, 2.2406, 2.0789, 1.9401, 1.8201, 1.7151, 1.6240, 1.5465, 1.4787, 1.4180, 1.3633, 1.3135, 1.2679, 1.2258, 1.1869,
+               0.9118, 0.7489, 0.6393, 0.5600, 0.4996, 0.4520, 0.4133, 0.3813, 0.3543, 0.3311, 0.3110, 0.2934, 0.2779, 0.2640, 0.2516, 0.2404, 0.2302, 0.2209,
+               0.1590, 0.1254],
+    'HS3':    [0.1482, 0.2507, 0.3981, 0.6071, 0.8931, 1.2516, 1.6426, 2.0128, 2.3305, 2.5885, 2.7919, 2.9492, 3.0692, 3.1594, 3.2260, 3.2734, 3.3052,
+               3.3333, 3.3295, 3.3055, 3.2684, 3.2229, 3.1723, 3.1187, 3.0635, 3.0079, 2.9524,
+               2.6902, 2.4631, 2.2704, 2.1064, 1.9657, 1.8439, 1.7374, 1.6449, 1.5662, 1.4972, 1.4355, 1.3799, 1.3292, 1.2828, 1.2401, 1.2006,
+               0.9216, 0.7567, 0.6459, 0.5657, 0.5047, 0.4565, 0.4175, 0.3851, 0.3578, 0.3344, 0.3141, 0.2963, 0.2806, 0.2666, 0.2540, 0.2427, 0.2324, 0.2230,
+               0.1605, 0.1266],
+    'IGP':    [0.1423, 0.2409, 0.3825, 0.5834, 0.8582, 1.2024, 1.5773, 1.9318, 2.2358, 2.4826, 2.6771, 2.8275, 2.9421, 3.0282, 3.0918, 3.1372, 3.1677,
+               3.1950, 3.1918, 3.1692, 3.1341, 3.0910, 3.0428, 2.9918, 2.9392, 2.8862, 2.8333,
+               2.5828, 2.3656, 2.1809, 2.0237, 1.8887, 1.7718, 1.6696, 1.5806, 1.5049, 1.4385, 1.3791, 1.3255, 1.2767, 1.2320, 1.1908, 1.1527,
+               0.8844, 0.7260, 0.6197, 0.5427, 0.4842, 0.4380, 0.4005, 0.3694, 0.3432, 0.3208, 0.3013, 0.2842, 0.2692, 0.2557, 0.2437, 0.2328, 0.2230, 0.2140,
+               0.1539, 0.1214],
+    'UG':     [0.1466, 0.2480, 0.3938, 0.6006, 0.8835, 1.2381, 1.6248, 1.9909, 2.3051, 2.5602, 2.7613, 2.9169, 3.0355, 3.1246, 3.1903, 3.2369, 3.2678,
+               3.2945, 3.2897, 3.2649, 3.2274, 3.1817, 3.1310, 3.0774, 3.0224, 2.9670, 2.9118,
+               2.6516, 2.4268, 2.2365, 2.0748, 1.9361, 1.8162, 1.7114, 1.6203, 1.5429, 1.4751, 1.4145, 1.3598, 1.3100, 1.2644, 1.2224, 1.1836,
+               0.9089, 0.7463, 0.6370, 0.5579, 0.4977, 0.4502, 0.4117, 0.3798, 0.3528, 0.3298, 0.3098, 0.2922, 0.2767, 0.2629, 0.2506, 0.2394, 0.2292, 0.2200,
+               0.1583, 0.1249],
+    'UG-AB':  [0.1447, 0.2449, 0.3888, 0.5929, 0.8722, 1.2225, 1.6046, 1.9666, 2.2775, 2.5300, 2.7290, 2.8830, 3.0005, 3.0888, 3.1542, 3.2008, 3.2323,
+               3.2606, 3.2578, 3.2352, 3.1996, 3.1558, 3.1069, 3.0549, 3.0014, 2.9473, 2.8934,
+               2.6380, 2.4163, 2.2279, 2.0674, 1.9295, 1.8102, 1.7058, 1.6150, 1.5378, 1.4700, 1.4093, 1.3547, 1.3049, 1.2593, 1.2173, 1.1784,
+               0.9045, 0.7426, 0.6339, 0.5553, 0.4954, 0.4481, 0.4098, 0.3780, 0.3512, 0.3282, 0.3083, 0.2909, 0.2755, 0.2617, 0.2494, 0.2383, 0.2282, 0.2190,
+               0.1576, 0.1243],
+    'UG-XR':  [0.1458, 0.2466, 0.3916, 0.5972, 0.8786, 1.2313, 1.6157, 1.9796, 2.2919, 2.5455, 2.7454, 2.9000, 3.0179, 3.1066, 3.1722, 3.2191, 3.2508,
+               3.2797, 3.2773, 3.2549, 3.2196, 3.1759, 3.1270, 3.0751, 3.0215, 2.9674, 2.9134,
+               2.6573, 2.4348, 2.2457, 2.0846, 1.9463, 1.8265, 1.7216, 1.6304, 1.5525, 1.4842, 1.4230, 1.3678, 1.3175, 1.2715, 1.2291, 1.1898,
+               0.9132, 0.7499, 0.6402, 0.5607, 0.5003, 0.4526, 0.4139, 0.3819, 0.3548, 0.3316, 0.3115, 0.2939, 0.2783, 0.2644, 0.2520, 0.2408, 0.2306, 0.2213,
+               0.1592, 0.1256],
+    'UG-LLT': [0.1448, 0.2450, 0.3890, 0.5932, 0.8726, 1.2233, 1.6061, 1.9690, 2.2807, 2.5339, 2.7336, 2.8882, 3.0061, 3.0948, 3.1604, 3.2074, 3.2390,
+               3.2677, 3.2652, 3.2426, 3.2072, 3.1634, 3.1145, 3.0625, 3.0090, 2.9549, 2.9009,
+               2.6450, 2.4229, 2.2341, 2.0732, 1.9350, 1.8153, 1.7106, 1.6196, 1.5421, 1.4742, 1.4134, 1.3586, 1.3086, 1.2629, 1.2208, 1.1818,
+               0.9071, 0.7449, 0.6358, 0.5569, 0.4969, 0.4495, 0.4111, 0.3792, 0.3523, 0.3293, 0.3093, 0.2918, 0.2763, 0.2625, 0.2502, 0.2390, 0.2289, 0.2197,
+               0.1580, 0.1247],
+    'UG-MV':  [0.1444, 0.2444, 0.3882, 0.5921, 0.8711, 1.2202, 1.6000, 1.9588, 2.2663, 2.5158, 2.7123, 2.8642, 2.9800, 3.0669, 3.1309, 3.1762, 3.2063,
+               3.2320, 3.2270, 3.2025, 3.1656, 3.1207, 3.0709, 3.0183, 2.9643, 2.9100, 2.8558,
+               2.6006, 2.3802, 2.1935, 2.0349, 1.8988, 1.7812, 1.6784, 1.5890, 1.5130, 1.4464, 1.3869, 1.3332, 1.2843, 1.2395, 1.1982, 1.1601,
+               0.8905, 0.7311, 0.6239, 0.5464, 0.4875, 0.4409, 0.4032, 0.3719, 0.3455, 0.3229, 0.3033, 0.2861, 0.2710, 0.2575, 0.2453, 0.2344, 0.2245, 0.2154,
+               0.1550, 0.1222],
+    'UG-F':   [0.1460, 0.2470, 0.3923, 0.5981, 0.8799, 1.2333, 1.6188, 1.9841, 2.2977, 2.5524, 2.7532, 2.9086, 3.0271, 3.1160, 3.1812, 3.2268, 3.2564,
+               3.2796, 3.2713, 3.2433, 3.2029, 3.1548, 3.1020, 3.0466, 2.9901, 2.9333, 2.8770,
+               2.6135, 2.3877, 2.1972, 2.0357, 1.8977, 1.7785, 1.6745, 1.5844, 1.5085, 1.4423, 1.3831, 1.3300, 1.2815, 1.2372, 1.1964, 1.1586,
+               0.8904, 0.7309, 0.6237, 0.5461, 0.4871, 0.4405, 0.4028, 0.3715, 0.3451, 0.3225, 0.3029, 0.2857, 0.2705, 0.2570, 0.2449, 0.2340, 0.2240, 0.2150,
+               0.1546, 0.1219],
+    'HF':     [0.1396, 0.2362, 0.3750, 0.5718, 0.8412, 1.1793, 1.5484, 1.8983, 2.1990, 2.4433, 2.6360, 2.7851, 2.8989, 2.9844, 3.0479, 3.0933, 3.1241,
+               3.1524, 3.1507, 3.1297, 3.0962, 3.0546, 3.0080, 2.9584, 2.9073, 2.8556, 2.8039,
+               2.5586, 2.3454, 2.1645, 2.0104, 1.8780, 1.7633, 1.6629, 1.5755, 1.5007, 1.4349, 1.3759, 1.3227, 1.2742, 1.2298, 1.1888, 1.1509,
+               0.8837, 0.7259, 0.6199, 0.5431, 0.4847, 0.4385, 0.4011, 0.3700, 0.3438, 0.3214, 0.3019, 0.2849, 0.2698, 0.2564, 0.2443, 0.2335, 0.2236, 0.2146,
+               0.1545, 0.1219],
+}
+
+def _tanxia_mass_fractions(key):
+    """Mass fractions {element: w_i} for a Tan & Xia Table-1 scintillator."""
+    atoms = TANXIA_COCKTAILS[key]['atoms']
+    masses = {el: n * ATOMIC_WEIGHTS[el] for el, n in atoms.items() if el in ATOMIC_WEIGHTS}
+    return normalizeDic(masses)
+
+_TANXIA_MASS_FRACTIONS = {key: _tanxia_mass_fractions(key) for key in TANXIA_COCKTAILS}
+
+@lru_cache(maxsize=None)
+def _closest_tanxia_cocktail(cocktail_name):
+    """
+    Map a TDCRPy LS-cocktail name onto the closest of the ten scintillators
+    tabulated by Tan and Xia (2012).
+
+    Cocktails that are (nominally) the same commercial product as one of the
+    ten scintillators use its data directly (see :data:`_TANXIA_DIRECT_MATCH`).
+    Any other cocktail (including custom/unlisted ones) is matched to the
+    tabulated scintillator with the closest elemental mass-fraction composition
+    (least-squares distance over H, C, N, O, P, S, Na).
+
+    Parameters
+    ----------
+    cocktail_name : str
+        Name of the LS cocktail, as returned by :func:`lsCocktail`.
+
+    Returns
+    -------
+    str
+        Key into :data:`TANXIA_COCKTAILS` (e.g. ``'UG'``).
+    """
+    if cocktail_name in _TANXIA_DIRECT_MATCH:
+        return _TANXIA_DIRECT_MATCH[cocktail_name]
+    if cocktail_name not in COCKTAIL_DATA:
+        return 'UG'  # sane default: Ultima Gold is the historical TDCRPy reference cocktail
+
+    w_target = COCKTAIL_DATA[cocktail_name]['w']
+    elements = ('H', 'C', 'N', 'O', 'P', 'S', 'Na')
+    best_key, best_dist = 'UG', None
+    for key, w_ref in _TANXIA_MASS_FRACTIONS.items():
+        dist = sum((w_target.get(el, 0.0) - w_ref.get(el, 0.0)) ** 2 for el in elements)
+        if best_dist is None or dist < best_dist:
+            best_dist, best_key = dist, key
+    return best_key
+
+_tanxia_dense_cache = {}
+
+def _tanxia_dense_sp(key):
+    """
+    Dense, 1-eV-resolution stopping-power table (MeV.cm-1) for a Tan & Xia
+    scintillator, built by linear interpolation of Table 2 of the paper
+    (converted from eV/Angstrom) over energies 0-19999 eV, extrapolated
+    linearly to zero at 0 eV.  Cached after first use.
+    """
+    if key not in _tanxia_dense_cache:
+        x = np.array([0.0] + _TANXIA_ENERGY_EV, dtype=float)
+        y = np.array([0.0] + _TANXIA_SP_TABLE_eV_per_A[key], dtype=float) * 100.0  # eV/A -> MeV/cm
+        e_grid = np.arange(0, 20000, dtype=float)
+        _tanxia_dense_cache[key] = np.interp(e_grid, x, y)
+    return _tanxia_dense_cache[key]
 
 def calculate_aqueous_fractions(solvantType, conc_mol_L):
     """
@@ -1431,7 +1589,14 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     emin : float, optional
         the minimal energy to consider. The default is 0.
     file : list, optional
-        tabulated data form the Tan and Xia model. The default is data_TanXia_f.
+        legacy tabulated data (Ultima Gold) for the Tan and Xia model, used
+        only if explicitly overridden by the caller. The default is
+        data_TanXia_f. When left at its default, the 'tan_xia' model instead
+        automatically selects the scintillator from Tan and Xia (2012) that
+        is closest -- by name or, failing that, by elemental composition --
+        to the LS cocktail currently selected via :func:`lsCocktail`, and
+        uses that scintillator's own reference density and mean ionisation
+        potential (see :data:`TANXIA_COCKTAILS`).
 
     Returns
     -------
@@ -1444,7 +1609,7 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
         'ashley': 100, 'kossert_graucarles': 1000, 'rao_reddy': 413,
     }
     emax = _emax_map.get(spmodel, 20000)
-    
+
     # e:eV ;rho: g.cm-3
     mc_2 = 0.5109989 #MeV
     I = 64.7e-6 #MeV
@@ -1452,6 +1617,16 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     ahc = 1.437e-13   #MeV.cm
     re = 2.8179403227e-13 # Classical electron radius in cm
     const_K = 4 * np.pi * NA * re**2 * mc_2 # ~ 0.307075 MeV cm^2 / mol
+
+    tx_key = None
+    if spmodel == 'tan_xia':
+        # Map the active LS cocktail onto the closest Tan & Xia (2012)
+        # scintillator and use its own mean ionisation potential, so that the
+        # low-energy table and the high-energy Bethe branch below stay
+        # consistent with each other for the selected cocktail.
+        tx_key = _closest_tanxia_cocktail(lsCocktail())
+        I = TANXIA_COCKTAILS[tx_key]['I_eV'] * 1e-6  # eV -> MeV
+
     if e>=emax:
         # model de Bethe
         e1 = e*1e-6 #MeV
@@ -1474,7 +1649,12 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
         if e > emin:
             if spmodel=='tan_xia':
                 # https://doi.org/10.1016/j.apradiso.2011.08.012
-                dEdx=float(file[int(e)]) #MeV.cm-1
+                if file is not data_TanXia_f:
+                    # caller explicitly supplied a custom table: honour it as before
+                    dEdx = float(file[int(e)])  #MeV.cm-1
+                else:
+                    tx_rho = TANXIA_COCKTAILS[tx_key]['rho']
+                    dEdx = float(_tanxia_dense_sp(tx_key)[int(e)]) * (rho / tx_rho)  #MeV.cm-1
             elif spmodel == 'joy_luo':
                 # Joy and Luo (1989) Modification
                 # Units: Result in MeV/cm (conversion factor 785 is for eV/A)
