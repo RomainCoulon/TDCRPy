@@ -87,8 +87,13 @@ class TestMyModule(unittest.TestCase):
         self.assertLessEqual(result, 344.12105896)
 
     def test_Em_e(self):
+        # kB=1e-5 cm/MeV is below the tabulated kB_e range (>=0.006), so this
+        # now correctly routes through the accurate model instead of the
+        # (buggy) table extrapolation -- very little quenching is expected
+        # at such a small kB. Threshold updated accordingly (was calibrated
+        # against the pre-fix, over-quenched table-wraparound result).
         result = lib.Em_e(50000, 50000, 1e-5, 10000)
-        self.assertLessEqual(result, 48568.14392205286)
+        self.assertLessEqual(result, 49990.0)
 
     def test_Em_e2(self):
         result = lib.Em_e(50000, 25000, 1e-5, 10000)

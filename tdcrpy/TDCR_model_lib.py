@@ -567,6 +567,20 @@ def readEffQ0():
     read_config_object()
     return config["Inputs"].get("effQuantum")
 
+def _live_effQuantic():
+    """Return the current PMT quantum efficiencies [muA, muB, muC] read fresh
+    from config.toml (unlike the module-level ``effQuantic`` global, which is
+    only set once at import time and does not track later ``modifyEffQ()``
+    calls within the same process)."""
+    raw = readEffQ0()
+    vals = []
+    if raw:
+        for s in raw.split(','):
+            s = s.strip()
+            if s and s != 'None':
+                vals.append(float(s))
+    return vals
+
 def lsCocktail():
     """Return the active LS cocktail name, or ``'False'`` if using defaults."""
     read_config_object()
@@ -1953,10 +1967,12 @@ def E_quench_e(ei,ed,kB,nE,kC=chou_param):
     """
     
     e_dis = np.linspace(ei-ed,ei,nE)
-    delta = e_dis[2] - e_dis[1]
-    q = 0
-    for i in e_dis:
-        q += delta/(1+kB*stoppingpower(i)+kC*stoppingpower(i)**2)
+    f = np.array([1.0/(1+kB*stoppingpower(i)+kC*stoppingpower(i)**2) for i in e_dis])
+    # Trapezoidal rule: summing nE point samples each weighted by a delta
+    # sized for (nE-1) intervals (as a plain Riemann sum would) overcounts
+    # the integral by a factor ~nE/(nE-1); this keeps q <= ed always, as it
+    # must (the integrand is <= 1).
+    q = float(np.sum((f[:-1] + f[1:]) * np.diff(e_dis) / 2.0))
     return q
 
 
@@ -1981,10 +1997,10 @@ def E_quench_a(e,kB,nE):
     """
     
     e_dis = np.linspace(0,e,nE)
-    delta = e_dis[2] - e_dis[1]
-    q = 0
-    for i in e_dis:
-        q += delta/(1+kB*stoppingpowerA(i))
+    f = np.array([1.0/(1+kB*stoppingpowerA(i)) for i in e_dis])
+    # Trapezoidal rule -- see E_quench_e for why a plain Riemann sum over
+    # nE points overcounts the integral.
+    q = float(np.sum((f[:-1] + f[1:]) * np.diff(e_dis) / 2.0))
     return q
 
 def run_interpolate(kB_vec, kB , Ev, Emv, E, m = depthSpline):
@@ -2022,11 +2038,22 @@ def run_interpolate(kB_vec, kB , Ev, Emv, E, m = depthSpline):
     else:
         # non exact value for the kB
         # find the index just above the true value
+        ind_k = -1
         for index, value in enumerate(kB_vec):
-            ind_k = -1
             if value > kB:
                 ind_k = index
-                break        
+                break
+        if ind_k == -1:
+            # kB above every tabulated value: extrapolate from the top pair
+            # instead of leaving ind_k-1 as a bare -1 (relies on Python's
+            # negative indexing landing on the second-to-last element).
+            ind_k = len(kB_vec) - 1
+        elif ind_k == 0:
+            # kB below every tabulated value (e.g. kB=0, "no quenching"):
+            # extrapolate from the bottom pair. Without this, ind_k-1 wraps
+            # around to kB_vec[-1] (the *highest* tabulated kB), silently
+            # mixing in strong-quenching values instead of extrapolating.
+            ind_k = 1
         kBin = False
     for index, value in enumerate(Ev):
         # find the index just above the location of the exact value of the input energy 
@@ -2087,12 +2114,14 @@ def Em_a(E, kB, nE, Et = Einterp_a, kB_vec = kB_a):
 
     """
     
-    if E <= Et:
-        # run the accurate quenching model
+    if E <= Et or kB < kB_vec[0] or kB > kB_vec[-1]:
+        # run the accurate quenching model (also covers kB outside the
+        # tabulated range, e.g. kB=0 "no quenching", where interpolation
+        # would otherwise extrapolate off the edge of the table)
         r = E_quench_a(E,kB,nE)
     else:
         # run interpolation
-        r = run_interpolate(kB_vec, kB , Ei_alpha, Em_alpha, E)    
+        r = run_interpolate(kB_vec, kB , Ei_alpha, Em_alpha, E)
     return r
 
 def Em_e(Ei, Ed, kB, nE, Et = Einterp_e*1e3, kB_vec = kB_e):
@@ -2121,8 +2150,10 @@ def Em_e(Ei, Ed, kB, nE, Et = Einterp_e*1e3, kB_vec = kB_e):
         interpolated quenched energy in eV for electron and in keV for alpha
 
     """    
-    if Ed <= Et or Ei != Ed:
-        # run the accurate quenching model
+    if Ed <= Et or Ei != Ed or kB < kB_vec[0] or kB > kB_vec[-1]:
+        # run the accurate quenching model (also covers kB outside the
+        # tabulated range, e.g. kB=0 "no quenching", where interpolation
+        # would otherwise extrapolate off the edge of the table)
         r = E_quench_e(Ei,Ed,kB,int(nE))
     else:
         # run interpolation
@@ -3608,7 +3639,7 @@ def relaxation_atom_ph(lacune,element,v):
     return particule_emise,energie_par_emise,posi_lacune,par_emise  
 
 def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
-                    effQuantic=effQuantic):
+                    effQuantic=None):
     """
     TDCR analytical model for pure beta emitting radionuclides.
 
@@ -3641,6 +3672,8 @@ def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
     res : float  (mode="res")
     eff_S, eff_D, eff_T : float  (mode="eff")
     """
+    if effQuantic is None:
+        effQuantic = _live_effQuantic()
     e, p = readBetaSpectra(rad)
     em = np.empty(len(e))
     for i, ei in enumerate(e):
@@ -3682,7 +3715,7 @@ def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
     if mode == "eff":
         return eff_S, eff_D, eff_T
 
-def modelAnalyticalCN(L, rad, kB, V, ne, effQuantic=effQuantic):
+def modelAnalyticalCN(L, rad, kB, V, ne, effQuantic=None):
     """CIEMAT/NIST analytical model for a 2-PMT coincidence system.
 
     The free parameter *L* is the **photon yield** (photons keV⁻¹), consistent
@@ -3716,6 +3749,8 @@ def modelAnalyticalCN(L, rad, kB, V, ne, effQuantic=effQuantic):
     eff_D : float
         Double-coincidence detection efficiency.
     """
+    if effQuantic is None:
+        effQuantic = _live_effQuantic()
     e, p = readBetaSpectra(rad)
     em = np.empty(len(e))
     for i, ei in enumerate(e):
@@ -3869,7 +3904,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
     else:
         return bins[:-1], p2
                 
-def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = effQuantic):
+def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, measTime, effQuantic = None):
     """
     Calculate detection probabilities for LS counting systems - see Broda, R., Cassette, P., Kossert, K., 2007. Radionuclide metrology using liquid scintillation counting. Metrologia 44. https://doi.org/10.1088/0026-1394/44/4/S06 
 
@@ -3908,6 +3943,8 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
         detection probability of coincidences in a C/N system.
 
     """
+    if effQuantic is None:
+        effQuantic = _live_effQuantic()
     if isinstance(L, (tuple, list)):
         symm = False
         mu = effQuantic
@@ -4028,7 +4065,7 @@ def detectProbabilities(L, e_quenching, e_quenching2, t1, evenement, extDT, meas
 
 
 def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement,
-                          extDT, measTime, effQuantic=effQuantic):
+                          extDT, measTime, effQuantic=None):
     """
     Full optical Monte-Carlo detection model for LS counting systems.
 
@@ -4068,6 +4105,8 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement,
     efficiency0_AB, efficiency0_BC, efficiency0_AC, efficiency0_D2 : int
         Per-event detection flags (0 or 1; can be 2 for delayed case).
     """
+    if effQuantic is None:
+        effQuantic = _live_effQuantic()
     mu = effQuantic
 
     if type(L) == float:
