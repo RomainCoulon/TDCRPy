@@ -1127,7 +1127,16 @@ def _run_from_history(L, N, tau, ext_dt, meas_time, opticalTransport, mode):
             if line.startswith("#"):
                 continue
             parts = line.split()
-            decay = int(parts[2])
+            try:
+                decay = int(parts[2])
+            except (IndexError, ValueError):
+                # Incomplete/corrupted record -- e.g. a short or partially
+                # flushed line (Temp_E2.txt is a fixed-name file in the
+                # shared system temp dir, so concurrent or leftover writes
+                # from another run can leave a stray malformed line). Skip
+                # it rather than crash; dropping one record has negligible
+                # effect on the accumulated statistics.
+                continue
 
             if decay != decaym:
                 if decay > 0:
@@ -1138,16 +1147,22 @@ def _run_from_history(L, N, tau, ext_dt, meas_time, opticalTransport, mode):
                     )
 
                 # Start new event.
-                energy = float(parts[1]) * 1e-3
-                t1 = float(parts[4])
+                try:
+                    energy = float(parts[1]) * 1e-3
+                    t1 = float(parts[4])
+                except (IndexError, ValueError):
+                    continue
                 decaym = decay
                 e_quenching = [energy]
                 e_quenching2 = []
                 evenement = 1
 
             else:
-                energy = float(parts[1]) * 1e-3
-                t1 = float(parts[4])
+                try:
+                    energy = float(parts[1]) * 1e-3
+                    t1 = float(parts[4])
+                except (IndexError, ValueError):
+                    continue
                 if t1 > tau * 1e-9:
                     evenement += 1
                     e_quenching2.append(energy)
@@ -1410,7 +1425,7 @@ def eff(TD, Rad, pmf_1, kB, V,
 
 def effA(TD, Rad, pmf_1, kB, V,
          L=1, maxiter=20, xatol=1e-7,
-         disp=False, Lbounds=(0.1, 100),
+         disp=False, Lbounds=(0.01, 100),
          cerenkov=False):
     """
     Determine the free parameter *L* and detection efficiencies from a

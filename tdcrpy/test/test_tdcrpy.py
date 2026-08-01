@@ -10,6 +10,8 @@ Bureau International des Poids et Mesures
 
 import unittest
 import importlib.resources
+import os
+import tempfile
 import numpy as np
 import tdcrpy
 import tdcrpy.TDCRPy as TDCRPy_mod
@@ -680,6 +682,25 @@ class TestTDCRPyMain(unittest.TestCase):
         eff_S, _, eff_D, _, eff_T = result[0], result[1], result[2], result[3], result[4]
         self.assertGreater(eff_S, 0)
         self.assertLessEqual(eff_T, eff_D + 1e-9)
+
+    def test_run_from_history_skips_malformed_lines(self):
+        # Regression test for a reported IndexError: Temp_E2.txt is a
+        # fixed-name file in the shared system temp dir, so a stray short
+        # or partially-written line (e.g. from a leftover/concurrent run)
+        # used to crash _run_from_history() at parts[2]. It must now skip
+        # such lines instead of raising.
+        recfile3 = os.path.join(tempfile.gettempdir(), "Temp_E2.txt")
+        with open(recfile3, "w") as f:
+            f.write("# TDCRPy output: quenched deposited energies from nuclear decays\n")
+            for idec in range(5):
+                f.write(f"1 5.000000E+03 {idec:2d} 1 0.000000E+00\n")
+            f.write("1 5.00\n")  # malformed: too few fields
+            for idec in range(5, 10):
+                f.write(f"1 5.000000E+03 {idec:2d} 1 0.000000E+00\n")
+
+        result = TDCRPy_mod.TDCRPy(5.0, "H-3", "1", 10, KB_TYPICAL, 15, readRecHist=True)
+        self.assertEqual(len(result), 14)
+        self.assertGreater(result[0], 0)  # eff_S
 
     def test_TDCRPy_higher_L_gives_higher_efficiency(self):
         res_low = TDCRPy_mod.TDCRPy(0.5, "H-3", "1", 150, KB_TYPICAL, 10)
