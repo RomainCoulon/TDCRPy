@@ -581,6 +581,14 @@ def _live_effQuantic():
                 vals.append(float(s))
     return vals
 
+def _live_tau():
+    """Return the current coincidence resolving time (ns) read fresh from
+    config.toml (unlike a module-level global, which is only set once at
+    import time and does not track later ``modifyTau()`` calls within the
+    same process)."""
+    read_config_object()
+    return config["Inputs"].getfloat("tau")
+
 def lsCocktail():
     """Return the active LS cocktail name, or ``'False'`` if using defaults."""
     read_config_object()
@@ -3639,7 +3647,8 @@ def relaxation_atom_ph(lacune,element,v):
     return particule_emise,energie_par_emise,posi_lacune,par_emise  
 
 def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
-                    effQuantic=None):
+                    effQuantic=None, delayed=False, p_delayed=0.0,
+                    ed=0.0, tau_prompt=None, tau_delayed=None):
     """
     TDCR analytical model for pure beta emitting radionuclides.
 
@@ -3666,6 +3675,22 @@ def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
     effQuantic : list of float, optional
         PMT quantum efficiencies [μ_A, μ_B, μ_C].  Defaults to the
         module-level value loaded from config.
+    delayed : bool, optional
+        If ``True``, account for prompt- and delayed-fluorescence timing
+        losses/gains within the coincidence resolving time window. Default
+        ``False`` (no effect on the calculation).
+    p_delayed : float, optional
+        Probability of delayed fluorescence emission per decay. Only used
+        when ``delayed=True``.
+    ed : float, optional
+        Quenched energy (keV) equivalent of the delayed fluorescence
+        emission. Only used when ``delayed=True``.
+    tau_prompt : float, optional
+        Decay period of the prompt fluorescence (ns). Only used when
+        ``delayed=True``.
+    tau_delayed : float, optional
+        Decay period of the delayed fluorescence (ns). Only used when
+        ``delayed=True``.
 
     Returns
     -------
@@ -3678,6 +3703,15 @@ def modelAnalytical(L, TD, TAB, TBC, TAC, rad, kB, V, mode, ne,
     em = np.empty(len(e))
     for i, ei in enumerate(e):
         em[i] = Em_e(ei * 1e3, ei * 1e3, kB * 1e3, ne) * 1e-3
+
+    if delayed:
+        # W = coincidence resolving time; fp(W) is the fraction of prompt
+        # fluorescence collected within W, fd(W) the fraction of delayed
+        # fluorescence collected within W.
+        W = _live_tau()
+        fp = 1 - np.exp(-W / tau_prompt)
+        fd = W / (W + tau_delayed)
+        em = em * fp + p_delayed * ed * fd
 
     if type(L) == float or isinstance(L, np.float64):
         # Symmetric: single mean quantum efficiency
