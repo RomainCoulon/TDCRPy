@@ -28,9 +28,6 @@ https://doi.org/10.1016/j.apradiso.2024.111518
 # ---------------------------------------------------------------------------
 import os
 import tempfile
-import configparser
-import importlib.resources
-from importlib.resources import files
 
 import numpy as np
 from tqdm import tqdm
@@ -175,11 +172,14 @@ def _read_config():
     ne_alpha : int
         Number of energy bins for alpha quenching.
     """
-    config = configparser.ConfigParser()
-    with importlib.resources.as_file(
-        files("tdcrpy").joinpath("config.toml")
-    ) as cfg_path:
-        config.read(cfg_path)
+    # Delegated to TDCR_model_lib, which caches the parsed configuration in
+    # memory and fails loudly (after retries) instead of silently handing back
+    # an empty parser when the file is momentarily unreadable. Parsing it here
+    # on every call used to turn each Monte-Carlo iteration into a filesystem
+    # round-trip -- slow, and a fresh opportunity to trip over a transient lock
+    # or network glitch, which then surfaced as ``KeyError: 'Inputs'``.
+    tl.read_config_object()
+    config = tl.config
     inp = config["Inputs"]
     return (
         config,

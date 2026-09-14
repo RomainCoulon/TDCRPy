@@ -43,6 +43,7 @@ import numpy as np
 import zipfile as zf
 import re
 import os
+import time
 import scipy.interpolate as interp
 from scipy.integrate import cumulative_trapezoid
 import matplotlib.pyplot as plt
@@ -519,38 +520,141 @@ def calculate_lsc_mixture_properties(cocktail_name, aqueous_mass_fraction, solva
 
 """
 ======= CONFIGURATION I/O (Safe Implementation) =======
+
+``config.toml`` holds mutable runtime state (cocktail, aqueous fraction, tau,
+dead time, ...) and is consulted on every Monte-Carlo call, so it has to be
+both cheap and robust. Three rules are enforced here:
+
+* **Reads never use** :meth:`configparser.ConfigParser.read`. That method
+  silently ignores *any* ``OSError`` and hands back an empty parser, so a
+  momentarily unavailable file (network share hiccup, lock held by a virus
+  scanner or backup agent, or the truncation window of a non-atomic write)
+  surfaces much later and far away as a baffling ``KeyError: 'Inputs'``
+  instead of the actual I/O error. We open the file ourselves, retry a few
+  times, and finally raise a descriptive error naming the real problem.
+
+* **Writes are atomic.** A temporary file in the same directory is written,
+  flushed, fsynced and then :func:`os.replace`\\ d over the target, so a
+  reader can never observe a half-written or truncated file.
+
+* **The parsed configuration is cached in memory.** Re-reading on every
+  Monte-Carlo call turned each call into a filesystem round-trip (painfully
+  slow, and a fresh failure opportunity, when TDCRPy is installed on a
+  network share). The cache is kept coherent because the
+  ``update_config_*`` helpers below are the only supported way to change the
+  configuration: they update the in-memory object and the file together.
+  A process that needs to pick up an edit made by *another* process must
+  call ``read_config_object(force=True)``.
 """
+_CONFIG_SECTION = "Inputs"
+_CONFIG_READ_ATTEMPTS = 5
+_CONFIG_READ_BACKOFF = 0.2      # seconds; doubled after each failed attempt
+
 _CONFIG_CACHED = False
 
 def get_config_path():
     return files('tdcrpy').joinpath('config.toml')
 
-def read_config_object():
+def _parse_config_file(path, section=_CONFIG_SECTION):
+    """Parse *path*, retrying transient I/O failures.
+
+    Returns a freshly populated :class:`configparser.ConfigParser`. Raises
+    :class:`RuntimeError` with an actionable message if the file cannot be
+    read, or can be read but lacks *section* -- which is exactly what a file
+    caught mid-write looks like.
+    """
+    delay = _CONFIG_READ_BACKOFF
+    problem = None
+    for attempt in range(1, _CONFIG_READ_ATTEMPTS + 1):
+        parser = configparser.ConfigParser()
+        try:
+            # open()/read_file() rather than read(): we want OSError to be
+            # raised, not silently swallowed.
+            with open(path, encoding="utf-8") as configfile:
+                parser.read_file(configfile)
+        except OSError as exc:
+            problem = f"{type(exc).__name__}: {exc}"
+        except configparser.Error as exc:
+            problem = f"malformed file ({type(exc).__name__}: {exc})"
+        else:
+            if parser.has_section(section):
+                return parser
+            problem = (f"file is readable but has no [{section}] section "
+                       "(it was most likely caught mid-write)")
+        if attempt < _CONFIG_READ_ATTEMPTS:
+            time.sleep(delay)
+            delay *= 2
+    raise RuntimeError(
+        f"TDCRPy could not read its configuration file after "
+        f"{_CONFIG_READ_ATTEMPTS} attempts:\n"
+        f"    {path}\n"
+        f"    last problem -> {problem}\n"
+        "If TDCRPy is installed on a network share, a transient disconnection "
+        "or a lock held by another program (virus scanner, backup agent, "
+        "indexer) is the usual cause; installing on a local disk avoids it."
+    )
+
+def read_config_object(force=False):
+    """Load ``config`` from disk, unless a cached copy is already in memory."""
     global config, _CONFIG_CACHED
-    # Return immediately if already cached in memory
-    if _CONFIG_CACHED:
+    if _CONFIG_CACHED and not force:
         return
-        
+
     with importlib.resources.as_file(get_config_path()) as data_path:
-        config.read(data_path)
+        # Rebind rather than merge: ConfigParser.read() merges into the
+        # existing object, so keys removed from the file would otherwise
+        # survive in memory.
+        config = _parse_config_file(data_path)
     _CONFIG_CACHED = True
 
 def save_config_object():
-    with importlib.resources.as_file(get_config_path()) as data_path:
-        with open(data_path, 'w') as configfile:
-            config.write(configfile)
+    """Write ``config`` to disk atomically (temp file + :func:`os.replace`)."""
+    delay = _CONFIG_READ_BACKOFF
+    problem = None
+    for attempt in range(1, _CONFIG_READ_ATTEMPTS + 1):
+        try:
+            with importlib.resources.as_file(get_config_path()) as data_path:
+                data_path = os.fspath(data_path)
+                directory = os.path.dirname(data_path) or "."
+                fd, tmp_path = tempfile.mkstemp(prefix=".config.", suffix=".tmp",
+                                                dir=directory)
+                try:
+                    with os.fdopen(fd, "w", encoding="utf-8") as configfile:
+                        config.write(configfile)
+                        configfile.flush()
+                        os.fsync(configfile.fileno())
+                    os.replace(tmp_path, data_path)   # atomic
+                except BaseException:
+                    try:
+                        os.remove(tmp_path)
+                    except OSError:
+                        pass
+                    raise
+            return
+        except OSError as exc:
+            problem = f"{type(exc).__name__}: {exc}"
+            if attempt < _CONFIG_READ_ATTEMPTS:
+                time.sleep(delay)
+                delay *= 2
+    raise RuntimeError(
+        f"TDCRPy could not write its configuration file after "
+        f"{_CONFIG_READ_ATTEMPTS} attempts:\n"
+        f"    {get_config_path()}\n"
+        f"    last problem -> {problem}"
+    )
 
-def update_config_value(key, value, section="Inputs"):
+def update_config_value(key, value, section=_CONFIG_SECTION):
     global _CONFIG_CACHED
     read_config_object()
     if section not in config:
         config.add_section(section)
     config[section][key] = str(value)
     save_config_object()
-    # Invalidate cache so next read fetches fresh data, if needed
-    _CONFIG_CACHED = False 
+    # The in-memory object is exactly what was just written, so the cache
+    # stays valid -- no need to pay for a re-read.
+    _CONFIG_CACHED = True
 
-def update_config_batch(updates_dict, section="Inputs"):
+def update_config_batch(updates_dict, section=_CONFIG_SECTION):
     global _CONFIG_CACHED
     read_config_object()
     if section not in config:
@@ -558,7 +662,7 @@ def update_config_batch(updates_dict, section="Inputs"):
     for key, value in updates_dict.items():
         config[section][key] = str(value)
     save_config_object()
-    _CONFIG_CACHED = False
+    _CONFIG_CACHED = True
 
 # --- READING FUNCTIONS ---
 
