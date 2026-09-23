@@ -8,6 +8,7 @@ Authors: Romain Coulon, Jialin Hu
 Bureau International des Poids et Mesures
 """
 
+import math
 import unittest
 import importlib.resources
 import os
@@ -1011,6 +1012,76 @@ class TestValidatedStochastic(unittest.TestCase):
             self.assertTrue(np.isfinite(eff_S), f'{rad} eff_S not finite')
             self.assertLessEqual(eff_T, eff_D + 1e-9,
                                  f'{rad}: eff_T > eff_D')
+
+
+
+class TestMicelleRadiusConsistency(unittest.TestCase):
+    """The stochastic micellar-quenching kernel must conserve the aqueous
+    volume fraction it is given.
+
+    Regression test for the v2.20.19 fix: the inter-micellar mean free path used
+    to be built from the *nominal* radius while the aqueous chords were drawn
+    from the zero-truncated sampled radius. Because truncation makes
+    ``<r> > r_d`` when ``sigma`` is comparable to ``r_d``, the aqueous path
+    fraction came out inflated by ``<r>/r_d`` and the high-energy retention
+    plateau fell below ``1 - fAq`` (0.8748 instead of 0.9000 at r_d=1, sigma=1).
+    """
+
+    E_PLATEAU = 50.0     # keV: range >> micelle size, so f(E) has saturated
+    NS = 60000           # samples; MC error on the mean is then ~1e-4
+
+    def _plateau(self, r_d, sigma, f_w):
+        mean, _, _ = lib.pure_mc_efficient_energy_numba(
+            self.E_PLATEAU, r_d_nm=r_d, sigma_r=sigma, f_w=f_w,
+            num_samples=self.NS)
+        return mean / self.E_PLATEAU
+
+    def test_mean_truncated_radius_matches_analytic(self):
+        # r_mean + r_sigma * phi(a)/(1-Phi(a)),  a = -r_mean/r_sigma
+        for r, s_ in [(1.0, 1.0), (2.0, 1.0), (3.0, 1.0), (0.5, 2.0)]:
+            a = -r / s_
+            pdf = math.exp(-0.5 * a * a) / math.sqrt(2.0 * math.pi)
+            cdf = 0.5 * (1.0 + math.erf(a / math.sqrt(2.0)))
+            expected = r + s_ * pdf / (1.0 - cdf)
+            got = lib.mean_truncated_radius(r, s_)
+            self.assertAlmostEqual(got, expected, places=10,
+                                   msg=f'r={r} sigma={s_}')
+
+    def test_mean_truncated_radius_zero_sigma(self):
+        for r in (0.5, 1.0, 4.0):
+            self.assertEqual(lib.mean_truncated_radius(r, 0.0), r)
+
+    def test_plateau_reaches_one_minus_faq(self):
+        """The regression itself: every (r_d, sigma) must plateau at 1-fAq."""
+        f_w = 0.10
+        for r_d in (1.0, 2.0, 3.0, 4.0, 8.0):
+            for sigma in (0.0, 1.0):
+                f_inf = self._plateau(r_d, sigma, f_w)
+                self.assertAlmostEqual(
+                    f_inf, 1.0 - f_w, places=2,
+                    msg=(f'r_d={r_d} sigma={sigma}: plateau {f_inf:.4f} '
+                         f'!= 1-fAq {1-f_w:.4f}'))
+
+    def test_worst_case_small_radius_large_sigma(self):
+        """r_d=1, sigma=1 was the worst case: 0.8748 before the fix."""
+        f_inf = self._plateau(1.0, 1.0, 0.10)
+        self.assertGreater(f_inf, 0.885,
+                           f'plateau {f_inf:.4f} still depressed (pre-fix 0.8748)')
+        self.assertAlmostEqual(f_inf, 0.90, places=2)
+
+    def test_plateau_independent_of_sigma(self):
+        """Sigma must change the spread, not the mean retention."""
+        f_w = 0.10
+        ref = self._plateau(2.0, 0.0, f_w)
+        for sigma in (0.5, 1.0, 1.5):
+            self.assertAlmostEqual(
+                self._plateau(2.0, sigma, f_w), ref, places=2,
+                msg=f'plateau moved with sigma={sigma}')
+
+    def test_plateau_tracks_faq(self):
+        for f_w in (0.05, 0.20, 0.30):
+            self.assertAlmostEqual(self._plateau(1.0, 1.0, f_w), 1.0 - f_w,
+                                   places=2, msg=f'fAq={f_w}')
 
 
 if __name__ == '__main__':

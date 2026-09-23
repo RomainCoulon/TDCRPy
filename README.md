@@ -231,6 +231,7 @@ Notebooks are organised in subfolders by topic under [`notebooks/`](https://gith
 | [analyticalModel.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/models/analyticalModel.ipynb) | **Analytical model** (`effA`): fast beta-spectrum-based efficiency for pure β emitters; symmetric and asymmetric PMT configurations |
 | [CNmethod.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/models/CNmethod.ipynb) | **CIEMAT/NIST (C/N) method**: 2-PMT coincidence efficiency curve using `modelAnalyticalCN`; L-fitting from measured C/N ratio |
 | [cerenkovModel.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/models/cerenkovModel.ipynb) | **Čerenkov counting model**: Frank-Tamm-based efficiency for high-energy beta emitters |
+| [cerenkovY90.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/models/cerenkovY90.ipynb) | **Čerenkov model, worked example (Y-90)**: threshold physics, Frank-Tamm photon yield, efficiency vs L, fitting L from a measured TDCR (symmetric and 3-PMT), optical parameters, and ⁹⁰Sr/⁹⁰Y discrimination |
 | [opticalTransport.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/models/opticalTransport.ipynb) | **Optical MC transport**: comparison of semi-analytical vs full photon-transport model (`opticalTransport=True`) for H-3, Fe-55, Co-60 |
 
 ### Nuclide case studies — [`notebooks/nuclides/`](https://github.com/RomainCoulon/TDCRPy/tree/main/notebooks/nuclides)
@@ -251,6 +252,7 @@ Notebooks are organised in subfolders by topic under [`notebooks/`](https://gith
 | [stoppingPower.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/physics/stoppingPower.ipynb) | **Stopping power models**: comparison of tan_xia, joy_luo, ashley and other models for electrons |
 | [readBetaSpectrum.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/physics/readBetaSpectrum.ipynb) | **Beta spectra**: reading and visualising deposited-energy spectra from BetaShape + MCNP calculations |
 | [interaction.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/physics/interaction.ipynb) | **Radiation–matter interactions**: photon and electron energy deposition via MCNP response matrices |
+| [micelleEffects.ipynb](https://github.com/RomainCoulon/TDCRPy/blob/main/notebooks/physics/micelleEffects.ipynb) | **Micellar quenching**: stochastic reverse-micelle model (`micCorr`); microscopic energy-retention factor and its impact on efficiency for H-3, Fe-55, Ni-63, C-14, Tc-99, at fixed L and with `eff()` TDCR calibration |
 
 ### Advanced — [`notebooks/advanced/`](https://github.com/RomainCoulon/TDCRPy/tree/main/notebooks/advanced)
 

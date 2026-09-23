@@ -50,6 +50,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import tempfile
 import shutil
+import math
 from numba import njit, prange
 
 # --- GLOBAL CONFIG SETUP ---
@@ -1202,6 +1203,7 @@ with importlib.resources.as_file(files('tdcrpy').joinpath('MCNP-MATRIX')) as dat
     sPu241 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Pu-241.txt'
     sCo60 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Co-60.txt'
     sZr93 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Zr-93.txt'
+    sY90 = data_path / 'Spectra_for_analytical_model/dep_spectrum_Y-90.txt'
     
 # import stopping power data for electron
 with importlib.resources.as_file(files('tdcrpy').joinpath('Quenching')) as data_path:
@@ -2030,7 +2032,7 @@ def readBetaSpectra(rad):
         "H-3": sH3, "C-14": sC14, "P-32": sP32, "S-35": sS35,
         "Ca-45": sCa45, "Ni-63": sNi63, "Sr-89": sSr89, "Sr-90": sSr90,
         "Tc-99": sTc99, "Pm-147": sPm147, "Pu-241": sPu241,
-        "Co-60": sCo60, "Zr-93": sZr93,
+        "Co-60": sCo60, "Zr-93": sZr93, "Y-90": sY90,
     }
     if rad not in _spectra_map:
         raise ValueError(
@@ -2322,6 +2324,30 @@ def calc_energy_numba(R_nm):
     return (R_nm / 40.0) ** (1.0 / 1.75)
 
 @njit(fastmath=True)
+def mean_truncated_radius(r_mean, r_sigma):
+    """Mean of the zero-truncated normal drawn by :func:`get_micelle_radius`.
+
+    ``get_micelle_radius`` rejects and redraws while ``r <= 0``, so the radii it
+    actually produces follow a normal truncated at zero, whose mean exceeds the
+    nominal ``r_mean`` whenever ``r_sigma`` is not small compared with it:
+
+    ``<r> = r_mean + r_sigma * phi(a) / (1 - Phi(a))``  with ``a = -r_mean/r_sigma``
+
+    The inter-micellar mean free path must be built from this value, not from the
+    nominal radius, or the aqueous path fraction is inflated by ``<r>/r_mean``
+    and the high-energy retention plateau falls below ``1 - f_w``.
+    """
+    if r_sigma <= 0.0:
+        return r_mean
+    a = -r_mean / r_sigma
+    pdf = math.exp(-0.5 * a * a) / math.sqrt(2.0 * math.pi)
+    cdf = 0.5 * (1.0 + math.erf(a / math.sqrt(2.0)))
+    tail = 1.0 - cdf
+    if tail <= 1e-12:          # degenerate: nominal radius far below zero
+        return r_mean
+    return r_mean + r_sigma * pdf / tail
+
+@njit(fastmath=True)
 def get_micelle_radius(r_mean, r_sigma):
     """ Échantillonnage avec rejet (loi normale tronquée) """
     if r_sigma <= 0.0:
@@ -2336,9 +2362,14 @@ def get_micelle_radius(r_mean, r_sigma):
 def _mc_kernel(E0_keV, r_d_nm, sigma_micelle, f_w, is_hydrophilic, num_samples):
     E_deposited_act = np.zeros(num_samples)
     
-    # Le libre parcours moyen inter-micellaire repose sur le diamètre de Sauter,
-    # approximé ici par le rayon arithmétique moyen pour le modèle macroscopique.
-    lambda_act = (4.0 / 3.0) * r_d_nm * (1.0 - f_w) / f_w
+    # Le libre parcours moyen inter-micellaire est construit sur le rayon moyen
+    # EFFECTIVEMENT échantillonné (loi normale tronquée en zéro), et non sur le
+    # rayon nominal : les cordes aqueuses tirées plus bas valent en moyenne
+    # (4/3)*<r>. Utiliser r_d_nm ici gonflerait la fraction de parcours en phase
+    # aqueuse d'un facteur <r>/r_d et ferait tomber le plateau de rétention sous
+    # 1 - f_w. Voir mean_truncated_radius().
+    r_eff = mean_truncated_radius(r_d_nm, sigma_micelle)
+    lambda_act = (4.0 / 3.0) * r_eff * (1.0 - f_w) / f_w
     
     for i in prange(num_samples):
         R = calc_range_numba(E0_keV)
@@ -4027,6 +4058,7 @@ def buildBetaSpectra(rad, V, N, prt=False):
     elif rad == "Pu-241": file_path = sPu241
     elif rad == "Co-60": file_path = sCo60
     elif rad == "Zr-93": file_path = sZr93
+    elif rad == "Y-90": file_path = sY90
     
     if prt:
         with open(file_path, "w") as file:
