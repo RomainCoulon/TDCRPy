@@ -200,7 +200,9 @@ def _open_record_files(temp_dir):
     Parameters
     ----------
     temp_dir : str
-        Directory in which the temporary files are created.
+        Unused since v2.20.20; the location comes from
+        :func:`~tdcrpy.TDCR_model_lib.record_file_path`. Kept for
+        backward compatibility of the call signature.
 
     Returns
     -------
@@ -240,9 +242,12 @@ def _open_record_files(temp_dir):
             "# Column 4: detection probability — triple coincidences\n"
         ),
     }
+    # Names carry the PID (see tl.record_file_path): two TDCRPy processes on
+    # one machine used to share these fixed names and silently overwrite each
+    # other's decay histories.
     paths = []
-    for fname, header in headers.items():
-        p = os.path.join(temp_dir, fname)
+    for index, header in enumerate(headers.values()):
+        p = tl.record_file_path(index)
         with open(p, "w") as f:
             f.write(header)
         paths.append(p)
@@ -1085,7 +1090,7 @@ def _quench(particle_vec, energy_vec, energy_vec_initial,
 def _run_from_history(L, N, tau, ext_dt, meas_time, opticalTransport, mode):
     """
     Replay detection-probability computation from a previously recorded
-    quenched-energy history file (``Temp_E2.txt``).
+    quenched-energy history file (``Temp_E2_<pid>.txt``).
 
     Parameters
     ----------
@@ -1108,8 +1113,7 @@ def _run_from_history(L, N, tau, ext_dt, meas_time, opticalTransport, mode):
     -------
     Same return type as :func:`TDCRPy` for the selected *mode*.
     """
-    temp_dir = tempfile.gettempdir()
-    recfile3 = os.path.join(temp_dir, "Temp_E2.txt")
+    recfile3 = tl.record_file_path(2)
 
     eff_lists = {k: [] for k in ("S", "D", "T", "AB", "BC", "AC", "D2")}
     detect_fn = (
@@ -1131,11 +1135,11 @@ def _run_from_history(L, N, tau, ext_dt, meas_time, opticalTransport, mode):
                 decay = int(parts[2])
             except (IndexError, ValueError):
                 # Incomplete/corrupted record -- e.g. a short or partially
-                # flushed line (Temp_E2.txt is a fixed-name file in the
-                # shared system temp dir, so concurrent or leftover writes
-                # from another run can leave a stray malformed line). Skip
-                # it rather than crash; dropping one record has negligible
-                # effect on the accumulated statistics.
+                # flushed line. Since v2.20.20 the record files carry the PID,
+                # so another live run can no longer interleave writes here; a
+                # leftover file from a crashed run of the same PID still can.
+                # Skip such a line rather than crash; dropping one record has
+                # negligible effect on the accumulated statistics.
                 continue
 
             if decay != decaym:

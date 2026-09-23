@@ -1019,13 +1019,64 @@ if sum(p_atom) > 0:
 
 
         
-def read_temp_files(copy=False, path="C:"):
+#: Basenames of the four decay-history record files, by index.
+_RECORD_STEMS = ("Temp_E0", "Temp_E1", "Temp_E2", "Temp_E3")
+
+
+def record_file_path(index, pid=None):
+    """Absolute path of a TDCRPy record file, unique to the writing process.
+
+    The decay histories written by :func:`tdcrpy.TDCRPy.TDCRPy` with
+    ``record=True`` live in the system temp directory. Before v2.20.20 they used
+    fixed names (``Temp_E0..E3.txt``), so two TDCRPy processes on one machine
+    silently overwrote each other's histories — and because
+    ``_run_from_history`` skips malformed lines, the corruption biased results
+    instead of raising. The process id is now part of the name, so concurrent
+    runs cannot collide.
+
+    Parameters
+    ----------
+    index : int
+        Record file index: 0 initial energies, 1 deposited, 2 quenched,
+        3 detection probabilities.
+    pid : int, optional
+        Process id owning the file. Defaults to the current process; pass an
+        explicit value only to inspect another run's files.
+
+    Returns
+    -------
+    str
+        Absolute path, e.g. ``.../Temp_E2_12345.txt``.
+    """
+    if pid is None:
+        pid = os.getpid()
+    return os.path.join(tempfile.gettempdir(),
+                        f"{_RECORD_STEMS[index]}_{pid}.txt")
+
+
+def cleanup_record_files(pid=None):
+    """Delete this process's record files. Returns the paths removed.
+
+    They are not removed automatically, so a run's histories stay available for
+    inspection (and for :func:`read_temp_files`) after it finishes.
+    """
+    removed = []
+    for i in range(len(_RECORD_STEMS)):
+        f = record_file_path(i, pid)
+        try:
+            os.remove(f)
+            removed.append(f)
+        except OSError:
+            pass
+    return removed
+
+
+def read_temp_files(copy=False, path="C:", pid=None):
     
-    temp_dir = tempfile.gettempdir()
-    file_path1 = os.path.join(temp_dir, 'Temp_E0.txt')
-    file_path2 = os.path.join(temp_dir, 'Temp_E1.txt')
-    file_path3 = os.path.join(temp_dir, 'Temp_E2.txt')
-    file_path4 = os.path.join(temp_dir, 'Temp_E3.txt')
+    file_path1 = record_file_path(0, pid)
+    file_path2 = record_file_path(1, pid)
+    file_path3 = record_file_path(2, pid)
+    file_path4 = record_file_path(3, pid)
     with open(file_path1, 'r') as temp_file: content1 = temp_file.read()
     with open(file_path2, 'r') as temp_file: content2 = temp_file.read()
     with open(file_path3, 'r') as temp_file: content3 = temp_file.read()
@@ -4387,7 +4438,8 @@ def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_A
 
 def readRecQuenchedEnergies():
     """
-    Read the temporary quenched-energy record file (``Temp_E2.txt``) and
+    Read the temporary quenched-energy record file (``Temp_E2_<pid>.txt``)
+    and
     return per-decay total quenched energies, separated into prompt and
     delayed components.
 
@@ -4417,8 +4469,7 @@ def readRecQuenchedEnergies():
         _cfg.read(p)
     tau_ns = _cfg["Inputs"].getfloat("tau")  # coincidence resolving time in ns
 
-    temp_dir = tempfile.gettempdir()
-    recfile3 = os.path.join(temp_dir, "Temp_E2.txt")
+    recfile3 = record_file_path(2)
     with open(recfile3, "r") as file:
         Epromt, Edelayed = [], []
         decaym = -1

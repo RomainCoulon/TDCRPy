@@ -685,12 +685,11 @@ class TestTDCRPyMain(unittest.TestCase):
         self.assertLessEqual(eff_T, eff_D + 1e-9)
 
     def test_run_from_history_skips_malformed_lines(self):
-        # Regression test for a reported IndexError: Temp_E2.txt is a
-        # fixed-name file in the shared system temp dir, so a stray short
-        # or partially-written line (e.g. from a leftover/concurrent run)
-        # used to crash _run_from_history() at parts[2]. It must now skip
-        # such lines instead of raising.
-        recfile3 = os.path.join(tempfile.gettempdir(), "Temp_E2.txt")
+        # Regression test for a reported IndexError: a stray short or
+        # partially-written line (from a leftover run, or before v2.20.20 a
+        # concurrent one) used to crash _run_from_history() at parts[2].
+        # It must skip such lines instead of raising.
+        recfile3 = lib.record_file_path(2)
         with open(recfile3, "w") as f:
             f.write("# TDCRPy output: quenched deposited energies from nuclear decays\n")
             for idec in range(5):
@@ -1082,6 +1081,69 @@ class TestMicelleRadiusConsistency(unittest.TestCase):
         for f_w in (0.05, 0.20, 0.30):
             self.assertAlmostEqual(self._plateau(1.0, 1.0, f_w), 1.0 - f_w,
                                    places=2, msg=f'fAq={f_w}')
+
+
+
+class TestRecordFileIsolation(unittest.TestCase):
+    """Record files must be private to the writing process.
+
+    Before v2.20.20 the four decay-history files had fixed names in the shared
+    system temp directory, so two TDCRPy processes on one machine overwrote
+    each other's histories. `_run_from_history` skips malformed lines, so the
+    damage surfaced as biased efficiencies and non-converging eff() fits rather
+    than as an error.
+    """
+
+    def test_path_contains_pid(self):
+        pid = os.getpid()
+        for i in range(4):
+            p = lib.record_file_path(i)
+            self.assertIn(str(pid), os.path.basename(p),
+                          f'record file {i} is not process-specific: {p}')
+            self.assertTrue(os.path.basename(p).startswith(f'Temp_E{i}_'))
+
+    def test_paths_differ_between_processes(self):
+        mine = lib.record_file_path(2)
+        other = lib.record_file_path(2, pid=os.getpid() + 1)
+        self.assertNotEqual(mine, other,
+                            'two processes would share one record file')
+
+    def test_four_distinct_files(self):
+        paths = [lib.record_file_path(i) for i in range(4)]
+        self.assertEqual(len(set(paths)), 4)
+        self.assertEqual(len({os.path.dirname(p) for p in paths}), 1)
+
+    def test_explicit_pid_is_honoured(self):
+        p = lib.record_file_path(2, pid=4242)
+        self.assertEqual(os.path.basename(p), 'Temp_E2_4242.txt')
+
+    def test_record_then_replay_round_trip(self):
+        """record=True then readRecHist=True must agree, using the new names."""
+        out_rec = TDCRPy_mod.TDCRPy(_L_STOCH, 'H-3', '1', 200, _KB, _V,
+                                    record=True)
+        self.assertTrue(os.path.exists(lib.record_file_path(2)),
+                        'record=True did not create the per-process file')
+        out_rep = TDCRPy_mod.TDCRPy(_L_STOCH, 'H-3', '1', 200, _KB, _V,
+                                    readRecHist=True)
+        # Not bit-exact: energies are written as %.6E, so the replay reads
+        # them back rounded to ~7 significant digits. That propagates to a
+        # ~1e-9 difference on an efficiency -- anything larger means the
+        # replay read a different history.
+        for k, i in (('S', 0), ('D', 2), ('T', 4)):
+            self.assertAlmostEqual(
+                out_rec[i], out_rep[i], places=7,
+                msg=f'replay disagrees with the run that wrote the history ({k})')
+
+    def test_cleanup_removes_this_process_files(self):
+        TDCRPy_mod.TDCRPy(_L_STOCH, 'H-3', '1', 50, _KB, _V, record=True)
+        self.assertTrue(os.path.exists(lib.record_file_path(2)))
+        removed = lib.cleanup_record_files()
+        self.assertTrue(removed, 'cleanup_record_files() removed nothing')
+        for i in range(4):
+            self.assertFalse(os.path.exists(lib.record_file_path(i)),
+                             f'record file {i} survived cleanup')
+        self.assertEqual(lib.cleanup_record_files(), [],
+                         'cleanup on an already-clean state should be a no-op')
 
 
 if __name__ == '__main__':
