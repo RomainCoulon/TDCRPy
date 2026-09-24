@@ -644,6 +644,44 @@ def save_config_object():
         f"    last problem -> {problem}"
     )
 
+def _refresh_micelle_globals():
+    """Re-derive the module globals the micelle model falls back on.
+
+    :func:`pure_mc_efficient_energy_numba` and :func:`micelleLoss` resolve
+    their aqueous-fraction and size arguments from these at call time, so a
+    ``modify*()`` call takes effect immediately.
+
+    Before v2.20.22 those values were bound as *keyword defaults* evaluated at
+    import time. A ``modify*()`` without an ``importlib.reload`` therefore left
+    the kernel looking at the values it saw when the package was imported --
+    and because the shipped configuration has ``fAq = 0``, and the kernel
+    returns the energy unchanged when ``f_w == 0``, enabling ``micCorr`` was a
+    silent no-op rather than an error.
+    """
+    global fAq, diam_micelle, sigma_micelle
+    read_config_object()
+    if _CONFIG_SECTION not in config:
+        return
+    inputs = config[_CONFIG_SECTION]
+    try:
+        fAq = inputs.getfloat("fAq", fallback=0.0)
+        diam_micelle = inputs.getfloat("diam_micelle", fallback=4.0)
+        sigma_micelle = inputs.getfloat("sigma_micelle", fallback=0.0)
+    except ValueError:
+        # A torn or hand-edited file: keep the last good values rather than
+        # crash a setter that has already written successfully.
+        pass
+
+
+def _micelle_globals():
+    """Current ``(fAq, diam_micelle, sigma_micelle)``.
+
+    Exists so callers whose own parameters shadow these names can still reach
+    them.
+    """
+    return fAq, diam_micelle, sigma_micelle
+
+
 def update_config_value(key, value, section=_CONFIG_SECTION):
     global _CONFIG_CACHED
     read_config_object()
@@ -654,6 +692,7 @@ def update_config_value(key, value, section=_CONFIG_SECTION):
     # The in-memory object is exactly what was just written, so the cache
     # stays valid -- no need to pay for a re-read.
     _CONFIG_CACHED = True
+    _refresh_micelle_globals()
 
 def update_config_batch(updates_dict, section=_CONFIG_SECTION):
     global _CONFIG_CACHED
@@ -664,6 +703,7 @@ def update_config_batch(updates_dict, section=_CONFIG_SECTION):
         config[section][key] = str(value)
     save_config_object()
     _CONFIG_CACHED = True
+    _refresh_micelle_globals()
 
 # --- READING FUNCTIONS ---
 
@@ -2353,7 +2393,7 @@ def Em_e(Ei, Ed, kB, nE, Et = Einterp_e*1e3, kB_vec = kB_e):
 
 #========================= Reverse micelle treatment ========================================
 
-def micelleLoss(E,*, fAq=fAq, diam_micelle=diam_micelle, e_vec=micelle_E, data=micelle_S):
+def micelleLoss(E,*, fAq=None, diam_micelle=None, e_vec=micelle_E, data=micelle_S):
     """
     Estimation of the energy deposited ratio due to loss in reversed micelles.
     The function carries out interpolation in values estimated with GENAT4-DNA
@@ -2378,6 +2418,12 @@ def micelleLoss(E,*, fAq=fAq, diam_micelle=diam_micelle, e_vec=micelle_E, data=m
     S : float
         energy deposited ratio (keV)
     """
+    _fAq, _diam, _ = _micelle_globals()
+    if fAq is None:
+        fAq = _fAq
+    if diam_micelle is None:
+        diam_micelle = _diam
+
     micDiam = np.array([0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0]) #nm
     S=np.interp(E*1e3, e_vec, micelle_S[:,np.argwhere(micDiam==diam_micelle)[0][0]])*(1-fAq)/0.9
     return S
@@ -2497,7 +2543,7 @@ def _mc_kernel(E0_keV, r_d_nm, sigma_micelle, f_w, is_hydrophilic, num_samples):
     return E_deposited_act
 
 # 3. The Python Wrapper for TDCRPy
-def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle / 2.0, sigma_r=sigma_micelle, f_w=fAq, tracer_type="hydrophilic", num_samples=1):
+def pure_mc_efficient_energy_numba(E, *, r_d_nm=None, sigma_r=None, f_w=None, tracer_type="hydrophilic", num_samples=1):
     """Stochastic micellar-quenching kernel.
 
     Parameters
@@ -2505,15 +2551,23 @@ def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle / 2.0, sigma_r=sigm
     E : float
         Electron energy in keV (already Birks-quenched, in the TDCRPy path).
     r_d_nm : float, optional
-        Droplet **radius** in nm. The default is half of the configured
-        ``diam_micelle``, which is a *diameter* — the same convention
-        :func:`micelleLoss` uses for the Nedjadi lookup table. Before
-        v2.20.21 the configured diameter was passed here unhalved, so the
-        kernel ran on droplets twice the requested size.
+        Droplet **radius** in nm. ``None`` (the default) resolves it at call
+        time to half of the configured ``diam_micelle``, which is a
+        *diameter* — the same convention :func:`micelleLoss` uses for the
+        Nedjadi lookup table. Before v2.20.21 the configured diameter was
+        passed here unhalved, so the kernel ran on droplets twice the
+        requested size.
     sigma_r : float, optional
-        Std dev of the size distribution (nm); 0 (default) is monodisperse.
+        Std dev of the size distribution (nm). ``None`` (the default) resolves
+        to the configured ``sigma_micelle``; 0 is monodisperse.
     f_w : float, optional
-        Aqueous volume fraction.
+        Aqueous volume fraction. ``None`` (the default) resolves to the
+        configured ``fAq``.
+
+        .. versionchanged:: 2.20.22
+           These three resolve from the configuration on every call. They used
+           to be bound once at import, so a ``modify*()`` call that was not
+           followed by an ``importlib.reload`` left the kernel inert.
     tracer_type : {"hydrophilic", "lipophilic"}, optional
         Where the decay starts. The TDCRPy quenching path only ever uses
         the hydrophilic default: an aqueous tracer sits inside a droplet.
@@ -2532,6 +2586,15 @@ def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle / 2.0, sigma_r=sigm
         else:
             return 0.0, 0.0, np.zeros(num_samples)
         
+    if r_d_nm is None or sigma_r is None or f_w is None:
+        _fAq, _diam, _sigma = _micelle_globals()
+        if r_d_nm is None:
+            r_d_nm = _diam / 2.0      # config holds a diameter, kernel wants r
+        if sigma_r is None:
+            sigma_r = _sigma
+        if f_w is None:
+            f_w = _fAq
+
     if f_w > 1.0:
         f_w = f_w / 100.0
     f_w = np.clip(f_w, 0.0, 1.0)

@@ -28,6 +28,7 @@ https://doi.org/10.1016/j.apradiso.2024.111518
 # ---------------------------------------------------------------------------
 import os
 import tempfile
+import warnings
 
 import numpy as np
 from tqdm import tqdm
@@ -1252,6 +1253,79 @@ def _print_transition(level_e, t_type, e_t, next_lev):
 # Objective function and efficiency-from-measurement wrappers
 # ---------------------------------------------------------------------------
 
+_AUTO_SPAN = (0.1, 100.0)      # photons/keV, the span scanned when
+_AUTO_POINTS = 14              # Lbounds is left at its default
+
+
+def _bracket_physical_L(tdcr_at, td0, span=_AUTO_SPAN, n=_AUTO_POINTS):
+    """Bracket the *physical* solution of ``tdcr_at(L) == td0``.
+
+    The modelled triple-to-double ratio is **not monotonic** in ``L``. For a
+    nuclide whose X-rays frequently escape the vial it rises, turns over and
+    falls again -- near ``L = 23`` for Fe-55 and ``L = 29`` for Cr-51 --
+    because the *doubles* recover the resulting near-zero deposits long before
+    they can fire three PMTs, so ``eff_D`` climbs toward 1 faster than
+    ``eff_T``.
+
+    A bounded search over the whole span therefore has two minima to choose
+    between, and can settle against the upper bound on the falling branch,
+    returning an ``L`` that reproduces the wrong ratio with nothing raised to
+    say so. Scanning first and taking the **first upward crossing** selects
+    the rising branch, which is the physical one.
+
+    Parameters
+    ----------
+    tdcr_at : callable
+        ``L -> modelled T/D``; non-finite is treated as "no information".
+    td0 : float
+        The measured ratio to reproduce.
+    span : tuple of float, optional
+        Range of ``L`` to scan.
+    n : int, optional
+        Number of log-spaced scan points.
+
+    Returns
+    -------
+    tuple of float or None
+        ``(lo, hi)`` enclosing the physical root, or ``None`` when the
+        measured ratio is never reached inside *span*.
+    """
+    grid = np.logspace(np.log10(span[0]), np.log10(span[1]), n)
+    diff = []
+    for Lg in grid:
+        try:
+            v = tdcr_at(float(Lg))
+        except Exception:
+            v = np.nan
+        diff.append(v - td0 if v is not None and np.isfinite(v) else np.nan)
+
+    for i in range(n - 1):
+        a, b = diff[i], diff[i + 1]
+        if np.isfinite(a) and np.isfinite(b) and a <= 0.0 <= b:
+            return float(grid[i]), float(grid[i + 1])
+    return None
+
+
+def _solve_L(tdcr_at, td0, fallback, Rad, what):
+    """Return the ``L`` reproducing *td0*, bracketing the root first.
+
+    *fallback* is called with the span when no crossing exists, so the caller
+    keeps its previous behaviour for ratios the model cannot reach at all.
+    """
+    bracket = _bracket_physical_L(tdcr_at, td0)
+    if bracket is None:
+        warnings.warn(
+            f"{what}: a TDCR of {td0:.4f} is not reproduced anywhere in "
+            f"L = {_AUTO_SPAN[0]}..{_AUTO_SPAN[1]} photons/keV for {Rad}. "
+            "Falling back to a bounded search over that span; the returned L "
+            "will not reproduce the requested ratio. Check the measured value, "
+            "or pass Lbounds explicitly.",
+            RuntimeWarning, stacklevel=3)
+        return fallback(_AUTO_SPAN)
+    return opt.brentq(lambda Lg: tdcr_at(Lg) - td0,
+                      bracket[0], bracket[1], xtol=1e-6, maxiter=100)
+
+
 def objectFct(L, TD, Rad, pmf_1, N, kB, V):
     """
     Objective function minimised by :func:`eff` to fit *L* to a measured
@@ -1305,7 +1379,7 @@ def objectFct(L, TD, Rad, pmf_1, N, kB, V):
 
 def eff(TD, Rad, pmf_1, kB, V,
         N=10000, L=1, maxiter=20, xatol=1e-7,
-        disp=False, Lbounds=(0.1, 100)):
+        disp=False, Lbounds=None):
     """
     Determine the free parameter *L* and detection efficiencies from a
     measured TDCR ratio, using the full stochastic Monte Carlo model.
@@ -1346,8 +1420,16 @@ def eff(TD, Rad, pmf_1, kB, V,
     disp : bool, optional
         Pass ``True`` to print optimiser diagnostics.  Default is ``False``.
     Lbounds : tuple of float, optional
-        ``(lower, upper)`` bounds on *L* (photons keV⁻¹) for the bounded
-        scalar search.  Default is ``(0.1, 100)``.
+        ``(lower, upper)`` bounds on *L* (photons keV⁻¹) for the scalar
+        search. ``None`` (the default) makes the search bracket the physical
+        root itself, by scanning ``L`` and taking the first crossing of the
+        measured ratio; pass a tuple to force a particular range.
+
+        .. versionchanged:: 2.20.22
+           The default was ``(0.1, 100)``. Because the modelled ratio is not
+           monotonic in ``L`` (see :func:`_bracket_physical_L`), a bounded
+           search over that span could settle on the falling branch and return
+           an ``L`` reproducing the wrong ratio, silently.
 
     Returns
     -------
@@ -1383,14 +1465,26 @@ def eff(TD, Rad, pmf_1, kB, V,
 
     # Step 2 — scalar optimisation for L (symmetric).
     td0 = TD if symm else TD[0]
-    result = opt.minimize_scalar(
-        objectFct,
-        args=(td0, Rad, pmf_1, N, kB, V),
-        method="bounded",
-        bounds=(Lbounds[0], Lbounds[1]),
-        options={"disp": disp, "maxiter": maxiter},
-    )
-    L0 = result.x
+
+    def _bounded(span):
+        return opt.minimize_scalar(
+            objectFct,
+            args=(td0, Rad, pmf_1, N, kB, V),
+            method="bounded",
+            bounds=(span[0], span[1]),
+            options={"disp": disp, "maxiter": maxiter},
+        ).x
+
+    if Lbounds is None:
+        # Bracket the physical root first: the residual is not unimodal over a
+        # wide span (see _bracket_physical_L).
+        def _tdcr_at(Lg):
+            out = TDCRPy(Lg, Rad, pmf_1, N, kB, V, readRecHist=True)
+            return out[4] / out[2] if out[2] > 1e-12 else np.nan
+
+        L0 = _solve_L(_tdcr_at, td0, _bounded, Rad, "eff()")
+    else:
+        L0 = _bounded(Lbounds)
     L_opt = (L0, L0, L0)
 
     # Step 2b — Nelder–Mead refinement for asymmetric case.
@@ -1429,7 +1523,7 @@ def eff(TD, Rad, pmf_1, kB, V,
 
 def effA(TD, Rad, pmf_1, kB, V,
          L=1, maxiter=20, xatol=1e-7,
-         disp=False, Lbounds=(0.01, 100),
+         disp=False, Lbounds=None,
          cerenkov=False):
     """
     Determine the free parameter *L* and detection efficiencies from a
@@ -1460,8 +1554,16 @@ def effA(TD, Rad, pmf_1, kB, V,
     disp : bool, optional
         Print optimiser diagnostics.  Default is ``False``.
     Lbounds : tuple of float, optional
-        ``(lower, upper)`` bounds for the scalar search (photons keV⁻¹).
-        Default is ``(0.1, 100)``.
+        ``(lower, upper)`` bounds on *L* (photons keV⁻¹) for the scalar
+        search. ``None`` (the default) makes the search bracket the physical
+        root itself, by scanning ``L`` and taking the first crossing of the
+        measured ratio; pass a tuple to force a particular range.
+
+        .. versionchanged:: 2.20.22
+           The default was ``(0.1, 100)``. Because the modelled ratio is not
+           monotonic in ``L`` (see :func:`_bracket_physical_L`), a bounded
+           search over that span could settle on the falling branch and return
+           an ``L`` reproducing the wrong ratio, silently.
     cerenkov : bool, optional
         Use the Čerenkov model (:func:`~tdcrpy.TDCR_model_lib.modelCerenkov`)
         instead of the standard analytical model.  Default is ``False``.
@@ -1505,14 +1607,27 @@ def effA(TD, Rad, pmf_1, kB, V,
 
     # Scalar bounded search.
     td0 = TD if symm else TD[0]
-    result = opt.minimize_scalar(
-        model_fn,
-        args=_args_scalar(td0),
-        method="bounded",
-        bounds=(Lbounds[0], Lbounds[1]),
-        options={"disp": disp, "maxiter": maxiter},
-    )
-    L0 = result.x
+
+    def _bounded(span):
+        return opt.minimize_scalar(
+            model_fn,
+            args=_args_scalar(td0),
+            method="bounded",
+            bounds=(span[0], span[1]),
+            options={"disp": disp, "maxiter": maxiter},
+        ).x
+
+    if Lbounds is None:
+        def _tdcr_at(Lg):
+            if cerenkov:
+                o = model_fn(Lg, td0, td0, td0, td0, Rad, "eff")
+            else:
+                o = model_fn(Lg, td0, td0, td0, td0, Rad, kB, V, "eff", 1e3)
+            return o[2] / o[1] if o[1] > 1e-12 else np.nan
+
+        L0 = _solve_L(_tdcr_at, td0, _bounded, Rad, "effA()")
+    else:
+        L0 = _bounded(Lbounds)
     L_opt = (L0, L0, L0)
 
     # Nelder–Mead refinement for asymmetric case.

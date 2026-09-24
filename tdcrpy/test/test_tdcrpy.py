@@ -1113,9 +1113,31 @@ class TestMicelleRadiusConsistency(unittest.TestCase):
         size while :func:`micelleLoss` read the same key as a diameter. The two
         micelle models therefore disagreed by a factor two on the same config.
         """
-        default = inspect.signature(
-            lib.pure_mc_efficient_energy_numba).parameters['r_d_nm'].default
-        self.assertAlmostEqual(default, lib.diam_micelle / 2.0, places=12)
+        saved = (lib.fAq, lib.diam_micelle)
+        try:
+            lib.modifyfAq(0.10)
+            lib.modifyDiam_micelle(4.0)
+            # 0.2 keV sits in the confinement regime, where the retention is
+            # strongly radius-dependent -- at the plateau every radius gives
+            # 1-fAq and the test could not tell 2 nm from 4 nm.
+            E, ns = 0.2, 40000
+            got = lib.pure_mc_efficient_energy_numba(E, num_samples=ns)[0]
+            as_radius = lib.pure_mc_efficient_energy_numba(
+                E, r_d_nm=2.0, num_samples=ns)[0]
+            as_diameter = lib.pure_mc_efficient_energy_numba(
+                E, r_d_nm=4.0, num_samples=ns)[0]
+            self.assertAlmostEqual(
+                got / E, as_radius / E, places=2,
+                msg='the default is not diam_micelle / 2')
+            self.assertLess(
+                as_diameter, as_radius,
+                'a 4 nm radius must confine more than a 2 nm one')
+            self.assertGreater(
+                abs(got - as_diameter) / E, 0.05,
+                'the kernel appears to be using the diameter as the radius')
+        finally:
+            lib.modifyfAq(saved[0])
+            lib.modifyDiam_micelle(saved[1])
 
     def test_shipped_default_diameter_is_four_nm(self):
         """4 nm diameter: below the 8 nm long treated as canonical, per the
@@ -1133,6 +1155,110 @@ class TestMicelleRadiusConsistency(unittest.TestCase):
         S = lib.micelleLoss(10.0)
         self.assertTrue(0.0 < S <= 1.0, f'micelleLoss returned {S}')
 
+
+
+class TestMicelleDefaultsResolveAtCallTime(unittest.TestCase):
+    """modify*() must take effect without an importlib.reload (v2.20.22).
+
+    The kernel used to bind ``f_w=fAq``, ``r_d_nm=diam_micelle/2`` and
+    ``sigma_r=sigma_micelle`` as keyword defaults evaluated at import. Since
+    the shipped configuration has ``fAq = 0`` and the kernel returns the energy
+    unchanged when ``f_w == 0``, enabling ``micCorr`` after a ``modify*()``
+    without a reload was a silent no-op: no error, no warning, and a
+    "with/without correction" comparison that comes out as pure MC noise.
+    """
+
+    E = 5.7          # keV, a typical H-3 electron: range >> droplet
+
+    def setUp(self):
+        self._saved = (lib.fAq, lib.diam_micelle, lib.sigma_micelle)
+
+    def tearDown(self):
+        f, d, sg = self._saved
+        lib.modifyfAq(f)
+        lib.modifyDiam_micelle(d)
+        lib.modifySigma_micelle(sg)
+
+    def test_signature_defaults_are_sentinels(self):
+        p = inspect.signature(lib.pure_mc_efficient_energy_numba).parameters
+        for name in ('r_d_nm', 'sigma_r', 'f_w'):
+            self.assertIsNone(p[name].default,
+                              f'{name} is still bound at import time')
+
+    def test_modifyfAq_takes_effect_without_reload(self):
+        lib.modifyfAq(0.0)
+        self.assertEqual(lib.pure_mc_efficient_energy_numba(self.E), self.E,
+                         'at fAq = 0 the kernel must be a pass-through')
+        lib.modifyfAq(0.10)
+        vals = [lib.pure_mc_efficient_energy_numba(self.E) for _ in range(200)]
+        self.assertTrue(any(v < self.E for v in vals),
+                        'correction still inert after modifyfAq -- the '
+                        'no-op regression is back')
+        # range >> droplet, so the mean retention is the bulk limit 1 - fAq
+        self.assertAlmostEqual(float(np.mean(vals)) / self.E, 0.90, places=1)
+
+    def test_modifyDiam_takes_effect_without_reload(self):
+        lib.modifyfAq(0.10)
+        for diam in (2.0, 8.0):
+            lib.modifyDiam_micelle(diam)
+            p = inspect.signature(lib.pure_mc_efficient_energy_numba).parameters
+            self.assertIsNone(p['r_d_nm'].default)
+            self.assertAlmostEqual(lib.diam_micelle, diam, places=9)
+
+    def test_explicit_arguments_still_win(self):
+        lib.modifyfAq(0.10)
+        self.assertEqual(
+            lib.pure_mc_efficient_energy_numba(self.E, f_w=0.0), self.E,
+            'an explicit f_w must override the configuration')
+
+    def test_micelleLoss_follows_the_configuration(self):
+        lib.modifyfAq(0.0)
+        lib.modifyDiam_micelle(4.0)
+        a = lib.micelleLoss(10.0)
+        lib.modifyfAq(0.20)
+        b = lib.micelleLoss(10.0)
+        self.assertNotAlmostEqual(a, b, places=3,
+                                  msg='micelleLoss ignored modifyfAq')
+
+
+class TestLBracketing(unittest.TestCase):
+    """eff()/effA() must bracket the physical root themselves (v2.20.22).
+
+    The modelled TDCR is not monotonic in L, so a bounded search over a wide
+    span can settle on the falling branch and return an L reproducing the
+    wrong ratio with nothing raised. Lbounds now defaults to None, meaning
+    "scan, then solve inside the first crossing".
+    """
+
+    def test_lbounds_defaults_to_none(self):
+        for fn in (TDCRPy_mod.eff, TDCRPy_mod.effA):
+            self.assertIsNone(
+                inspect.signature(fn).parameters['Lbounds'].default,
+                f'{fn.__name__} still defaults to a hard-coded bracket')
+
+    def test_bracket_picks_the_rising_branch(self):
+        """A curve that rises, turns over and falls has two solutions; the
+        physical one is on the rising branch."""
+        def tdcr(L):                      # peaks at L = 10, TDCR = 1.0
+            return 1.0 - ((L - 10.0) / 10.0) ** 2
+
+        lo, hi = TDCRPy_mod._bracket_physical_L(tdcr, 0.75)
+        self.assertLess(hi, 10.0, 'bracket is not on the rising branch')
+        self.assertLessEqual(tdcr(lo), 0.75)
+        self.assertGreaterEqual(tdcr(hi), 0.75)
+
+    def test_bracket_returns_none_when_unreachable(self):
+        self.assertIsNone(
+            TDCRPy_mod._bracket_physical_L(lambda L: 0.5, 0.95),
+            'an unreachable ratio must report no bracket, not a wrong one')
+
+    def test_bracket_tolerates_non_finite(self):
+        def tdcr(L):
+            return np.nan if L < 1.0 else min(0.99, 0.2 * L)
+
+        br = TDCRPy_mod._bracket_physical_L(tdcr, 0.6)
+        self.assertIsNotNone(br)
+        self.assertGreaterEqual(br[0], 1.0)
 
 
 class TestRecordFileIsolation(unittest.TestCase):
