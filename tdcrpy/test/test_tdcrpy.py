@@ -1284,6 +1284,29 @@ class TestLBracketing(unittest.TestCase):
         self.assertLess(hi, TDCRPy_mod._AUTO_SPAN[1],
                         'fell back to the full span instead of the bracket')
 
+    def test_optical_transport_default_reads_the_configuration(self):
+        """The opticalTransport key was inert before v2.20.24.
+
+        TDCRPy() took it as a plain ``False`` argument default and never
+        consulted the configuration, so setting the key -- or calling
+        modifyOpticalTransport() -- changed nothing unless the caller also
+        passed the argument by hand, which eff() never did.
+        """
+        self.assertIsNone(
+            inspect.signature(TDCRPy_mod.TDCRPy).parameters[
+                'opticalTransport'].default,
+            'TDCRPy() still ignores the opticalTransport configuration key')
+
+    def test_modifyOpticalTransport_takes_effect_without_reload(self):
+        saved = lib.opticalTransport
+        try:
+            lib.modifyOpticalTransport(True)
+            self.assertTrue(lib.opticalTransport)
+            lib.modifyOpticalTransport(False)
+            self.assertFalse(lib.opticalTransport)
+        finally:
+            lib.modifyOpticalTransport(saved)
+
     def test_tolerance_is_matched_to_the_monte_carlo_noise(self):
         """Solving L to machine precision is meaningless: the histories are one
         realisation, so L is reproducible only to ~1 % at N = 1e4."""

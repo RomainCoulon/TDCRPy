@@ -318,7 +318,7 @@ def TDCRPy(
     record=False,
     readRecHist=False,
     uncData=False,
-    opticalTransport=False,
+    opticalTransport=None,
     # Legacy capitalisation aliases kept for backward compatibility.
     Display=None,
 ):
@@ -371,12 +371,20 @@ def TDCRPy(
     uncData : bool, optional
         If ``True``, sample nuclear-data uncertainties for each trial
         (propagation of nuclear-data uncertainty).  Default is ``False``.
-    opticalTransport : bool, optional
+    opticalTransport : bool or None, optional
         If ``True``, use the full optical Monte-Carlo transport model
         (:func:`~tdcrpy.TDCR_model_lib.detectProbabilitiesMC`) — photons
         are sampled, distributed equally across PMTs and converted to
-        photoelectrons stochastically.  Default is ``False`` (semi-analytical
-        detection model).
+        photoelectrons stochastically. ``False`` selects the semi-analytical
+        detection model. ``None`` (the default) takes the value from
+        ``config.toml``.
+
+        .. versionchanged:: 2.20.24
+           The default was ``False``, which made the ``opticalTransport``
+           configuration key inert: setting it, or calling
+           :func:`~tdcrpy.TDCR_model_lib.modifyOpticalTransport`, had no
+           effect unless the caller also passed this argument by hand — and
+           :func:`eff` never did.
     Display : bool or None, optional
         *Deprecated alias* for *display*.  If not ``None``, overrides
         *display*.
@@ -429,6 +437,13 @@ def TDCRPy(
     # 1. Load configuration                                                #
     # ------------------------------------------------------------------ #
     config, tau, ext_dt, meas_time, mic_corr, ne_electron, ne_alpha = _read_config()
+
+    # None means "whatever the configuration says". Until 2.20.24 this was a
+    # plain False default and the opticalTransport key was inert: setting it,
+    # or calling modifyOpticalTransport(), changed nothing unless the caller
+    # also passed the argument by hand -- and eff() never did.
+    if opticalTransport is None:
+        opticalTransport = bool(tl.opticalTransport)
 
     # ------------------------------------------------------------------ #
     # 2. Analytical model short-circuit                                    #

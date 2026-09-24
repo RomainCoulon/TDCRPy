@@ -644,8 +644,8 @@ def save_config_object():
         f"    last problem -> {problem}"
     )
 
-def _refresh_micelle_globals():
-    """Re-derive the module globals the micelle model falls back on.
+def _refresh_config_globals():
+    """Re-derive the module globals that are resolved at call time.
 
     :func:`pure_mc_efficient_energy_numba` and :func:`micelleLoss` resolve
     their aqueous-fraction and size arguments from these at call time, so a
@@ -658,7 +658,7 @@ def _refresh_micelle_globals():
     returns the energy unchanged when ``f_w == 0``, enabling ``micCorr`` was a
     silent no-op rather than an error.
     """
-    global fAq, diam_micelle, sigma_micelle
+    global fAq, diam_micelle, sigma_micelle, opticalTransport
     read_config_object()
     if _CONFIG_SECTION not in config:
         return
@@ -667,6 +667,8 @@ def _refresh_micelle_globals():
         fAq = inputs.getfloat("fAq", fallback=0.0)
         diam_micelle = inputs.getfloat("diam_micelle", fallback=4.0)
         sigma_micelle = inputs.getfloat("sigma_micelle", fallback=0.0)
+        opticalTransport = inputs.getboolean("opticalTransport",
+                                             fallback=False)
     except ValueError:
         # A torn or hand-edited file: keep the last good values rather than
         # crash a setter that has already written successfully.
@@ -692,7 +694,7 @@ def update_config_value(key, value, section=_CONFIG_SECTION):
     # The in-memory object is exactly what was just written, so the cache
     # stays valid -- no need to pay for a re-read.
     _CONFIG_CACHED = True
-    _refresh_micelle_globals()
+    _refresh_config_globals()
 
 def update_config_batch(updates_dict, section=_CONFIG_SECTION):
     global _CONFIG_CACHED
@@ -703,7 +705,7 @@ def update_config_batch(updates_dict, section=_CONFIG_SECTION):
         config[section][key] = str(value)
     save_config_object()
     _CONFIG_CACHED = True
-    _refresh_micelle_globals()
+    _refresh_config_globals()
 
 # --- READING FUNCTIONS ---
 
