@@ -1252,6 +1252,52 @@ class TestLBracketing(unittest.TestCase):
             TDCRPy_mod._bracket_physical_L(lambda L: 0.5, 0.95),
             'an unreachable ratio must report no bracket, not a wrong one')
 
+    def test_solve_L_falls_back_when_the_bracket_will_not_hold(self):
+        """A stochastic tdcr_at breaks brentq's sign condition (v2.20.23).
+
+        The replay samples photons when ``opticalTransport`` is on, so the
+        value at a bracket end is not the same on re-evaluation and brentq can
+        raise ValueError. That must degrade to a bounded search *inside the
+        bracket* -- which still excludes the falling branch -- not propagate.
+        """
+        seen = {'n': 0}
+
+        def flaky(L):
+            # rises during the scan, then goes flat, so f(lo) and f(hi) end up
+            # with the same sign when brentq re-evaluates them
+            seen['n'] += 1
+            return min(0.99, 0.1 * L) if seen['n'] <= TDCRPy_mod._AUTO_POINTS \
+                else 0.20
+
+        used = {}
+
+        def fallback(span):
+            used['span'] = span
+            return 42.0
+
+        out = TDCRPy_mod._solve_L(flaky, 0.6, fallback, 'X', 'eff()')
+        self.assertEqual(out, 42.0, 'brentq failure was not caught')
+        self.assertIn('span', used, 'fallback was never reached')
+        lo, hi = used['span']
+        self.assertGreater(lo, TDCRPy_mod._AUTO_SPAN[0],
+                           'fell back to the full span instead of the bracket')
+        self.assertLess(hi, TDCRPy_mod._AUTO_SPAN[1],
+                        'fell back to the full span instead of the bracket')
+
+    def test_tolerance_is_matched_to_the_monte_carlo_noise(self):
+        """Solving L to machine precision is meaningless: the histories are one
+        realisation, so L is reproducible only to ~1 % at N = 1e4."""
+        self.assertGreaterEqual(TDCRPy_mod._L_XTOL, 1e-5)
+        self.assertLessEqual(TDCRPy_mod._L_XTOL, 1e-2)
+
+    def test_eff_returns_u_L_last(self):
+        """u_L is appended, so every existing positional index still holds."""
+        import inspect as _i
+        src = _i.getsource(TDCRPy_mod.eff)
+        self.assertIn('u_L,', src)
+        # the documented order: L0 first, u_L last
+        self.assertLess(src.index('L0, L_opt,'), src.rindex('u_L,'))
+
     def test_bracket_tolerates_non_finite(self):
         def tdcr(L):
             return np.nan if L < 1.0 else min(0.99, 0.2 * L)

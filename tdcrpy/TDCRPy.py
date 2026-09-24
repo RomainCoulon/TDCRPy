@@ -26,6 +26,7 @@ https://doi.org/10.1016/j.apradiso.2024.111518
 # ---------------------------------------------------------------------------
 # Standard-library and third-party imports
 # ---------------------------------------------------------------------------
+import math
 import os
 import tempfile
 import warnings
@@ -1306,11 +1307,24 @@ def _bracket_physical_L(tdcr_at, td0, span=_AUTO_SPAN, n=_AUTO_POINTS):
     return None
 
 
+# Absolute tolerance on L. Deliberately far coarser than machine precision:
+# the decay histories are one Monte-Carlo realisation, so the fitted L is
+# reproducible only to about 1 % at N = 1e4 and 0.35 % at N = 1e5 (it scales
+# as 1/sqrt(N)). Chasing more digits than that costs a replay per iteration
+# and buys nothing — see :func:`eff`, which reports that spread as u_L.
+_L_XTOL = 1e-4
+
+
 def _solve_L(tdcr_at, td0, fallback, Rad, what):
     """Return the ``L`` reproducing *td0*, bracketing the root first.
 
-    *fallback* is called with the span when no crossing exists, so the caller
-    keeps its previous behaviour for ratios the model cannot reach at all.
+    *fallback* is called with a span whenever the root cannot be solved
+    directly, so the caller keeps its previous behaviour. That happens in two
+    cases: no crossing exists at all, or the bracket does not hold when
+    :func:`scipy.optimize.brentq` re-evaluates its ends. The second case needs
+    a stochastic ``tdcr_at`` — the replay samples photons and photoelectrons
+    when ``opticalTransport`` is enabled — and is guarded rather than left to
+    raise.
     """
     bracket = _bracket_physical_L(tdcr_at, td0)
     if bracket is None:
@@ -1322,8 +1336,13 @@ def _solve_L(tdcr_at, td0, fallback, Rad, what):
             "or pass Lbounds explicitly.",
             RuntimeWarning, stacklevel=3)
         return fallback(_AUTO_SPAN)
-    return opt.brentq(lambda Lg: tdcr_at(Lg) - td0,
-                      bracket[0], bracket[1], xtol=1e-6, maxiter=100)
+    try:
+        return opt.brentq(lambda Lg: tdcr_at(Lg) - td0,
+                          bracket[0], bracket[1], xtol=_L_XTOL, maxiter=100)
+    except ValueError:
+        # Sign condition broken on re-evaluation: tdcr_at is stochastic. Fall
+        # back inside the bracket, which still excludes the falling branch.
+        return fallback(bracket)
 
 
 def objectFct(L, TD, Rad, pmf_1, N, kB, V):
@@ -1434,7 +1453,8 @@ def eff(TD, Rad, pmf_1, kB, V,
     Returns
     -------
     L0 : float
-        Optimised global free parameter (keV⁻¹).
+        Optimised global free parameter (keV⁻¹). Its Monte-Carlo
+        uncertainty is returned last, as *u_L*.
     L : tuple of float
         Triplet of free parameters ``(L_A, L_B, L_C)``.
         Equal to ``(L0, L0, L0)`` for the symmetric case.
@@ -1452,6 +1472,31 @@ def eff(TD, Rad, pmf_1, kB, V,
         AC coincidence efficiency and standard uncertainty.
     eff_D2, u_eff_D2 : float
         C/N coincidence efficiency and standard uncertainty.
+    u_L : float
+        Standard uncertainty of *L0* from the finite number of simulated
+        decays, added in 2.20.23 and appended so existing positional indices
+        are unchanged.
+
+        The fit itself is deterministic — every trial *L* replays the same
+        recorded histories — but those histories are one realisation, so a
+        repeat with a different seed lands on a different *L*. The estimate
+        propagates the counting uncertainty of the modelled ratio through the
+        local slope, ``u(L) = u(T/D) / |d(T/D)/dL|``. ``u(T/D)`` is the
+        variance of a ratio of two means, computed from the per-decay
+        detection probabilities including their covariance — the model stores
+        a probability per decay rather than a 0/1 outcome, so a binomial
+        estimate would not apply, and ``p_T`` and ``p_D`` are strongly
+        correlated. It scales as ``1/sqrt(N)``.
+
+        Checked against the spread of repeated fits (H-3, TD = 0.80,
+        fAq = 0.10; 40, 30 and 16 independent runs): ``u_L`` divided by the
+        observed standard deviation came to 0.82, 1.17 and 0.94 at
+        ``N = 2e3``, ``1e4`` and ``4e4``, each inside the 11-18 % uncertainty
+        of the standard deviation itself. Below ``N`` of a few thousand it
+        reads slightly low, where the fitted ``L`` starts to scatter more than
+        a local-slope argument can describe. It covers
+        the sampling of the decays only — not the uncertainty of the measured
+        *TD* that was supplied, nor any model error.
 
     See Also
     --------
@@ -1509,6 +1554,36 @@ def eff(TD, Rad, pmf_1, kB, V,
         eff_D2, u_eff_D2,
     ) = out
 
+    # Monte-Carlo uncertainty of the fitted L: the counting uncertainty of the
+    # modelled ratio, divided by how fast that ratio moves with L.
+    u_L = np.nan
+    if symm and eff_D > 1e-12 and N > 0:
+        tdcr0 = eff_T / eff_D
+        # Variance of the ratio of two means, from the per-decay detection
+        # probabilities. Two things make a binomial estimate wrong here: the
+        # model stores a PROBABILITY per decay rather than a 0/1 outcome, so
+        # the per-decay Bernoulli noise is never sampled; and p_T and p_D are
+        # strongly correlated across decays, which the covariance term below
+        # removes. Ignoring either inflates u_L by a factor of a few.
+        per = TDCRPy(L0, Rad, pmf_1, N, kB, V, readRecHist=True, mode="dis")
+        p_D = np.asarray(per[1], dtype=float)
+        p_T = np.asarray(per[2], dtype=float)
+        u_tdcr = np.nan
+        if p_D.size > 1 and p_D.mean() > 1e-12:
+            m, d_bar = p_D.size, p_D.mean()
+            c = np.cov(p_T, p_D, ddof=1)
+            var_r = (c[0, 0] + tdcr0 ** 2 * c[1, 1]
+                     - 2.0 * tdcr0 * c[0, 1]) / (m * d_bar * d_bar)
+            u_tdcr = math.sqrt(max(float(var_r), 0.0))
+        h = 0.02 * L0
+        if h > 0 and np.isfinite(u_tdcr):
+            lo = TDCRPy(L0 - h, Rad, pmf_1, N, kB, V, readRecHist=True)
+            hi = TDCRPy(L0 + h, Rad, pmf_1, N, kB, V, readRecHist=True)
+            if lo[2] > 1e-12 and hi[2] > 1e-12:
+                slope = ((hi[4] / hi[2]) - (lo[4] / lo[2])) / (2.0 * h)
+                if abs(slope) > 1e-12:
+                    u_L = u_tdcr / abs(slope)
+
     return (
         L0, L_opt,
         eff_S, u_eff_S,
@@ -1518,6 +1593,7 @@ def eff(TD, Rad, pmf_1, kB, V,
         eff_BC, u_eff_BC,
         eff_AC, u_eff_AC,
         eff_D2, u_eff_D2,
+        u_L,
     )
 
 
