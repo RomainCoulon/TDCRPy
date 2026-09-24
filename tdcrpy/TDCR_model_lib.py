@@ -721,7 +721,8 @@ def readParameters(disp=False):
         * ``depthSpline`` (int) — spline interpolation window half-width
         * ``Einterp_a`` (float) — alpha interpolation threshold (keV)
         * ``Einterp_e`` (float) — electron interpolation threshold (keV)
-        * ``diam_micelle`` (float) — mean micelle diameter (nm)
+        * ``diam_micelle`` (float) — mean micelle **diameter** (nm); the
+          stochastic kernel uses half of it as the droplet radius
         * ``fAq`` (float) — aqueous volume fraction
         * ``tau`` (int) — coincidence resolving time (ns)
         * ``extDT`` (float) — extended dead time (µs)
@@ -734,7 +735,8 @@ def readParameters(disp=False):
         * ``solvantConc`` (float) — solvent molar concentration (mol L⁻¹)
         * ``sp_model`` (str) — electron stopping-power model name
         * ``chou_param`` (float) — Chou bimolecular quenching constant (cm² MeV⁻²)
-        * ``sigma_micelle`` (float) — std dev of micelle diameter (nm)
+        * ``sigma_micelle`` (float) — std dev of the micelle size distribution
+          (nm); 0 (the shipped default) means a monodisperse population
 
     Raises
     ------
@@ -835,7 +837,21 @@ def readParameters(disp=False):
 # Each setter writes one value to config.toml and invalidates the in-memory cache.
 
 def modifySigma_micelle(x):
-    """Set the standard deviation of the micelle diameter distribution (nm)."""
+    """Set the standard deviation of the micelle size distribution (nm).
+
+    ``0`` — the shipped default — makes the population monodisperse, so every
+    droplet has the nominal size. The size spread measured by dynamic light
+    scattering on commercial LS cocktails is small compared with the mean
+    [D. E. Bergeron, *Determination of micelle size in some commercial liquid
+    scintillation cocktails*, Appl. Radiat. Isot. **70** (2012) 2164-2169,
+    doi:10.1016/j.apradiso.2012.02.089], which is what that default encodes.
+
+    A non-zero ``sigma`` leaves the high-energy plateau at ``1 - fAq``
+    untouched (see :func:`mean_truncated_radius`), and acts only where the
+    electron range is comparable to the droplet: below ~0.3 keV the escape
+    probability is convex in the radius, so averaging over a size
+    distribution *raises* the retention above its monodisperse value.
+    """
     update_config_value("sigma_micelle", x)
 
 def modifynE_electron(x):
@@ -908,8 +924,13 @@ def modifyEinterp_e(x):
     update_config_value("Einterp_e", x)
 
 def modifyDiam_micelle(x):
-    """Set the mean diameter of reverse micelles (nm). Must be 0.5, 1, 2, 3, or 4."""
-    update_config_value("diam_micelle", int(x))
+    """Set the mean **diameter** of the reverse micelles, in nm.
+
+    The stochastic kernel uses half of it as the droplet radius. The legacy
+    :func:`micelleLoss` lookup additionally requires one of the tabulated
+    diameters: 0.5, 1, 2, 3, 4, 5, 6, 7, 8 or 10 nm.
+    """
+    update_config_value("diam_micelle", x)
 
 def modifyfAq(x):
     """Set the aqueous volume fraction of the scintillator mixture (0–1)."""
@@ -2476,9 +2497,34 @@ def _mc_kernel(E0_keV, r_d_nm, sigma_micelle, f_w, is_hydrophilic, num_samples):
     return E_deposited_act
 
 # 3. The Python Wrapper for TDCRPy
-def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle, sigma_r=sigma_micelle, f_w=fAq, tracer_type="hydrophilic", num_samples=1):
-    """
-    E in keV
+def pure_mc_efficient_energy_numba(E, *, r_d_nm=diam_micelle / 2.0, sigma_r=sigma_micelle, f_w=fAq, tracer_type="hydrophilic", num_samples=1):
+    """Stochastic micellar-quenching kernel.
+
+    Parameters
+    ----------
+    E : float
+        Electron energy in keV (already Birks-quenched, in the TDCRPy path).
+    r_d_nm : float, optional
+        Droplet **radius** in nm. The default is half of the configured
+        ``diam_micelle``, which is a *diameter* — the same convention
+        :func:`micelleLoss` uses for the Nedjadi lookup table. Before
+        v2.20.21 the configured diameter was passed here unhalved, so the
+        kernel ran on droplets twice the requested size.
+    sigma_r : float, optional
+        Std dev of the size distribution (nm); 0 (default) is monodisperse.
+    f_w : float, optional
+        Aqueous volume fraction.
+    tracer_type : {"hydrophilic", "lipophilic"}, optional
+        Where the decay starts. The TDCRPy quenching path only ever uses
+        the hydrophilic default: an aqueous tracer sits inside a droplet.
+    num_samples : int, optional
+        Number of tracks to sample.
+
+    Returns
+    -------
+    float or (float, float, ndarray)
+        The retained energy for ``num_samples=1``, otherwise its mean,
+        standard deviation and the full sample.
     """
     if E <= 0:
         if num_samples==1:

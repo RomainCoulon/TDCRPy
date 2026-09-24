@@ -60,10 +60,21 @@ pCl = 0.000000
 # properties on reverse micelles
 # applied reverse micelle correction
 micCorr = False
-# diameter of the micelles in nm (possible values: 0.5, 1.0, 2.0, 3.0, 4.0)
-diam_micelle = 2
-# standard deviation of the micelles diameters
-sigma_micelle = 1
+# mean DIAMETER of the reverse micelles in nm. The stochastic kernel uses half
+# of it as the droplet radius; the legacy micelleLoss() lookup needs one of the
+# tabulated diameters 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 10 nm. The 4 nm default
+# follows the dynamic light scattering of [D.E. Bergeron, Appl. Radiat. Isot. 70
+# (2012) 2164-2169], which found commercial cocktails well below the 8 nm long
+# treated as canonical.
+diam_micelle = 4
+# standard deviation of the micelle size distribution in nm. 0 = monodisperse,
+# the default: the size spread measured for commercial LS cocktails is small
+# compared with the mean [D.E. Bergeron, Appl. Radiat. Isot. 70 (2012) 2164-2169,
+# doi:10.1016/j.apradiso.2012.02.089], so the mean size carries the physics.
+# A non-zero value acts only below ~0.3 keV, where it RAISES the retention
+# (the escape probability is convex in the radius) -- see
+# notebooks/physics/micelleEffects.ipynb, section 5.
+sigma_micelle = 0
 
 ## OPTICAL PROPERTIES
 # Quantum efficiency of PMT A, B, C

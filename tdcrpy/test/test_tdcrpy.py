@@ -9,6 +9,7 @@ Bureau International des Poids et Mesures
 """
 
 import math
+import inspect
 import unittest
 import importlib.resources
 import os
@@ -1081,6 +1082,56 @@ class TestMicelleRadiusConsistency(unittest.TestCase):
         for f_w in (0.05, 0.20, 0.30):
             self.assertAlmostEqual(self._plateau(1.0, 1.0, f_w), 1.0 - f_w,
                                    places=2, msg=f'fAq={f_w}')
+
+    def test_shipped_default_is_monodisperse(self):
+        """The packaged configuration must ship sigma_micelle = 0 (v2.20.21).
+
+        Reported reverse-micelle size spreads are small compared with the mean,
+        so the mean size carries the physics. A zero default also keeps the
+        sampled radius strictly positive, which removes any dependence on how
+        the size distribution is truncated or parameterised.
+        """
+        with importlib.resources.path('tdcrpy', 'configDefault.toml') as cfg:
+            text = cfg.read_text(encoding='utf-8')
+        line = [l for l in text.splitlines()
+                if l.strip().startswith('sigma_micelle')]
+        self.assertEqual(len(line), 1, 'sigma_micelle not found in configDefault')
+        self.assertEqual(float(line[0].split('=')[1].strip()), 0.0,
+                         f'shipped default is not monodisperse: {line[0]!r}')
+
+    def test_zero_sigma_is_deterministic_in_radius(self):
+        """At sigma = 0 every droplet has the nominal radius, so the retention
+        is the pure-geometry result and no truncation question arises."""
+        self.assertEqual(lib.mean_truncated_radius(2.0, 0.0), 2.0)
+        self.assertAlmostEqual(self._plateau(2.0, 0.0, 0.10), 0.90, places=2)
+
+    def test_kernel_default_radius_is_half_the_diameter(self):
+        """``diam_micelle`` is a DIAMETER; the kernel takes a radius (v2.20.21).
+
+        Before the fix the configured diameter was bound straight to
+        ``r_d_nm``, so the quenching path ran on droplets twice the requested
+        size while :func:`micelleLoss` read the same key as a diameter. The two
+        micelle models therefore disagreed by a factor two on the same config.
+        """
+        default = inspect.signature(
+            lib.pure_mc_efficient_energy_numba).parameters['r_d_nm'].default
+        self.assertAlmostEqual(default, lib.diam_micelle / 2.0, places=12)
+
+    def test_shipped_default_diameter_is_four_nm(self):
+        """4 nm diameter: below the 8 nm long treated as canonical, per the
+        light-scattering survey of Bergeron, Appl. Radiat. Isot. 70 (2012)."""
+        with importlib.resources.path('tdcrpy', 'configDefault.toml') as cfg:
+            text = cfg.read_text(encoding='utf-8')
+        line = [l for l in text.splitlines()
+                if l.strip().startswith('diam_micelle')]
+        self.assertEqual(len(line), 1, 'diam_micelle not found in configDefault')
+        self.assertEqual(float(line[0].split('=')[1].strip()), 4.0)
+
+    def test_micelleloss_accepts_the_shipped_diameter(self):
+        """micelleLoss indexes a table of tabulated diameters, so the shipped
+        default has to be one of them or the legacy path raises."""
+        S = lib.micelleLoss(10.0)
+        self.assertTrue(0.0 < S <= 1.0, f'micelleLoss returned {S}')
 
 
 
