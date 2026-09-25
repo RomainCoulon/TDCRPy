@@ -548,7 +548,14 @@ both cheap and robust. Three rules are enforced here:
   call ``read_config_object(force=True)``.
 """
 _CONFIG_SECTION = "Inputs"
-_CONFIG_READ_ATTEMPTS = 5
+# Retry budget for config.toml I/O. The backoff doubles, so N attempts wait
+# BACKOFF * (2**(N-1) - 1) seconds in total: 8 attempts is about 25 s.
+#
+# On Windows an atomic os.replace onto config.toml fails with WinError 5 while
+# any other process holds the destination open -- an on-access virus scan of
+# the freshly written temp file is enough. Five attempts only bought 3 s, which
+# is short enough that a transient lock could kill a notebook run an hour in.
+_CONFIG_READ_ATTEMPTS = 8
 _CONFIG_READ_BACKOFF = 0.2      # seconds; doubled after each failed attempt
 
 _CONFIG_CACHED = False

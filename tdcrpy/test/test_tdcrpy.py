@@ -1284,6 +1284,19 @@ class TestLBracketing(unittest.TestCase):
         self.assertLess(hi, TDCRPy_mod._AUTO_SPAN[1],
                         'fell back to the full span instead of the bracket')
 
+    def test_config_retry_budget_survives_a_transient_lock(self):
+        """config.toml I/O must tolerate a lock for longer than a few seconds.
+
+        On Windows an atomic os.replace onto config.toml fails with WinError 5
+        while another process holds the destination open, which an on-access
+        virus scan is enough to cause. The budget used to be 5 attempts = 3 s,
+        short enough that one transient lock killed a notebook run an hour in.
+        """
+        n, b = lib._CONFIG_READ_ATTEMPTS, lib._CONFIG_READ_BACKOFF
+        total = b * (2 ** (n - 1) - 1)
+        self.assertGreaterEqual(total, 20.0,
+                                f'retry budget is only {total:.1f} s')
+
     def test_optical_transport_default_reads_the_configuration(self):
         """The opticalTransport key was inert before v2.20.24.
 
