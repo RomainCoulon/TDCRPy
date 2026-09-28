@@ -1121,14 +1121,20 @@ class TestMicelleRadiusConsistency(unittest.TestCase):
             # 0.2 keV sits in the confinement regime, where the retention is
             # strongly radius-dependent -- at the plateau every radius gives
             # 1-fAq and the test could not tell 2 nm from 4 nm.
-            E, ns = 0.2, 40000
+            E, ns = 0.2, 200000
             got = lib.pure_mc_efficient_energy_numba(E, num_samples=ns)[0]
             as_radius = lib.pure_mc_efficient_energy_numba(
                 E, r_d_nm=2.0, num_samples=ns)[0]
             as_diameter = lib.pure_mc_efficient_energy_numba(
                 E, r_d_nm=4.0, num_samples=ns)[0]
+            # Both are Monte-Carlo estimates: the per-event spread here is
+            # about 0.34 of E, so each mean carries ~0.34/sqrt(ns) and their
+            # difference ~1.4x that. The tolerance is ~5 sigma of that, which
+            # is loose enough not to fail on noise and still an order of
+            # magnitude tighter than the 2 nm / 4 nm separation being tested.
+            tol = 5 * 1.5 * 0.34 / math.sqrt(ns)
             self.assertAlmostEqual(
-                got / E, as_radius / E, places=2,
+                got / E, as_radius / E, delta=tol,
                 msg='the default is not diam_micelle / 2')
             self.assertLess(
                 as_diameter, as_radius,
@@ -1345,12 +1351,11 @@ class TestLBracketing(unittest.TestCase):
 
 
 class TestMicelleAdvisory(unittest.TestCase):
-    """micCorr stays off by default, but a nuclide that needs it must say so.
+    """micCorr stays off by default, but the EC nuclides that need it say so.
 
-    The trigger is measured from the decay -- the fraction of electron energy
-    emitted below 1 keV, where the range is comparable to a droplet -- rather
-    than matched against a hard-coded nuclide list, so it covers anything in
-    the catalogue.
+    Fe-55 and Cr-51 are electron-capture emitters whose Auger cascades sit in
+    the confinement regime: about 5 % of their light is lost inside the water
+    droplets and is not modelled when the correction is off.
     """
 
     def setUp(self):
@@ -1361,10 +1366,6 @@ class TestMicelleAdvisory(unittest.TestCase):
         lib.modifyfAq(self._faq)
         TDCRPy_mod._micelle_advised.clear()
 
-    def _tally(self, frac):
-        TDCRPy_mod._micelle_tally['total'] = 1.0
-        TDCRPy_mod._micelle_tally['low'] = frac
-
     def test_default_configuration_leaves_the_correction_off(self):
         with importlib.resources.path('tdcrpy', 'configDefault.toml') as cfg:
             text = cfg.read_text(encoding='utf-8')
@@ -1372,48 +1373,46 @@ class TestMicelleAdvisory(unittest.TestCase):
         self.assertEqual(len(line), 1)
         self.assertIn('False', line[0])
 
-    def test_warns_for_a_soft_electron_spectrum(self):
-        lib.modifyfAq(0.10)
-        self._tally(0.11)                     # Fe-55 carries about this much
-        with self.assertWarns(UserWarning):
-            TDCRPy_mod._micelle_advice('Fe-55')
+    def test_critical_list_is_the_two_ec_nuclides(self):
+        self.assertEqual(set(TDCRPy_mod._MICELLE_CRITICAL), {'Fe-55', 'Cr-51'})
 
-    def test_silent_for_a_hard_beta_emitter(self):
+    def test_warns_for_each_critical_nuclide(self):
         lib.modifyfAq(0.10)
-        self._tally(0.001)                    # Tc-99
+        for rad in ('Fe-55', 'Cr-51'):
+            TDCRPy_mod._micelle_advised.clear()
+            with self.assertWarns(UserWarning):
+                TDCRPy_mod._micelle_advice([rad])
+
+    def test_silent_for_everything_else(self):
+        lib.modifyfAq(0.10)
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter('always')
-            TDCRPy_mod._micelle_advice('Tc-99')
-        self.assertEqual(len(caught), 0, 'advisory fired where it does not apply')
+            for rad in ('H-3', 'C-14', 'Tc-99', 'Ni-63'):
+                TDCRPy_mod._micelle_advice([rad])
+        self.assertEqual(len(caught), 0, 'advisory fired for a non-EC nuclide')
 
     def test_warns_only_once_per_nuclide(self):
         lib.modifyfAq(0.10)
-        self._tally(0.11)
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter('always')
-            TDCRPy_mod._micelle_advice('Fe-55')
-            TDCRPy_mod._micelle_advice('Fe-55')
+            TDCRPy_mod._micelle_advice(['Fe-55'])
+            TDCRPy_mod._micelle_advice(['Fe-55'])
         self.assertEqual(len(caught), 1, 'advisory repeated for one nuclide')
 
-    def test_no_tally_without_water(self):
-        """With fAq = 0 there is nothing to lose light to, so nothing accrues."""
+    def test_finds_a_critical_nuclide_inside_a_mixture(self):
+        lib.modifyfAq(0.10)
+        with self.assertWarns(UserWarning):
+            TDCRPy_mod._micelle_advice(['H-3', 'Fe-55'])
+
+    def test_silent_without_water(self):
+        """With fAq = 0 there are no micelles, so there is nothing to warn about."""
         lib.modifyfAq(0.0)
         lib.modifyMicCorr(False)
-        TDCRPy_mod._micelle_tally['low'] = 0.0
-        TDCRPy_mod._micelle_tally['total'] = 0.0
-        TDCRPy_mod.TDCRPy(6.0, 'H-3', '1', 40, KB_TYPICAL, 10)
-        self.assertEqual(TDCRPy_mod._micelle_tally['total'], 0.0)
-
-    def test_tally_accumulates_when_water_is_present(self):
-        lib.modifyfAq(0.10)
-        lib.modifyMicCorr(False)
-        TDCRPy_mod._micelle_tally['low'] = 0.0
-        TDCRPy_mod._micelle_tally['total'] = 0.0
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            TDCRPy_mod.TDCRPy(6.0, 'H-3', '1', 60, KB_TYPICAL, 10)
-        self.assertGreater(TDCRPy_mod._micelle_tally['total'], 0.0,
-                           'the advisory never sees any electron energy')
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', 20, KB_TYPICAL, 10)
+        micelle = [c for c in caught if 'micCorr is' in str(c.message)]
+        self.assertEqual(len(micelle), 0, 'advisory fired with no aqueous phase')
 
 
 class TestRecordFileIsolation(unittest.TestCase):

@@ -153,45 +153,40 @@ def _relax_atom(daughter_relax, particle_vec, energy_vec, rad,
 
 
 # --- micelle advisory -----------------------------------------------------
-# Energy carried by electrons below this is where the reverse-micelle
-# confinement penalty lives: the range there is comparable to a droplet, so the
-# electron may never reach the scintillating solvent.
-_MICELLE_LOW_KEV = 1.0
-# Fraction of the electron energy below that which makes the correction worth
-# paying for. Calibrated against the confinement loss measured at fAq = 0.10,
-# 4 nm droplets: Fe-55 carries 10.6 % of its energy below 1 keV and loses
-# 5.2 % of its light, Cr-51 8.4 % and 4.6 %; H-3 carries 2.7 % and loses
-# 0.45 %, Ni-63 0.3 % and 0.07 %, C-14 and Tc-99 essentially nothing.
-_MICELLE_LOW_FRACTION = 0.05
-_micelle_tally = {"low": 0.0, "total": 0.0}
+# Nuclides for which running without the reverse-micelle correction measurably
+# biases the result. Both are electron-capture emitters whose signal is carried
+# by Auger cascades of a few hundred eV to a few keV, where the electron range
+# is comparable to a droplet and the electron may never reach the scintillating
+# solvent. Measured at fAq = 0.10 with 4 nm droplets, separating the bulk
+# (1 - fAq) dilution -- which is degenerate with L -- from the confinement
+# penalty that is not:
+#
+#     Fe-55   5.2 % of the light lost to confinement
+#     Cr-51   4.6 %
+#     H-3     0.45 %      Ni-63  0.07 %      C-14, Tc-99  ~0
+#
+# Add a nuclide here if its Auger spectrum puts it in the same regime; the list
+# is not exhaustive of the catalogue.
+_MICELLE_CRITICAL = ("Fe-55", "Cr-51")
 _micelle_advised = set()
 
 
 def _micelle_advice(Rad):
-    """Warn once when a nuclide that needs the micelle correction ran without it.
-
-    Deliberately not a hard-coded nuclide list: the criterion is a property of
-    the decay's electron spectrum, so it works for any nuclide in the
-    catalogue, including ones nobody has looked at yet.
-    """
-    total = _micelle_tally["total"]
-    if total <= 0.0:
-        return
-    frac = _micelle_tally["low"] / total
+    """Warn once when one of the critical nuclides ran without the correction."""
     # Rad has been parsed into a list of nuclides by this point in TDCRPy().
-    name = ", ".join(Rad) if isinstance(Rad, (list, tuple)) else str(Rad)
-    if frac < _MICELLE_LOW_FRACTION or name in _micelle_advised:
+    rads = Rad if isinstance(Rad, (list, tuple)) else [Rad]
+    hits = [r for r in rads if r in _MICELLE_CRITICAL and r not in _micelle_advised]
+    if not hits:
         return
-    _micelle_advised.add(name)
+    _micelle_advised.update(hits)
     warnings.warn(
-        f"{name}: {frac:.0%} of the electron energy is emitted below "
-        f"{_MICELLE_LOW_KEV:g} keV, where the range is comparable to a reverse "
-        f"micelle, but micCorr is off with fAq = {tl.fAq:g}. Light lost inside "
-        f"the water droplets is then not modelled and the efficiency is "
-        f"overestimated -- about 5 % of the light for Fe-55 and Cr-51. Enable "
-        f"it with tdcrpy.TDCR_model_lib.modifyMicCorr(True); see "
-        f"notebooks/physics/micelleEffects.ipynb for the cost and the size of "
-        f"the effect.",
+        f"{', '.join(hits)}: electron-capture nuclide whose Auger electrons are "
+        f"slow enough to be trapped inside the reverse micelles, but micCorr is "
+        f"off with fAq = {tl.fAq:g}. About 5 % of the light is then unaccounted "
+        f"for and the efficiency is overestimated. Enable it with "
+        f"tdcrpy.TDCR_model_lib.modifyMicCorr(True); see "
+        f"notebooks/physics/micelleEffects.ipynb for the size of the effect and "
+        f"what it costs.",
         UserWarning, stacklevel=3)
 
 
@@ -509,9 +504,6 @@ def TDCRPy(
     # ------------------------------------------------------------------ #
     # 3. Record-file initialisation                                        #
     # ------------------------------------------------------------------ #
-    _micelle_tally["low"] = 0.0
-    _micelle_tally["total"] = 0.0
-
     if record:
         temp_dir = tempfile.gettempdir()
         recfile1, recfile2, recfile3, recfile4 = _open_record_files(temp_dir)
@@ -719,7 +711,7 @@ def TDCRPy(
     # ------------------------------------------------------------------ #
     # 9. Final estimators                                                  #
     # ------------------------------------------------------------------ #
-    if not mic_corr:
+    if not mic_corr and tl.fAq > 0.0:
         _micelle_advice(Rad)
 
     out_eff = tl.efficienciesEstimates(
@@ -1136,12 +1128,6 @@ def _quench(particle_vec, energy_vec, energy_vec_initial,
             ) * 1e-3
             if mic_corr:
                 eq = tl.pure_mc_efficient_energy_numba(eq)
-            elif tl.fAq > 0.0 and eq > 0.0:
-                # Two float adds per electron, only when the correction is off
-                # and there is water to lose light to.
-                _micelle_tally["total"] += eq
-                if eq < _MICELLE_LOW_KEV:
-                    _micelle_tally["low"] += eq
             energy_vec[ipart] = eq
             e_quenching.append(eq)
 
