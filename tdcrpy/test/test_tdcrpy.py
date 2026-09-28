@@ -11,6 +11,7 @@ Bureau International des Poids et Mesures
 import math
 import inspect
 import unittest
+import warnings
 import importlib.resources
 import os
 import tempfile
@@ -1341,6 +1342,78 @@ class TestLBracketing(unittest.TestCase):
         br = TDCRPy_mod._bracket_physical_L(tdcr, 0.6)
         self.assertIsNotNone(br)
         self.assertGreaterEqual(br[0], 1.0)
+
+
+class TestMicelleAdvisory(unittest.TestCase):
+    """micCorr stays off by default, but a nuclide that needs it must say so.
+
+    The trigger is measured from the decay -- the fraction of electron energy
+    emitted below 1 keV, where the range is comparable to a droplet -- rather
+    than matched against a hard-coded nuclide list, so it covers anything in
+    the catalogue.
+    """
+
+    def setUp(self):
+        self._faq = lib.fAq
+        TDCRPy_mod._micelle_advised.clear()
+
+    def tearDown(self):
+        lib.modifyfAq(self._faq)
+        TDCRPy_mod._micelle_advised.clear()
+
+    def _tally(self, frac):
+        TDCRPy_mod._micelle_tally['total'] = 1.0
+        TDCRPy_mod._micelle_tally['low'] = frac
+
+    def test_default_configuration_leaves_the_correction_off(self):
+        with importlib.resources.path('tdcrpy', 'configDefault.toml') as cfg:
+            text = cfg.read_text(encoding='utf-8')
+        line = [l for l in text.splitlines() if l.strip().startswith('micCorr')]
+        self.assertEqual(len(line), 1)
+        self.assertIn('False', line[0])
+
+    def test_warns_for_a_soft_electron_spectrum(self):
+        lib.modifyfAq(0.10)
+        self._tally(0.11)                     # Fe-55 carries about this much
+        with self.assertWarns(UserWarning):
+            TDCRPy_mod._micelle_advice('Fe-55')
+
+    def test_silent_for_a_hard_beta_emitter(self):
+        lib.modifyfAq(0.10)
+        self._tally(0.001)                    # Tc-99
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            TDCRPy_mod._micelle_advice('Tc-99')
+        self.assertEqual(len(caught), 0, 'advisory fired where it does not apply')
+
+    def test_warns_only_once_per_nuclide(self):
+        lib.modifyfAq(0.10)
+        self._tally(0.11)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            TDCRPy_mod._micelle_advice('Fe-55')
+            TDCRPy_mod._micelle_advice('Fe-55')
+        self.assertEqual(len(caught), 1, 'advisory repeated for one nuclide')
+
+    def test_no_tally_without_water(self):
+        """With fAq = 0 there is nothing to lose light to, so nothing accrues."""
+        lib.modifyfAq(0.0)
+        lib.modifyMicCorr(False)
+        TDCRPy_mod._micelle_tally['low'] = 0.0
+        TDCRPy_mod._micelle_tally['total'] = 0.0
+        TDCRPy_mod.TDCRPy(6.0, 'H-3', '1', 40, KB_TYPICAL, 10)
+        self.assertEqual(TDCRPy_mod._micelle_tally['total'], 0.0)
+
+    def test_tally_accumulates_when_water_is_present(self):
+        lib.modifyfAq(0.10)
+        lib.modifyMicCorr(False)
+        TDCRPy_mod._micelle_tally['low'] = 0.0
+        TDCRPy_mod._micelle_tally['total'] = 0.0
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            TDCRPy_mod.TDCRPy(6.0, 'H-3', '1', 60, KB_TYPICAL, 10)
+        self.assertGreater(TDCRPy_mod._micelle_tally['total'], 0.0,
+                           'the advisory never sees any electron energy')
 
 
 class TestRecordFileIsolation(unittest.TestCase):
