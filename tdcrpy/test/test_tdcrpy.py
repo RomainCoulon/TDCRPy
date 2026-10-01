@@ -1350,6 +1350,81 @@ class TestLBracketing(unittest.TestCase):
         self.assertGreaterEqual(br[0], 1.0)
 
 
+class TestEmptyDecaysCounted(unittest.TestCase):
+    """Decays that deposit nothing must count as zero, not vanish (v2.20.28).
+
+    A decay in which every emitted particle escapes the vial writes no line to
+    the record file. Averaging the replayed efficiencies over the records that
+    exist therefore dropped those decays instead of counting them, inflating
+    the efficiency by M/(N-M). Measured at N = 20000: Fe-55 lost 328 decays
+    and read 1.67 % high, Cr-51 lost 281 and read 1.43 % high; H-3 and C-14
+    lose none and were unaffected.
+    """
+
+    def test_full_list_is_a_plain_mean(self):
+        """With one record per decay the result must not change at all."""
+        v = [0.0, 0.25, 0.5, 0.75, 1.0]
+        mean, sem = lib._mean_over_decays(v, len(v))
+        self.assertAlmostEqual(mean, float(np.mean(v)), places=12)
+        self.assertAlmostEqual(sem, float(np.std(v)) / math.sqrt(len(v)),
+                               places=12)
+
+    def test_missing_records_count_as_zeros(self):
+        """Three records out of four decays: the fourth contributed zero."""
+        v = [1.0, 1.0, 1.0]
+        mean, sem = lib._mean_over_decays(v, 4)
+        self.assertAlmostEqual(mean, 0.75, places=12)
+        # same as averaging [1, 1, 1, 0] explicitly
+        ref = np.array([1.0, 1.0, 1.0, 0.0])
+        self.assertAlmostEqual(mean, float(ref.mean()), places=12)
+        self.assertAlmostEqual(sem, float(ref.std()) / 2.0, places=12)
+
+    def test_inflation_matches_the_closed_form(self):
+        """The old behaviour was high by exactly M/(N-M)."""
+        v = [0.8] * 970                      # 30 of 1000 decays deposited none
+        mean, _ = lib._mean_over_decays(v, 1000)
+        old = float(np.mean(v))              # what the code used to return
+        self.assertAlmostEqual(old / mean - 1.0, 30 / 970.0, places=10)
+
+    def test_more_records_than_decays_does_not_scale_down(self):
+        v = [1.0] * 10
+        mean, _ = lib._mean_over_decays(v, 4)
+        self.assertAlmostEqual(mean, 1.0, places=12)
+
+    def test_replay_reproduces_the_direct_simulation(self):
+        """The regression itself, on a nuclide that loses decays.
+
+        Fe-55 is an electron-capture emitter whose X-rays frequently escape,
+        so a measurable fraction of its decays deposit nothing. record=True
+        both simulates and records, so the replay below consumes exactly the
+        decays the direct result was computed from and any difference is the
+        reconstruction, not Monte-Carlo noise.
+        """
+        saved = (lib.fAq, lib.micCorr)
+        try:
+            lib.modifyfAq(0.0)
+            lib.modifyMicCorr(False)
+            n = 400
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                direct = TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', n,
+                                           KB_TYPICAL, 10, record=True)
+                replay = TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', n,
+                                           KB_TYPICAL, 10, readRecHist=True)
+            # Not bit-exact: the record file stores energies as %.6E, so the
+            # replay reads them back rounded to about 7 significant digits.
+            # Before the fix the gap was 1.7e-2 relative, not 1e-8.
+            for name, i in (('eff_S', 0), ('eff_D', 2), ('eff_T', 4)):
+                self.assertAlmostEqual(
+                    direct[i], replay[i], places=6,
+                    msg=f'{name}: replay {replay[i]} != direct {direct[i]}; '
+                        'decays that deposited nothing are being dropped')
+        finally:
+            lib.modifyfAq(saved[0])
+            lib.modifyMicCorr(saved[1])
+            lib.cleanup_record_files()
+
+
 class TestMicelleAdvisory(unittest.TestCase):
     """micCorr stays off by default, but the EC nuclides that need it say so.
 

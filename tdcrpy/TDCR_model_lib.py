@@ -4495,6 +4495,52 @@ def detectProbabilitiesMC(L, e_quenching, e_quenching2, t1, evenement,
             acc['AB'], acc['BC'], acc['AC'], acc['D2'])         
 
 
+def _mean_over_decays(values, N):
+    """Mean detection probability over *N* decays, and its standard error.
+
+    The list holds one entry per decay that produced a record. A decay in
+    which nothing was deposited -- every emitted particle escaped the vial --
+    writes no line to the record file, so it is absent from the list even
+    though it happened and its detection probability was zero.
+
+    Averaging over ``len(values)`` therefore dropped those decays instead of
+    counting them, inflating the efficiency by ``M / (N - M)`` with *M* the
+    number missing. Measured at N = 20000 before this was fixed: Fe-55 lost
+    328 decays and read 1.67 % high, Cr-51 lost 281 and read 1.43 % high,
+    while H-3 and C-14 lose none and were unaffected. The bias reached
+    :func:`~tdcrpy.TDCRPy.eff`, whose replay path is where it appears, and any
+    activity derived from it was too low by the same amount. The fitted light
+    yield was NOT affected: the T/D ratio scales both efficiencies by the same
+    factor, so it cancels.
+
+    The variance is taken about the mean over all *N* decays, so the implicit
+    zeros widen it as they should.
+
+    Parameters
+    ----------
+    values : array_like
+        Per-decay detection probabilities, one entry per recorded decay.
+    N : int
+        Number of decays simulated, including any that deposited nothing.
+
+    Returns
+    -------
+    mean, sem : float
+    """
+    arr = np.asarray(values, dtype=float)
+    n = int(N)
+    if n <= 0:
+        return 0.0, 0.0
+    if arr.size > n:
+        # More records than decays should be impossible; trust the records
+        # rather than silently scaling the mean down.
+        n = arr.size
+    mean = float(arr.sum()) / n
+    var = float((arr ** 2).sum()) / n - mean ** 2
+    return mean, math.sqrt(max(var, 0.0) / n)
+
+
+
 def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_AB, efficiency_BC, efficiency_AC, efficiency_D2, N):
     """Compute mean efficiencies and their standard uncertainties from per-decay detection flags.
 
@@ -4535,21 +4581,13 @@ def efficienciesEstimates(efficiency_S, efficiency_D, efficiency_T, efficiency_A
     mean_efficiency_D2, std_efficiency_D2 : float
         Mean and standard uncertainty for C/N coincidence efficiency.
     """
-    mean_efficiency_S = np.mean(efficiency_S)
-    std_efficiency_S = np.std(efficiency_S)/np.sqrt(N)
-    mean_efficiency_D = np.mean(efficiency_D)
-    std_efficiency_D = np.std(efficiency_D)/np.sqrt(N)
-    mean_efficiency_T = np.mean(efficiency_T) # average
-    std_efficiency_T = np.std(efficiency_T)/np.sqrt(N)   # standard deviation
-    mean_efficiency_AB = np.mean(efficiency_AB)
-    std_efficiency_AB = np.std(efficiency_AB)/np.sqrt(N)
-    mean_efficiency_BC = np.mean(efficiency_BC)
-    std_efficiency_BC = np.std(efficiency_BC)/np.sqrt(N)
-    mean_efficiency_AC = np.mean(efficiency_AC)
-    std_efficiency_AC = np.std(efficiency_AC)/np.sqrt(N)
-    
-    mean_efficiency_D2 = np.mean(efficiency_D2)
-    std_efficiency_D2 = np.std(efficiency_D2)/np.sqrt(N)
+    mean_efficiency_S, std_efficiency_S = _mean_over_decays(efficiency_S, N)
+    mean_efficiency_D, std_efficiency_D = _mean_over_decays(efficiency_D, N)
+    mean_efficiency_T, std_efficiency_T = _mean_over_decays(efficiency_T, N)
+    mean_efficiency_AB, std_efficiency_AB = _mean_over_decays(efficiency_AB, N)
+    mean_efficiency_BC, std_efficiency_BC = _mean_over_decays(efficiency_BC, N)
+    mean_efficiency_AC, std_efficiency_AC = _mean_over_decays(efficiency_AC, N)
+    mean_efficiency_D2, std_efficiency_D2 = _mean_over_decays(efficiency_D2, N)
 
     return mean_efficiency_S, std_efficiency_S, mean_efficiency_D, std_efficiency_D, mean_efficiency_T, std_efficiency_T, mean_efficiency_AB, std_efficiency_AB, mean_efficiency_BC, std_efficiency_BC, mean_efficiency_AC, std_efficiency_AC, mean_efficiency_D2, std_efficiency_D2
     
