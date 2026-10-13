@@ -1425,69 +1425,319 @@ class TestEmptyDecaysCounted(unittest.TestCase):
             lib.cleanup_record_files()
 
 
-class TestMicelleAdvisory(unittest.TestCase):
-    """micCorr stays off by default, but the EC nuclides that need it say so.
+class TestECBranchProbability(unittest.TestCase):
+    """Which nuclides need the micelle correction is read, not listed.
+
+    Until v2.20.29 the two nuclides known to need the correction were a
+    hard-coded tuple -- the same kind of duplicated constant that has gone
+    stale elsewhere in this package. The PenNuc decay scheme already carries
+    the answer: a primary branch entry labelled ``Atom_<shell>`` is a vacancy
+    made by electron capture.
+    """
+
+    # Electron-capture probabilities from the DDEP/LNHB evaluations. Anchors
+    # the reconstruction, not just its self-consistency.
+    EVALUATED = {
+        'Fe-55': 1.0000, 'Cr-51': 1.0000, 'Mn-54': 1.0000, 'I-125': 1.0000,
+        'Cd-109': 1.0000, 'Co-57': 1.0000, 'Zn-65': 0.9830, 'Tl-201': 0.9800,
+        'Cu-64': 0.4350, 'K-40': 0.1072, 'Na-22': 0.0964, 'Tl-204': 0.0297,
+        'Cl-36': 0.0190,
+    }
+    PURE_BETA = ('H-3', 'C-14', 'Ni-63', 'Tc-99', 'Sr-90', 'P-32', 'S-35')
+
+    def test_matches_the_evaluated_ec_probabilities(self):
+        for rad, expected in self.EVALUATED.items():
+            got = lib.ec_branch_probability(rad)
+            self.assertAlmostEqual(
+                got, expected, delta=max(0.01, 0.05 * expected),
+                msg=f'{rad}: P(EC) = {got:.4f}, evaluated {expected:.4f}')
+
+    def test_pure_beta_emitters_have_no_ec_branch(self):
+        for rad in self.PURE_BETA:
+            self.assertEqual(lib.ec_branch_probability(rad), 0.0,
+                             f'{rad} is a pure beta emitter')
+
+    def test_isomeric_transition_is_not_electron_capture(self):
+        """Tc-99m decays by IT. Its conversion-electron vacancies are not EC."""
+        self.assertEqual(lib.ec_branch_probability('Tc-99m'), 0.0)
+
+    def test_probability_is_normalised(self):
+        for rad in ('Fe-55', 'Cu-64', 'Eu-152', 'Am-241', 'Co-60'):
+            p = lib.ec_branch_probability(rad)
+            self.assertGreaterEqual(p, 0.0)
+            self.assertLessEqual(p, 1.0)
+
+    def test_unknown_nuclide_is_not_critical(self):
+        """A missing decay file must never switch a correction on."""
+        self.assertEqual(lib.ec_branch_probability('Xx-999'), 0.0)
+        self.assertFalse(lib.is_micelle_critical('Xx-999'))
+
+    def test_threshold_selects_the_right_nuclides(self):
+        self.assertTrue(lib.is_micelle_critical('Fe-55', threshold=0.01))
+        self.assertTrue(lib.is_micelle_critical('Cl-36', threshold=0.01))
+        self.assertFalse(lib.is_micelle_critical('Cl-36', threshold=0.5))
+        self.assertTrue(lib.is_micelle_critical('Fe-55', threshold=0.5))
+        self.assertFalse(lib.is_micelle_critical('H-3', threshold=0.0001))
+
+
+class TestMicelleAutoActivation(unittest.TestCase):
+    """The correction switches itself on for EC nuclides, and says so.
 
     Fe-55 and Cr-51 are electron-capture emitters whose Auger cascades sit in
     the confinement regime: about 5 % of their light is lost inside the water
-    droplets and is not modelled when the correction is off.
+    droplets, and that part is NOT absorbed by the fitted L, unlike the
+    (1 - fAq) bulk dilution. Since v2.20.29 TDCRPy applies the correction to
+    them by itself whenever fAq > 0.
     """
 
     def setUp(self):
         self._faq = lib.fAq
+        self._auto = lib.micCorrAuto
+        self._thr = lib.micCorrECThreshold
+        self._mic = lib.micCorr
         TDCRPy_mod._micelle_advised.clear()
+        TDCRPy_mod._micelle_auto_announced.clear()
 
     def tearDown(self):
-        lib.modifyfAq(self._faq)
+        lib.update_config_batch({'fAq': self._faq,
+                                 'micCorrAuto': self._auto,
+                                 'micCorrECThreshold': self._thr,
+                                 'micCorr': self._mic})
         TDCRPy_mod._micelle_advised.clear()
+        TDCRPy_mod._micelle_auto_announced.clear()
 
-    def test_default_configuration_leaves_the_correction_off(self):
+    # -- what ships -------------------------------------------------------
+    def test_default_configuration_ships_auto_on_with_miccorr_off(self):
         with importlib.resources.path('tdcrpy', 'configDefault.toml') as cfg:
             text = cfg.read_text(encoding='utf-8')
-        line = [l for l in text.splitlines() if l.strip().startswith('micCorr')]
-        self.assertEqual(len(line), 1)
-        self.assertIn('False', line[0])
+        keys = {}
+        for line in text.splitlines():
+            line = line.strip()
+            if line.startswith('micCorr'):
+                k, _, v = line.partition('=')
+                keys[k.strip()] = v.strip()
+        self.assertEqual(keys.get('micCorr'), 'False')
+        self.assertEqual(keys.get('micCorrAuto'), 'True')
+        self.assertEqual(float(keys.get('micCorrECThreshold')), 0.01)
 
-    def test_critical_list_is_the_two_ec_nuclides(self):
-        self.assertEqual(set(TDCRPy_mod._MICELLE_CRITICAL), {'Fe-55', 'Cr-51'})
+    def test_missing_keys_fall_back_to_auto_on(self):
+        """A config.toml written before v2.20.29 must get the new default."""
+        import configparser
+        parser = configparser.ConfigParser()
+        parser.read_string('[Inputs]\nmicCorr = False\n')
+        inp = parser['Inputs']
+        self.assertTrue(inp.getboolean('micCorrAuto', fallback=True))
+        self.assertEqual(inp.getfloat('micCorrECThreshold', fallback=0.01),
+                         0.01)
 
-    def test_warns_for_each_critical_nuclide(self):
+    # -- the resolution itself --------------------------------------------
+    def test_no_water_means_no_change(self):
+        """With fAq = 0 there are no droplets: behaviour as before v2.20.29."""
+        lib.modifyfAq(0.0)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            self.assertFalse(
+                TDCRPy_mod._resolve_micelle_correction(['Fe-55'], False))
+        self.assertEqual(len(caught), 0, 'warned with no aqueous phase')
+
+    def test_activates_for_an_ec_nuclide(self):
         lib.modifyfAq(0.10)
-        for rad in ('Fe-55', 'Cr-51'):
-            TDCRPy_mod._micelle_advised.clear()
-            with self.assertWarns(UserWarning):
-                TDCRPy_mod._micelle_advice([rad])
+        for rad in ('Fe-55', 'Cr-51', 'I-125', 'Mn-54'):
+            TDCRPy_mod._micelle_auto_announced.clear()
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter('always')
+                on = TDCRPy_mod._resolve_micelle_correction([rad], False)
+            self.assertTrue(on, f'{rad}: correction did not self-activate')
+            self.assertEqual(len(caught), 1,
+                             f'{rad}: activation was not announced')
+            self.assertIn('automatically', str(caught[0].message))
 
-    def test_silent_for_everything_else(self):
+    def test_leaves_beta_emitters_alone(self):
         lib.modifyfAq(0.10)
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter('always')
             for rad in ('H-3', 'C-14', 'Tc-99', 'Ni-63'):
-                TDCRPy_mod._micelle_advice([rad])
-        self.assertEqual(len(caught), 0, 'advisory fired for a non-EC nuclide')
+                self.assertFalse(
+                    TDCRPy_mod._resolve_micelle_correction([rad], False), rad)
+        self.assertEqual(len(caught), 0, 'warned for a pure beta emitter')
 
-    def test_warns_only_once_per_nuclide(self):
+    def test_announces_once_per_nuclide(self):
         lib.modifyfAq(0.10)
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter('always')
-            TDCRPy_mod._micelle_advice(['Fe-55'])
-            TDCRPy_mod._micelle_advice(['Fe-55'])
+            TDCRPy_mod._resolve_micelle_correction(['Fe-55'], False)
+            TDCRPy_mod._resolve_micelle_correction(['Fe-55'], False)
+        self.assertEqual(len(caught), 1, 'activation announced twice')
+
+    def test_activates_for_a_mixture_containing_one_ec_nuclide(self):
+        lib.modifyfAq(0.10)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            self.assertTrue(TDCRPy_mod._resolve_micelle_correction(
+                ['H-3', 'Fe-55'], False))
+
+    def test_explicit_miccorr_is_never_overridden(self):
+        lib.modifyfAq(0.10)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            self.assertTrue(
+                TDCRPy_mod._resolve_micelle_correction(['H-3'], True))
+            self.assertTrue(
+                TDCRPy_mod._resolve_micelle_correction(['Fe-55'], True))
+        self.assertEqual(len(caught), 0,
+                         'announced an activation the caller had already made')
+
+    def test_threshold_is_honoured(self):
+        lib.modifyfAq(0.10)
+        lib.modifyMicCorrECThreshold(0.5)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            self.assertFalse(
+                TDCRPy_mod._resolve_micelle_correction(['Cl-36'], False),
+                'Cl-36 has a 1.9 % EC branch and is below a 0.5 threshold')
+            self.assertTrue(
+                TDCRPy_mod._resolve_micelle_correction(['Fe-55'], False))
+
+    # -- opting out --------------------------------------------------------
+    def test_auto_off_falls_back_to_the_advisory(self):
+        lib.modifyfAq(0.10)
+        lib.modifyMicCorrAuto(False)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            on = TDCRPy_mod._resolve_micelle_correction(['Fe-55'], False)
+        self.assertFalse(on, 'micCorrAuto = False did not opt out')
+        self.assertEqual(len(caught), 1)
+        self.assertIn('micCorrAuto is disabled', str(caught[0].message))
+
+    def test_advisory_warns_once_per_nuclide(self):
+        lib.modifyfAq(0.10)
+        lib.modifyMicCorrAuto(False)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            TDCRPy_mod._resolve_micelle_correction(['Cr-51'], False)
+            TDCRPy_mod._resolve_micelle_correction(['Cr-51'], False)
         self.assertEqual(len(caught), 1, 'advisory repeated for one nuclide')
 
-    def test_finds_a_critical_nuclide_inside_a_mixture(self):
-        lib.modifyfAq(0.10)
-        with self.assertWarns(UserWarning):
-            TDCRPy_mod._micelle_advice(['H-3', 'Fe-55'])
+    def test_setters_round_trip(self):
+        lib.modifyMicCorrAuto(False)
+        self.assertFalse(lib.micCorrAuto)
+        lib.modifyMicCorrAuto(True)
+        self.assertTrue(lib.micCorrAuto)
+        lib.modifyMicCorrECThreshold(0.25)
+        self.assertAlmostEqual(lib.micCorrECThreshold, 0.25)
 
-    def test_silent_without_water(self):
-        """With fAq = 0 there are no micelles, so there is nothing to warn about."""
-        lib.modifyfAq(0.0)
-        lib.modifyMicCorr(False)
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter('always')
-            TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', 20, KB_TYPICAL, 10)
-        micelle = [c for c in caught if 'micCorr is' in str(c.message)]
-        self.assertEqual(len(micelle), 0, 'advisory fired with no aqueous phase')
+    # -- end to end --------------------------------------------------------
+    def test_run_enters_the_kernel_exactly_when_it_should(self):
+        """The exact validation: is the micelle kernel entered, and for whom?
+
+        The kernel is @njit(parallel=True) and keeps a per-thread RNG state
+        that np.random.seed() cannot reach, so two arms of the same physics
+        differ by Monte-Carlo noise however the Python side is seeded --
+        comparing them bit for bit would test the seeding. Counting the calls
+        is exact.
+        """
+        real = lib.pure_mc_efficient_energy_numba
+        calls = []
+
+        def counting(E, **kwargs):
+            calls.append(E)
+            return real(E, **kwargs)
+
+        lib.pure_mc_efficient_energy_numba = counting
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+
+                # opted out: the kernel must never be entered
+                lib.update_config_batch({'fAq': 0.10, 'micCorr': False,
+                                         'micCorrAuto': False})
+                calls.clear()
+                TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', 60, KB_TYPICAL, 10)
+                self.assertEqual(len(calls), 0,
+                                 'micCorrAuto = False still corrected')
+
+                # self-activating on an EC nuclide
+                lib.modifyMicCorrAuto(True)
+                TDCRPy_mod._micelle_auto_announced.clear()
+                calls.clear()
+                TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', 60, KB_TYPICAL, 10)
+                self.assertGreater(len(calls), 0,
+                                   'Fe-55 ran without the correction')
+
+                # ... and only there
+                calls.clear()
+                TDCRPy_mod.TDCRPy(6.0, 'C-14', '1', 60, KB_TYPICAL, 10)
+                self.assertEqual(len(calls), 0,
+                                 'C-14 paid for a correction it does not need')
+
+                # no droplets, no correction, whatever the nuclide
+                lib.modifyfAq(0.0)
+                calls.clear()
+                TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', 60, KB_TYPICAL, 10)
+                self.assertEqual(len(calls), 0,
+                                 'corrected a cocktail with no aqueous phase')
+        finally:
+            lib.pure_mc_efficient_energy_numba = real
+            lib.cleanup_record_files()
+
+    def test_self_activated_run_agrees_with_an_explicit_one(self):
+        """Statistical validation: the two arms are the same physics.
+
+        Self-activation must land on the explicit micCorr = True result and
+        not somewhere between it and the uncorrected one. The arms are
+        independent Monte-Carlo samples, so they are compared inside their own
+        combined standard uncertainty, while the uncorrected arm has to sit
+        clear of both.
+        """
+        n = 2000
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                lib.update_config_batch({'fAq': 0.10, 'micCorr': False,
+                                         'micCorrAuto': True})
+                auto = TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', n, KB_TYPICAL, 10)
+                lib.update_config_batch({'micCorr': True})
+                explicit = TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', n,
+                                             KB_TYPICAL, 10)
+                lib.update_config_batch({'micCorr': False,
+                                         'micCorrAuto': False})
+                off = TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', n, KB_TYPICAL, 10)
+
+            u = math.hypot(auto[3], explicit[3])
+            self.assertLess(
+                abs(auto[2] - explicit[2]), 4.0 * u,
+                f'self-activated eff_D = {auto[2]:.5f} +/- {auto[3]:.5f} is '
+                f'not the explicit {explicit[2]:.5f} +/- {explicit[3]:.5f}')
+            self.assertGreater(
+                off[2] - auto[2], 2.0 * math.hypot(auto[3], off[3]),
+                f'uncorrected eff_D = {off[2]:.5f} is not measurably above '
+                f'the corrected {auto[2]:.5f}: the default is cosmetic')
+        finally:
+            lib.cleanup_record_files()
+
+    def test_run_differs_from_the_uncorrected_one(self):
+        """And it must actually change something, or the default is cosmetic."""
+        lib.update_config_batch({'fAq': 0.10, 'micCorr': False})
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                lib.modifyMicCorrAuto(False)
+                np.random.seed(11)
+                off = TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', 300,
+                                        KB_TYPICAL, 10)
+                lib.modifyMicCorrAuto(True)
+                np.random.seed(11)
+                on = TDCRPy_mod.TDCRPy(6.0, 'Fe-55', '1', 300,
+                                       KB_TYPICAL, 10)
+            self.assertGreater(
+                abs(off[2] - on[2]), 1e-6,
+                'self-activation changed nothing: the correction is inert')
+            self.assertGreater(
+                off[2], on[2],
+                'the uncorrected efficiency must be the HIGHER one -- '
+                'confinement removes light')
+        finally:
+            lib.cleanup_record_files()
 
 
 class TestRecordFileIsolation(unittest.TestCase):

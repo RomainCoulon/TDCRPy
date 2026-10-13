@@ -152,38 +152,101 @@ def _relax_atom(daughter_relax, particle_vec, energy_vec, rad,
 
 
 
-# --- micelle advisory -----------------------------------------------------
-# Nuclides for which running without the reverse-micelle correction measurably
-# biases the result. Both are electron-capture emitters whose signal is carried
-# by Auger cascades of a few hundred eV to a few keV, where the electron range
-# is comparable to a droplet and the electron may never reach the scintillating
-# solvent. Measured at fAq = 0.10 with 4 nm droplets, separating the bulk
-# (1 - fAq) dilution -- which is degenerate with L -- from the confinement
-# penalty that is not:
+# --- reverse-micelle correction: when it switches itself on ---------------
+# Running without the correction measurably biases electron-capture nuclides.
+# Their signal is carried by Auger cascades of a few hundred eV to a few keV,
+# where the electron range is comparable to a droplet and the electron may
+# never reach the scintillating solvent. Measured at fAq = 0.10 with 4 nm
+# droplets, separating the bulk (1 - fAq) dilution -- which is degenerate with
+# L and so absorbed by the fit -- from the confinement penalty that is not:
 #
 #     Fe-55   5.2 % of the light lost to confinement
-#     Cr-51   4.6 %
-#     H-3     0.45 %      Ni-63  0.07 %      C-14, Tc-99  ~0
+#     Cr-51   4.9 %
+#     H-3     0.46 %      Ni-63  0.05 %      C-14, Tc-99  ~0
 #
-# Add a nuclide here if its Auger spectrum puts it in the same regime; the list
-# is not exhaustive of the catalogue.
-_MICELLE_CRITICAL = ("Fe-55", "Cr-51")
+# Which nuclides those are is a property of the decay scheme, not a list worth
+# maintaining by hand: tl.ec_branch_probability() reads the electron-capture
+# probability out of the PenNuc data and tl.is_micelle_critical() compares it
+# with micCorrECThreshold. Since v2.20.29 the correction therefore activates
+# itself, once fAq > 0 says there are droplets at all.
 _micelle_advised = set()
+_micelle_auto_announced = set()
 
 
-def _micelle_advice(Rad):
-    """Warn once when one of the critical nuclides ran without the correction."""
+def _micelle_critical_hits(Rad):
+    """Nuclides in *Rad* whose electron-capture branch needs the correction."""
     # Rad has been parsed into a list of nuclides by this point in TDCRPy().
     rads = Rad if isinstance(Rad, (list, tuple)) else [Rad]
-    hits = [r for r in rads if r in _MICELLE_CRITICAL and r not in _micelle_advised]
+    return [r for r in rads if tl.is_micelle_critical(r)]
+
+
+def _resolve_micelle_correction(Rad, mic_corr):
+    """Decide whether this call applies the reverse-micelle correction.
+
+    ``micCorr`` remains the explicit switch. On top of it, when
+    ``micCorrAuto`` is set -- the default since v2.20.29 -- and ``fAq > 0``,
+    the correction turns itself on for an electron-capture nuclide: the case
+    where leaving it off is a several-percent bias on the efficiency rather
+    than a rounding error. It says so once per nuclide per session, because a
+    correction that changed the physics silently would be worse than one left
+    off.
+
+    With ``fAq = 0`` there are no droplets and the kernel returns the energy
+    unchanged, so the shipped configuration behaves exactly as before.
+
+    Parameters
+    ----------
+    Rad : list of str
+        Parsed radionuclide labels.
+    mic_corr : bool
+        Value of ``micCorr`` from the configuration.
+
+    Returns
+    -------
+    bool
+        Whether to apply the correction in this call.
+    """
+    if mic_corr or tl.fAq <= 0.0:
+        return mic_corr
+
+    tl._refresh_config_globals()
+    hits = _micelle_critical_hits(Rad)
     if not hits:
+        return False
+
+    if not tl.micCorrAuto:
+        _micelle_advice(hits)
+        return False
+
+    fresh = [r for r in hits if r not in _micelle_auto_announced]
+    if fresh:
+        _micelle_auto_announced.update(fresh)
+        warnings.warn(
+            f"{', '.join(fresh)}: electron-capture nuclide whose Auger "
+            f"electrons are slow enough to stop inside the reverse micelles. "
+            f"With fAq = {tl.fAq:g} the reverse-micelle correction has been "
+            f"enabled automatically (micCorrAuto), because leaving it off "
+            f"overestimates the efficiency by of order 5 % of the light. The "
+            f"run is correspondingly slower. Set micCorr = True to make this "
+            f"explicit, or modifyMicCorrAuto(False) to opt out; see "
+            f"notebooks/physics/micelleCheck.ipynb for the measured size of "
+            f"the effect and what it costs.",
+            UserWarning, stacklevel=3)
+    return True
+
+
+def _micelle_advice(hits):
+    """Warn once per nuclide that the correction was needed but not applied."""
+    fresh = [r for r in hits if r not in _micelle_advised]
+    if not fresh:
         return
-    _micelle_advised.update(hits)
+    _micelle_advised.update(fresh)
     warnings.warn(
-        f"{', '.join(hits)}: electron-capture nuclide whose Auger electrons are "
-        f"slow enough to be trapped inside the reverse micelles, but micCorr is "
-        f"off with fAq = {tl.fAq:g}. About 5 % of the light is then unaccounted "
-        f"for and the efficiency is overestimated. Enable it with "
+        f"{', '.join(fresh)}: electron-capture nuclide whose Auger electrons "
+        f"are slow enough to be trapped inside the reverse micelles, but "
+        f"micCorr is off with fAq = {tl.fAq:g} and micCorrAuto is disabled. "
+        f"About 5 % of the light is then unaccounted for and the efficiency is "
+        f"overestimated. Enable it with "
         f"tdcrpy.TDCR_model_lib.modifyMicCorr(True); see "
         f"notebooks/physics/micelleEffects.ipynb for the size of the effect and "
         f"what it costs.",
@@ -531,6 +594,12 @@ def TDCRPy(
         print(f"Warning: pmf_1 sums to {sum(pmf_1):.6f}, expected 1.")
 
     # ------------------------------------------------------------------ #
+    # 6b. Reverse-micelle correction: explicit switch, or self-activating  #
+    #     for an electron-capture nuclide in a micellar cocktail.          #
+    # ------------------------------------------------------------------ #
+    mic_corr = _resolve_micelle_correction(Rad, mic_corr)
+
+    # ------------------------------------------------------------------ #
     # 7. Load nuclear-decay data for all requested radionuclides           #
     # ------------------------------------------------------------------ #
     decay_data = _load_decay_data(Rad)
@@ -711,9 +780,6 @@ def TDCRPy(
     # ------------------------------------------------------------------ #
     # 9. Final estimators                                                  #
     # ------------------------------------------------------------------ #
-    if not mic_corr and tl.fAq > 0.0:
-        _micelle_advice(Rad)
-
     out_eff = tl.efficienciesEstimates(
         eff_lists["S"], eff_lists["D"], eff_lists["T"],
         eff_lists["AB"], eff_lists["BC"], eff_lists["AC"],

@@ -25,7 +25,7 @@ The calculation is based on a photo-physical stochastic Monte Carlo model, allow
 * Complex decay schemes (beta spectra via BetaShape, gamma interactions via MCNP matrices).
 * Radionuclide mixtures with arbitrary activity fractions.
 * Ionisation quenching via the Birks model (electrons and alpha particles).
-* Reverse micelle effects in cocktails used for aqueous samples.
+* Reverse micelle effects in cocktails used for aqueous samples — applied automatically to electron-capture nuclides when an aqueous fraction is declared (`micCorrAuto`, since v2.20.29).
 * Asymmetric PMT configurations (per-channel free parameters).
 * Full optical Monte Carlo transport (`opticalTransport=True`).
 * C/N (CIEMAT/NIST) 2-PMT efficiency curves.
@@ -203,8 +203,11 @@ td.TDCR_model_lib.readParameters(disp=True)
 | Density | `modifyDensity(ρ)` | 0.98 | g/cm³ | Scintillator density (Ultima Gold) |
 | Mean Z / A | `modifyZ(z)`, `modifyA(a)` | 3.25 / 5.94 | — | Effective atomic/mass number |
 | Cocktail | `modifyLScocktail(name, fAq)` | `Ultima Gold` | — | LS cocktail + aqueous fraction |
-| Micelle correction | `modifyMicCorr(b)` | False | — | Activate reverse-micelle correction |
-| Micelle diameter | `modifyDiam_micelle(d)` | 2 | nm | Mean micelle diameter |
+| Micelle correction | `modifyMicCorr(b)` | False | — | Force the reverse-micelle correction on for every nuclide |
+| Micelle auto-activation | `modifyMicCorrAuto(b)` | True | — | Apply it by itself to electron-capture nuclides when `fAq > 0`, warning once per nuclide |
+| EC threshold | `modifyMicCorrECThreshold(p)` | 0.01 | — | Electron-capture probability above which a nuclide self-activates |
+| Micelle diameter | `modifyDiam_micelle(d)` | 4 | nm | Mean micelle **diameter** (Bergeron 2012) |
+| Micelle dispersion | `modifySigma_micelle(s)` | 0 | nm | Size spread; 0 = monodisperse |
 | Quantum efficiency | `modifyEffQ(q)` | `0.25,0.25,0.25` | — | PMT quantum efficiencies (A, B, C) |
 | Optical transport | `modifyOpticalTransport(b)` | False | — | Enable full optical MC transport |
 | Resolving time | `modifyTau(τ)` | 50 | ns | Coincidence resolving time |

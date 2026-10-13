@@ -666,6 +666,7 @@ def _refresh_config_globals():
     silent no-op rather than an error.
     """
     global fAq, diam_micelle, sigma_micelle, opticalTransport
+    global micCorrAuto, micCorrECThreshold
     read_config_object()
     if _CONFIG_SECTION not in config:
         return
@@ -676,6 +677,9 @@ def _refresh_config_globals():
         sigma_micelle = inputs.getfloat("sigma_micelle", fallback=0.0)
         opticalTransport = inputs.getboolean("opticalTransport",
                                              fallback=False)
+        micCorrAuto = inputs.getboolean("micCorrAuto", fallback=True)
+        micCorrECThreshold = inputs.getfloat("micCorrECThreshold",
+                                             fallback=0.01)
     except ValueError:
         # A torn or hand-edited file: keep the last good values rather than
         # crash a setter that has already written successfully.
@@ -689,6 +693,90 @@ def _micelle_globals():
     them.
     """
     return fAq, diam_micelle, sigma_micelle
+
+
+@lru_cache(maxsize=None)
+def ec_branch_probability(rad):
+    """Probability that one decay of *rad* proceeds by electron capture.
+
+    Read from the PenNuc decay scheme rather than from a list of nuclide
+    names. In PenNuc a decay branch holds its alternative primary modes as
+    parallel entries -- ``"beta"``, ``"beta+"``, ``"alpha"`` or an
+    ``"Atom_<shell>"`` token, the last meaning a vacancy created by electron
+    capture -- weighted by the sub-probabilities that :func:`sampling` draws
+    from. The electron-capture probability is therefore the branch probability
+    times the normalised weight of its ``Atom_*`` entries, summed over
+    branches and daughters.
+
+    Checked against the DDEP evaluations: Fe-55 1.000, Cr-51 1.000,
+    Zn-65 0.986 (0.9830 evaluated), Cu-64 0.439 (0.4350), K-40 0.1074
+    (0.10720), Cl-36 0.0190 (0.0190), and 0 for H-3, C-14, Ni-63, Tc-99.
+
+    Parameters
+    ----------
+    rad : str
+        Radionuclide label, e.g. ``"Fe-55"``.
+
+    Returns
+    -------
+    float
+        Electron-capture probability per decay, in [0, 1]. ``0.0`` when the
+        decay data cannot be read, so that a missing file never silently
+        turns a correction on.
+    """
+    try:
+        pn = readPenNuc2(rad)
+    except Exception:
+        return 0.0
+    particle, p_sub, prob_branch = pn[3], pn[5], pn[7]
+    p_ec = 0.0
+    for d in range(len(particle)):
+        for b in range(len(particle[d])):
+            labels = [str(x) for x in particle[d][b]]
+            if not labels:
+                continue
+            try:
+                p_b = float(prob_branch[d][b])
+            except (TypeError, ValueError):
+                continue
+            sub = [float(x) for x in p_sub[d][b]]
+            if len(sub) == len(labels) and sum(sub) > 0:
+                total = sum(sub)
+                weights = [x / total for x in sub]
+            else:
+                # No usable sub-probabilities: the sampler would pick
+                # uniformly, so weight the modes the same way it does.
+                weights = [1.0 / len(labels)] * len(labels)
+            p_ec += p_b * sum(w for w, lab in zip(weights, labels)
+                              if lab.startswith("Atom"))
+    return float(min(max(p_ec, 0.0), 1.0))
+
+
+def is_micelle_critical(rad, threshold=None):
+    """Whether *rad* needs the reverse-micelle correction.
+
+    True when the electron-capture probability reaches *threshold*
+    (``micCorrECThreshold`` in the configuration, 0.01 by default). The
+    confinement loss is about 5 % of the light for a pure electron-capture
+    emitter, so a nuclide below the default threshold is biased by less than
+    0.05 % if the correction is left off -- under the Monte-Carlo noise of a
+    normal run, and not worth its cost.
+
+    Parameters
+    ----------
+    rad : str
+        Radionuclide label.
+    threshold : float, optional
+        Overrides the configured threshold.
+
+    Returns
+    -------
+    bool
+    """
+    if threshold is None:
+        _refresh_config_globals()
+        threshold = micCorrECThreshold
+    return ec_branch_probability(rad) >= float(threshold)
 
 
 def update_config_value(key, value, section=_CONFIG_SECTION):
@@ -862,9 +950,14 @@ def readParameters(disp=False):
         print(f"\t                 P={pP:.4f}, S={pS:.4f}, Na={pNa:.4f}, Cl={pCl:.4f}")
         if micCorr:
             print("\tMicelle correction activated")
-            print(f"\tMicelle diameter = {diam_micelle} nm (Sigma = {sigma_micelle} nm)")
+        elif micCorrAuto and fAq > 0:
+            print(f"\tMicelle correction self-activating for nuclides with an "
+                  f"electron-capture probability >= {micCorrECThreshold:g} "
+                  f"(micCorrAuto)")
         else:
             print("\tMicelle correction not activated")
+        if micCorr or (micCorrAuto and fAq > 0):
+            print(f"\tMicelle diameter = {diam_micelle} nm (Sigma = {sigma_micelle} nm)")
 
         print("\nOPTICAL PROPERTIES")
         print(f"\tQuantum efficiency of PMT A = {effQuantic[0]:.3f}")
@@ -1009,6 +1102,21 @@ def modifyMicCorr(x):
     """Enable or disable the reverse-micelle energy-loss correction (bool)."""
     update_config_value("micCorr", x)
 
+def modifyMicCorrAuto(x):
+    """Enable or disable self-activation of the micelle correction (bool).
+
+    When ``True`` (the default) and ``fAq > 0``, :func:`tdcrpy.TDCRPy.TDCRPy`
+    turns the correction on by itself for an electron-capture nuclide and says
+    so once per nuclide. Set it to ``False`` to keep ``micCorr`` as the only
+    switch.
+    """
+    update_config_value("micCorrAuto", x)
+
+def modifyMicCorrECThreshold(x):
+    """Set the electron-capture probability above which the correction
+    self-activates (0-1; default 0.01)."""
+    update_config_value("micCorrECThreshold", x)
+
 def modifyEffQ(x):
     """Set PMT quantum efficiencies as a comma-separated string, e.g. ``'0.1, 0.1, 0.1'``."""
     update_config_value("effQuantum", x)
@@ -1081,6 +1189,17 @@ def resetConfFile():
  diam_micelle, fAq, tau, extDT, measTime, micCorr, effQuantic,
  opticalTransport, pH, pC, pN, pO, pP, pS, pNa, pCl,
  solvantType, solvantConc, sp_model, chou_param, sigma_micelle) = readParameters()
+
+# Self-activation of the reverse-micelle correction. Read straight from the
+# parser, with fallbacks, rather than added to readParameters() -- callers
+# unpack that tuple positionally, and an existing config.toml written before
+# v2.20.29 has neither key yet.
+try:
+    micCorrAuto = config["Inputs"].getboolean("micCorrAuto", fallback=True)
+    micCorrECThreshold = config["Inputs"].getfloat("micCorrECThreshold",
+                                                   fallback=0.01)
+except (KeyError, ValueError):
+    micCorrAuto, micCorrECThreshold = True, 0.01
 
 # Calculate normalized atomic array (if needed for legacy code)
 p_atom = np.array([pH, pC, pN, pO, pP, pS, pNa, pCl])

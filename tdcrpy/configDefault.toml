@@ -58,8 +58,27 @@ pS = 0.000463
 pNa = 0.000465
 pCl = 0.000000
 # properties on reverse micelles
-# applied reverse micelle correction
+# Apply the reverse-micelle correction unconditionally. False does NOT mean
+# "never": see micCorrAuto below.
 micCorr = False
+# Let the correction switch itself on for the nuclides that need it. When True
+# (the default since v2.20.29) and fAq > 0, TDCRPy applies the correction to an
+# electron-capture nuclide even with micCorr = False, and warns once per
+# nuclide that it has done so. The reason is that confinement inside the water
+# droplets costs about 5 % of the light of an Auger cascade and is NOT absorbed
+# by the fitted free parameter L, unlike the (1 - fAq) bulk dilution -- so
+# leaving it off biases the efficiency of Fe-55 or Cr-51 by several tenths of a
+# percent while a pure beta emitter is unaffected. With fAq = 0 there are no
+# droplets and this does nothing. See notebooks/physics/micelleCheck.ipynb.
+micCorrAuto = True
+# Electron-capture probability per decay above which a nuclide counts as
+# needing the correction, read from the PenNuc decay scheme by
+# TDCR_model_lib.ec_branch_probability(). At the 0.01 default the worst case
+# left uncorrected is about 0.01 x 5 % = 0.05 % of the light, below the
+# Monte-Carlo noise of a normal run. Raise it to pay the cost only for
+# predominantly EC nuclides (0.5 keeps Fe-55, Cr-51, Mn-54, I-125 ... and drops
+# Cu-64, K-40, Cl-36).
+micCorrECThreshold = 0.01
 # mean DIAMETER of the reverse micelles in nm. The stochastic kernel uses half
 # of it as the droplet radius; the legacy micelleLoss() lookup needs one of the
 # tabulated diameters 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 10 nm. The 4 nm default
