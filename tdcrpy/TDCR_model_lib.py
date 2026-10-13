@@ -52,6 +52,7 @@ import tempfile
 import shutil
 import math
 from numba import njit, prange
+import warnings
 
 # --- GLOBAL CONFIG SETUP ---
 config = configparser.ConfigParser()
@@ -667,6 +668,8 @@ def _refresh_config_globals():
     """
     global fAq, diam_micelle, sigma_micelle, opticalTransport
     global micCorrAuto, micCorrECThreshold
+    global delayedFluorescence, tau_prompt, tau_delayed, eta_delayed
+    global tta_kq, tta_gamma, tta_Ac
     read_config_object()
     if _CONFIG_SECTION not in config:
         return
@@ -680,6 +683,14 @@ def _refresh_config_globals():
         micCorrAuto = inputs.getboolean("micCorrAuto", fallback=True)
         micCorrECThreshold = inputs.getfloat("micCorrECThreshold",
                                              fallback=0.01)
+        delayedFluorescence = inputs.getboolean("delayedFluorescence",
+                                                fallback=False)
+        tau_prompt = inputs.getfloat("tau_prompt", fallback=3.0)
+        tau_delayed = inputs.getfloat("tau_delayed", fallback=85.0)
+        eta_delayed = inputs.getfloat("eta_delayed", fallback=0.03)
+        tta_kq = inputs.getfloat("tta_kq", fallback=5.0e6)
+        tta_gamma = inputs.getfloat("tta_gamma", fallback=1.0e-11)
+        tta_Ac = inputs.getfloat("tta_Ac", fallback=1.0e-13)
     except ValueError:
         # A torn or hand-edited file: keep the last good values rather than
         # crash a setter that has already written successfully.
@@ -958,6 +969,12 @@ def readParameters(disp=False):
             print("\tMicelle correction not activated")
         if micCorr or (micCorrAuto and fAq > 0):
             print(f"\tMicelle diameter = {diam_micelle} nm (Sigma = {sigma_micelle} nm)")
+        if delayedFluorescence:
+            print(f"\tDelayed (TTA) fluorescence activated: "
+                  f"eta = {eta_delayed:g}, tau_delayed = {tau_delayed:g} ns, "
+                  f"tau_prompt = {tau_prompt:g} ns")
+        else:
+            print("\tDelayed (TTA) fluorescence not activated")
 
         print("\nOPTICAL PROPERTIES")
         print(f"\tQuantum efficiency of PMT A = {effQuantic[0]:.3f}")
@@ -1117,6 +1134,103 @@ def modifyMicCorrECThreshold(x):
     self-activates (0-1; default 0.01)."""
     update_config_value("micCorrECThreshold", x)
 
+def modifyDelayedFluorescence(x):
+    """Enable or disable the prompt + delayed (TTA) fluorescence model (bool).
+
+    Off by default. When on, the light yield of every electron becomes
+    window-dependent (see :func:`effective_light_energy`), which changes every
+    efficiency the model reports -- so this is a different model, not a
+    refinement that leaves old results standing.
+
+    Warns once per cocktail when the configured cocktail is not one the
+    ``eta``/``tau_delayed`` parameters were actually fitted in.
+
+    Notes
+    -----
+    ``eta`` and ``tau_delayed`` are fitted against the W-scan of this
+    project's own measurements; nothing independently constrains them, and
+    ``tau_prompt`` is the reference's worked-example value pending a TCSPC
+    bench measurement. The known defect is that the delayed term buys its
+    W-flatness WITHIN a quench level at the cost of a 6.5-9 % drift in the
+    optimal kB BETWEEN levels, where none was visible at ``eta = 0``.
+    """
+    update_config_value("delayedFluorescence", x)
+    if x:
+        tau_d, eta, measured = delayedFluorescenceDefaults()
+        if not measured:
+            warnings.warn(
+                f"delayedFluorescence enabled for cocktail "
+                f"'{lsCocktail()}', for which no eta/tau_delayed were "
+                f"fitted. The configured tau_delayed = {tau_delayed:g} ns "
+                f"and eta_delayed = {eta_delayed:g} are an assignment by "
+                f"solvent class (suggested: {tau_d:g} ns, {eta:g}), not a "
+                f"measurement. Only the Ultima Gold family and neat toluene "
+                f"have fitted values.",
+                UserWarning, stacklevel=2)
+
+
+def modifyTau_prompt(x):
+    """Set the prompt-fluorescence decay time (ns).
+
+    A measured constant of the cocktail, never fitted: under a light yield
+    refitted independently at each window it is unidentifiable, since
+    ``f_p(W)`` is a purely multiplicative rescaling that the fit absorbs. The
+    3.0 ns default is the reference's worked-example value, not a measurement
+    on any particular cocktail.
+    """
+    update_config_value("tau_prompt", x)
+
+
+def modifyTau_delayed(x):
+    """Set the delayed-fluorescence window-capture time constant (ns).
+
+    85 ns for the Ultima Gold family, 138 ns for toluene --
+    :func:`delayedFluorescenceDefaults` has the per-source fits.
+    """
+    update_config_value("tau_delayed", x)
+
+
+def modifyEta_delayed(x):
+    """Set the delayed-light amplitude (dimensionless fraction of ``Psi``).
+
+    0.03 for the Ultima Gold family, 0.05 for toluene. Conditional on the TTA
+    constants behind ``S_a`` (see :func:`sa_tta`) and not transferable to a
+    different choice of them. Must not exceed the spin-statistics ceiling
+    :data:`ETA_MAX_TTA`.
+    """
+    x = float(x)
+    if x < 0.0:
+        raise ValueError(f"eta_delayed must be >= 0, got {x}")
+    if x > ETA_MAX_TTA:
+        raise ValueError(f"eta_delayed = {x} exceeds the spin-statistics "
+                         f"ceiling {ETA_MAX_TTA}")
+    update_config_value("eta_delayed", x)
+
+
+def modifyTTAkinetics(k_q=None, gamma=None, A_c=None):
+    """Set the TTA kinetics constants behind ``S_a`` (see :func:`sa_tta`).
+
+    Parameters
+    ----------
+    k_q : float, optional
+        First-order triplet quenching rate, s^-1.
+    gamma : float, optional
+        Bimolecular annihilation rate constant, cm^3 s^-1.
+    A_c : float, optional
+        Track-core cross-section, cm^2.
+    """
+    updates = {}
+    if k_q is not None:
+        updates["tta_kq"] = k_q
+    if gamma is not None:
+        updates["tta_gamma"] = gamma
+    if A_c is not None:
+        updates["tta_Ac"] = A_c
+    if updates:
+        _PSI_CACHE.clear()
+        update_config_batch(updates)
+
+
 def modifyEffQ(x):
     """Set PMT quantum efficiencies as a comma-separated string, e.g. ``'0.1, 0.1, 0.1'``."""
     update_config_value("effQuantum", x)
@@ -1133,12 +1247,20 @@ def modifyLScocktail(cocktail_name, fAq, solvantType="Water", solvantConc=0.0):
     """
     Updates cocktail name, aqueous properties, and re-calculates all physics.
     """
-    # 1. Update config settings
+    # 1. Update config settings. The delayed-fluorescence parameters
+    # describe the scintillator, so they follow the cocktail the same way
+    # density and composition do, rather than leaving a stale pair behind
+    # from the previous one. The Psi reservoir depends on the stopping
+    # power, hence on the cocktail, so its cache goes too.
+    _tau_d, _eta, _ = delayedFluorescenceDefaults(cocktail_name)
+    _PSI_CACHE.clear()
     update_config_batch({
         "ls_cocktail": cocktail_name,
         "fAq": str(fAq),
         "solvantType": str(solvantType),
-        "solvantConc_mol_L": str(solvantConc)
+        "solvantConc_mol_L": str(solvantConc),
+        "tau_delayed": str(_tau_d),
+        "eta_delayed": str(_eta)
     })
     
     # 2. Calculate properties using the new solvent info
@@ -1200,6 +1322,22 @@ try:
                                                    fallback=0.01)
 except (KeyError, ValueError):
     micCorrAuto, micCorrECThreshold = True, 0.01
+
+# Prompt + delayed (TTA) fluorescence. Off by default: it changes every light
+# yield in the model, and its eta/tau_delayed are fitted quantities.
+try:
+    delayedFluorescence = config["Inputs"].getboolean("delayedFluorescence",
+                                                      fallback=False)
+    tau_prompt = config["Inputs"].getfloat("tau_prompt", fallback=3.0)
+    tau_delayed = config["Inputs"].getfloat("tau_delayed", fallback=85.0)
+    eta_delayed = config["Inputs"].getfloat("eta_delayed", fallback=0.03)
+    tta_kq = config["Inputs"].getfloat("tta_kq", fallback=5.0e6)
+    tta_gamma = config["Inputs"].getfloat("tta_gamma", fallback=1.0e-11)
+    tta_Ac = config["Inputs"].getfloat("tta_Ac", fallback=1.0e-13)
+except (KeyError, ValueError):
+    delayedFluorescence, tau_prompt, tau_delayed, eta_delayed = (
+        False, 3.0, 85.0, 0.03)
+    tta_kq, tta_gamma, tta_Ac = 5.0e6, 1.0e-11, 1.0e-13
 
 # Calculate normalized atomic array (if needed for legacy code)
 p_atom = np.array([pH, pC, pN, pO, pP, pS, pNa, pCl])
@@ -2518,6 +2656,406 @@ def Em_e(Ei, Ed, kB, nE, Et = Einterp_e*1e3, kB_vec = kB_e):
 #============================================================================================
 
 #============================================================================================
+
+#=================== Prompt + delayed (TTA) fluorescence ====================
+
+# A coincidence window W only collects the light a pulse emits within W of its
+# trigger, and scintillation light is not emitted instantaneously. The plain
+# Birks model has no W-dependence at all, so sweeping a measurement over W and
+# refitting L at each point leaves a systematic trend in the derived activity
+# -- worth several percent for Tc-99 over 5 ns to 1 us. The model below splits
+# the light into a fast (prompt) and a slow (delayed) component and asks how
+# much of each survives the window:
+#
+#     Q_eff(E, W) = Q(E, kB) * f_p(W, tau_p)  +  eta * Psi(E) * f_d(W, tau_d)
+#
+# Q(E, kB) is the ordinary Birks-quenched energy -- Em_e(), unchanged. The
+# delayed component is triplet-triplet annihilation: two triplet excitations
+# diffuse together and one returns as a singlet that fluoresces. Being
+# bimolecular its rate goes as the SQUARE of the local triplet concentration,
+# hence with the local energy-loss rate dE/dx rather than with total deposited
+# energy -- so it is enhanced wherever the track is locally dense, which is
+# why it cannot be absorbed into kB or into L.
+#
+# Reference: R. Coulon, "TDCR Measurements -- Lecture Notes", ch. 3 (Eq. 3.2,
+# 3.4, 3.7a, 3.8, 3.8a), via the reference implementation in
+# newTDCRmodel/tta_light_model.py. Ported checks: for Tc-99 at kB = 7.5e-6
+# cm/keV this module reproduces that implementation's spectrum averages,
+# <Q> = 90.53 keV (93.0 % of <E>) and <Psi> = 57.95 keV (59.53 %).
+#
+# OFF BY DEFAULT. Turning it on changes every light yield in the model and so
+# every efficiency; eta and tau_d are fitted quantities, not measured ones
+# (see modifyDelayedFluorescence for what that means in practice).
+
+W_ION_KEV = 0.025          #: mean energy per ion pair, keV (ch. 3, 3.2.4)
+ETA_MAX_TTA = 1.5          #: spin-statistics ceiling on eta, 3/2 (3.2.4)
+
+#: Psi grid. e_max must cover the hardest beta in the catalogue: Psi is very
+#: nearly linear in E above ~1 MeV (phi_TTA ~ 0.33 for minimum-ionising
+#: electrons, not ~0), so a grid that stops at 2 MeV does not "saturate", it
+#: extrapolates -- measured as Psi(20 MeV)/E = 0.54 against the converged
+#: 0.3668. n = 4000 and n = 8000 agree to 4 decimals on the Tc-99 averages.
+_PSI_E_MIN_KEV = 0.05
+_PSI_E_MAX_KEV = 2.0e4
+_PSI_N = 4000
+
+_PSI_CACHE = {}
+
+
+def phi_tta(beta):
+    """Fraction of triplets reaching annihilation, ``1 - ln(1+b)/b``.
+
+    Eq. (3.8). The direct form cancels catastrophically as ``b -> 0``, where
+    it is 1 minus something within 1e-16 of 1, so below ``b = 1e-4`` the
+    series ``b/2 - b^2/3 + b^3/4`` is used instead.
+
+    Parameters
+    ----------
+    beta : array_like
+        ``S(E) / S_a`` -- stopping power in units of the annihilation
+        saturation stopping power.
+
+    Returns
+    -------
+    numpy.ndarray
+        Ultimate TTA yield fraction, in [0, 1). Saturates towards 1 on a
+        dense track and falls off linearly on a sparse one.
+    """
+    b = np.asarray(beta, dtype=float)
+    out = np.empty(b.shape, dtype=float)
+    lo = b < 1e-4
+    x = b[lo]
+    out[lo] = x / 2.0 - x ** 2 / 3.0 + x ** 3 / 4.0
+    x = b[~lo]
+    out[~lo] = 1.0 - np.log1p(x) / x
+    return out
+
+
+def sa_tta(k_q=None, gamma=None, A_c=None, w_ion=W_ION_KEV):
+    """Annihilation-saturation stopping power ``S_a``, keV/cm. Eq. (3.8a).
+
+    ``S_a = 4 W A_c k_q / (3 gamma)`` -- the stopping power at which
+    bimolecular annihilation begins to win against the first-order (dissolved
+    O2) quenching sink, and so the scale that sets where :func:`phi_tta`
+    saturates.
+
+    Parameters
+    ----------
+    k_q : float, optional
+        First-order quenching rate of the triplet population, s^-1.
+        Defaults to the configured ``tta_kq``.
+    gamma : float, optional
+        Bimolecular annihilation rate constant, cm^3 s^-1 (``tta_gamma``).
+    A_c : float, optional
+        Track-core cross-section, cm^2 (``tta_Ac``).
+    w_ion : float, optional
+        Mean energy per ion pair, keV.
+
+    Returns
+    -------
+    float
+        ``S_a`` in keV/cm. The shipped constants give 1666.7 keV/cm.
+
+    Notes
+    -----
+    All three constants are literature order-of-magnitude values, not
+    measurements on any particular cocktail. ``A_c`` is the softest: it
+    abstracts a track whose real radial structure is energy-dependent.
+    Since ``S_a`` is proportional to ``A_c``, a different choice rescales
+    ``Psi`` and is largely reabsorbed by a different fitted ``eta`` -- so a
+    fitted ``eta`` is conditional on these constants and is NOT transferable
+    to another choice of them. What survives is the SHAPE of ``Psi(E)``.
+    """
+    if k_q is None or gamma is None or A_c is None:
+        _refresh_config_globals()
+        if k_q is None:
+            k_q = tta_kq
+        if gamma is None:
+            gamma = tta_gamma
+        if A_c is None:
+            A_c = tta_Ac
+    return 4.0 * w_ion * A_c * k_q / (3.0 * gamma)
+
+
+def f_prompt(tau_r, tau_p):
+    """Fraction of prompt light captured in a window ``tau_r``. Eq. (3.4).
+
+    ``1 - exp(-tau_r/tau_p)``, written with ``expm1`` to keep precision for a
+    short window. ``tau_p <= 0`` is the instantaneous limit and returns 1.
+
+    Parameters
+    ----------
+    tau_r : float
+        Coincidence resolving time (the window), ns.
+    tau_p : float
+        Prompt-fluorescence decay time, ns.
+
+    Returns
+    -------
+    float
+    """
+    if tau_p is None or tau_p <= 0.0:
+        return 1.0
+    return float(-np.expm1(-float(tau_r) / float(tau_p)))
+
+
+def f_delayed(tau_r, tau_d):
+    """Fraction of delayed light captured in a window ``tau_r``. Eq. (3.7a).
+
+    ``tau_r / (tau_r + tau_d)`` -- the annihilation-dominated capture branch.
+    Unlike the prompt term this never saturates quickly: at the shipped
+    ``tau = 50`` ns and ``tau_d = 85`` ns only 37 % of the delayed light is
+    inside the window, which is what makes the model W-dependent at all.
+
+    Parameters
+    ----------
+    tau_r : float
+        Coincidence resolving time, ns.
+    tau_d : float
+        Delayed-fluorescence window-capture time constant, ns.
+
+    Returns
+    -------
+    float
+    """
+    t = float(tau_r)
+    if t <= 0.0:
+        return 0.0
+    return t / (t + float(tau_d))
+
+
+def _psi_interpolator(S_a=None):
+    """Build (and cache) the cumulative TTA reservoir ``Psi(E)``.
+
+    ``Psi(E) = int_0^E phi_TTA(S(E')/S_a) dE'`` on a log-spaced grid, over
+    TDCRPy's own ICRU-37 collision stopping power -- so the LET dependence is
+    carried explicitly rather than by a proxy such as the quenching deficit
+    ``E - Q(E,kB)``. Log-spaced because the integrand does nearly all of its
+    varying below a few keV.
+
+    ``Psi`` does NOT depend on ``kB``, so it survives a ``kB`` sweep. It does
+    depend on the stopping power, hence on the cocktail, the stopping-power
+    model and the mean Z/A/density, all of which are in the cache key -- a
+    reservoir that outlived a cocktail change would be a trap, not a cache.
+
+    Returns
+    -------
+    scipy.interpolate.PchipInterpolator
+        Callable in keV, returning keV.
+    """
+    if S_a is None:
+        S_a = sa_tta()
+    # Read the composition globals at call time. stoppingpower() binds rho, Z,
+    # A and spmodel as keyword DEFAULTS evaluated at import, so leaving them
+    # out would silently use whatever cocktail was configured when tdcrpy was
+    # first imported -- the same late-binding trap the micelle kernel had
+    # before v2.20.22.
+    key = (float(S_a), _PSI_E_MIN_KEV, _PSI_E_MAX_KEV, _PSI_N,
+           lsCocktail(), sp_model, float(RHO), float(Z), float(A))
+    hit = _PSI_CACHE.get(key)
+    if hit is not None:
+        return hit
+    e_grid = np.logspace(np.log10(_PSI_E_MIN_KEV),
+                         np.log10(_PSI_E_MAX_KEV), _PSI_N)
+    # stoppingpower() is scalar-only, takes eV and returns MeV/cm; Psi wants
+    # keV/cm to pair with S_a.
+    s_grid = np.array([stoppingpower(e * 1e3, rho=RHO, Z=Z, A=A,
+                                     spmodel=sp_model)
+                       for e in e_grid], dtype=float) * 1e3
+    y = phi_tta(s_grid / float(S_a))
+    # Cumulative trapezoid, plus the [0, E[0]] head. The integrand is bounded
+    # by 1, so the head is bounded by E[0] = 0.05 keV outright.
+    cum = y[0] * e_grid[0] + np.concatenate(
+        ([0.0], np.cumsum(np.diff(e_grid) * (y[1:] + y[:-1]) / 2.0)))
+    psi = interp.PchipInterpolator(e_grid, cum)
+    _PSI_CACHE[key] = psi
+    return psi
+
+
+def psiTTA(E, S_a=None):
+    """TTA delayed-light reservoir ``Psi(E)`` in keV, for ``E`` in keV.
+
+    The energy available as delayed light before the ``eta`` amplitude and
+    the window factor are applied. Roughly 60 % of ``E`` for a Tc-99 beta,
+    against 7 % for the quenching-deficit form this replaced -- so an ``eta``
+    fitted under one form is about 8.5x the other and the two are not
+    comparable.
+
+    Parameters
+    ----------
+    E : float or array_like
+        Electron energy, keV.
+    S_a : float, optional
+        Saturation stopping power, keV/cm. Defaults to :func:`sa_tta`.
+
+    Returns
+    -------
+    float or numpy.ndarray
+        ``Psi(E)`` in keV, clipped to the tabulated grid at both ends and to
+        ``[0, E]``.
+    """
+    psi = _psi_interpolator(S_a)
+    e = np.clip(np.asarray(E, dtype=float),
+                _PSI_E_MIN_KEV, _PSI_E_MAX_KEV)
+    out = np.clip(np.asarray(psi(e), dtype=float), 0.0, None)
+    out = np.minimum(out, np.asarray(E, dtype=float))
+    return float(out) if np.ndim(E) == 0 else out
+
+
+def delayedFluorescenceDefaults(cocktail=None):
+    """Recommended ``(tau_delayed, eta_delayed)`` for a cocktail.
+
+    Fitted per source in ``newTDCRmodel/optimize_model_params.py`` over
+    W = 50 ns to 1 us on accidental-corrected data, and found to group by
+    COCKTAIL rather than by nuclide -- which is what parameters describing a
+    scintillator rather than a decay should do. The three Ultima Gold sources
+    (Tc-99 and C-14 in LLT, S-35 in AB) agree to about 10 % on both
+    quantities despite three different beta spectra:
+
+        Tc-99   Ultima Gold LLT   eta 0.0335   tau_d  85 ns
+        C-14    Ultima Gold LLT   eta 0.0275   tau_d  78 ns
+        S-35    Ultima Gold AB    eta 0.0280   tau_d  91 ns
+        H-3     toluene           eta 0.0503   tau_d 138 ns
+        H-3     toluene, taped    eta 0.0495   tau_d 126 ns
+        C-14    toluene           eta 0.1360   tau_d ~900 ns (shallow)
+
+    Hence (85 ns, 0.03) for the Ultima Gold family and (138 ns, 0.05) for
+    neat aromatic solvents. The two toluene sources' own spread in ``eta``
+    (0.050 against 0.136) is 14x the Ultima Gold spread, so "toluene" is so
+    far a coherent group mainly in DIFFERING from Ultima Gold.
+
+    Parameters
+    ----------
+    cocktail : str, optional
+        Cocktail name as :func:`lsCocktail` reports it. Defaults to the
+        configured one.
+
+    Returns
+    -------
+    tau_delayed : float
+        ns.
+    eta_delayed : float
+        Dimensionless fraction of the ``Psi`` reservoir.
+    measured : bool
+        ``True`` only for the two families a source was actually fitted in.
+        ``False`` means the values are an assignment by solvent class, not a
+        measurement -- :func:`modifyDelayedFluorescence` says so once.
+    """
+    if cocktail is None:
+        cocktail = lsCocktail()
+    name = str(cocktail).strip()
+    if name.startswith("Ultima Gold"):
+        return 85.0, 0.03, True
+    if name in ("Toluene", "Pseudocumene", "PXE", "LAB"):
+        # Neat aromatic solvents. Only toluene itself was fitted.
+        return 138.0, 0.05, name == "Toluene"
+    # Everything else is a surfactant-loaded commercial cocktail, closer in
+    # make-up to Ultima Gold than to a neat solvent -- but unfitted.
+    return 85.0, 0.03, False
+
+
+def effective_light_energy(q_prompt, Ei, Ed, tau_r,
+                           eta=None, tau_p=None, tau_d=None, S_a=None):
+    """Window-dependent light yield ``Q_eff``, Eq. (3.2). Energies in keV.
+
+    ``Q_eff = q_prompt * f_p(tau_r, tau_p) + eta * dPsi * f_d(tau_r, tau_d)``
+
+    where ``dPsi = Psi(Ei) - Psi(Ei - Ed)`` is the reservoir accumulated over
+    the track segment that actually deposited energy in the scintillator --
+    the same segment :func:`E_quench_e` integrates the Birks factor over, so
+    the two terms describe the same piece of track. For an electron that stops
+    in the vial, ``Ei == Ed`` and this is just ``Psi(Ed)``, matching the
+    reference implementation's fully-stopped form.
+
+    Parameters
+    ----------
+    q_prompt : float
+        Birks-quenched energy ``Q(E, kB)`` from :func:`Em_e`, keV.
+    Ei : float
+        Initial electron energy, keV.
+    Ed : float
+        Deposited energy, keV.
+    tau_r : float
+        Coincidence resolving time (the window), ns.
+    eta : float, optional
+        Delayed-light amplitude. Defaults to the configured ``eta_delayed``.
+    tau_p : float, optional
+        Prompt decay time, ns (``tau_prompt``).
+    tau_d : float, optional
+        Delayed capture time constant, ns (``tau_delayed``).
+    S_a : float, optional
+        Saturation stopping power, keV/cm.
+
+    Returns
+    -------
+    float
+        ``Q_eff`` in keV.
+
+    Notes
+    -----
+    ``eta = 0`` with a long window recovers ``q_prompt`` exactly, which is
+    what :func:`selfTestDelayedFluorescence` asserts. ``eta = 0`` at a SHORT
+    window does not: the prompt factor ``f_p`` is still applied. The exact
+    pre-model baseline is ``delayedFluorescence = False``, not ``eta = 0``.
+    """
+    if eta is None or tau_p is None or tau_d is None:
+        _refresh_config_globals()
+        if eta is None:
+            eta = eta_delayed
+        if tau_p is None:
+            tau_p = tau_prompt
+        if tau_d is None:
+            tau_d = tau_delayed
+    out = float(q_prompt) * f_prompt(tau_r, tau_p)
+    if eta:
+        e_i = max(float(Ei), 0.0)
+        e_rest = max(e_i - max(float(Ed), 0.0), 0.0)
+        d_psi = psiTTA(e_i, S_a) - psiTTA(e_rest, S_a)
+        out += float(eta) * max(d_psi, 0.0) * f_delayed(tau_r, tau_d)
+    return out
+
+
+def selfTestDelayedFluorescence(E=10.0, kB=7.5e-6, nE=1000):
+    """Five checks on the delayed-fluorescence model. Raises on failure.
+
+    The same five the reference implementation carries, which between them
+    catch every error seen while it was being built.
+
+    Parameters
+    ----------
+    E : float
+        Probe energy, keV.
+    kB : float
+        Birks constant, cm/keV.
+    nE : int
+        Quenching integration bins.
+
+    Returns
+    -------
+    bool
+        ``True``.
+    """
+    psi_E = psiTTA(E)
+    if psi_E > E + 1e-9:
+        raise AssertionError(f"Psi({E}) = {psi_E} exceeds E")
+    grid = np.logspace(np.log10(_PSI_E_MIN_KEV),
+                       np.log10(_PSI_E_MAX_KEV), 400)
+    vals = psiTTA(grid)
+    if not np.all(np.diff(vals) >= -1e-12):
+        raise AssertionError("Psi is not monotone")
+    # the series branch must not underflow to zero
+    if abs(phi_tta(np.array([1e-12]))[0] - 5e-13) > 1e-24:
+        raise AssertionError("phi_tta series branch is wrong")
+    q = Em_e(E * 1e3, E * 1e3, kB * 1e3, nE) * 1e-3
+    if q > E + 1e-9:
+        raise AssertionError(f"Q({E}) = {q} exceeds E")
+    # eta = 0 and a saturated window: the plain Birks model back, exactly
+    back = effective_light_energy(q, E, E, 1e9, eta=0.0,
+                                  tau_p=3.0, tau_d=85.0)
+    if abs(back - q) > 1e-9:
+        raise AssertionError(f"eta=0 does not recover Q: {back} != {q}")
+    return True
+
 
 #========================= Reverse micelle treatment ========================================
 

@@ -1425,6 +1425,422 @@ class TestEmptyDecaysCounted(unittest.TestCase):
             lib.cleanup_record_files()
 
 
+class TestTTAFunctions(unittest.TestCase):
+    """The closed-form pieces of the delayed-fluorescence model.
+
+    R. Coulon, "TDCR Measurements -- Lecture Notes", ch. 3, Eq. (3.4),
+    (3.7a), (3.8), (3.8a), as implemented in newTDCRmodel/tta_light_model.py.
+    """
+
+    def test_sa_matches_the_reference_constants(self):
+        """S_a = 4 W A_c k_q / (3 gamma); the shipped constants give 1666.7."""
+        self.assertAlmostEqual(lib.sa_tta(k_q=5.0e6, gamma=1.0e-11,
+                                          A_c=1.0e-13), 1666.6666666, places=4)
+        self.assertAlmostEqual(lib.sa_tta(), 1666.6666666, places=4)
+
+    def test_sa_scales_with_each_constant(self):
+        base = lib.sa_tta(k_q=5.0e6, gamma=1.0e-11, A_c=1.0e-13)
+        self.assertAlmostEqual(
+            lib.sa_tta(k_q=1.0e7, gamma=1.0e-11, A_c=1.0e-13), 2 * base)
+        self.assertAlmostEqual(
+            lib.sa_tta(k_q=5.0e6, gamma=2.0e-11, A_c=1.0e-13), base / 2)
+        self.assertAlmostEqual(
+            lib.sa_tta(k_q=5.0e6, gamma=1.0e-11, A_c=2.0e-13), 2 * base)
+
+    def test_phi_tta_series_branch_does_not_underflow(self):
+        """Below b = 1e-4 the direct form is 1 minus 1-to-within-1e-16."""
+        self.assertAlmostEqual(float(lib.phi_tta(np.array([1e-12]))[0]),
+                               5e-13, delta=1e-24)
+        # the two branches must agree across the switch at 1e-4
+        for b in (9.9e-5, 1.0e-4, 1.01e-4):
+            direct = 1.0 - math.log1p(b) / b
+            self.assertAlmostEqual(float(lib.phi_tta(np.array([b]))[0]),
+                                   direct, places=10)
+
+    def test_phi_tta_is_bounded_and_monotone(self):
+        b = np.logspace(-14, 6, 2000)
+        v = lib.phi_tta(b)
+        self.assertTrue(np.all(v >= 0.0))
+        self.assertTrue(np.all(v < 1.0))
+        self.assertTrue(np.all(np.diff(v) > 0),
+                        'phi_TTA must rise with the stopping power')
+
+    def test_f_prompt(self):
+        self.assertAlmostEqual(lib.f_prompt(3.0, 3.0), 1 - math.exp(-1.0))
+        self.assertAlmostEqual(lib.f_prompt(50.0, 3.0), 1.0, places=6)
+        self.assertAlmostEqual(lib.f_prompt(0.0, 3.0), 0.0)
+        # tau_p <= 0 is the instantaneous limit
+        self.assertEqual(lib.f_prompt(1.0, 0.0), 1.0)
+        self.assertEqual(lib.f_prompt(1.0, -1.0), 1.0)
+
+    def test_f_delayed(self):
+        self.assertAlmostEqual(lib.f_delayed(85.0, 85.0), 0.5)
+        self.assertAlmostEqual(lib.f_delayed(50.0, 85.0), 50 / 135.0)
+        self.assertEqual(lib.f_delayed(0.0, 85.0), 0.0)
+        # never saturates as fast as the prompt term: that is the W-dependence
+        self.assertLess(lib.f_delayed(1000.0, 85.0), 0.93)
+
+    def test_self_test_passes(self):
+        self.assertTrue(lib.selfTestDelayedFluorescence())
+
+
+class TestPsiReservoir(unittest.TestCase):
+    """Psi(E), the TTA delayed-light reservoir, against the reference.
+
+    DELAYED_FLUORESCENCE_MODEL.md section 3 publishes, for Tc-99 at
+    kB = 7.5e-6 cm/keV (spectrum-averaged, mean E = 97.3 keV): <Q> = 90.5 keV
+    (93 % of <E>) and <Psi> = 57.9 keV (59.5 %). Reproducing those is what
+    makes this a port rather than a re-derivation.
+    """
+
+    def test_reproduces_the_reference_spectrum_average(self):
+        e_bins, p_spec = lib.readBetaSpectra('Tc-99')
+        e_bins = np.asarray(e_bins, dtype=float)
+        p_spec = np.asarray(p_spec, dtype=float)
+        mean_e = float(np.average(e_bins, weights=p_spec))
+        mean_psi = float(np.average(lib.psiTTA(e_bins), weights=p_spec))
+        self.assertAlmostEqual(mean_e, 97.34, delta=0.05)
+        self.assertAlmostEqual(mean_psi, 57.95, delta=0.15,
+                               msg=f'<Psi> = {mean_psi:.2f} keV, reference '
+                                   f'57.9 keV')
+        self.assertAlmostEqual(100 * mean_psi / mean_e, 59.53, delta=0.15)
+
+    def test_psi_never_exceeds_the_energy(self):
+        for e in (0.01, 0.05, 0.5, 5.0, 50.0, 500.0, 5000.0, 2e4):
+            self.assertLessEqual(lib.psiTTA(e), e + 1e-9, f'Psi({e}) > E')
+
+    def test_psi_is_monotone(self):
+        grid = np.logspace(-2, np.log10(2e4), 1500)
+        v = lib.psiTTA(grid)
+        self.assertTrue(np.all(np.diff(v) >= -1e-12))
+
+    def test_psi_is_bigger_than_the_quenching_deficit_it_replaced(self):
+        """The reservoir is ~8.5x the old E - Q(E,kB) form, so the two etas
+        are on different scales and must never be compared."""
+        e = 97.3
+        q = lib.Em_e(e * 1e3, e * 1e3, 7.5e-6 * 1e3, 1000) * 1e-3
+        deficit = e - q
+        self.assertGreater(lib.psiTTA(e) / deficit, 5.0)
+
+    def test_grid_covers_the_hardest_betas(self):
+        """A grid stopping at 2 MeV extrapolates rather than saturates:
+        phi_TTA is ~0.33 for minimum-ionising electrons, not ~0."""
+        self.assertGreaterEqual(lib._PSI_E_MAX_KEV, 2.0e4)
+        ratio = lib.psiTTA(2.0e4) / 2.0e4
+        self.assertAlmostEqual(ratio, 0.3668, delta=0.02)
+
+    def test_vectorised_and_scalar_agree(self):
+        e = np.array([1.0, 10.0, 100.0])
+        v = lib.psiTTA(e)
+        self.assertEqual(np.shape(v), (3,))
+        for i, x in enumerate(e):
+            self.assertAlmostEqual(float(v[i]), lib.psiTTA(float(x)),
+                                   places=12)
+
+    def test_cache_is_keyed_on_the_stopping_power(self):
+        """Psi depends on the cocktail through S(E). A reservoir that
+        outlived a cocktail change would be a trap, not a cache."""
+        lib.psiTTA(10.0)
+        # key = (S_a, e_min, e_max, n, cocktail, sp_model, rho, Z, A)
+        self.assertTrue(all(len(k) == 9 for k in lib._PSI_CACHE))
+        self.assertTrue(any(k[4] == lib.lsCocktail()
+                            for k in lib._PSI_CACHE),
+                        'cache key does not carry the cocktail')
+        self.assertTrue(any(k[5] == lib.sp_model for k in lib._PSI_CACHE),
+                        'cache key does not carry the stopping-power model')
+
+
+class TestEffectiveLightEnergy(unittest.TestCase):
+    """Q_eff = Q f_p + eta Psi f_d, Eq. (3.2)."""
+
+    def test_eta_zero_and_a_long_window_give_back_the_birks_energy(self):
+        q = 90.5
+        self.assertAlmostEqual(
+            lib.effective_light_energy(q, 97.3, 97.3, 1e9, eta=0.0,
+                                       tau_p=3.0, tau_d=85.0),
+            q, places=12)
+
+    def test_prompt_factor_is_applied_at_a_short_window(self):
+        """eta = 0 is NOT the baseline at a short window: f_p still bites."""
+        q = 100.0
+        got = lib.effective_light_energy(q, 100.0, 100.0, 3.0, eta=0.0,
+                                         tau_p=3.0, tau_d=85.0)
+        self.assertAlmostEqual(got, q * (1 - math.exp(-1.0)), places=10)
+
+    def test_delayed_term_has_the_documented_value(self):
+        q, e = 90.0, 97.3
+        got = lib.effective_light_energy(q, e, e, 50.0, eta=0.03,
+                                         tau_p=3.0, tau_d=85.0)
+        expected = (q * lib.f_prompt(50.0, 3.0)
+                    + 0.03 * lib.psiTTA(e) * lib.f_delayed(50.0, 85.0))
+        self.assertAlmostEqual(got, expected, places=12)
+
+    def test_partial_deposit_uses_the_track_segment(self):
+        """dPsi = Psi(Ei) - Psi(Ei - Ed), the same segment E_quench_e
+        integrates the Birks factor over -- and Psi(Ed) when Ei == Ed."""
+        q = 10.0
+        full = lib.effective_light_energy(q, 100.0, 100.0, 50.0, eta=0.1,
+                                          tau_p=3.0, tau_d=85.0)
+        f_p = lib.f_prompt(50.0, 3.0)
+        expected_full = (q * f_p
+                         + 0.1 * lib.psiTTA(100.0) * lib.f_delayed(50.0, 85.0))
+        self.assertAlmostEqual(full, expected_full, places=9)
+
+        part = lib.effective_light_energy(q, 100.0, 40.0, 50.0, eta=0.1,
+                                          tau_p=3.0, tau_d=85.0)
+        d_psi = lib.psiTTA(100.0) - lib.psiTTA(60.0)
+        self.assertAlmostEqual(
+            part, q * f_p + 0.1 * d_psi * lib.f_delayed(50.0, 85.0), places=9)
+        self.assertLess(part, full,
+                        'a partial deposit must draw on less of the reservoir')
+
+    def test_grows_monotonically_with_the_window(self):
+        q, e = 90.0, 97.3
+        vals = [lib.effective_light_energy(q, e, e, w, eta=0.03, tau_p=3.0,
+                                           tau_d=85.0)
+                for w in (1, 5, 10, 50, 100, 500, 1000)]
+        self.assertTrue(all(b > a for a, b in zip(vals, vals[1:])),
+                        f'Q_eff is not monotone in the window: {vals}')
+
+
+class TestDelayedFluorescenceConfig(unittest.TestCase):
+    """The option, its per-cocktail parameters, and its default state."""
+
+    def setUp(self):
+        self._saved = {
+            'delayedFluorescence': lib.delayedFluorescence,
+            'tau_prompt': lib.tau_prompt,
+            'tau_delayed': lib.tau_delayed,
+            'eta_delayed': lib.eta_delayed,
+            'tau': lib.tau,
+        }
+        TDCRPy_mod._delayed_announced.clear()
+
+    def tearDown(self):
+        lib.update_config_batch(self._saved)
+        TDCRPy_mod._delayed_announced.clear()
+
+    def test_ships_off(self):
+        with importlib.resources.path('tdcrpy', 'configDefault.toml') as cfg:
+            text = cfg.read_text(encoding='utf-8')
+        line = [l.strip() for l in text.splitlines()
+                if l.strip().startswith('delayedFluorescence')]
+        self.assertEqual(len(line), 1)
+        self.assertIn('False', line[0])
+
+    def test_missing_keys_fall_back_to_off(self):
+        """A config.toml written before v2.20.30 must not switch it on."""
+        import configparser
+        parser = configparser.ConfigParser()
+        parser.read_string('[Inputs]\nmicCorr = False\n')
+        inp = parser['Inputs']
+        self.assertFalse(inp.getboolean('delayedFluorescence', fallback=False))
+        self.assertEqual(inp.getfloat('tau_prompt', fallback=3.0), 3.0)
+        self.assertEqual(inp.getfloat('tau_delayed', fallback=85.0), 85.0)
+        self.assertEqual(inp.getfloat('eta_delayed', fallback=0.03), 0.03)
+
+    def test_the_two_fitted_cocktail_families(self):
+        """The values this release ships, from the per-source fits."""
+        for name in ('Ultima Gold', 'Ultima Gold LLT', 'Ultima Gold AB',
+                     'Ultima Gold XR'):
+            tau_d, eta, measured = lib.delayedFluorescenceDefaults(name)
+            self.assertEqual((tau_d, eta), (85.0, 0.03), name)
+            self.assertTrue(measured, name)
+        tau_d, eta, measured = lib.delayedFluorescenceDefaults('Toluene')
+        self.assertEqual((tau_d, eta), (138.0, 0.05))
+        self.assertTrue(measured)
+
+    def test_unfitted_cocktails_are_flagged_as_such(self):
+        for name in ('Insta-Gel Plus', 'Hionic-Fluor', 'ProSafe+',
+                     'Pseudocumene', 'PXE'):
+            _, _, measured = lib.delayedFluorescenceDefaults(name)
+            self.assertFalse(measured,
+                             f'{name} has no fitted eta/tau_delayed')
+
+    def test_neat_aromatics_group_with_toluene(self):
+        for name in ('Pseudocumene', 'PXE', 'LAB'):
+            tau_d, eta, _ = lib.delayedFluorescenceDefaults(name)
+            self.assertEqual((tau_d, eta), (138.0, 0.05), name)
+
+    def test_setters_round_trip(self):
+        lib.modifyTau_prompt(2.5)
+        self.assertAlmostEqual(lib.tau_prompt, 2.5)
+        lib.modifyTau_delayed(138.0)
+        self.assertAlmostEqual(lib.tau_delayed, 138.0)
+        lib.modifyEta_delayed(0.05)
+        self.assertAlmostEqual(lib.eta_delayed, 0.05)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            lib.modifyDelayedFluorescence(True)
+        self.assertTrue(lib.delayedFluorescence)
+        lib.modifyDelayedFluorescence(False)
+        self.assertFalse(lib.delayedFluorescence)
+
+    def test_eta_is_bounded_by_spin_statistics(self):
+        self.assertAlmostEqual(lib.ETA_MAX_TTA, 1.5)
+        with self.assertRaises(ValueError):
+            lib.modifyEta_delayed(2.0)
+        with self.assertRaises(ValueError):
+            lib.modifyEta_delayed(-0.01)
+
+    def test_cocktail_change_re_derives_the_parameters(self):
+        """They describe the scintillator, so a stale pair left over from the
+        previous cocktail would be exactly the staleness this package keeps
+        tripping over."""
+        saved = (lib.lsCocktail(), lib.fAq)
+        try:
+            lib.modifyLScocktail('Toluene', 0.0)
+            self.assertAlmostEqual(lib.tau_delayed, 138.0)
+            self.assertAlmostEqual(lib.eta_delayed, 0.05)
+            lib.modifyLScocktail('Ultima Gold', 0.0)
+            self.assertAlmostEqual(lib.tau_delayed, 85.0)
+            self.assertAlmostEqual(lib.eta_delayed, 0.03)
+        finally:
+            lib.modifyLScocktail(saved[0], saved[1])
+
+    def test_warns_once_for_an_unfitted_cocktail(self):
+        saved = (lib.lsCocktail(), lib.fAq)
+        try:
+            lib.modifyLScocktail('Insta-Gel Plus', 0.0)
+            lib.update_config_batch({'delayedFluorescence': True})
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter('always')
+                TDCRPy_mod._resolve_delayed_fluorescence(50.0)
+                TDCRPy_mod._resolve_delayed_fluorescence(50.0)
+            hits = [c for c in caught if 'no eta/tau_delayed were fitted'
+                    in str(c.message)]
+            self.assertEqual(len(hits), 1, 'unfitted cocktail not flagged '
+                                           'exactly once')
+        finally:
+            lib.update_config_batch({'delayedFluorescence': False})
+            lib.modifyLScocktail(saved[0], saved[1])
+
+    def test_resolution_returns_none_when_off(self):
+        lib.update_config_batch({'delayedFluorescence': False})
+        self.assertIsNone(TDCRPy_mod._resolve_delayed_fluorescence(50.0))
+
+    def test_resolution_carries_the_window(self):
+        lib.update_config_batch({'delayedFluorescence': True,
+                                 'tau_prompt': 3.0, 'tau_delayed': 85.0,
+                                 'eta_delayed': 0.03})
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            got = TDCRPy_mod._resolve_delayed_fluorescence(77.0)
+        self.assertEqual(got, (77.0, 0.03, 3.0, 85.0))
+
+
+class TestDelayedFluorescenceInTheModel(unittest.TestCase):
+    """End to end: the option is inert off, and window-dependent on."""
+
+    N = 400
+    L = 6.0
+
+    def setUp(self):
+        self._saved = {
+            'delayedFluorescence': lib.delayedFluorescence,
+            'eta_delayed': lib.eta_delayed,
+            'tau_prompt': lib.tau_prompt,
+            'tau_delayed': lib.tau_delayed,
+            'tau': lib.tau,
+            'micCorr': lib.micCorr,
+            'fAq': lib.fAq,
+        }
+        TDCRPy_mod._delayed_announced.clear()
+
+    def tearDown(self):
+        lib.update_config_batch(self._saved)
+        TDCRPy_mod._delayed_announced.clear()
+        lib.cleanup_record_files()
+
+    def _eff_d(self, rad='C-14'):
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            return TDCRPy_mod.TDCRPy(self.L, rad, '1', self.N,
+                                     KB_TYPICAL, 10)[2]
+
+    def test_eta_zero_reproduces_the_plain_model_exactly(self):
+        """At the shipped tau the prompt factor is 1 to 1e-7, so eta = 0 must
+        return the Birks-quenched result bit for bit -- no Monte-Carlo
+        tolerance needed, because the only change is arithmetic on an
+        identical decay sample.
+
+        It is still not the baseline in general: at a SHORT window f_p bites
+        even with eta = 0, which is why the option, not eta, is the switch.
+        """
+        lib.update_config_batch({'delayedFluorescence': False, 'tau': 100.0,
+                                 'micCorr': False, 'fAq': 0.0})
+        np.random.seed(3)
+        off = self._eff_d()
+        lib.update_config_batch({'delayedFluorescence': True,
+                                 'eta_delayed': 0.0, 'tau_prompt': 3.0})
+        np.random.seed(3)
+        on = self._eff_d()
+        self.assertAlmostEqual(on, off, places=12)
+
+    def test_switching_it_on_raises_the_efficiency(self):
+        lib.update_config_batch({'delayedFluorescence': False, 'tau': 100.0,
+                                 'micCorr': False, 'fAq': 0.0})
+        np.random.seed(5)
+        off = self._eff_d('H-3')
+        lib.update_config_batch({'delayedFluorescence': True,
+                                 'eta_delayed': 0.03, 'tau_delayed': 85.0,
+                                 'tau_prompt': 3.0})
+        np.random.seed(5)
+        on = self._eff_d('H-3')
+        self.assertGreater(on, off,
+                           'the delayed term adds light, so it must raise '
+                           'the efficiency at fixed L')
+
+    def test_efficiency_rises_with_the_coincidence_window(self):
+        """The whole point of the model: the plain Birks model has no
+        W-dependence at all."""
+        lib.update_config_batch({'delayedFluorescence': True,
+                                 'eta_delayed': 0.03, 'tau_delayed': 85.0,
+                                 'tau_prompt': 3.0, 'micCorr': False,
+                                 'fAq': 0.0})
+        effs = []
+        for tau in (10.0, 100.0, 1000.0):
+            lib.update_config_batch({'tau': tau})
+            np.random.seed(9)
+            effs.append(self._eff_d('H-3'))
+        self.assertTrue(all(b > a for a, b in zip(effs, effs[1:])),
+                        f'eff_D is not monotone in the window: {effs}')
+
+    def test_off_by_default_leaves_the_quench_path_untouched(self):
+        """_quench with delayed=None must be the pre-v2.20.30 code path."""
+        particles = ['electron', 'electron']
+        energies = [10.0, 50.0]
+        initial = [10.0, 50.0]
+        plain = TDCRPy_mod._quench(list(particles), list(energies),
+                                   list(initial), KB_TYPICAL, 100, 100,
+                                   False, False)
+        explicit = TDCRPy_mod._quench(list(particles), list(energies),
+                                      list(initial), KB_TYPICAL, 100, 100,
+                                      False, False, None)
+        for a, b in zip(plain, explicit):
+            self.assertAlmostEqual(a, b, places=12)
+
+    def test_micelle_retention_scales_the_total_light(self):
+        """With both corrections on, confinement must scale prompt AND
+        delayed light: it is about where the track ran, not about which
+        component the light came out as."""
+        particles = ['electron']
+        e = [3.0]
+        delayed = (100.0, 0.03, 3.0, 85.0)
+        lib.update_config_batch({'fAq': 0.10, 'micCorr': True})
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            both = TDCRPy_mod._quench(list(particles), list(e), list(e),
+                                      KB_TYPICAL, 100, 100, True, False,
+                                      delayed)[0]
+            only_delayed = TDCRPy_mod._quench(list(particles), list(e),
+                                              list(e), KB_TYPICAL, 100, 100,
+                                              False, False, delayed)[0]
+        self.assertLess(both, only_delayed,
+                        'the micelle correction did not reach the delayed '
+                        'light')
+
+
 class TestECBranchProbability(unittest.TestCase):
     """Which nuclides need the micelle correction is read, not listed.
 

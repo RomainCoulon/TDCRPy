@@ -30,6 +30,7 @@ tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_S-35.txt
 tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_Sr-89.txt
 tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_Sr-90.txt
 tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_Tc-99.txt
+tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_Y-90.txt
 tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_Zr-93.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/E_depose.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_10ml-beta-_1_200k.txt

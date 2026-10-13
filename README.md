@@ -25,6 +25,7 @@ The calculation is based on a photo-physical stochastic Monte Carlo model, allow
 * Complex decay schemes (beta spectra via BetaShape, gamma interactions via MCNP matrices).
 * Radionuclide mixtures with arbitrary activity fractions.
 * Ionisation quenching via the Birks model (electrons and alpha particles).
+* Prompt and delayed (triplet-triplet annihilation) fluorescence, giving a light yield that depends on the coincidence resolving time (`delayedFluorescence`, off by default, since v2.20.30).
 * Reverse micelle effects in cocktails used for aqueous samples — applied automatically to electron-capture nuclides when an aqueous fraction is declared (`micCorrAuto`, since v2.20.29).
 * Asymmetric PMT configurations (per-channel free parameters).
 * Full optical Monte Carlo transport (`opticalTransport=True`).
@@ -208,6 +209,11 @@ td.TDCR_model_lib.readParameters(disp=True)
 | EC threshold | `modifyMicCorrECThreshold(p)` | 0.01 | — | Electron-capture probability above which a nuclide self-activates |
 | Micelle diameter | `modifyDiam_micelle(d)` | 4 | nm | Mean micelle **diameter** (Bergeron 2012) |
 | Micelle dispersion | `modifySigma_micelle(s)` | 0 | nm | Size spread; 0 = monodisperse |
+| Delayed fluorescence | `modifyDelayedFluorescence(b)` | False | — | Prompt + delayed (TTA) light-yield model; makes the light yield depend on the coincidence window |
+| Prompt decay time | `modifyTau_prompt(t)` | 3.0 | ns | `τ_p` — a measured cocktail constant, never fitted |
+| Delayed capture time | `modifyTau_delayed(t)` | 85 | ns | `τ_d` — 85 (Ultima Gold family), 138 (toluene); re-derived by `modifyLScocktail` |
+| Delayed amplitude | `modifyEta_delayed(e)` | 0.03 | — | `η` — 0.03 (Ultima Gold family), 0.05 (toluene) |
+| TTA kinetics | `modifyTTAkinetics(k_q, gamma, A_c)` | 5e6, 1e-11, 1e-13 | s⁻¹, cm³s⁻¹, cm² | Constants behind `S_a` = 1666.7 keV/cm |
 | Quantum efficiency | `modifyEffQ(q)` | `0.25,0.25,0.25` | — | PMT quantum efficiencies (A, B, C) |
 | Optical transport | `modifyOpticalTransport(b)` | False | — | Enable full optical MC transport |
 | Resolving time | `modifyTau(τ)` | 50 | ns | Coincidence resolving time |

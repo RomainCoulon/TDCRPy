@@ -253,6 +253,54 @@ def _micelle_advice(hits):
         UserWarning, stacklevel=3)
 
 
+_delayed_announced = set()
+
+
+def _resolve_delayed_fluorescence(tau):
+    """Resolve the prompt + delayed fluorescence parameters for this call.
+
+    Returns ``None`` when the model is off, which is the shipped default and
+    leaves the quenching path byte-identical to the plain Birks model.
+
+    The window is TDCRPy's own coincidence resolving time ``tau``: it is the
+    window the logical event is built in, so it is the window the light has
+    to arrive inside. At the shipped ``tau = 50`` ns and ``tau_prompt = 3`` ns
+    the prompt factor is 1 to within 1e-7, so at default settings the whole
+    effect is the delayed term -- ``eta * Psi * 0.370``, about +0.7 % of the
+    deposited energy for a beta. It grows with ``tau``.
+
+    Parameters
+    ----------
+    tau : float
+        Coincidence resolving time, ns.
+
+    Returns
+    -------
+    tuple or None
+        ``(tau_r, eta, tau_prompt, tau_delayed)``, or ``None`` when off.
+    """
+    tl._refresh_config_globals()
+    if not tl.delayedFluorescence:
+        return None
+    cocktail = tl.lsCocktail()
+    if cocktail not in _delayed_announced:
+        _delayed_announced.add(cocktail)
+        sug_tau, sug_eta, measured = tl.delayedFluorescenceDefaults(cocktail)
+        if not measured:
+            warnings.warn(
+                f"delayedFluorescence is on for cocktail '{cocktail}', for "
+                f"which no eta/tau_delayed were fitted. The values in use "
+                f"(tau_delayed = {tl.tau_delayed:g} ns, eta_delayed = "
+                f"{tl.eta_delayed:g}) are an assignment by solvent class "
+                f"(suggested {sug_tau:g} ns, {sug_eta:g}), not a measurement. "
+                f"Only the Ultima Gold family and neat toluene have fitted "
+                f"values; see tdcrpy.TDCR_model_lib."
+                f"delayedFluorescenceDefaults.",
+                UserWarning, stacklevel=3)
+    return (float(tau), float(tl.eta_delayed),
+            float(tl.tau_prompt), float(tl.tau_delayed))
+
+
 def _read_config():
     """
     Load the TDCRPy configuration file and return a
@@ -600,6 +648,11 @@ def TDCRPy(
     mic_corr = _resolve_micelle_correction(Rad, mic_corr)
 
     # ------------------------------------------------------------------ #
+    # 6c. Prompt + delayed (TTA) fluorescence, off unless asked for.       #
+    # ------------------------------------------------------------------ #
+    delayed = _resolve_delayed_fluorescence(tau)
+
+    # ------------------------------------------------------------------ #
     # 7. Load nuclear-decay data for all requested radionuclides           #
     # ------------------------------------------------------------------ #
     decay_data = _load_decay_data(Rad)
@@ -726,14 +779,14 @@ def TDCRPy(
         # -------------------------------------------------------------- #
         e_quenching = _quench(
             particle_vec, energy_vec, energy_vec_initial,
-            kB, ne_electron, ne_alpha, mic_corr, display,
+            kB, ne_electron, ne_alpha, mic_corr, display, delayed,
         )
 
         e_quenching2 = 0
         if evenement != 1:
             e_quenching2 = _quench(
                 particle_vec2, energy_vec2, energy_vec_initial2,
-                kB, ne_electron, ne_alpha, mic_corr, display,
+                kB, ne_electron, ne_alpha, mic_corr, display, delayed,
             )
 
         # -------------------------------------------------------------- #
@@ -1152,7 +1205,7 @@ def _interact_prompt(particle_vec, energy_vec, energy_vec_initial, V):
 
 
 def _quench(particle_vec, energy_vec, energy_vec_initial,
-            kB, ne_electron, ne_alpha, mic_corr, display):
+            kB, ne_electron, ne_alpha, mic_corr, display, delayed=None):
     """
     Apply the Birks quenching model to each particle.
 
@@ -1173,6 +1226,10 @@ def _quench(particle_vec, energy_vec, energy_vec_initial,
     mic_corr : bool
         Apply reverse-micelle correction when ``True``.
     display : bool
+    delayed : tuple, optional
+        ``(tau_r, eta, tau_prompt, tau_delayed)`` from
+        :func:`_resolve_delayed_fluorescence`, or ``None`` (the default) to
+        use the plain Birks-quenched energy.
 
     Returns
     -------
@@ -1186,14 +1243,32 @@ def _quench(particle_vec, energy_vec, energy_vec_initial,
             e_quenching.append(energy_vec[ipart])
 
         elif p in ("electron", "positron"):
+            e_i = energy_vec_initial[ipart]
+            e_d = energy_vec[ipart]
             eq = tl.Em_e(
-                energy_vec_initial[ipart] * 1e3,
-                energy_vec[ipart] * 1e3,
+                e_i * 1e3,
+                e_d * 1e3,
                 kB * 1e3,
                 ne_electron,
             ) * 1e-3
             if mic_corr:
-                eq = tl.pure_mc_efficient_energy_numba(eq)
+                # The kernel returns the retained energy, so read it as a
+                # retention FACTOR: with the delayed model on it has to scale
+                # the total light, prompt and delayed alike, since confinement
+                # is about where the track ran, not about which component the
+                # light came out as. With the delayed model off, applying the
+                # factor to eq is identical to what the kernel returned.
+                retained = tl.pure_mc_efficient_energy_numba(eq)
+                retention = retained / eq if eq > 0 else 1.0
+            else:
+                retained, retention = eq, 1.0
+            if delayed is None:
+                eq = retained
+            else:
+                tau_r, eta, tau_p, tau_d = delayed
+                eq = tl.effective_light_energy(
+                    eq, e_i, e_d, tau_r,
+                    eta=eta, tau_p=tau_p, tau_d=tau_d) * retention
             energy_vec[ipart] = eq
             e_quenching.append(eq)
 

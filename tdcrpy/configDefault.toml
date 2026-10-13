@@ -57,6 +57,37 @@ pP = 0.002551
 pS = 0.000463
 pNa = 0.000465
 pCl = 0.000000
+## PROMPT + DELAYED (TTA) FLUORESCENCE
+# A coincidence window only collects the light emitted within it of the
+# trigger, and scintillation light is not instantaneous: it has a fast
+# (prompt) and a slow (delayed) component. The delayed one is triplet-triplet
+# annihilation, which is bimolecular and so scales with the local dE/dx rather
+# than with total deposited energy -- it cannot be absorbed into kB or L.
+# OFF by default: turning it on changes every light yield, hence every
+# efficiency, and eta/tau_delayed are fitted quantities, not measured ones.
+# R. Coulon, "TDCR Measurements -- Lecture Notes", ch. 3.
+delayedFluorescence = False
+# Prompt-fluorescence decay time (ns). A measured constant of the cocktail,
+# never fitted -- under a light yield refitted per window it is
+# unidentifiable. 3.0 ns is the reference's worked-example value, pending a
+# TCSPC bench measurement.
+tau_prompt = 3.0
+# Delayed-fluorescence window-capture time constant (ns) and delayed-light
+# amplitude (dimensionless fraction of the Psi reservoir). These describe the
+# scintillator, not the decay, and modifyLScocktail() re-derives them when the
+# cocktail changes. Fitted per source over W = 50 ns - 1 us:
+#   Ultima Gold family   tau_delayed =  85 ns   eta_delayed = 0.03
+#   neat toluene         tau_delayed = 138 ns   eta_delayed = 0.05
+tau_delayed = 85.0
+eta_delayed = 0.03
+# TTA kinetics behind the annihilation-saturation stopping power
+# S_a = 4 W_ion A_c k_q / (3 gamma) = 1666.7 keV/cm. Literature
+# order-of-magnitude values, not measurements; A_c is the softest. A fitted
+# eta is conditional on these and is not transferable to another choice.
+tta_kq = 5e6
+tta_gamma = 1e-11
+tta_Ac = 1e-13
+
 # properties on reverse micelles
 # Apply the reverse-micelle correction unconditionally. False does NOT mean
 # "never": see micCorrAuto below.
