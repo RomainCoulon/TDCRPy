@@ -153,22 +153,31 @@ def _relax_atom(daughter_relax, particle_vec, energy_vec, rad,
 
 
 # --- reverse-micelle correction: when it switches itself on ---------------
-# Running without the correction measurably biases electron-capture nuclides.
-# Their signal is carried by Auger cascades of a few hundred eV to a few keV,
-# where the electron range is comparable to a droplet and the electron may
-# never reach the scintillating solvent. Measured at fAq = 0.10 with 4 nm
-# droplets, separating the bulk (1 - fAq) dilution -- which is degenerate with
-# L and so absorbed by the fit -- from the confinement penalty that is not:
+# Running without the correction biases any nuclide whose light is carried by
+# electrons slow enough to stop inside their birth droplet -- a few hundred eV
+# to a few keV, where the electron range is comparable to a droplet and the
+# electron may never reach the scintillating solvent. Measured at fAq = 0.10
+# with 4 nm droplets for the whole catalogue, separating the bulk (1 - fAq)
+# dilution -- which is degenerate with L and so absorbed by the fit -- from
+# the confinement penalty that is not:
 #
-#     Fe-55   5.2 % of the light lost to confinement
-#     Cr-51   4.9 %
-#     H-3     0.46 %      Ni-63  0.05 %      C-14, Tc-99  ~0
+#     Ar-37  12.2 % of the light lost to confinement
+#     Ca-41  10.2 %     Cr-51  5.6 %      Fe-55  5.2 %      Ni-59  3.2 %
+#     Pu-241  0.60 %    H-3    0.53 %     Ra-228 0.32 %     C-14   0.018 %
 #
-# Which nuclides those are is a property of the decay scheme, not a list worth
-# maintaining by hand: tl.ec_branch_probability() reads the electron-capture
-# probability out of the PenNuc data and tl.is_micelle_critical() compares it
-# with micCorrECThreshold. Since v2.20.29 the correction therefore activates
-# itself, once fAq > 0 says there are droplets at all.
+# Two things to note. The worst case is twice Fe-55, which earlier versions of
+# this comment quoted as if it were the maximum. And Pu-241, H-3 and Ra-228
+# have NO electron-capture branch: a low-endpoint beta reaches the same
+# confinement regime as an Auger cascade, so electron capture is a proxy for
+# the real criterion rather than the criterion itself.
+#
+# Hence tl.is_micelle_critical() reads the MEASURED bias from
+# Micelle/micelleBias.csv and compares it with micCorrBiasThreshold (0.01 %).
+# Until v2.20.31 it compared tl.ec_branch_probability() with
+# micCorrECThreshold, which left ten nuclides with a resolved bias ungated and
+# switched the correction on for 33 that did not need it. The screening is
+# notebooks/physics/micelleCatalogue.py. Since v2.20.29 the correction
+# activates itself, once fAq > 0 says there are droplets at all.
 _micelle_advised = set()
 _micelle_auto_announced = set()
 
@@ -221,16 +230,19 @@ def _resolve_micelle_correction(Rad, mic_corr):
     fresh = [r for r in hits if r not in _micelle_auto_announced]
     if fresh:
         _micelle_auto_announced.update(fresh)
+        detail = ', '.join(
+            f"{r} ({b:.2f} %)" if (b := tl.micelle_bias(r)) is not None else r
+            for r in fresh)
         warnings.warn(
-            f"{', '.join(fresh)}: electron-capture nuclide whose Auger "
-            f"electrons are slow enough to stop inside the reverse micelles. "
-            f"With fAq = {tl.fAq:g} the reverse-micelle correction has been "
-            f"enabled automatically (micCorrAuto), because leaving it off "
-            f"overestimates the efficiency by of order 5 % of the light. The "
-            f"run is correspondingly slower. Set micCorr = True to make this "
+            f"{detail}: emits electrons slow enough to stop inside the "
+            f"reverse micelles. With fAq = {tl.fAq:g} the reverse-micelle "
+            f"correction has been enabled automatically (micCorrAuto), "
+            f"because leaving it off overestimates the efficiency by the "
+            f"measured share of the light shown above. The run is "
+            f"correspondingly slower. Set micCorr = True to make this "
             f"explicit, or modifyMicCorrAuto(False) to opt out; see "
-            f"notebooks/physics/micelleCheck.ipynb for the measured size of "
-            f"the effect and what it costs.",
+            f"notebooks/physics/micelleCatalogue.py for the measurement and "
+            f"micelleCheck.ipynb for what it costs.",
             UserWarning, stacklevel=3)
     return True
 
@@ -241,15 +253,17 @@ def _micelle_advice(hits):
     if not fresh:
         return
     _micelle_advised.update(fresh)
+    detail = ', '.join(
+        f"{r} ({b:.2f} %)" if (b := tl.micelle_bias(r)) is not None else r
+        for r in fresh)
     warnings.warn(
-        f"{', '.join(fresh)}: electron-capture nuclide whose Auger electrons "
-        f"are slow enough to be trapped inside the reverse micelles, but "
-        f"micCorr is off with fAq = {tl.fAq:g} and micCorrAuto is disabled. "
-        f"About 5 % of the light is then unaccounted for and the efficiency is "
-        f"overestimated. Enable it with "
-        f"tdcrpy.TDCR_model_lib.modifyMicCorr(True); see "
-        f"notebooks/physics/micelleEffects.ipynb for the size of the effect and "
-        f"what it costs.",
+        f"{detail}: emits electrons slow enough to be trapped inside the "
+        f"reverse micelles, but micCorr is off with fAq = {tl.fAq:g} and "
+        f"micCorrAuto is disabled. The measured share of the light shown "
+        f"above is then unaccounted for and the efficiency is overestimated. "
+        f"Enable it with tdcrpy.TDCR_model_lib.modifyMicCorr(True); see "
+        f"notebooks/physics/micelleCatalogue.py for the measurement and "
+        f"micelleEffects.ipynb for what it costs.",
         UserWarning, stacklevel=3)
 
 
@@ -972,12 +986,33 @@ def _sample_nuclear_decay(
         energy_vec.append(energy_branch)
     else:
         # Isomeric transition with no primary particle emission.
+        #
+        # The daughter need not have any level to transition from. Five
+        # nuclides in the PenNuc library carry a branch with neither a
+        # particle nor a level -- Np-236 (P = 1.6e-3), At-217 (6.7e-5),
+        # Fr-221 (4.8e-5), Po-215 (2.3e-6) and Ac-228 (5.5e-8) -- and
+        # indexing levelNumber[...][it][0] for those raised IndexError.
+        # Because the probabilities are small the crash was probabilistic:
+        # a short run passed and a production run did not.
+        #
+        # Such a branch deposits nothing in the scintillator, so it is a
+        # decay that produced no light. Return level 0, which skips the
+        # cascade below and leaves the particle vectors empty; the zero is
+        # then counted rather than dropped (see _mean_over_decays, v2.20.28).
+        levels = levelNumber[index_rad][iDaughter]
         tp = tl.normalise(Transition_prob_sum[index_rad][iDaughter])
         it = tl.sampling(tp)
-        levelOftheDaughter = levelNumber[index_rad][iDaughter][it][0]
+        if 0 <= it < len(levels) and len(levels[it]) > 0:
+            levelOftheDaughter = levels[it][0]
+        else:
+            levelOftheDaughter = 0
         if display:
-            print("\t Sampled branch: isomeric transition — no particle emitted")
-            print(f"\t\t Level: {levelOftheDaughter}")
+            if levelOftheDaughter:
+                print("\t Sampled branch: isomeric transition — no particle emitted")
+                print(f"\t\t Level: {levelOftheDaughter}")
+            else:
+                print("\t Sampled branch: no particle and no level — "
+                      "this decay deposits nothing")
 
     # ---- Isomeric transition cascade ----
     while levelOftheDaughter > 0:

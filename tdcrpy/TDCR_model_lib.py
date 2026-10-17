@@ -667,7 +667,7 @@ def _refresh_config_globals():
     silent no-op rather than an error.
     """
     global fAq, diam_micelle, sigma_micelle, opticalTransport
-    global micCorrAuto, micCorrECThreshold
+    global micCorrAuto, micCorrECThreshold, micCorrBiasThreshold
     global delayedFluorescence, tau_prompt, tau_delayed, eta_delayed
     global tta_kq, tta_gamma, tta_Ac
     read_config_object()
@@ -683,6 +683,8 @@ def _refresh_config_globals():
         micCorrAuto = inputs.getboolean("micCorrAuto", fallback=True)
         micCorrECThreshold = inputs.getfloat("micCorrECThreshold",
                                              fallback=0.01)
+        micCorrBiasThreshold = inputs.getfloat("micCorrBiasThreshold",
+                                               fallback=0.01)
         delayedFluorescence = inputs.getboolean("delayedFluorescence",
                                                 fallback=False)
         tau_prompt = inputs.getfloat("tau_prompt", fallback=3.0)
@@ -763,31 +765,142 @@ def ec_branch_probability(rad):
     return float(min(max(p_ec, 0.0), 1.0))
 
 
+#: Reference conditions of the shipped bias table, for the mismatch note in
+#: :func:`micelle_bias`. Keep in step with Micelle/micelleBias.csv's header.
+_MICELLE_BIAS_REFERENCE = dict(fAq=0.10, diam_micelle=4.0, sigma_micelle=0.0)
+
+_MICELLE_BIAS = None
+
+
+def _load_micelle_bias():
+    """Parse and cache Micelle/micelleBias.csv.
+
+    Returns
+    -------
+    dict
+        ``{nuclide: (bias_pct, u_bias_pct, source)}``. Empty when the file is
+        missing or unreadable, which makes :func:`is_micelle_critical` fall
+        back to the electron-capture proxy rather than silently gate nothing.
+    """
+    global _MICELLE_BIAS
+    if _MICELLE_BIAS is not None:
+        return _MICELLE_BIAS
+    table = {}
+    try:
+        path = files("tdcrpy").joinpath("Micelle", "micelleBias.csv")
+        with path.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#") or line.startswith("nuclide"):
+                    continue
+                parts = line.split(",")
+                if len(parts) < 3:
+                    continue
+                try:
+                    table[parts[0]] = (float(parts[1]), float(parts[2]),
+                                       parts[-1])
+                except ValueError:
+                    continue
+    except Exception:
+        table = {}
+    _MICELLE_BIAS = table
+    return table
+
+
+def micelle_bias(rad):
+    """Measured reverse-micelle confinement bias of *rad*, per cent of light.
+
+    The share of the scintillation light lost inside the water droplets that
+    a refitted light yield does NOT absorb. The ``(1 - fAq)`` bulk dilution,
+    which it does absorb because it is exactly degenerate with ``L``, is
+    excluded -- so this is the part that biases an efficiency.
+
+    Measured for the whole catalogue by
+    ``notebooks/physics/micelleCatalogue.py`` and tabulated in
+    ``Micelle/micelleBias.csv``. Representative values: Ar-37 12.2 %, Ca-41
+    10.2 %, Cr-51 5.6 %, Fe-55 5.2 %, Pu-241 0.60 %, H-3 0.53 %, C-14
+    0.018 %, and 0 for an emitter with no electron light at all.
+
+    Parameters
+    ----------
+    rad : str
+        Radionuclide label, e.g. ``"Fe-55"``.
+
+    Returns
+    -------
+    float or None
+        Bias in per cent, or ``None`` when the nuclide is not tabulated.
+
+    Notes
+    -----
+    The table is a SCREENING at reference conditions (Ultima Gold + 10 %
+    water, 4 nm monodisperse); the correction itself always uses the
+    configured values. A larger aqueous fraction shortens the organic mean
+    free path and raises the bias, so above the reference ``fAq`` these
+    values understate it -- which is why the shipped threshold is set an
+    order of magnitude below the level at which anyone would care.
+    """
+    hit = _load_micelle_bias().get(rad)
+    return None if hit is None else hit[0]
+
+
 def is_micelle_critical(rad, threshold=None):
     """Whether *rad* needs the reverse-micelle correction.
 
-    True when the electron-capture probability reaches *threshold*
-    (``micCorrECThreshold`` in the configuration, 0.01 by default). The
-    confinement loss is about 5 % of the light for a pure electron-capture
-    emitter, so a nuclide below the default threshold is biased by less than
-    0.05 % if the correction is left off -- under the Monte-Carlo noise of a
-    normal run, and not worth its cost.
+    True when its measured confinement bias (:func:`micelle_bias`) reaches
+    *threshold*, ``micCorrBiasThreshold`` in the configuration, 0.01 % by
+    default.
+
+    Until v2.20.31 this gated on the electron-capture probability instead,
+    which was a proxy for "emits an electron slow enough to stop inside its
+    birth droplet". The catalogue-wide screening showed the proxy was the
+    weakest of the three candidates -- Spearman rho against the measured bias
+    was +0.482, against -0.821 for the droplet-crossing count and -0.767 for
+    the mean electron energy -- because it catches the Auger route to a slow
+    electron and misses the soft-beta route completely. It left ten nuclides
+    with a resolved bias ungated, led by Pu-241 (0.60 %), H-3 (0.53 %) and
+    Ra-228 (0.32 %), none of which has an electron-capture branch, while
+    switching the correction on for 33 others that did not need it.
 
     Parameters
     ----------
     rad : str
         Radionuclide label.
     threshold : float, optional
-        Overrides the configured threshold.
+        Overrides the configured threshold, in per cent.
 
     Returns
     -------
     bool
+
+    Notes
+    -----
+    For a nuclide absent from the table -- one added to the decay library
+    after the screening -- this falls back to the old electron-capture proxy
+    at ``micCorrECThreshold`` and warns once, because guessing "not critical"
+    for an unscreened nuclide would be a silent bias of exactly the kind the
+    gate exists to prevent.
     """
+    _refresh_config_globals()
     if threshold is None:
-        _refresh_config_globals()
-        threshold = micCorrECThreshold
-    return ec_branch_probability(rad) >= float(threshold)
+        threshold = micCorrBiasThreshold
+    bias = micelle_bias(rad)
+    if bias is not None:
+        return bias >= float(threshold)
+    if rad not in _micelle_unscreened:
+        _micelle_unscreened.add(rad)
+        warnings.warn(
+            f"{rad} is not in the measured reverse-micelle bias table "
+            f"(Micelle/micelleBias.csv), so the electron-capture proxy is "
+            f"being used instead, at micCorrECThreshold = "
+            f"{micCorrECThreshold:g}. That proxy misses soft beta emitters "
+            f"such as H-3 and Pu-241; re-run "
+            f"notebooks/physics/micelleCatalogue.py to screen it properly.",
+            UserWarning, stacklevel=2)
+    return ec_branch_probability(rad) >= float(micCorrECThreshold)
+
+
+_micelle_unscreened = set()
 
 
 def update_config_value(key, value, section=_CONFIG_SECTION):
@@ -1130,9 +1243,27 @@ def modifyMicCorrAuto(x):
     update_config_value("micCorrAuto", x)
 
 def modifyMicCorrECThreshold(x):
-    """Set the electron-capture probability above which the correction
-    self-activates (0-1; default 0.01)."""
+    """Set the electron-capture probability for the FALLBACK gate (0-1).
+
+    Used only for a nuclide absent from the measured bias table; the gate
+    itself is :func:`modifyMicCorrBiasThreshold` since v2.20.31.
+    """
     update_config_value("micCorrECThreshold", x)
+
+def modifyMicCorrBiasThreshold(x):
+    """Set the confinement bias, in per cent, above which the correction
+    self-activates (default 0.01 %).
+
+    Compared against :func:`micelle_bias`, the measured light-weighted
+    confinement loss. At the 0.01 % default about half the catalogue
+    activates when ``fAq > 0``; raising it to 0.1 % keeps the nuclides where
+    the bias is a tenth of a percent or more, and to 1 % only the strong
+    Auger emitters (Ar-37, Ca-41, Cr-51, Fe-55, Ni-59, Ge-68, Ti-44, Co-57).
+    """
+    x = float(x)
+    if x < 0.0:
+        raise ValueError(f"micCorrBiasThreshold must be >= 0, got {x}")
+    update_config_value("micCorrBiasThreshold", x)
 
 def modifyDelayedFluorescence(x):
     """Enable or disable the prompt + delayed (TTA) fluorescence model (bool).
@@ -1322,6 +1453,11 @@ try:
                                                    fallback=0.01)
 except (KeyError, ValueError):
     micCorrAuto, micCorrECThreshold = True, 0.01
+try:
+    micCorrBiasThreshold = config["Inputs"].getfloat("micCorrBiasThreshold",
+                                                     fallback=0.01)
+except (KeyError, ValueError):
+    micCorrBiasThreshold = 0.01
 
 # Prompt + delayed (TTA) fluorescence. Off by default: it changes every light
 # yield in the model, and its eta/tau_delayed are fitted quantities.

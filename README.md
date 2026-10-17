@@ -26,7 +26,7 @@ The calculation is based on a photo-physical stochastic Monte Carlo model, allow
 * Radionuclide mixtures with arbitrary activity fractions.
 * Ionisation quenching via the Birks model (electrons and alpha particles).
 * Prompt and delayed (triplet-triplet annihilation) fluorescence, giving a light yield that depends on the coincidence resolving time (`delayedFluorescence`, off by default, since v2.20.30).
-* Reverse micelle effects in cocktails used for aqueous samples — applied automatically to electron-capture nuclides when an aqueous fraction is declared (`micCorrAuto`, since v2.20.29).
+* Reverse micelle effects in cocktails used for aqueous samples — applied automatically, when an aqueous fraction is declared, to the nuclides measured to need it (`micCorrAuto`; the per-nuclide confinement bias was screened across the whole catalogue in [micelleCatalogue.py](notebooks/physics/micelleCatalogue.py), worst cases Ar-37 12.2 %, Ca-41 10.2 %, Fe-55 5.2 %).
 * Asymmetric PMT configurations (per-channel free parameters).
 * Full optical Monte Carlo transport (`opticalTransport=True`).
 * C/N (CIEMAT/NIST) 2-PMT efficiency curves.
@@ -206,7 +206,8 @@ td.TDCR_model_lib.readParameters(disp=True)
 | Cocktail | `modifyLScocktail(name, fAq)` | `Ultima Gold` | — | LS cocktail + aqueous fraction |
 | Micelle correction | `modifyMicCorr(b)` | False | — | Force the reverse-micelle correction on for every nuclide |
 | Micelle auto-activation | `modifyMicCorrAuto(b)` | True | — | Apply it by itself to electron-capture nuclides when `fAq > 0`, warning once per nuclide |
-| EC threshold | `modifyMicCorrECThreshold(p)` | 0.01 | — | Electron-capture probability above which a nuclide self-activates |
+| Bias threshold | `modifyMicCorrBiasThreshold(b)` | 0.01 | % | Measured confinement bias above which a nuclide self-activates (`Micelle/micelleBias.csv`) |
+| EC threshold | `modifyMicCorrECThreshold(p)` | 0.01 | — | Fallback gate, for a nuclide absent from the bias table |
 | Micelle diameter | `modifyDiam_micelle(d)` | 4 | nm | Mean micelle **diameter** (Bergeron 2012) |
 | Micelle dispersion | `modifySigma_micelle(s)` | 0 | nm | Size spread; 0 = monodisperse |
 | Delayed fluorescence | `modifyDelayedFluorescence(b)` | False | — | Prompt + delayed (TTA) light-yield model; makes the light yield depend on the coincidence window |

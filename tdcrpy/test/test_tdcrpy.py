@@ -1425,6 +1425,110 @@ class TestEmptyDecaysCounted(unittest.TestCase):
             lib.cleanup_record_files()
 
 
+class TestParticlelessLevellessBranch(unittest.TestCase):
+    """A decay branch with neither a particle nor a level must not crash.
+
+    Found by the catalogue-wide micelle sweep (notebooks/physics/
+    micelleCatalogue.py) on At-217. The isomeric fallback in
+    _sample_nuclear_decay indexed levelNumber[...][it][0] for a daughter whose
+    level list is [[]], raising IndexError.
+
+    The crash was PROBABILISTIC, which is why it had survived: the branch
+    probabilities run from 5.5e-8 to 1.6e-3, so a short test run passes and a
+    production run of 1e5-1e6 decays does not. That is also why these tests
+    drive the branch deterministically rather than hoping to sample it.
+    """
+
+    #: (nuclide, daughter, branch probability) -- every nuclide in the PenNuc
+    #: library that can reach the fallback with no level to land on.
+    AFFECTED = (('Np-236', 1, 1.6e-3), ('At-217', 1, 6.7e-5),
+                ('Fr-221', 1, 4.8e-5), ('Po-215', 1, 2.3e-6),
+                ('Ac-228', 0, 5.5e-8))
+
+    def test_the_affected_set_is_what_we_think_it_is(self):
+        """Derived from the decay data, so it cannot go stale silently."""
+        found = []
+        for name in lib.z_PenNuc.namelist():
+            if not name.endswith('.PenNuc.txt'):
+                continue
+            rad = name.split('.')[0]
+            try:
+                pn = lib.readPenNuc2(rad)
+            except Exception:
+                continue
+            p_sub, level_number = pn[5], pn[11]
+            for d in range(len(p_sub)):
+                levels = list(level_number[d]) if d < len(level_number) else []
+                if not levels or not all(not list(x) for x in levels):
+                    continue
+                if any(not list(p_sub[d][b]) for b in range(len(p_sub[d]))):
+                    found.append(rad)
+                    break
+        self.assertEqual(sorted(found),
+                         sorted(r for r, _, _ in self.AFFECTED),
+                         'the set of nuclides that can reach the fallback '
+                         'with no level has changed')
+
+    def test_fallback_returns_level_zero_instead_of_raising(self):
+        """Drive the branch directly: a daughter with [[]] for its levels."""
+        rad = 'At-217'
+        pn = lib.readPenNuc2(rad)
+        data = TDCRPy_mod._load_decay_data([rad])
+        (particle, p_branch, e_branch, LevelDaughter, levelNumber, prob_trans,
+         prob_branch, levelEnergy, transitionType, e_trans, next_level,
+         Q_value, DaughterVec, Pdaughter, Transition_prob_sum, u_prob_trans,
+         trans_halfLife) = data
+        # confirm the precondition this test exists for
+        self.assertTrue(all(not list(x) for x in levelNumber[0][1]),
+                        'At-217 daughter 1 no longer has an empty level list')
+
+        # force the daughter whose branch has neither particle nor level
+        real_sampling = lib.sampling
+        calls = {'n': 0}
+
+        def first_call_picks_daughter_1(p):
+            calls['n'] += 1
+            return 1 if calls['n'] == 1 else real_sampling(p)
+
+        lib.sampling = first_call_picks_daughter_1
+        try:
+            out = TDCRPy_mod._sample_nuclear_decay(
+                0, [rad], DaughterVec, Pdaughter, particle, p_branch,
+                e_branch, LevelDaughter, levelNumber, prob_trans, prob_branch,
+                levelEnergy, transitionType, e_trans, next_level,
+                Transition_prob_sum, trans_halfLife, u_prob_trans,
+                100.0, False, False)
+        finally:
+            lib.sampling = real_sampling
+
+        particle_vec, energy_vec = out[0], out[1]
+        self.assertEqual(list(particle_vec), [],
+                         'a branch with no particle emitted something')
+        self.assertEqual(list(energy_vec), [])
+
+    def test_a_long_run_of_each_affected_nuclide_survives(self):
+        """The regression as it actually presented: a run that is long enough.
+
+        Np-236's branch is 1.6e-3, so 20000 decays hit it about 32 times. The
+        others are rarer; they are covered deterministically above, and here
+        only for the cheap reassurance that nothing else in their path breaks.
+        """
+        saved = (lib.fAq, lib.micCorr, lib.micCorrAuto)
+        try:
+            lib.update_config_batch({'fAq': 0.0, 'micCorr': False,
+                                     'micCorrAuto': False})
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                out = TDCRPy_mod.TDCRPy(6.0, 'Np-236', '1', 20000,
+                                        KB_TYPICAL, 10)
+            self.assertGreater(out[2], 0.0)
+            self.assertLessEqual(out[2], 1.0)
+        finally:
+            lib.update_config_batch({'fAq': saved[0], 'micCorr': saved[1],
+                                     'micCorrAuto': saved[2]})
+            lib.cleanup_record_files()
+
+
 class TestTTAFunctions(unittest.TestCase):
     """The closed-form pieces of the delayed-fluorescence model.
 
@@ -1888,12 +1992,118 @@ class TestECBranchProbability(unittest.TestCase):
         self.assertEqual(lib.ec_branch_probability('Xx-999'), 0.0)
         self.assertFalse(lib.is_micelle_critical('Xx-999'))
 
-    def test_threshold_selects_the_right_nuclides(self):
-        self.assertTrue(lib.is_micelle_critical('Fe-55', threshold=0.01))
-        self.assertTrue(lib.is_micelle_critical('Cl-36', threshold=0.01))
-        self.assertFalse(lib.is_micelle_critical('Cl-36', threshold=0.5))
-        self.assertTrue(lib.is_micelle_critical('Fe-55', threshold=0.5))
-        self.assertFalse(lib.is_micelle_critical('H-3', threshold=0.0001))
+    def test_ec_probability_no_longer_decides_the_gate(self):
+        """P(EC) is still read, but since v2.20.31 it does not gate.
+
+        Cl-36 has a 1.9 % electron-capture branch, so the old gate switched
+        the correction on for it; its measured bias is 0.0017 %, two hundred
+        times below the shipped threshold. H-3 has no EC branch at all and a
+        measured bias of 0.53 %. The proxy had both backwards.
+        """
+        self.assertGreater(lib.ec_branch_probability('Cl-36'), 0.01)
+        self.assertFalse(lib.is_micelle_critical('Cl-36'))
+        self.assertEqual(lib.ec_branch_probability('H-3'), 0.0)
+        self.assertTrue(lib.is_micelle_critical('H-3'))
+
+
+class TestMicelleBiasTable(unittest.TestCase):
+    """The shipped bias table, and the gate that reads it (v2.20.31).
+
+    Measured by notebooks/physics/micelleCatalogue.py across the whole
+    catalogue. It replaced the electron-capture proxy, which the screening
+    showed was the weakest of three candidates: Spearman rho against the
+    measured bias was +0.482 for P(EC), -0.821 for the droplet-crossing count
+    and -0.767 for the mean electron energy.
+    """
+
+    #: Spot values from the screening, per cent of total light.
+    MEASURED = {'Ar-37': 12.165, 'Ca-41': 10.237, 'Cr-51': 5.6235,
+                'Fe-55': 5.2021, 'Ni-59': 3.1803, 'Ge-68': 1.8126,
+                'Pu-241': 0.5978, 'H-3': 0.5314, 'Ra-228': 0.3202,
+                'C-14': 0.0182}
+
+    def test_table_ships_and_covers_the_catalogue(self):
+        table = lib._load_micelle_bias()
+        self.assertGreater(len(table), 200,
+                           'the bias table did not ship with the package')
+        pennuc = {n.split('.')[0] for n in lib.z_PenNuc.namelist()
+                  if n.endswith('.PenNuc.txt')}
+        # every tabulated nuclide is a real one
+        self.assertTrue(set(table).issubset(pennuc | {'Ja-1', 'AT211PO211'}))
+        # and the catalogue is almost entirely covered: what is missing is
+        # only what the screening could not run (3 pre-existing failures) and
+        # the two non-nuclide entries
+        self.assertLessEqual(len(pennuc - set(table)), 6)
+
+    def test_spot_values_match_the_screening(self):
+        for rad, expected in self.MEASURED.items():
+            got = lib.micelle_bias(rad)
+            self.assertIsNotNone(got, rad)
+            self.assertAlmostEqual(got, expected, delta=0.002, msg=rad)
+
+    def test_fe55_agrees_with_micellecheck(self):
+        """The anchor: micelleCheck.ipynb measured 5.20 % by a TDCR fit."""
+        self.assertAlmostEqual(lib.micelle_bias('Fe-55'), 5.20, delta=0.05)
+
+    def test_no_electron_light_is_a_measured_zero(self):
+        """Not a gap. TDCRPy corrects electrons and positrons only, so for a
+        pure alpha emitter the correction is inert whatever the gate says."""
+        for rad in ('Po-210', 'Po-214', 'Rn-220'):
+            self.assertEqual(lib.micelle_bias(rad), 0.0, rad)
+            self.assertFalse(lib.is_micelle_critical(rad), rad)
+
+    def test_alpha_emitters_are_not_gated_on_electron_only_confinement(self):
+        """Po-209 loses 6.7 % of its ELECTRON light, and carries 0.38 % of its
+        light in electrons. Gating on the unweighted figure would have put it
+        third worst in the catalogue; its actual bias is 0.026 %."""
+        self.assertLess(lib.micelle_bias('Po-209'), 0.05)
+
+    def test_threshold_monotonicity(self):
+        table = lib._load_micelle_bias()
+        counts = [sum(1 for v in table.values() if v[0] >= t)
+                  for t in (0.01, 0.05, 0.1, 1.0)]
+        self.assertEqual(counts, sorted(counts, reverse=True))
+        self.assertEqual(counts[3], 8, 'the >=1 % set should be the eight '
+                                       'strong Auger emitters')
+
+    def test_unscreened_nuclide_falls_back_and_says_so(self):
+        """Guessing "not critical" for an unscreened nuclide would be exactly
+        the silent bias the gate exists to prevent."""
+        lib._micelle_unscreened.discard('Xx-999')
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            self.assertFalse(lib.is_micelle_critical('Xx-999'))
+        hits = [c for c in caught
+                if 'not in the measured reverse-micelle bias table'
+                in str(c.message)]
+        self.assertEqual(len(hits), 1)
+
+    def test_bias_accessor_returns_none_for_an_unknown_nuclide(self):
+        self.assertIsNone(lib.micelle_bias('Xx-999'))
+
+    def test_table_header_records_its_conditions(self):
+        """A screening whose conditions were not recorded would be unusable."""
+        with importlib.resources.path('tdcrpy', 'Micelle') as d:
+            text = (d / 'micelleBias.csv').read_text(encoding='utf-8')
+        head = text[:2000]
+        for token in ('Ultima Gold', 'fAq', 'diameter', 'TDCRPy'):
+            self.assertIn(token, head, f'{token} missing from the header')
+
+    def test_setter_rejects_a_negative_threshold(self):
+        saved = lib.micCorrBiasThreshold
+        try:
+            with self.assertRaises(ValueError):
+                lib.modifyMicCorrBiasThreshold(-1.0)
+        finally:
+            lib.modifyMicCorrBiasThreshold(saved)
+
+    def test_default_threshold_ships_at_hundredth_of_a_percent(self):
+        with importlib.resources.path('tdcrpy', 'configDefault.toml') as cfg:
+            text = cfg.read_text(encoding='utf-8')
+        line = [l.strip() for l in text.splitlines()
+                if l.strip().startswith('micCorrBiasThreshold')]
+        self.assertEqual(len(line), 1)
+        self.assertEqual(float(line[0].split('=')[1]), 0.01)
 
 
 class TestMicelleAutoActivation(unittest.TestCase):
@@ -1910,6 +2120,7 @@ class TestMicelleAutoActivation(unittest.TestCase):
         self._faq = lib.fAq
         self._auto = lib.micCorrAuto
         self._thr = lib.micCorrECThreshold
+        self._bias_thr = lib.micCorrBiasThreshold
         self._mic = lib.micCorr
         TDCRPy_mod._micelle_advised.clear()
         TDCRPy_mod._micelle_auto_announced.clear()
@@ -1918,6 +2129,7 @@ class TestMicelleAutoActivation(unittest.TestCase):
         lib.update_config_batch({'fAq': self._faq,
                                  'micCorrAuto': self._auto,
                                  'micCorrECThreshold': self._thr,
+                                 'micCorrBiasThreshold': self._bias_thr,
                                  'micCorr': self._mic})
         TDCRPy_mod._micelle_advised.clear()
         TDCRPy_mod._micelle_auto_announced.clear()
@@ -1968,14 +2180,35 @@ class TestMicelleAutoActivation(unittest.TestCase):
                              f'{rad}: activation was not announced')
             self.assertIn('automatically', str(caught[0].message))
 
-    def test_leaves_beta_emitters_alone(self):
+    def test_leaves_hard_beta_emitters_alone(self):
+        """A hard beta emitter still gets nothing.
+
+        Not H-3, C-14 or Ni-63 any more: the catalogue screening measured
+        0.53 %, 0.018 % and 0.031 % for those, all above the 0.01 % gate, and
+        activating them is the point of v2.20.31. These six sit below it --
+        their electrons are fast enough to leave the droplet.
+        """
         lib.modifyfAq(0.10)
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter('always')
-            for rad in ('H-3', 'C-14', 'Tc-99', 'Ni-63'):
+            for rad in ('Tc-99', 'Sr-90', 'P-32', 'Cs-137', 'Y-90', 'Co-60'):
                 self.assertFalse(
                     TDCRPy_mod._resolve_micelle_correction([rad], False), rad)
-        self.assertEqual(len(caught), 0, 'warned for a pure beta emitter')
+        self.assertEqual(len(caught), 0, 'warned for a hard beta emitter')
+
+    def test_soft_beta_emitters_now_activate(self):
+        """The ten the P(EC) gate missed, every one with no EC branch."""
+        lib.modifyfAq(0.10)
+        missed = ('Pu-241', 'H-3', 'Ra-228', 'Ru-106', 'Pb-210', 'Ac-227',
+                  'Nb-93m', 'Tc-99m', 'I-129', 'Zr-93')
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            for rad in missed:
+                self.assertLess(lib.ec_branch_probability(rad), 0.01,
+                                f'{rad} has an EC branch after all')
+                self.assertTrue(
+                    TDCRPy_mod._resolve_micelle_correction([rad], False),
+                    f'{rad} still not gated on')
 
     def test_announces_once_per_nuclide(self):
         lib.modifyfAq(0.10)
@@ -2004,13 +2237,15 @@ class TestMicelleAutoActivation(unittest.TestCase):
                          'announced an activation the caller had already made')
 
     def test_threshold_is_honoured(self):
+        """Raising the bias threshold narrows the gate, in per cent of light."""
         lib.modifyfAq(0.10)
-        lib.modifyMicCorrECThreshold(0.5)
+        lib.modifyMicCorrBiasThreshold(1.0)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('always')
+            # H-3 is 0.53 %, below a 1 % gate; Fe-55 is 5.2 %, above it
             self.assertFalse(
-                TDCRPy_mod._resolve_micelle_correction(['Cl-36'], False),
-                'Cl-36 has a 1.9 % EC branch and is below a 0.5 threshold')
+                TDCRPy_mod._resolve_micelle_correction(['H-3'], False),
+                'H-3 at 0.53 % should be below a 1 % threshold')
             self.assertTrue(
                 TDCRPy_mod._resolve_micelle_correction(['Fe-55'], False))
 
@@ -2080,11 +2315,14 @@ class TestMicelleAutoActivation(unittest.TestCase):
                 self.assertGreater(len(calls), 0,
                                    'Fe-55 ran without the correction')
 
-                # ... and only there
+                # ... and only there. Tc-99, not C-14: since v2.20.31 the
+                # gate is the measured bias, and C-14's 0.018 % is above the
+                # 0.01 % threshold, so C-14 now activates correctly. Tc-99
+                # measures -0.005 %, i.e. zero within its uncertainty.
                 calls.clear()
-                TDCRPy_mod.TDCRPy(6.0, 'C-14', '1', 60, KB_TYPICAL, 10)
+                TDCRPy_mod.TDCRPy(6.0, 'Tc-99', '1', 60, KB_TYPICAL, 10)
                 self.assertEqual(len(calls), 0,
-                                 'C-14 paid for a correction it does not need')
+                                 'Tc-99 paid for a correction it does not need')
 
                 # no droplets, no correction, whatever the nuclide
                 lib.modifyfAq(0.0)

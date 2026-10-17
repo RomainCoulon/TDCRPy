@@ -102,13 +102,24 @@ micCorr = False
 # percent while a pure beta emitter is unaffected. With fAq = 0 there are no
 # droplets and this does nothing. See notebooks/physics/micelleCheck.ipynb.
 micCorrAuto = True
-# Electron-capture probability per decay above which a nuclide counts as
-# needing the correction, read from the PenNuc decay scheme by
-# TDCR_model_lib.ec_branch_probability(). At the 0.01 default the worst case
-# left uncorrected is about 0.01 x 5 % = 0.05 % of the light, below the
-# Monte-Carlo noise of a normal run. Raise it to pay the cost only for
-# predominantly EC nuclides (0.5 keeps Fe-55, Cr-51, Mn-54, I-125 ... and drops
-# Cu-64, K-40, Cl-36).
+# Confinement bias, in PER CENT of the light, above which a nuclide counts as
+# needing the correction. Compared against the MEASURED value in
+# Micelle/micelleBias.csv, which notebooks/physics/micelleCatalogue.py
+# produced for the whole catalogue: Ar-37 12.2 %, Ca-41 10.2 %, Cr-51 5.6 %,
+# Fe-55 5.2 %, Pu-241 0.60 %, H-3 0.53 %, C-14 0.018 %.
+# At the 0.01 % default about half the catalogue activates when fAq > 0; 0.1 %
+# keeps the nuclides biased by a tenth of a percent or more; 1 % keeps only
+# the strong Auger emitters. The table is a screening at fAq = 0.10 with 4 nm
+# droplets, and a larger aqueous fraction raises the bias, so the default sits
+# an order of magnitude below the level at which anyone would care.
+micCorrBiasThreshold = 0.01
+# Fallback only, for a nuclide absent from the bias table: the
+# electron-capture probability per decay, from
+# TDCR_model_lib.ec_branch_probability(). This was the gate until v2.20.31,
+# when the catalogue screening showed it is the weakest of the three available
+# predictors (Spearman rho +0.48 against the measured bias, versus -0.82 for
+# the droplet-crossing count and -0.77 for the mean electron energy) because
+# it misses soft beta emitters such as H-3 and Pu-241 entirely.
 micCorrECThreshold = 0.01
 # mean DIAMETER of the reverse micelles in nm. The stochastic kernel uses half
 # of it as the droplet radius; the legacy micelleLoss() lookup needs one of the

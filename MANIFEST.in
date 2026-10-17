@@ -3,10 +3,10 @@ include tdcrpy/decayData/All-nuclides_BetaShape.zip
 include tdcrpy/decayData/All-nuclides_Ensdf.zip
 include tdcrpy/decayData/photo-ENDF.zip
 include tdcrpy/decayData/atom-ENDF-VII0.zip
-include tdrcpy/Quenching/alpha_toulene.txt
-include tdrcpy/Quenching/TandataUG.txt
-include tdrcpy/EfficiencyCurves/*/*.txt
-include tdrcpy/MCNP-MATRIX/matrice/fichier/*.txt
-include tdrcpy/Micelle/*.csv
+include tdcrpy/Quenching/alpha_toulene.txt
+include tdcrpy/Quenching/TandataUG.txt
+include tdcrpy/EfficiencyCurves/*/*.txt
+include tdcrpy/MCNP-MATRIX/matrice/fichier/*.txt
+include tdcrpy/Micelle/*.csv
 include ../*.html
 include ../docs/_build/html/*.html
