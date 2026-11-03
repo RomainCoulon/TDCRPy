@@ -58,8 +58,20 @@ def read(path):
 
 
 def main():
-    p1, key = read(P1)
-    p2, _ = read(P2)
+    p1, key1 = read(P1)
+    p2, key2 = read(P2)
+
+    # bias_pct comes from pass 2, so the header must quote pass 2's statistics
+    # and version. Quoting pass 1's understated them by 5x once already. The
+    # reference-only columns (p_ec, E_mean_keV, n_cross_med) still come from
+    # pass 1, which the header says.
+    phys = ('COCKTAIL', 'FAQ', 'DIAM', 'SIGMA', 'KB', 'V')
+    differ = {k: (key1.get(k), key2.get(k)) for k in phys
+              if key1.get(k) != key2.get(k)}
+    if differ:
+        sys.exit(f'the two passes were run under different conditions, so '
+                 f'their columns cannot share a table: {differ}')
+    key = dict(key2)
 
     out = []
     for rad, r in sorted(p1.items()):
@@ -111,6 +123,11 @@ def main():
                  f'#   V          {key.get("V")} mL\n'
                  f'#   N          {key.get("N_REC")} decays/nuclide\n'
                  f'#   TDCRPy     {key.get("tdcrpy")}\n'
+                 '#\n'
+                 '# bias_pct, u_bias_pct, f_e and conf_e_pct are measured at\n'
+                 f'# the N above. The reference-only columns p_ec, E_mean_keV\n'
+                 f'# and n_cross_med come from pass 1, at N = '
+                 f'{key1.get("N_REC")} and TDCRPy {key1.get("tdcrpy")}.\n'
                  '#\n'
                  '# bias_pct is the light-weighted confinement loss: the part\n'
                  '# a refitted L does NOT absorb. The (1 - fAq) bulk dilution,\n'

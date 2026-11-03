@@ -161,9 +161,9 @@ def _relax_atom(daughter_relax, particle_vec, energy_vec, rad,
 # dilution -- which is degenerate with L and so absorbed by the fit -- from
 # the confinement penalty that is not:
 #
-#     Ar-37  12.2 % of the light lost to confinement
-#     Ca-41  10.2 %     Cr-51  5.6 %      Fe-55  5.2 %      Ni-59  3.2 %
-#     Pu-241  0.60 %    H-3    0.53 %     Ra-228 0.32 %     C-14   0.018 %
+#     Ar-37  12.36 % of the light lost to confinement
+#     Ca-41  10.36 %    Fe-55  5.19 %     Cr-51  4.81 %     Ni-59  3.05 %
+#     Sr-82   1.01 %    Pu-241 0.65 %     H-3    0.44 %     Ra-228 0.33 %
 #
 # Two things to note. The worst case is twice Fe-55, which earlier versions of
 # this comment quoted as if it were the maximum. And Pu-241, H-3 and Ra-228
@@ -172,11 +172,12 @@ def _relax_atom(daughter_relax, particle_vec, energy_vec, rad,
 # the real criterion rather than the criterion itself.
 #
 # Hence tl.is_micelle_critical() reads the MEASURED bias from
-# Micelle/micelleBias.csv and compares it with micCorrBiasThreshold (0.01 %).
-# Until v2.20.31 it compared tl.ec_branch_probability() with
-# micCorrECThreshold, which left ten nuclides with a resolved bias ungated and
-# switched the correction on for 33 that did not need it. The screening is
-# notebooks/physics/micelleCatalogue.py. Since v2.20.29 the correction
+# Micelle/micelleBias.csv and compares it with micCorrBiasThreshold (0.01 %),
+# which 83 of the 225 screened nuclides exceed. Until v2.20.31 it compared
+# tl.ec_branch_probability() with micCorrECThreshold, which left ten nuclides
+# with a resolved bias ungated and switched the correction on for 33 that did
+# not need it. The screening is notebooks/physics/micelleCatalogue.py, at
+# 20000 decays per nuclide since v2.20.32. Since v2.20.29 the correction
 # activates itself, once fAq > 0 says there are droplets at all.
 _micelle_advised = set()
 _micelle_auto_announced = set()

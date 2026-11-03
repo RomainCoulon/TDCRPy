@@ -114,16 +114,21 @@ def main():
         ok = False
         print('   FAIL ' + ' '.join(bad))
 
-    # ---- 6. the eight above 1 % are the strong Auger emitters -----------
-    top = sorted(((b, r) for r, b, _ in rows), reverse=True)[:8]
-    print('\n6. the eight largest biases:')
+    # ---- 6. those above 1 % are the strong Auger emitters ---------------
+    # Taken as "everything above 1 %", not as a fixed top-N: at 4000 decays
+    # per nuclide there were eight, and Sr-82 joined the set at 20000. A
+    # hardcoded 8 here reported the right nuclides while silently hiding the
+    # ninth.
+    top = sorted(((b, r) for r, b, _ in rows if b >= 1.0), reverse=True)
+    print(f'\n6. the {len(top)} biases above 1 %:')
     for b, r in top:
         print(f'   {r:10s} {b:7.3f} %')
     expect = {'Ar-37', 'Ca-41', 'Cr-51', 'Fe-55', 'Ni-59', 'Ge-68', 'Ti-44',
-              'Co-57'}
+              'Co-57', 'Sr-82'}
     if {r for _, r in top} != expect:
         ok = False
-        print(f'   FAIL: expected {sorted(expect)}')
+        print(f'   FAIL: expected {sorted(expect)}, '
+              f'got {sorted(r for _, r in top)}')
 
     print(f'\n{"PASS" if ok else "FAIL"}')
     return 0 if ok else 1

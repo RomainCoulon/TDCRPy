@@ -53,6 +53,7 @@ tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_2000_10000k.txt
 tdcrpy/MCNP-MATRIX/matrice/fichier/matrice_16ml-photon_200_2000k.txt
 tdcrpy/Micelle/2nmfaq01.csv
 tdcrpy/Micelle/faq01.csv
+tdcrpy/Micelle/micelleBias.csv
 tdcrpy/Quenching/QuenchEnergyAlpha_0.015.txt
 tdcrpy/Quenching/QuenchEnergyAlpha_1.1e-05.txt
 tdcrpy/Quenching/QuenchEnergyAlpha_1.2e-05.txt

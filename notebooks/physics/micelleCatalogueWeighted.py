@@ -96,18 +96,26 @@ def recorded_light(rad, n):
 
 def main():
     pass1 = {}
-    with open(SRC, encoding='utf-8') as fh:
-        for line in fh:
-            try:
-                r = json.loads(line)
-            except ValueError:
-                continue
-            pass1[r['rad']] = r
+    if os.path.exists(SRC):
+        with open(SRC, encoding='utf-8') as fh:
+            for line in fh:
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                pass1[r['rad']] = r
 
+    standalone = os.environ.get('MICELLE_ALL') == '1'
     wanted = sys.argv[1:]
     if not wanted:
-        wanted = sorted(k for k, v in pass1.items()
-                        if v.get('status') == 'ok' and v.get('conf', 0) >= FLOOR)
+        if standalone:
+            # the whole library, independent of any earlier pass
+            wanted = sorted(n.split('.')[0] for n in tl.z_PenNuc.namelist()
+                            if n.endswith('.PenNuc.txt'))
+        else:
+            wanted = sorted(k for k, v in pass1.items()
+                            if v.get('status') == 'ok'
+                            and v.get('conf', 0) >= FLOOR)
 
     key = dict(tdcrpy=version('TDCRPy'), N_REC=N_REC, FAQ=FAQ, DIAM=DIAM,
                SIGMA=SIGMA, KB=KB, V=V, COCKTAIL=COCKTAIL, pass_=2)
@@ -138,7 +146,11 @@ def main():
         try:
             scint, total = recorded_light(rad, N_REC)
             if scint.size == 0 or total <= 0:
-                row = dict(rad=rad, status='no-light', f_e=None, bias=None)
+                # no electron or positron light at all: the correction reaches
+                # nothing, so the bias is a measured zero rather than a gap
+                row = dict(rad=rad, status='no-light', f_e=0.0, bias=0.0,
+                           u_bias=0.0, conf_e=None, n_scint=0,
+                           p_ec=float(tl.ec_branch_probability(rad)))
             else:
                 ret, _ = _count_kernel_vec(scint, DIAM / 2.0, SIGMA, FAQ)
                 f = float(ret.sum() / scint.sum())
@@ -146,13 +158,15 @@ def main():
                 conf_e = 100.0 * (1.0 - FAQ - f) / (1.0 - FAQ)
                 u_conf = 100.0 * float(u_f) / (1.0 - FAQ)
                 f_e = float(scint.sum() / total)
+                prev = pass1.get(rad, {})
                 row = dict(rad=rad, status='ok', f_e=f_e,
                            scint_keV=float(scint.sum()), total_keV=total,
                            n_scint=int(scint.size), F=f,
+                           E_mean=float(scint.mean()),
                            conf_e=conf_e, u_conf_e=u_conf,
                            bias=f_e * conf_e, u_bias=f_e * u_conf,
-                           conf_pass1=pass1[rad].get('conf'),
-                           p_ec=pass1[rad].get('p_ec'))
+                           conf_pass1=prev.get('conf'),
+                           p_ec=float(tl.ec_branch_probability(rad)))
         except Exception as exc:
             row = dict(rad=rad, status=f'error: {type(exc).__name__}: {exc}',
                        f_e=None, bias=None)

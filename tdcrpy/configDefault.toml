@@ -105,11 +105,11 @@ micCorrAuto = True
 # Confinement bias, in PER CENT of the light, above which a nuclide counts as
 # needing the correction. Compared against the MEASURED value in
 # Micelle/micelleBias.csv, which notebooks/physics/micelleCatalogue.py
-# produced for the whole catalogue: Ar-37 12.2 %, Ca-41 10.2 %, Cr-51 5.6 %,
-# Fe-55 5.2 %, Pu-241 0.60 %, H-3 0.53 %, C-14 0.018 %.
-# At the 0.01 % default about half the catalogue activates when fAq > 0; 0.1 %
-# keeps the nuclides biased by a tenth of a percent or more; 1 % keeps only
-# the strong Auger emitters. The table is a screening at fAq = 0.10 with 4 nm
+# produced for the whole catalogue: Ar-37 12.36 %, Ca-41 10.36 %,
+# Fe-55 5.19 %, Cr-51 4.81 %, Sr-82 1.01 %, H-3 0.44 %, C-14 0.0071 %.
+# At the 0.01 % default 83 of the 225 screened nuclides activate when
+# fAq > 0; 0.05 % keeps 45, 0.1 % keeps 29, and 1 % keeps only the nine
+# strong Auger emitters. The table is a screening at fAq = 0.10 with 4 nm
 # droplets, and a larger aqueous fraction raises the bias, so the default sits
 # an order of magnitude below the level at which anyone would care.
 micCorrBiasThreshold = 0.01

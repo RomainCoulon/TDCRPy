@@ -1996,9 +1996,9 @@ class TestECBranchProbability(unittest.TestCase):
         """P(EC) is still read, but since v2.20.31 it does not gate.
 
         Cl-36 has a 1.9 % electron-capture branch, so the old gate switched
-        the correction on for it; its measured bias is 0.0017 %, two hundred
+        the correction on for it; its measured bias is 0.0006 %, sixteen
         times below the shipped threshold. H-3 has no EC branch at all and a
-        measured bias of 0.53 %. The proxy had both backwards.
+        measured bias of 0.44 %. The proxy had both backwards.
         """
         self.assertGreater(lib.ec_branch_probability('Cl-36'), 0.01)
         self.assertFalse(lib.is_micelle_critical('Cl-36'))
@@ -2016,11 +2016,12 @@ class TestMicelleBiasTable(unittest.TestCase):
     and -0.767 for the mean electron energy.
     """
 
-    #: Spot values from the screening, per cent of total light.
-    MEASURED = {'Ar-37': 12.165, 'Ca-41': 10.237, 'Cr-51': 5.6235,
-                'Fe-55': 5.2021, 'Ni-59': 3.1803, 'Ge-68': 1.8126,
-                'Pu-241': 0.5978, 'H-3': 0.5314, 'Ra-228': 0.3202,
-                'C-14': 0.0182}
+    #: Spot values from the screening, per cent of total light, at N = 20000
+    #: decays per nuclide (v2.20.32; the first table was screened at 4000).
+    MEASURED = {'Ar-37': 12.357, 'Ca-41': 10.361, 'Cr-51': 4.8063,
+                'Fe-55': 5.1851, 'Ni-59': 3.0507, 'Ge-68': 1.7966,
+                'Pu-241': 0.6481, 'H-3': 0.4374, 'Ra-228': 0.3264,
+                'C-14': 0.0071}
 
     def test_table_ships_and_covers_the_catalogue(self):
         table = lib._load_micelle_bias()
@@ -2063,7 +2064,9 @@ class TestMicelleBiasTable(unittest.TestCase):
         counts = [sum(1 for v in table.values() if v[0] >= t)
                   for t in (0.01, 0.05, 0.1, 1.0)]
         self.assertEqual(counts, sorted(counts, reverse=True))
-        self.assertEqual(counts[3], 8, 'the >=1 % set should be the eight '
+        # Sr-82 joined this set at N = 20000: it screened at 0.92 % on 4000
+        # decays and measures 1.009 +/- 0.019 % on 20000.
+        self.assertEqual(counts[3], 9, 'the >=1 % set should be the nine '
                                        'strong Auger emitters')
 
     def test_unscreened_nuclide_falls_back_and_says_so(self):
@@ -2183,10 +2186,13 @@ class TestMicelleAutoActivation(unittest.TestCase):
     def test_leaves_hard_beta_emitters_alone(self):
         """A hard beta emitter still gets nothing.
 
-        Not H-3, C-14 or Ni-63 any more: the catalogue screening measured
-        0.53 %, 0.018 % and 0.031 % for those, all above the 0.01 % gate, and
-        activating them is the point of v2.20.31. These six sit below it --
-        their electrons are fast enough to leave the droplet.
+        Not H-3 or Ni-63 any more: the screening measures 0.44 % and 0.060 %
+        for those, both above the 0.01 % gate, and activating them is the
+        point of v2.20.31. These six sit below it -- their electrons are fast
+        enough to leave the droplet. C-14 is deliberately not in either list:
+        at 4000 decays it screened at 0.018 % and gated on, at 20000 it
+        measures 0.0071 +/- 0.0030 % and gates off, so it is the one nuclide
+        whose side of the threshold the statistics decided.
         """
         lib.modifyfAq(0.10)
         with warnings.catch_warnings(record=True) as caught:
@@ -2242,10 +2248,10 @@ class TestMicelleAutoActivation(unittest.TestCase):
         lib.modifyMicCorrBiasThreshold(1.0)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('always')
-            # H-3 is 0.53 %, below a 1 % gate; Fe-55 is 5.2 %, above it
+            # H-3 is 0.44 %, below a 1 % gate; Fe-55 is 5.2 %, above it
             self.assertFalse(
                 TDCRPy_mod._resolve_micelle_correction(['H-3'], False),
-                'H-3 at 0.53 % should be below a 1 % threshold')
+                'H-3 at 0.44 % should be below a 1 % threshold')
             self.assertTrue(
                 TDCRPy_mod._resolve_micelle_correction(['Fe-55'], False))
 
@@ -2315,10 +2321,11 @@ class TestMicelleAutoActivation(unittest.TestCase):
                 self.assertGreater(len(calls), 0,
                                    'Fe-55 ran without the correction')
 
-                # ... and only there. Tc-99, not C-14: since v2.20.31 the
-                # gate is the measured bias, and C-14's 0.018 % is above the
-                # 0.01 % threshold, so C-14 now activates correctly. Tc-99
-                # measures -0.005 %, i.e. zero within its uncertainty.
+                # ... and only there. Tc-99 rather than C-14, because C-14
+                # sits right on the threshold (0.0071 +/- 0.0030 % at 20000
+                # decays, 0.018 % at 4000) and would make this test a hostage
+                # to the screening statistics. Tc-99 measures
+                # 0.0052 +/- 0.0016 %, half the gate and stable.
                 calls.clear()
                 TDCRPy_mod.TDCRPy(6.0, 'Tc-99', '1', 60, KB_TYPICAL, 10)
                 self.assertEqual(len(calls), 0,
