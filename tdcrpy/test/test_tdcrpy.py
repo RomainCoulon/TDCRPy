@@ -2463,5 +2463,145 @@ class TestRecordFileIsolation(unittest.TestCase):
                          'cleanup on an already-clean state should be a no-op')
 
 
+class TestGuiInputs(unittest.TestCase):
+    """The GUI's input handling (v2.20.33).
+
+    Only the pure functions are exercised: no Tk root is created, so these
+    run on a machine with no display. The window itself is smoke-tested by
+    hand, but a bad entry must never reach the model, and that is decidable
+    here.
+    """
+
+    def setUp(self):
+        from tdcrpy import gui
+        self.gui = gui
+        self.base = dict(task='efficiency', rad='Fe-55', pmf='', L='1.0',
+                         kB='1e-5', V='10', N='10000')
+
+    def _refused(self, **overrides):
+        """Return the message raised for a form that should be refused."""
+        form = dict(self.base, **overrides)
+        with self.assertRaises(self.gui.InputError) as ctx:
+            self.gui.build_job(form)
+        return str(ctx.exception)
+
+    # ---- the happy paths --------------------------------------------------
+    def test_single_nuclide_needs_no_fraction(self):
+        job = self.gui.build_job(self.base)
+        self.assertEqual(job['rad'], 'Fe-55')
+        self.assertEqual(job['pmf'], '1')
+        self.assertEqual(job['L'], 1.0)
+        self.assertEqual(job['N'], 10000)
+
+    def test_mixture_keeps_the_users_order(self):
+        job = self.gui.build_job(
+            dict(self.base, rad='Co-60, H-3', pmf='0.8, 0.2'))
+        self.assertEqual(job['rad'], 'Co-60, H-3')
+        self.assertEqual(job['pmf'], '0.8, 0.2')
+
+    def test_three_light_yields_mean_asymmetric_pmts(self):
+        job = self.gui.build_job(dict(self.base, L='1,2,3'))
+        self.assertEqual(job['L'], [1.0, 2.0, 3.0])
+
+    def test_fit_task_carries_the_measured_ratio(self):
+        job = self.gui.build_job(dict(self.base, task='fit', TD='0.9'))
+        self.assertEqual(job['TD'], 0.9)
+        self.assertEqual(job['L_guess'], 1.0)
+
+    def test_four_ratios_mean_an_asymmetric_counter(self):
+        job = self.gui.build_job(
+            dict(self.base, task='fit', TD='0.3,0.4,0.5,0.6'))
+        self.assertEqual(job['TD'], [0.3, 0.4, 0.5, 0.6])
+
+    def test_analytical_fit_sends_no_decay_count(self):
+        """effA() takes no N, so passing one would be a silent lie about
+        what the number of decays did."""
+        job = self.gui.build_job(
+            dict(self.base, task='fit_analytical', TD='0.9'))
+        self.assertNotIn('N', job)
+
+    def test_bounds_are_optional_and_forwarded(self):
+        self.assertNotIn('Lbounds', self.gui.build_job(
+            dict(self.base, task='fit', TD='0.9')))
+        job = self.gui.build_job(
+            dict(self.base, task='fit', TD='0.9', Lbounds='5, 50'))
+        self.assertEqual(job['Lbounds'], [5.0, 50.0])
+
+    # ---- what must be refused, and said clearly --------------------------
+    def test_missing_nuclide(self):
+        self.assertIn('at least one', self._refused(rad=''))
+
+    def test_fraction_count_must_match_the_nuclides(self):
+        msg = self._refused(rad='Co-60, H-3', pmf='0.8')
+        self.assertIn('2', msg)
+
+    def test_fractions_that_do_not_sum_to_one_are_refused(self):
+        """The library normalises them, which would quietly turn a typo into
+        a different source than the one intended."""
+        self.assertIn('sum to', self._refused(rad='Co-60, H-3',
+                                              pmf='0.8, 0.9'))
+
+    def test_non_numeric_entry_names_the_offending_text(self):
+        self.assertIn("'abc'", self._refused(kB='abc'))
+
+    def test_physically_impossible_entries(self):
+        self.assertIn('greater than zero', self._refused(V='0'))
+        self.assertIn('at least 1', self._refused(N='0'))
+        self.assertIn('negative', self._refused(kB='-1'))
+
+    def test_a_tdcr_above_one_is_not_a_ratio(self):
+        self.assertIn('not a ratio',
+                      self._refused(task='fit', TD='1.4'))
+
+    def test_two_light_yields_are_neither_symmetric_nor_asymmetric(self):
+        self.assertIn('1 or 3', self._refused(L='1,2'))
+
+    def test_inverted_bounds(self):
+        self.assertIn('lower bound',
+                      self._refused(task='fit', TD='0.9', Lbounds='50,5'))
+
+    # ---- presentation ----------------------------------------------------
+    def test_format_value_reports_a_relative_uncertainty(self):
+        val, unc, rel = self.gui.format_value(0.1864, 0.0127)
+        self.assertEqual(val, '0.1864')
+        self.assertEqual(unc, '0.0127')
+        self.assertTrue(rel.endswith('%'))
+
+    def test_format_value_tolerates_a_missing_uncertainty(self):
+        self.assertEqual(self.gui.format_value('1.2, 1.2, 1.2', None),
+                         ('1.2, 1.2, 1.2', '', ''))
+        self.assertEqual(self.gui.format_value(None, None), ('', '', ''))
+
+    def test_format_value_does_not_divide_by_zero(self):
+        self.assertEqual(self.gui.format_value(0.0, 0.1)[2], '')
+
+    # ---- the GUI must not pull the model into its own process ------------
+    def test_the_window_module_does_not_import_tdcrpy_itself(self):
+        """Importing the model would cost the numba import before the window
+        appeared, and is the whole reason the work runs in a subprocess."""
+        import ast
+        src = inspect.getsource(self.gui)
+        imported = set()
+        for node in ast.walk(ast.parse(src)):
+            if isinstance(node, ast.Import):
+                imported.update(a.name for a in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported.add(node.module)
+        offenders = {m for m in imported
+                     if m == 'tdcrpy' or m.startswith('tdcrpy.')}
+        self.assertEqual(offenders, set(),
+                         f'gui.py imports the model: {sorted(offenders)}')
+
+    def test_package_dir_is_found_without_importing(self):
+        self.assertTrue(os.path.isdir(self.gui.package_dir()))
+
+    def test_worker_channel_labels_match_the_model_order(self):
+        """The worker unpacks a flat 14-tuple, so its channel list must be in
+        the order TDCRPy returns them or every efficiency is mislabelled."""
+        from tdcrpy import _gui_worker
+        self.assertEqual([k for k, _ in _gui_worker.CHANNELS],
+                         ['S', 'D', 'T', 'AB', 'BC', 'AC', 'D2'])
+
+
 if __name__ == '__main__':
     unittest.main()

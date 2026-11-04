@@ -5,6 +5,7 @@ setup.py
 TDCRPy.egg-info/PKG-INFO
 TDCRPy.egg-info/SOURCES.txt
 TDCRPy.egg-info/dependency_links.txt
+TDCRPy.egg-info/entry_points.txt
 TDCRPy.egg-info/requires.txt
 TDCRPy.egg-info/top_level.txt
 tdcrpy/TDCRPy.py
@@ -14,8 +15,10 @@ tdcrpy/TDCR_model_lib.py
 tdcrpy/TDCR_model_lib_0.py
 tdcrpy/TDCRoptimize_0.py
 tdcrpy/__init__.py
+tdcrpy/_gui_worker.py
 tdcrpy/config.toml
 tdcrpy/configDefault.toml
+tdcrpy/gui.py
 tdcrpy/test2.py
 tdcrpy/test_randomGen.py
 tdcrpy/MCNP-MATRIX/Spectra_for_analytical_model/dep_spectrum_C-14.txt

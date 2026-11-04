@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: TDCRPy
-Version: 2.20.32
+Version: 2.20.33
 Summary: TDCR model — Monte Carlo efficiency estimation for liquid scintillation counting
 Home-page: https://github.com/RomainCoulon/TDCRPy
 Author: Romain Coulon
@@ -106,6 +106,92 @@ python -m unittest tdcrpy.test.test_tdcrpy
 ```
 
 ---
+
+## 🖥 Graphical interface
+
+If you would rather not write a script, there is a window:
+
+```bash
+tdcrpy-gui            # or: python -m tdcrpy.gui
+```
+
+### Setting it up on Windows
+
+**1 — Install Python 3.11 or newer, with tcl/tk.** The window is built with `tkinter`, which ships with CPython but is an *optional component* of the python.org installer. Keep **“tcl/tk and IDLE”** ticked (it is on by default), and tick **“Add python.exe to PATH”** on the first screen. The Microsoft Store build of Python includes tkinter as well. Check it worked:
+
+```bat
+python -c "import tkinter; print(tkinter.TkVersion)"
+```
+
+A version number (8.6 or similar) means you are ready. `ModuleNotFoundError: No module named 'tkinter'` means Python was installed without tcl/tk — re-run the installer, choose **Modify**, and enable it. Nothing else needs installing: the interface adds no dependency of its own.
+
+**2 — Install TDCRPy.** In a Command Prompt or PowerShell:
+
+```bat
+python -m pip install --upgrade TDCRPy
+```
+
+Using a virtual environment is recommended, because the interface writes the settings you choose into the package’s `config.toml`:
+
+```bat
+python -m venv %USERPROFILE%\tdcrpy-env
+%USERPROFILE%\tdcrpy-env\Scripts\activate
+python -m pip install TDCRPy
+```
+
+**3 — Start it.**
+
+```bat
+tdcrpy-gui
+```
+
+The first run takes longer than later ones — tens of seconds — because `numba` compiles the Monte-Carlo kernel. The window itself appears immediately; it fills the nuclide and cocktail lists once the library has loaded in the background.
+
+**If `tdcrpy-gui` is not recognised**, the launcher was installed somewhere that is not on your `PATH`. This is normal for `pip install --user`. Either call it by its full path, or use the form that never depends on `PATH`:
+
+```bat
+python -m tdcrpy.gui
+```
+
+To find the launcher:
+
+```bat
+python -c "import sysconfig; print(sysconfig.get_path('scripts'))"
+```
+
+**4 — Optional: a desktop shortcut.** Right-click the desktop → **New → Shortcut**, and give it the full path to `tdcrpy-gui.exe` printed by the command above, for example:
+
+```
+C:\Users\<you>\tdcrpy-env\Scripts\tdcrpy-gui.exe
+```
+
+`tdcrpy-gui.exe` is a *windowed* launcher, so it opens no console behind the interface. If you prefer a batch file — useful for a shared instrument PC, where it can activate the environment first — use `pythonw.exe` rather than `python.exe`, or a console window will stay open for as long as the interface does:
+
+```bat
+@echo off
+call "%USERPROFILE%\tdcrpy-env\Scripts\activate"
+start "" pythonw -m tdcrpy.gui
+```
+
+### Troubleshooting
+
+| What you see | What it means |
+|---|---|
+| `No module named 'tkinter'` | Python installed without tcl/tk. Re-run the installer → Modify → enable “tcl/tk and IDLE”. |
+| `'tdcrpy-gui' is not recognized` | The Scripts directory is not on `PATH`. Use `python -m tdcrpy.gui`, or the full path. |
+| A console window sits behind the interface | You launched it with `python`. Use `tdcrpy-gui` or `pythonw -m tdcrpy.gui`. |
+| Nuclide and cocktail lists stay empty | The background enquiry failed; the log pane shows why. Usually a broken install — check `python -c "import tdcrpy"`. |
+| `crashed (code …)` in the status bar | A fault inside the Monte-Carlo kernel, not a problem with your inputs. Re-running usually succeeds. |
+| Results differ slightly between identical runs | Expected: the model is a Monte Carlo. Raise *Number of decays N*; the reported uncertainties scale as 1/√N. |
+
+It offers the three calculations the library exposes — efficiencies at a light yield you supply, and `L` fitted to a measured TDCR by either the stochastic or the analytical model — with the scintillator, micelle, delayed-fluorescence and counter settings on tabs, a results table with uncertainties, and a log that shows the model's own warnings (including the reverse-micelle advisories). Results can be saved as CSV.
+
+Two things worth knowing:
+
+* **Running writes your settings to the package `config.toml`**, which scripts and notebooks share. The window snapshots that file when it opens, and *Undo my config changes* puts it back; *Restore shipped defaults* replaces it with `configDefault.toml`.
+* Each calculation runs in a **separate process**, so the window stays responsive, *Cancel* is immediate, and a native crash in the Monte-Carlo kernel is reported rather than taking the interface with it.
+
+The interface needs no extra dependency — `tkinter` ships with CPython — and the nuclide list, cocktail list and defaults are read from the installed library, never duplicated in the GUI.
 
 ## ⚡ Quick Start
 

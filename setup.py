@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 import os
 
-VERSION = "2.20.32"
+VERSION = "2.20.33"
 DESCRIPTION = "TDCR model — Monte Carlo efficiency estimation for liquid scintillation counting"
 
 # Read long description from README
@@ -35,6 +35,16 @@ setup(
     ],
     extras_require={
         "dev": ["pytest", "sphinx", "sphinx-rtd-theme"],
+    },
+    # tkinter ships with CPython, so the window adds no dependency.
+    # gui_scripts, not console_scripts: on Windows the latter builds a
+    # console launcher, which flashes up (and keeps open) a terminal behind
+    # the window. The trade-off is that a gui_script has no stdout, which
+    # tdcrpy.gui.main() handles by reporting through a dialog instead.
+    entry_points={
+        "gui_scripts": [
+            "tdcrpy-gui = tdcrpy.gui:main",
+        ],
     },
     python_requires=">=3.11",
     keywords=["TDCR", "Monte-Carlo", "radionuclide", "liquid scintillation", "counting"],
