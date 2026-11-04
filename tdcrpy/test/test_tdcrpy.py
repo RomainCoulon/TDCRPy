@@ -2591,6 +2591,35 @@ class TestGuiInputs(unittest.TestCase):
         self.assertEqual(job['N'], 10000)
         self.assertNotIn('L', job)
 
+    def test_beta_spectrum_task_needs_only_the_first_nuclide(self):
+        job = self.gui.build_job(
+            dict(self.base, task='beta_spectrum', rad='H-3, Co-60',
+                 betaMode='beta-', betaLevel='tot'))
+        self.assertEqual(job, {'task': 'beta_spectrum', 'rad': 'H-3',
+                               'mode': 'beta-', 'level': 'tot',
+                               'config': {}})
+
+    def test_beta_spectrum_task_defaults_mode_and_level(self):
+        job = self.gui.build_job(dict(self.base, task='beta_spectrum'))
+        self.assertEqual(job['mode'], 'beta-')
+        self.assertEqual(job['level'], 'tot')
+
+    def test_stopping_power_task_needs_no_nuclide_or_decay_count(self):
+        job = self.gui.build_job(dict(
+            self.base, task='stopping_power', rad='',
+            Erange='0.1, 2000, 50', Elog=True, spCompare=True))
+        self.assertEqual(job['E_grid'],
+                         self.gui.build_E_grid('0.1, 2000, 50'))
+        self.assertTrue(job['compare_models'])
+        self.assertEqual(set(job), {'task', 'E_grid', 'compare_models',
+                                    'config'})
+
+    def test_build_E_grid_log_spacing_hits_the_endpoints_exactly(self):
+        grid = self.gui.build_E_grid('0.1, 2000, 10')
+        self.assertEqual(len(grid), 10)
+        self.assertAlmostEqual(grid[0], 0.1)
+        self.assertAlmostEqual(grid[-1], 2000.0)
+
     def test_build_L_grid_log_spacing_hits_the_endpoints_exactly(self):
         grid = self.gui.build_L_grid('0.1, 10, 5')
         self.assertEqual(len(grid), 5)
@@ -2649,6 +2678,12 @@ class TestGuiInputs(unittest.TestCase):
         with self.assertRaises(self.gui.InputError):
             self.gui.build_L_grid(
                 f'0.1, 10, {self.gui.CURVE_MAX_POINTS + 1}')
+
+    def test_E_grid_refuses_an_inverted_or_nonpositive_range(self):
+        with self.assertRaises(self.gui.InputError):
+            self.gui.build_E_grid('2000, 0.1, 5')
+        with self.assertRaises(self.gui.InputError):
+            self.gui.build_E_grid('0, 2000, 5')
 
     # ---- presentation ----------------------------------------------------
     def test_format_value_reports_a_relative_uncertainty(self):
@@ -2771,6 +2806,103 @@ class TestGuiWorkerCurve(unittest.TestCase):
             self.assertFalse(os.path.exists(p),
                              'the analytical branch must not touch the '
                              'record files')
+
+
+class TestGuiWorkerDiagnostics(unittest.TestCase):
+    """The beta-spectrum and stopping-power tasks added in v2.20.35: a
+    direct plot of a library function, no Monte Carlo, no nuclide mixture.
+    """
+
+    def setUp(self):
+        from tdcrpy import _gui_worker
+        self.worker = _gui_worker
+
+    class _Sink:
+        def send(self, *a, **k):
+            pass
+
+    # ---- beta spectrum -----------------------------------------------
+    def test_beta_level_accepts_the_literal_names_and_integers(self):
+        self.assertEqual(self.worker._beta_level('tot'), 'tot')
+        self.assertEqual(self.worker._beta_level('tot_myEstep'),
+                         'tot_myEstep')
+        self.assertEqual(self.worker._beta_level('2'), 2)
+        self.assertEqual(self.worker._beta_level(''), 'tot')
+        self.assertEqual(self.worker._beta_level(None), 'tot')
+
+    def test_beta_level_refuses_nonsense(self):
+        with self.assertRaises(ValueError):
+            self.worker._beta_level('not-a-level')
+
+    def test_run_beta_spectrum_pure_emitter(self):
+        job = {'task': 'beta_spectrum', 'rad': 'H-3', 'mode': 'beta-',
+              'level': 'tot', 'config': {}}
+        rows, columns, plot = self.worker._run_beta_spectrum(
+            TDCRPy_mod, job, self._Sink())
+        self.assertEqual([k for k, _t in columns], ['E_keV', 'p'])
+        self.assertGreater(len(rows), 10)
+        for e, p in rows:
+            self.assertGreaterEqual(e, 0)
+            self.assertGreaterEqual(p, 0)
+        self.assertEqual(plot['x'], 'E_keV')
+        self.assertEqual(plot['y'], ['p'])
+
+    def test_run_beta_spectrum_named_transition(self):
+        job = {'task': 'beta_spectrum', 'rad': 'Co-60', 'mode': 'beta-',
+              'level': '1', 'config': {}}
+        rows, _columns, _plot = self.worker._run_beta_spectrum(
+            TDCRPy_mod, job, self._Sink())
+        self.assertGreater(len(rows), 0)
+
+    def test_run_beta_spectrum_reports_available_levels_on_a_miss(self):
+        """Fe-55 decays by electron capture: no beta- spectrum exists."""
+        job = {'task': 'beta_spectrum', 'rad': 'Fe-55', 'mode': 'beta-',
+              'level': 'tot', 'config': {}}
+        with self.assertRaises(ValueError) as ctx:
+            self.worker._run_beta_spectrum(TDCRPy_mod, job, self._Sink())
+        self.assertIn('Fe-55', str(ctx.exception))
+
+    # ---- stopping power -------------------------------------------------
+    def test_run_stopping_power_single_model(self):
+        job = {'task': 'stopping_power', 'E_grid': [1.0, 10.0, 100.0],
+              'compare_models': False, 'config': {}}
+        rows, columns, plot = self.worker._run_stopping_power(
+            TDCRPy_mod, job, self._Sink())
+        self.assertEqual(len(columns), 2)       # E_keV + one model
+        self.assertEqual(len(rows), 3)
+        for row in rows:
+            self.assertEqual(len(row), 2)
+            self.assertGreater(row[1], 0)
+        self.assertEqual(plot['y'], [columns[1][0]])
+        self.assertTrue(plot['xlog'] and plot['ylog'])
+
+    def test_run_stopping_power_compare_models_matches_the_catalogue(self):
+        from tdcrpy import TDCR_model_lib as tl
+        job = {'task': 'stopping_power', 'E_grid': [1.0, 100.0],
+              'compare_models': True, 'config': {}}
+        rows, columns, plot = self.worker._run_stopping_power(
+            TDCRPy_mod, job, self._Sink())
+        model_cols = [k for k, _t in columns[1:]]
+        self.assertEqual(model_cols, list(tl.STOPPING_POWER_MODELS))
+        self.assertEqual(plot['y'], model_cols)
+        for row in rows:
+            self.assertEqual(len(row), 1 + len(model_cols))
+
+    # ---- the dispatcher in run() ----------------------------------------
+    def test_run_dispatches_plot_tasks_with_columns_and_plot(self):
+        sent = []
+
+        class _Recorder:
+            def send(self, event, **fields):
+                sent.append(dict(fields, event=event))
+
+        job = {'task': 'stopping_power', 'E_grid': [1.0, 10.0],
+              'compare_models': False, 'config': {}}
+        self.worker.run(job, _Recorder())
+        result = [m for m in sent if m['event'] == 'result'][0]
+        self.assertIn('columns', result)
+        self.assertIn('plot', result)
+        self.assertEqual(result['task'], 'stopping_power')
 
 
 if __name__ == '__main__':

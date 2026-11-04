@@ -3,12 +3,15 @@
 
 Start it with ``tdcrpy-gui``, or ``python -m tdcrpy.gui``.
 
-Four calculations are offered: efficiencies at a light yield you supply
+Six calculations are offered: efficiencies at a light yield you supply
 (:func:`tdcrpy.TDCRPy.TDCRPy`); the light yield fitted to a measured TDCR
 ratio by either the stochastic (:func:`~tdcrpy.TDCRPy.eff`) or the analytical
 (:func:`~tdcrpy.TDCRPy.effA`) model, both reported over the same seven
-channels; and the efficiency curve, ε_D against TDCR, over a range of light
-yields.
+channels; the efficiency curve, ε_D against TDCR, over a range of light
+yields; the emitted beta spectrum of one nuclide and transition
+(:func:`~tdcrpy.TDCR_model_lib.readBetaShape`); and the electron stopping
+power dE/dx against energy (:func:`~tdcrpy.TDCR_model_lib.stoppingpower`),
+for the configured scintillator or for every model side by side.
 
 Design notes
 ------------
@@ -44,9 +47,12 @@ TASKS = (
     ('fit', 'Fit L to a TDCR — stochastic'),
     ('fit_analytical', 'Fit L to a TDCR — analytical'),
     ('curve', 'Curve ε_D vs TDCR over an L range'),
+    ('beta_spectrum', 'Beta spectrum'),
+    ('stopping_power', 'Stopping power'),
 )
 
-#: Most points an efficiency curve may have; each costs one replay.
+#: Most points any plotted grid (L, or energy for the stopping power) may
+#: have; on the efficiency curve each one costs one replay.
 CURVE_MAX_POINTS = 500
 
 
@@ -132,19 +138,19 @@ def parse_fractions(text, n_rad):
     return vals
 
 
-def build_L_grid(text, log_spacing=True):
-    """Turn "from, to, points" into the list of light yields to evaluate.
+def _build_grid(text, field, log_spacing):
+    """Turn "from, to, points" into an evenly- or log-spaced grid.
 
-    Log spacing is the default because TDCR and efficiency change fastest at
-    low L: an even grid from 0.1 to 10 would spend most of its points on the
-    flat end of the curve.
+    Log spacing is the default because the functions plotted this way --
+    efficiency vs L, stopping power vs E -- change fastest at the low end:
+    an even grid would spend most of its points on the flat part.
     """
-    lo, hi, n = parse_numbers(text, 'L range', count=3)
+    lo, hi, n = parse_numbers(text, field, count=3)
     if n != int(n) or not 2 <= n <= CURVE_MAX_POINTS:
-        raise InputError(f'L range: the number of points must be a whole '
+        raise InputError(f'{field}: the number of points must be a whole '
                          f'number from 2 to {CURVE_MAX_POINTS}.')
     if not 0 < lo < hi:
-        raise InputError('L range: need 0 < from < to.')
+        raise InputError(f'{field}: need 0 < from < to.')
     n = int(n)
     if log_spacing:
         r = (hi / lo) ** (1.0 / (n - 1))
@@ -153,6 +159,16 @@ def build_L_grid(text, log_spacing=True):
         grid = [lo + (hi - lo) * i / (n - 1) for i in range(n)]
     grid[-1] = hi                    # no rounding drift on the end point
     return grid
+
+
+def build_L_grid(text, log_spacing=True):
+    """Light yields (keV⁻¹) to evaluate the efficiency curve at."""
+    return _build_grid(text, 'L range', log_spacing)
+
+
+def build_E_grid(text, log_spacing=True):
+    """Energies (keV) to evaluate the stopping power at."""
+    return _build_grid(text, 'Energy range', log_spacing)
 
 
 def build_job(form):
@@ -166,6 +182,28 @@ def build_job(form):
         costs no process start-up and no numba import.
     """
     task = form['task']
+
+    if task == 'stopping_power':
+        # No nuclide, no Monte Carlo: dE/dx is a property of the
+        # scintillator (set via 'config') and the model alone.
+        return {
+            'task': task,
+            'E_grid': build_E_grid(form.get('Erange', ''),
+                                   bool(form.get('Elog', True))),
+            'compare_models': bool(form.get('spCompare', False)),
+            'config': form.get('config') or {},
+        }
+
+    if task == 'beta_spectrum':
+        rad = parse_nuclides(form['rad'])[0]
+        return {
+            'task': task,
+            'rad': rad,
+            'mode': form.get('betaMode') or 'beta-',
+            'level': (form.get('betaLevel') or 'tot').strip(),
+            'config': form.get('config') or {},
+        }
+
     rads = parse_nuclides(form['rad'])
     fracs = parse_fractions(form.get('pmf', ''), len(rads))
 
@@ -409,8 +447,9 @@ class App(ttk.Frame):
                   foreground='#666').grid(row=0, column=2, sticky='w',
                                           padx=(8, 0))
 
-        self._row(f, 2, 'Activity fractions', 'pmf', '',
-                  hint='blank for a single nuclide, else e.g. 0.8, 0.2')
+        self.pmf_entry = self._row(
+            f, 2, 'Activity fractions', 'pmf', '',
+            hint='blank for a single nuclide, else e.g. 0.8, 0.2')
         ttk.Separator(f, orient='horizontal').grid(
             row=3, column=0, columnspan=3, sticky='ew', pady=8)
 
@@ -432,9 +471,9 @@ class App(ttk.Frame):
             f, text='log spacing', variable=self._flag('Llog', True))
         self.log_check.grid(row=9, column=1, sticky='w')
 
-        self._row(f, 10, 'Birks constant kB', 'kB', '1.0e-5',
-                  hint='cm keV⁻¹')
-        self._row(f, 11, 'Volume', 'V', '10', hint='mL')
+        self.kb_entry = self._row(f, 10, 'Birks constant kB', 'kB', '1.0e-5',
+                                  hint='cm keV⁻¹')
+        self.v_entry = self._row(f, 11, 'Volume', 'V', '10', hint='mL')
         self.n_entry = self._row(f, 12, 'Number of decays N', 'N', '10000',
                                  hint='≥ 10 000 recommended (JCGM 101)')
 
@@ -450,6 +489,19 @@ class App(ttk.Frame):
         ttk.Checkbutton(f, text='Verbose log (prints every decay)',
                         variable=self._flag('display')).grid(
             row=15, column=0, columnspan=3, sticky='w')
+
+        ttk.Separator(f, orient='horizontal').grid(
+            row=16, column=0, columnspan=3, sticky='ew', pady=8)
+        ttk.Label(f, text='Beta decay mode').grid(row=17, column=0,
+                                                   sticky='w', pady=2)
+        self.beta_mode_box = ttk.Combobox(
+            f, textvariable=self._var('betaMode', 'beta-'), width=10,
+            values=('beta-', 'beta+'), state='readonly')
+        self.beta_mode_box.grid(row=17, column=1, sticky='w', pady=2)
+        self.beta_level_entry = self._row(
+            f, 18, 'Transition level', 'betaLevel', 'tot',
+            hint="the daughter level before the transition, or 'tot' "
+                 "for a pure beta emitter")
 
     #: Where the stopping-power choice acts. Said in the window because the
     #: answer -- not everywhere -- is not what the field suggests.
@@ -492,6 +544,19 @@ class App(ttk.Frame):
                   hint='cm² MeV⁻²')
         self._row(f, 8, 'Electron quench bins', 'nE_electron', '1000')
         self._row(f, 9, 'Alpha quench bins', 'nE_alpha', '1000')
+
+        ttk.Separator(f, orient='horizontal').grid(
+            row=10, column=0, columnspan=3, sticky='ew', pady=8)
+        self.erange_entry = self._row(
+            f, 11, 'Energy range (plot)', 'Erange', '0.1, 2000, 100',
+            hint='from, to, number of points (keV)')
+        self.elog_check = ttk.Checkbutton(
+            f, text='log spacing', variable=self._flag('Elog', True))
+        self.elog_check.grid(row=12, column=1, sticky='w')
+        self.spcompare_check = ttk.Checkbutton(
+            f, text='overlay every stopping-power model (same ρ, Z, A)',
+            variable=self._flag('spCompare', False))
+        self.spcompare_check.grid(row=13, column=0, columnspan=3, sticky='w')
 
     def _tab_micelles(self, nb):
         f = ttk.Frame(nb, padding=10)
@@ -708,6 +773,11 @@ class App(ttk.Frame):
         task = self.vars['task'].get()
         fitting = task in ('fit', 'fit_analytical')
         curve = task == 'curve'
+        beta = task == 'beta_spectrum'
+        stopping = task == 'stopping_power'
+        # Neither reads a nuclide mixture, runs a Monte Carlo, nor needs a
+        # counting geometry: both are a direct plot of a library function.
+        diagnostic = beta or stopping
         for widget, shown in (
             (self.l_entry, task == 'efficiency'),
             (self.td_entry, fitting),
@@ -715,10 +785,20 @@ class App(ttk.Frame):
             (self.bounds_entry, fitting),
             (self.range_entry, curve),
             (self.log_check, curve),
-            (self.n_entry, task != 'fit_analytical'),
-            (self.smodel_check, not fitting),
+            (self.pmf_entry, not diagnostic),
+            (self.kb_entry, not diagnostic),
+            (self.v_entry, not diagnostic),
+            (self.n_entry, task != 'fit_analytical' and not diagnostic),
+            (self.smodel_check, not fitting and not diagnostic),
+            (self.nuclide_entry, not stopping),
+            (self.beta_level_entry, beta),
+            (self.erange_entry, stopping),
+            (self.elog_check, stopping),
+            (self.spcompare_check, stopping),
         ):
             widget.configure(state='normal' if shown else 'disabled')
+        # A combobox, not an entry: 'normal' would let free text through.
+        self.beta_mode_box.configure(state='readonly' if beta else 'disabled')
 
     def _add_nuclide(self):
         pick = self.nuclide_box.get().strip()
@@ -761,6 +841,29 @@ class App(ttk.Frame):
         self._set_busy(True, 'reading configuration…')
         self._worker = Worker(['--describe'], None, self._queue)
 
+    def _run_summary(self, job):
+        """One log line describing the job -- built field by field, since
+        the diagnostic tasks (beta spectrum, stopping power) carry none of
+        'rad', 'kB', 'V' or 'N'."""
+        parts = [f'run: {job["task"]}']
+        if 'rad' in job:
+            parts.append(job['rad'])
+        if 'kB' in job:
+            parts.append(f'kB={job["kB"]:g}')
+        if 'V' in job:
+            parts.append(f'V={job["V"]:g}')
+        if 'N' in job:
+            parts.append(f'N={job["N"]}')
+        if 'L_grid' in job:
+            g = job['L_grid']
+            parts.append(f'L={g[0]:g}…{g[-1]:g} ({len(g)} points)')
+        if 'E_grid' in job:
+            g = job['E_grid']
+            parts.append(f'E={g[0]:g}…{g[-1]:g} keV ({len(g)} points)')
+        if 'mode' in job:
+            parts.append(f'{job["mode"]}  level={job.get("level")}')
+        return '  '.join(parts)
+
     def _run(self):
         if self._worker is not None:
             messagebox.showinfo(
@@ -778,12 +881,7 @@ class App(ttk.Frame):
         self.tree.delete(*self.tree.get_children())
         self._rows = []
         self._append_log('-' * 68)
-        self._append_log(f'run: {job["task"]}  {job["rad"]}  '
-                         f'kB={job["kB"]:g}  V={job["V"]:g}'
-                         + (f'  N={job["N"]}' if 'N' in job else '')
-                         + (f'  L={job["L_grid"][0]:g}…{job["L_grid"][-1]:g}'
-                            f' ({len(job["L_grid"])} points)'
-                            if 'L_grid' in job else ''))
+        self._append_log(self._run_summary(job))
         self._last_job = job
         self.progress.configure(mode='indeterminate')
         self.progress.start(40)
@@ -845,7 +943,8 @@ class App(ttk.Frame):
             self._apply_describe(msg)
         elif event == 'result':
             if msg.get('columns'):
-                self._show_curve(msg['columns'], msg.get('rows') or [])
+                self._show_curve(msg['columns'], msg.get('rows') or [],
+                                 msg.get('plot') or {})
             else:
                 self._show_result(msg.get('rows') or [])
         elif event == 'error':
@@ -889,7 +988,7 @@ class App(ttk.Frame):
             self._rows.append(list(cells))
         self.status.configure(text='done')
 
-    def _show_curve(self, columns, rows):
+    def _show_curve(self, columns, rows, plot):
         """Fill the table with the curve, and draw it."""
         self._set_columns([(key, title, 82, 'e') for key, title in columns])
         # Full precision in the saved file; the table is for reading.
@@ -900,13 +999,35 @@ class App(ttk.Frame):
             self._rows.append(['' if v is None else repr(v) for v in row])
         self.status.configure(text='done')
         try:
-            self._plot_curve([k for k, _t in columns], rows)
+            self._plot_curve([k for k, _t in columns], rows, plot)
         except ImportError as exc:
             self._append_log(f'no plot: matplotlib is not importable ({exc})')
 
-    def _plot_curve(self, keys, rows):
-        """ε_D against TDCR in a window of its own, with matplotlib's toolbar
-        for zoom and Save.
+    def _plot_title(self, job):
+        """A one-line caption naming what is actually plotted."""
+        task = job.get('task')
+        if task == 'curve':
+            model = 'stochastic' if job.get('Smodel', True) else 'analytical'
+            return (f'{job.get("rad", "")}   kB = {job.get("kB", 0):g} '
+                   f'cm/keV   {model}')
+        if task == 'beta_spectrum':
+            return (f'{job.get("rad", "")}   {job.get("mode", "beta-")}   '
+                   f'level {job.get("level", "tot")}')
+        if task == 'stopping_power':
+            return 'electron stopping power'
+        return ''
+
+    def _plot_curve(self, keys, rows, plot):
+        """One or more y-columns against one x-column, in a window of its
+        own, with matplotlib's toolbar for zoom and Save.
+
+        *plot* names which columns to draw and how: ``x``, ``y`` (a list --
+        more than one overlays several series with a legend, used for
+        'overlay every stopping-power model'), optionally ``yerr`` (same
+        length as ``y``, entries ``None`` where there is no uncertainty),
+        ``xlabel``, ``ylabel``, ``xlog``/``ylog``, and ``annotate`` (a column
+        to label at the first and last point, used for L on the efficiency
+        curve).
 
         Imported here, not at the top: the window is meant to open without
         paying for matplotlib, and most runs never draw a curve.
@@ -915,14 +1036,16 @@ class App(ttk.Frame):
         from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                        NavigationToolbar2Tk)
         col = {k: i for i, k in enumerate(keys)}
-        pts = [r for r in rows if r[col['TDCR']] is not None]
-        x = [r[col['TDCR']] for r in pts]
-        y = [r[col['eff_D']] for r in pts]
-        u = [r[col['u_eff_D']] for r in pts]
+        xk = plot['x']
+        pts = [r for r in rows if r[col[xk]] is not None]
+        x = [r[col[xk]] for r in pts]
+        y_keys = plot['y']
+        yerr_keys = plot.get('yerr') or [None] * len(y_keys)
+        multi = len(y_keys) > 1
 
         if self._plot_win is None or not self._plot_win.winfo_exists():
             win = tk.Toplevel(self.master)
-            win.title('TDCRPy — efficiency curve')
+            win.title('TDCRPy — plot')
             fig = Figure(figsize=(6.4, 4.6), dpi=100)
             canvas = FigureCanvasTkAgg(fig, master=win)
             NavigationToolbar2Tk(canvas, win).update()
@@ -931,25 +1054,34 @@ class App(ttk.Frame):
         fig = self._plot_fig
         fig.clear()
         ax = fig.add_subplot(111)
-        if any(v is not None for v in u):
-            ax.errorbar(x, y, yerr=[v or 0.0 for v in u], fmt='o-', ms=3,
-                        lw=1, capsize=2)
-        else:
-            ax.plot(x, y, 'o-', ms=3, lw=1)
-        ax.set_xlabel('TDCR  (T/D)')
-        ax.set_ylabel('ε_D')
-        ax.grid(alpha=0.3)
-        job = self._last_job or {}
-        model = 'stochastic' if job.get('Smodel', True) else 'analytical'
-        ax.set_title(f'{job.get("rad", "")}   kB = {job.get("kB", 0):g} '
-                     f'cm/keV   {model}', fontsize=10)
-        # Mark the ends of the L range, so the direction is readable.
-        # The last label goes left of its point, or it falls off the axes.
-        for r, dx, ha in ((pts[0], 6, 'left'), (pts[-1], -6, 'right')) if pts else ():
-            ax.annotate(f'L = {r[col["L"]]:.3g}',
-                        (r[col['TDCR']], r[col['eff_D']]),
-                        textcoords='offset points', xytext=(dx, -12), ha=ha,
-                        fontsize=8, color='#555')
+        for yk, ek in zip(y_keys, yerr_keys):
+            y = [r[col[yk]] for r in pts]
+            if ek and any(r[col[ek]] is not None for r in pts):
+                yerr = [r[col[ek]] or 0.0 for r in pts]
+                ax.errorbar(x, y, yerr=yerr, fmt='o-', ms=3, lw=1, capsize=2,
+                            label=yk if multi else None)
+            else:
+                style = 'o-' if len(x) <= 60 else '-'
+                ax.plot(x, y, style, ms=3, lw=1, label=yk if multi else None)
+        if plot.get('xlog'):
+            ax.set_xscale('log')
+        if plot.get('ylog'):
+            ax.set_yscale('log')
+        ax.set_xlabel(plot.get('xlabel', xk))
+        ax.set_ylabel(plot.get('ylabel', ''))
+        ax.grid(alpha=0.3, which='both')
+        if multi:
+            ax.legend(fontsize=8)
+        ax.set_title(self._plot_title(self._last_job or {}), fontsize=10)
+        akey = plot.get('annotate')
+        if akey and pts:
+            y0 = [r[col[y_keys[0]]] for r in pts]
+            # The last label goes left of its point, or it falls off the axes.
+            for r, yv, dx, ha in ((pts[0], y0[0], 6, 'left'),
+                                 (pts[-1], y0[-1], -6, 'right')):
+                ax.annotate(f'{akey} = {r[col[akey]]:.3g}', (r[col[xk]], yv),
+                            textcoords='offset points', xytext=(dx, -12),
+                            ha=ha, fontsize=8, color='#555')
         fig.tight_layout()
         self._plot_canvas.draw()
         self._plot_win.lift()

@@ -175,7 +175,7 @@ def describe():
 
 
 # --------------------------------------------------------------------------
-# the four calculations
+# the six calculations
 # --------------------------------------------------------------------------
 def _channel_rows(out, analytical):
     """Rows for the seven channels of a 14-tuple ``(mean, u)`` result.
@@ -299,11 +299,97 @@ def _run_curve(mod, job, emit):
     return rows
 
 
+#: Levels of the BetaShape archive Co60-style names can take, besides an
+#: integer transition number: a pure beta emitter has only 'tot'.
+_BETA_LITERAL_LEVELS = ('tot', 'tot_myEstep')
+
+
+def _beta_level(text):
+    """Turn the GUI's free-text level field into what readBetaShape() wants:
+    an int transition number, or one of the literal level names."""
+    text = (text or 'tot').strip()
+    if text in _BETA_LITERAL_LEVELS:
+        return text
+    try:
+        return int(text)
+    except ValueError:
+        raise ValueError(f"'{text}' is not a transition number nor one of "
+                         f"{_BETA_LITERAL_LEVELS}")
+
+
+def _available_beta_levels(tl, rad, mode):
+    """List the levels the archive actually has for *rad* and *mode*, for
+    the error message when the requested one is missing."""
+    prefix = f"{rad.replace('-', '')}/{mode}_{rad.replace('-', '')}_"
+    out = []
+    for name in tl.z_betashape.namelist():
+        if name.startswith(prefix) and name.endswith('.bs'):
+            tail = name[len(prefix):-3]
+            if tail.startswith('trans'):
+                tail = tail[len('trans'):]
+            out.append(tail)
+    return sorted(set(out))
+
+
+#: Columns of the beta-spectrum table, as (key, heading).
+BETA_SPECTRUM_COLUMNS = (('E_keV', 'E / keV'), ('p', 'p(E) / keV⁻¹'))
+
+
+def _run_beta_spectrum(mod, job, emit):
+    """``readBetaShape()``: the emitted-energy distribution of one beta
+    transition, read straight from the shipped BetaShape archive -- no
+    Monte Carlo, so this returns at once.
+    """
+    import tdcrpy.TDCR_model_lib as tl
+    rad = job['rad']
+    mode = job.get('mode', 'beta-')
+    level = _beta_level(job.get('level'))
+    emit.send('stage', text=f'reading the {mode} spectrum of {rad}')
+    try:
+        e, p = tl.readBetaShape(rad, mode, level)
+    except KeyError:
+        avail = _available_beta_levels(tl, rad, mode)
+        raise ValueError(
+            f"{rad} has no {mode} spectrum at level {level!r}. "
+            f"Levels available for {rad} {mode}: {avail or '(none)'}.")
+    rows = [[ei, pi] for ei, pi in zip(e, p)]
+    plot = {'x': 'E_keV', 'y': ['p'], 'yerr': [None],
+            'xlabel': 'E / keV', 'ylabel': 'p(E) / keV⁻¹'}
+    return rows, BETA_SPECTRUM_COLUMNS, plot
+
+
+def _run_stopping_power(mod, job, emit):
+    """``stoppingpower()``: electron dE/dx over an energy grid, for the
+    scintillator currently configured -- or, with ``compare_models``, for
+    every model the library knows, at that same density/Z/A so the
+    comparison is apples to apples.
+    """
+    import tdcrpy.TDCR_model_lib as tl
+    grid = [float(v) for v in job['E_grid']]            # keV
+    compare = bool(job.get('compare_models'))
+    models = list(tl.STOPPING_POWER_MODELS) if compare else [None]
+    emit.send('stage', text='evaluating the stopping power')
+    rows = [[E] + [tl.stoppingpower(E * 1e3, spmodel=m) for m in models]
+            for E in grid]
+    labels = models if compare else [tl._stopping_globals()[3]]
+    columns = (('E_keV', 'E / keV'),) + tuple((lab, lab) for lab in labels)
+    plot = {'x': 'E_keV', 'y': list(labels), 'yerr': [None] * len(labels),
+            'xlabel': 'E / keV', 'ylabel': 'dE/dx / MeV cm⁻¹',
+            'xlog': True, 'ylog': True}
+    return rows, columns, plot
+
+
+#: Tasks whose result is a curve to plot, rather than a single set of
+#: quantities: the result carries 'columns' and 'plot' alongside 'rows'.
+PLOT_TASKS = {'curve', 'beta_spectrum', 'stopping_power'}
+
 _RUNNERS = {
     'efficiency': lambda m, j, e: _run_efficiency(m, j, e),
     'fit': lambda m, j, e: _run_fit(m, j, e, analytical=False),
     'fit_analytical': lambda m, j, e: _run_fit(m, j, e, analytical=True),
     'curve': lambda m, j, e: _run_curve(m, j, e),
+    'beta_spectrum': lambda m, j, e: _run_beta_spectrum(m, j, e),
+    'stopping_power': lambda m, j, e: _run_stopping_power(m, j, e),
 }
 
 
@@ -325,11 +411,19 @@ def run(job, emit):
     except KeyError:
         raise ValueError(f'unknown task {job.get("task")!r}')
 
-    rows = runner(mod, job, emit)
     if job['task'] == 'curve':
+        rows = runner(mod, job, emit)
         emit.send('result', rows=rows, task='curve',
-                  columns=[list(c) for c in CURVE_COLUMNS])
+                  columns=[list(c) for c in CURVE_COLUMNS],
+                  plot={'x': 'TDCR', 'y': ['eff_D'], 'yerr': ['u_eff_D'],
+                        'xlabel': 'TDCR  (T/D)', 'ylabel': 'ε_D',
+                        'annotate': 'L'})
+    elif job['task'] in PLOT_TASKS:
+        rows, columns, plot = runner(mod, job, emit)
+        emit.send('result', rows=rows, task=job['task'],
+                  columns=[list(c) for c in columns], plot=plot)
     else:
+        rows = runner(mod, job, emit)
         emit.send('result', rows=rows, task=job['task'])
 
 

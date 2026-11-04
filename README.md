@@ -64,7 +64,7 @@ python -m unittest tdcrpy.test.test_tdcrpy
 
 ## 🖥 Graphical interface
 
-If you would rather not write a script, there is a window. It offers four calculations: efficiency at a light yield you give it, the light yield fitted to a measured TDCR (stochastic or analytical model), and the efficiency curve ε_D vs TDCR over a range of light yields, plotted with `matplotlib` (already a dependency, so nothing extra to install).
+If you would rather not write a script, there is a window. It offers six calculations: efficiency at a light yield you give it, the light yield fitted to a measured TDCR (stochastic or analytical model), the efficiency curve ε_D vs TDCR over a range of light yields, the emitted beta spectrum of one nuclide, and the electron stopping power dE/dx vs energy — the last three plotted with `matplotlib` (already a dependency, so nothing extra to install).
 
 ```bash
 tdcrpy-gui            # or: python -m tdcrpy.gui
@@ -139,7 +139,7 @@ start "" pythonw -m tdcrpy.gui
 | `crashed (code …)` in the status bar | A fault inside the Monte-Carlo kernel, not a problem with your inputs. Re-running usually succeeds. |
 | Results differ slightly between identical runs | Expected: the model is a Monte Carlo. Raise *Number of decays N*; the reported uncertainties scale as 1/√N. |
 
-It offers the three calculations the library exposes — efficiencies at a light yield you supply, and `L` fitted to a measured TDCR by either the stochastic or the analytical model — with the scintillator, micelle, delayed-fluorescence and counter settings on tabs, a results table with uncertainties, and a log that shows the model's own warnings (including the reverse-micelle advisories). Results can be saved as CSV.
+It offers six calculations — efficiencies at a light yield you supply; `L` fitted to a measured TDCR by either the stochastic or the analytical model; the efficiency curve ε_D vs TDCR over a range of `L`; the emitted beta spectrum of one nuclide and transition; and the electron stopping power dE/dx vs energy, for the configured scintillator or every model side by side — with the scintillator, micelle, delayed-fluorescence and counter settings on tabs, a results table with uncertainties, a plot window for the curve-shaped results, and a log that shows the model's own warnings (including the reverse-micelle advisories). Results can be saved as CSV.
 
 Two things worth knowing:
 
