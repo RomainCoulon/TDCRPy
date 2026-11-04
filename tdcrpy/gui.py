@@ -3,11 +3,12 @@
 
 Start it with ``tdcrpy-gui``, or ``python -m tdcrpy.gui``.
 
-Three calculations are offered, matching the three entry points of the
-library: efficiencies at a light yield you supply (:func:`tdcrpy.TDCRPy.TDCRPy`),
-and the light yield fitted to a measured TDCR ratio by either the stochastic
-(:func:`~tdcrpy.TDCRPy.eff`) or the analytical (:func:`~tdcrpy.TDCRPy.effA`)
-model.
+Four calculations are offered: efficiencies at a light yield you supply
+(:func:`tdcrpy.TDCRPy.TDCRPy`); the light yield fitted to a measured TDCR
+ratio by either the stochastic (:func:`~tdcrpy.TDCRPy.eff`) or the analytical
+(:func:`~tdcrpy.TDCRPy.effA`) model, both reported over the same seven
+channels; and the efficiency curve, ε_D against TDCR, over a range of light
+yields.
 
 Design notes
 ------------
@@ -39,10 +40,14 @@ from tkinter import filedialog, messagebox, ttk
 _TQDM_PCT = re.compile(r'(\d{1,3})%')
 
 TASKS = (
-    ('efficiency', 'Efficiency at a given light yield L'),
-    ('fit', 'Fit L to a measured TDCR  —  stochastic model'),
-    ('fit_analytical', 'Fit L to a measured TDCR  —  analytical model'),
+    ('efficiency', 'Efficiency at L'),
+    ('fit', 'Fit L to a TDCR — stochastic'),
+    ('fit_analytical', 'Fit L to a TDCR — analytical'),
+    ('curve', 'Curve ε_D vs TDCR over an L range'),
 )
+
+#: Most points an efficiency curve may have; each costs one replay.
+CURVE_MAX_POINTS = 500
 
 
 class InputError(ValueError):
@@ -127,6 +132,29 @@ def parse_fractions(text, n_rad):
     return vals
 
 
+def build_L_grid(text, log_spacing=True):
+    """Turn "from, to, points" into the list of light yields to evaluate.
+
+    Log spacing is the default because TDCR and efficiency change fastest at
+    low L: an even grid from 0.1 to 10 would spend most of its points on the
+    flat end of the curve.
+    """
+    lo, hi, n = parse_numbers(text, 'L range', count=3)
+    if n != int(n) or not 2 <= n <= CURVE_MAX_POINTS:
+        raise InputError(f'L range: the number of points must be a whole '
+                         f'number from 2 to {CURVE_MAX_POINTS}.')
+    if not 0 < lo < hi:
+        raise InputError('L range: need 0 < from < to.')
+    n = int(n)
+    if log_spacing:
+        r = (hi / lo) ** (1.0 / (n - 1))
+        grid = [lo * r ** i for i in range(n)]
+    else:
+        grid = [lo + (hi - lo) * i / (n - 1) for i in range(n)]
+    grid[-1] = hi                    # no rounding drift on the end point
+    return grid
+
+
 def build_job(form):
     """Turn the form's string values into a job for the worker.
 
@@ -164,6 +192,10 @@ def build_job(form):
         L = parse_numbers(form['L'], 'Light yield L', count=(1, 3))
         job['L'] = L[0] if len(L) == 1 else L
         job['Smodel'] = bool(form.get('Smodel', True))
+    elif task == 'curve':
+        job['L_grid'] = build_L_grid(form.get('Lrange', ''),
+                                     bool(form.get('Llog', True)))
+        job['Smodel'] = bool(form.get('Smodel', True))
     else:
         # One value is T/D; four add T/AB, T/BC and T/AC for an asymmetric
         # counter, which is the only way to fit three separate yields.
@@ -184,6 +216,7 @@ def build_job(form):
             job['Lbounds'] = [lo, hi]
 
     if task != 'fit_analytical':
+        # The analytical curve ignores N, but TDCRPy() still takes one.
         N = parse_numbers(form['N'], 'Number of decays N', count=1)[0]
         if N < 1:
             raise InputError('Number of decays N: must be at least 1.')
@@ -296,6 +329,8 @@ class App(ttk.Frame):
         self._rows = []
         self._config_snapshot = None
         self._cancelled = False
+        self._last_job = None
+        self._plot_win = None
 
         self.vars = {}
         self._build_header()
@@ -390,24 +425,38 @@ class App(ttk.Frame):
             f, 7, 'L bounds', 'Lbounds', '',
             hint='blank lets the fit bracket the physical root itself')
 
-        self._row(f, 8, 'Birks constant kB', 'kB', '1.0e-5',
+        self.range_entry = self._row(
+            f, 8, 'L range', 'Lrange', '0.1, 10, 25',
+            hint='from, to, number of points (keV⁻¹)')
+        self.log_check = ttk.Checkbutton(
+            f, text='log spacing', variable=self._flag('Llog', True))
+        self.log_check.grid(row=9, column=1, sticky='w')
+
+        self._row(f, 10, 'Birks constant kB', 'kB', '1.0e-5',
                   hint='cm keV⁻¹')
-        self._row(f, 9, 'Volume', 'V', '10', hint='mL')
-        self.n_entry = self._row(f, 10, 'Number of decays N', 'N', '10000',
+        self._row(f, 11, 'Volume', 'V', '10', hint='mL')
+        self.n_entry = self._row(f, 12, 'Number of decays N', 'N', '10000',
                                  hint='≥ 10 000 recommended (JCGM 101)')
 
         self.smodel_check = ttk.Checkbutton(
             f, text='Stochastic model (uncheck for the analytical one, '
                     'valid for pure β emitters only)',
             variable=self._flag('Smodel', True))
-        self.smodel_check.grid(row=11, column=0, columnspan=3, sticky='w',
+        self.smodel_check.grid(row=13, column=0, columnspan=3, sticky='w',
                                pady=(8, 0))
         ttk.Checkbutton(f, text='Propagate nuclear-data uncertainty',
                         variable=self._flag('uncData')).grid(
-            row=12, column=0, columnspan=3, sticky='w')
+            row=14, column=0, columnspan=3, sticky='w')
         ttk.Checkbutton(f, text='Verbose log (prints every decay)',
                         variable=self._flag('display')).grid(
-            row=13, column=0, columnspan=3, sticky='w')
+            row=15, column=0, columnspan=3, sticky='w')
+
+    #: Where the stopping-power choice acts. Said in the window because the
+    #: answer -- not everywhere -- is not what the field suggests.
+    SP_NOTE = ('Electrons, low energy. It enters wherever the quenching '
+               'integral is evaluated directly: below {where}, and for any '
+               'partial deposit. Above it the shipped quenching tables are '
+               'interpolated and are not recomputed.')
 
     def _tab_scintillator(self, nb):
         f = ttk.Frame(nb, padding=10)
@@ -427,12 +476,22 @@ class App(ttk.Frame):
                   hint='mol L⁻¹')
         ttk.Separator(f, orient='horizontal').grid(
             row=4, column=0, columnspan=3, sticky='ew', pady=8)
-        self._row(f, 5, 'Stopping-power model', 'sp_model', 'tan_xia',
-                  width=14)
-        self._row(f, 6, 'Chou parameter', 'chou_param', '0',
+        ttk.Label(f, text='Stopping-power model').grid(row=5, column=0,
+                                                       sticky='w')
+        # Editable until the library says which models it has; read-only
+        # afterwards, so a typo cannot reach config.toml.
+        self.sp_box = ttk.Combobox(
+            f, textvariable=self._var('sp_model', 'tan_xia'), width=20,
+            values=())
+        self.sp_box.grid(row=5, column=1, sticky='w', pady=2)
+        self.sp_note = ttk.Label(f, wraplength=430, foreground='#666',
+                                 text=self.SP_NOTE.format(where='Einterp_e'))
+        self.sp_note.grid(row=6, column=0, columnspan=3, sticky='w',
+                          pady=(0, 6))
+        self._row(f, 7, 'Chou parameter', 'chou_param', '0',
                   hint='cm² MeV⁻²')
-        self._row(f, 7, 'Electron quench bins', 'nE_electron', '1000')
-        self._row(f, 8, 'Alpha quench bins', 'nE_alpha', '1000')
+        self._row(f, 8, 'Electron quench bins', 'nE_electron', '1000')
+        self._row(f, 9, 'Alpha quench bins', 'nE_alpha', '1000')
 
     def _tab_micelles(self, nb):
         f = ttk.Frame(nb, padding=10)
@@ -501,17 +560,8 @@ class App(ttk.Frame):
         right.rowconfigure(0, weight=3)
         right.rowconfigure(2, weight=2)
 
-        cols = ('quantity', 'value', 'u', 'rel')
-        self.tree = ttk.Treeview(right, columns=cols, show='headings',
-                                 height=10)
-        for key, title, width, anchor in (
-            ('quantity', 'Quantity', 210, 'w'),
-            ('value', 'Value', 120, 'e'),
-            ('u', 'u', 100, 'e'),
-            ('rel', 'u / value', 90, 'e'),
-        ):
-            self.tree.heading(key, text=title)
-            self.tree.column(key, width=width, anchor=anchor)
+        self.tree = ttk.Treeview(right, show='headings', height=10)
+        self._set_columns(self.QUANTITY_COLUMNS)
         self.tree.grid(row=0, column=0, sticky='nsew')
         ttk.Scrollbar(right, orient='vertical',
                       command=self.tree.yview).grid(row=0, column=1,
@@ -525,6 +575,22 @@ class App(ttk.Frame):
         ttk.Scrollbar(right, orient='vertical',
                       command=self.log.yview).grid(row=2, column=1,
                                                    sticky='ns')
+
+    #: Results table for a single calculation: one quantity per row.
+    QUANTITY_COLUMNS = (
+        ('quantity', 'Quantity', 210, 'w'),
+        ('value', 'Value', 120, 'e'),
+        ('u', 'u', 100, 'e'),
+        ('rel', 'u / value', 90, 'e'),
+    )
+
+    def _set_columns(self, spec):
+        """Rebuild the results table's columns from (key, title, width,
+        anchor) tuples."""
+        self.tree.configure(columns=[c[0] for c in spec])
+        for key, title, width, anchor in spec:
+            self.tree.heading(key, text=title)
+            self.tree.column(key, width=width, anchor=anchor, stretch=True)
 
     def _build_footer(self):
         bar = ttk.Frame(self)
@@ -640,12 +706,15 @@ class App(ttk.Frame):
     def _on_task_change(self):
         """Show only the fields the chosen calculation uses."""
         task = self.vars['task'].get()
-        fitting = task != 'efficiency'
+        fitting = task in ('fit', 'fit_analytical')
+        curve = task == 'curve'
         for widget, shown in (
-            (self.l_entry, not fitting),
+            (self.l_entry, task == 'efficiency'),
             (self.td_entry, fitting),
             (self.guess_entry, fitting),
             (self.bounds_entry, fitting),
+            (self.range_entry, curve),
+            (self.log_check, curve),
             (self.n_entry, task != 'fit_analytical'),
             (self.smodel_check, not fitting),
         ):
@@ -711,7 +780,11 @@ class App(ttk.Frame):
         self._append_log('-' * 68)
         self._append_log(f'run: {job["task"]}  {job["rad"]}  '
                          f'kB={job["kB"]:g}  V={job["V"]:g}'
-                         + (f'  N={job["N"]}' if 'N' in job else ''))
+                         + (f'  N={job["N"]}' if 'N' in job else '')
+                         + (f'  L={job["L_grid"][0]:g}…{job["L_grid"][-1]:g}'
+                            f' ({len(job["L_grid"])} points)'
+                            if 'L_grid' in job else ''))
+        self._last_job = job
         self.progress.configure(mode='indeterminate')
         self.progress.start(40)
         self._set_busy(True, 'running…')
@@ -763,10 +836,18 @@ class App(ttk.Frame):
         if event == 'stage':
             self.status.configure(text=msg.get('text', ''))
             self._append_log(f'• {msg.get("text", "")}')
+        elif event == 'progress':
+            if str(self.progress.cget('mode')) == 'indeterminate':
+                self.progress.stop()
+                self.progress.configure(mode='determinate')
+            self.progress.configure(value=min(100.0, float(msg['pct'])))
         elif event == 'describe':
             self._apply_describe(msg)
         elif event == 'result':
-            self._show_result(msg.get('rows') or [])
+            if msg.get('columns'):
+                self._show_curve(msg['columns'], msg.get('rows') or [])
+            else:
+                self._show_result(msg.get('rows') or [])
         elif event == 'error':
             self._append_log(msg.get('traceback') or msg.get('message', ''))
             messagebox.showerror('TDCRPy failed', msg.get('message',
@@ -781,6 +862,12 @@ class App(ttk.Frame):
         nuclides = msg.get('nuclides') or []
         if nuclides:
             self.nuclide_box.configure(values=nuclides, state='readonly')
+        sp_models = msg.get('sp_models') or []
+        if sp_models:
+            self.sp_box.configure(values=sp_models, state='readonly')
+        if msg.get('Einterp_e') is not None:
+            self.sp_note.configure(text=self.SP_NOTE.format(
+                where=f'Einterp_e = {msg["Einterp_e"]:g} keV'))
         for key, value in (msg.get('config') or {}).items():
             var = self.vars.get(key)
             if var is None:
@@ -794,11 +881,78 @@ class App(ttk.Frame):
                          f'{len(cocktails)} cocktails)')
 
     def _show_result(self, rows):
-        self._rows = rows
+        self._set_columns(self.QUANTITY_COLUMNS)
+        self._rows = [['quantity', 'value', 'u', 'u_rel']]
         for quantity, value, unc in rows:
-            val, u, rel = format_value(value, unc)
-            self.tree.insert('', 'end', values=(quantity, val, u, rel))
+            cells = (quantity,) + format_value(value, unc)
+            self.tree.insert('', 'end', values=cells)
+            self._rows.append(list(cells))
         self.status.configure(text='done')
+
+    def _show_curve(self, columns, rows):
+        """Fill the table with the curve, and draw it."""
+        self._set_columns([(key, title, 82, 'e') for key, title in columns])
+        # Full precision in the saved file; the table is for reading.
+        self._rows = [[key for key, _title in columns]]
+        for row in rows:
+            self.tree.insert('', 'end', values=[
+                '' if v is None else f'{v:.5g}' for v in row])
+            self._rows.append(['' if v is None else repr(v) for v in row])
+        self.status.configure(text='done')
+        try:
+            self._plot_curve([k for k, _t in columns], rows)
+        except ImportError as exc:
+            self._append_log(f'no plot: matplotlib is not importable ({exc})')
+
+    def _plot_curve(self, keys, rows):
+        """ε_D against TDCR in a window of its own, with matplotlib's toolbar
+        for zoom and Save.
+
+        Imported here, not at the top: the window is meant to open without
+        paying for matplotlib, and most runs never draw a curve.
+        """
+        from matplotlib.figure import Figure
+        from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
+                                                       NavigationToolbar2Tk)
+        col = {k: i for i, k in enumerate(keys)}
+        pts = [r for r in rows if r[col['TDCR']] is not None]
+        x = [r[col['TDCR']] for r in pts]
+        y = [r[col['eff_D']] for r in pts]
+        u = [r[col['u_eff_D']] for r in pts]
+
+        if self._plot_win is None or not self._plot_win.winfo_exists():
+            win = tk.Toplevel(self.master)
+            win.title('TDCRPy — efficiency curve')
+            fig = Figure(figsize=(6.4, 4.6), dpi=100)
+            canvas = FigureCanvasTkAgg(fig, master=win)
+            NavigationToolbar2Tk(canvas, win).update()
+            canvas.get_tk_widget().pack(fill='both', expand=True)
+            self._plot_win, self._plot_fig, self._plot_canvas = win, fig, canvas
+        fig = self._plot_fig
+        fig.clear()
+        ax = fig.add_subplot(111)
+        if any(v is not None for v in u):
+            ax.errorbar(x, y, yerr=[v or 0.0 for v in u], fmt='o-', ms=3,
+                        lw=1, capsize=2)
+        else:
+            ax.plot(x, y, 'o-', ms=3, lw=1)
+        ax.set_xlabel('TDCR  (T/D)')
+        ax.set_ylabel('ε_D')
+        ax.grid(alpha=0.3)
+        job = self._last_job or {}
+        model = 'stochastic' if job.get('Smodel', True) else 'analytical'
+        ax.set_title(f'{job.get("rad", "")}   kB = {job.get("kB", 0):g} '
+                     f'cm/keV   {model}', fontsize=10)
+        # Mark the ends of the L range, so the direction is readable.
+        # The last label goes left of its point, or it falls off the axes.
+        for r, dx, ha in ((pts[0], 6, 'left'), (pts[-1], -6, 'right')) if pts else ():
+            ax.annotate(f'L = {r[col["L"]]:.3g}',
+                        (r[col['TDCR']], r[col['eff_D']]),
+                        textcoords='offset points', xytext=(dx, -12), ha=ha,
+                        fontsize=8, color='#555')
+        fig.tight_layout()
+        self._plot_canvas.draw()
+        self._plot_win.lift()
 
     def _handle_exit(self, rc):
         cancelled, self._cancelled = self._cancelled, False
@@ -837,11 +991,8 @@ class App(ttk.Frame):
         try:
             with open(path, 'w', encoding='utf-8', newline='') as fh:
                 import csv
-                w = csv.writer(fh)
-                w.writerow(['quantity', 'value', 'u', 'u_rel'])
-                for quantity, value, unc in self._rows:
-                    val, u, rel = format_value(value, unc)
-                    w.writerow([quantity, val, u, rel])
+                # First row is the header, built with the table.
+                csv.writer(fh).writerows(self._rows)
         except OSError as exc:
             messagebox.showerror('TDCRPy', f'Could not save:\n{exc}')
             return

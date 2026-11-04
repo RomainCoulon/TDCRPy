@@ -64,7 +64,7 @@ python -m unittest tdcrpy.test.test_tdcrpy
 
 ## 🖥 Graphical interface
 
-If you would rather not write a script, there is a window:
+If you would rather not write a script, there is a window. It offers four calculations: efficiency at a light yield you give it, the light yield fitted to a measured TDCR (stochastic or analytical model), and the efficiency curve ε_D vs TDCR over a range of light yields, plotted with `matplotlib` (already a dependency, so nothing extra to install).
 
 ```bash
 tdcrpy-gui            # or: python -m tdcrpy.gui

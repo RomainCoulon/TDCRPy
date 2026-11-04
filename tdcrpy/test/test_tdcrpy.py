@@ -610,6 +610,63 @@ class TestStoppingPowerVariants(unittest.TestCase):
         self.assertGreater(sp2, 0)
 
 
+class TestStoppingPowerResolvesAtCallTime(unittest.TestCase):
+    """stoppingpower()/E_quench_e() must take modifyDensity()/modifysp_model()
+    etc. without a reload (v2.20.34).
+
+    ``rho``, ``Z``, ``A`` and ``spmodel`` used to be keyword defaults
+    evaluated once at import, from whatever ``config.toml`` said at that
+    time -- the same late-binding trap the micelle kernel had before v2.20.22
+    (see TestMicelleDefaultsResolveAtCallTime). A later modify*() call then
+    silently failed to reach the exact quenching integral.
+    """
+
+    def setUp(self):
+        self._saved = (lib.RHO, lib.Z, lib.A, lib.sp_model, lib.chou_param)
+
+    def tearDown(self):
+        rho, z, a, sp, chou = self._saved
+        lib.modifyDensity(rho)
+        lib.modifyZ(z)
+        lib.modifyA(a)
+        lib.modifysp_model(sp)
+        lib.modifyChou_param(chou)
+
+    def test_signature_defaults_are_sentinels(self):
+        p = inspect.signature(lib.stoppingpower).parameters
+        for name in ('rho', 'Z', 'A', 'spmodel'):
+            self.assertIsNone(p[name].default,
+                              f'{name} is still bound at import time')
+        self.assertIsNone(
+            inspect.signature(lib.E_quench_e).parameters['kC'].default)
+
+    def test_modifydensity_takes_effect_without_reload(self):
+        lib.modifysp_model('tan_xia')
+        lib.modifyDensity(0.90)
+        sp1 = lib.stoppingpower(100)
+        lib.modifyDensity(1.80)
+        sp2 = lib.stoppingpower(100)
+        self.assertAlmostEqual(sp2 / sp1, 2.0, places=2,
+                               msg='stoppingpower is still bound to the '
+                                   'density read at import -- the no-op '
+                                   'regression is back')
+
+    def test_explicit_arguments_still_win(self):
+        lib.modifyDensity(0.5)
+        self.assertNotAlmostEqual(
+            lib.stoppingpower(100, rho=2.0), lib.stoppingpower(100), places=6,
+            msg='an explicit rho must override the configuration')
+
+    def test_E_quench_e_follows_chou_param_without_reload(self):
+        lib.modifyChou_param(0.0)
+        q0 = lib.E_quench_e(50, 50, 1.0e-5, 200)
+        lib.modifyChou_param(50.0)
+        q1 = lib.E_quench_e(50, 50, 1.0e-5, 200)
+        self.assertLess(q1, q0,
+                        'a higher Chou parameter must quench more, and '
+                        'modifyChou_param must reach E_quench_e live')
+
+
 class TestEnergyDeposition(unittest.TestCase):
     """Tests for energy deposition functions."""
 
@@ -2527,6 +2584,26 @@ class TestGuiInputs(unittest.TestCase):
             dict(self.base, task='fit', TD='0.9', Lbounds='5, 50'))
         self.assertEqual(job['Lbounds'], [5.0, 50.0])
 
+    def test_curve_task_builds_an_L_grid_and_keeps_N(self):
+        job = self.gui.build_job(
+            dict(self.base, task='curve', Lrange='0.1, 10, 5'))
+        self.assertEqual(job['L_grid'], self.gui.build_L_grid('0.1, 10, 5'))
+        self.assertEqual(job['N'], 10000)
+        self.assertNotIn('L', job)
+
+    def test_build_L_grid_log_spacing_hits_the_endpoints_exactly(self):
+        grid = self.gui.build_L_grid('0.1, 10, 5')
+        self.assertEqual(len(grid), 5)
+        self.assertAlmostEqual(grid[0], 0.1)
+        self.assertAlmostEqual(grid[-1], 10.0)
+        # Log spacing: equal ratios between consecutive points.
+        ratios = [grid[i + 1] / grid[i] for i in range(len(grid) - 1)]
+        self.assertAlmostEqual(min(ratios), max(ratios), places=9)
+
+    def test_build_L_grid_linear_spacing(self):
+        grid = self.gui.build_L_grid('1, 9, 5', log_spacing=False)
+        self.assertEqual(grid, [1.0, 3.0, 5.0, 7.0, 9.0])
+
     # ---- what must be refused, and said clearly --------------------------
     def test_missing_nuclide(self):
         self.assertIn('at least one', self._refused(rad=''))
@@ -2559,6 +2636,19 @@ class TestGuiInputs(unittest.TestCase):
     def test_inverted_bounds(self):
         self.assertIn('lower bound',
                       self._refused(task='fit', TD='0.9', Lbounds='50,5'))
+
+    def test_L_grid_refuses_an_inverted_or_nonpositive_range(self):
+        with self.assertRaises(self.gui.InputError):
+            self.gui.build_L_grid('10, 0.1, 5')
+        with self.assertRaises(self.gui.InputError):
+            self.gui.build_L_grid('0, 10, 5')
+
+    def test_L_grid_refuses_too_few_or_too_many_points(self):
+        with self.assertRaises(self.gui.InputError):
+            self.gui.build_L_grid('0.1, 10, 1')
+        with self.assertRaises(self.gui.InputError):
+            self.gui.build_L_grid(
+                f'0.1, 10, {self.gui.CURVE_MAX_POINTS + 1}')
 
     # ---- presentation ----------------------------------------------------
     def test_format_value_reports_a_relative_uncertainty(self):
@@ -2601,6 +2691,86 @@ class TestGuiInputs(unittest.TestCase):
         from tdcrpy import _gui_worker
         self.assertEqual([k for k, _ in _gui_worker.CHANNELS],
                          ['S', 'D', 'T', 'AB', 'BC', 'AC', 'D2'])
+
+
+class TestGuiWorkerCurve(unittest.TestCase):
+    """The curve task added in v2.20.34: record once, replay at every L."""
+
+    def setUp(self):
+        from tdcrpy import _gui_worker
+        self.worker = _gui_worker
+
+    def test_analytical_channels_symmetric_matches_the_closed_form(self):
+        out = self.worker._analytical_channels(0.5, 0.8, 0.6, symm=True)
+        self.assertEqual(out[0], 0.5)                       # eff_S
+        self.assertEqual(out[2], 0.8)                        # eff_D
+        self.assertEqual(out[4], 0.6)                        # eff_T
+        pair = (0.8 + 2 * 0.6) / 3
+        self.assertAlmostEqual(out[6], pair)                  # AB
+        self.assertAlmostEqual(out[8], pair)                  # BC
+        self.assertAlmostEqual(out[10], pair)                 # AC
+        self.assertAlmostEqual(out[12], 0.8)                  # D2 == D
+        self.assertTrue(all(v is None for v in out[1::2]),
+                        'the analytical model has no sampling noise')
+
+    def test_analytical_channels_asymmetric_leaves_pairs_empty(self):
+        out = self.worker._analytical_channels(0.5, 0.8, 0.6, symm=False)
+        self.assertIsNone(out[6])
+        self.assertIsNone(out[8])
+        self.assertIsNone(out[10])
+        self.assertIsNone(out[12])
+
+    def test_channel_rows_drops_analytical_uncertainties(self):
+        out = tuple(float(i) for i in range(14))
+        rows = self.worker._channel_rows(out, analytical=True)
+        self.assertTrue(all(u is None for _q, _v, u in rows))
+        rows = self.worker._channel_rows(out, analytical=False)
+        self.assertEqual(rows[0], ('Efficiency Single', 0.0, 1.0))
+
+    def test_run_curve_record_and_replay_round_trip(self):
+        """A 3-point grid must return one row per L, each a valid TDCR point,
+        using the record/replay path (v2.20.15 fragility notwithstanding)."""
+        import tdcrpy.TDCRPy as mod
+
+        class _Sink:
+            def send(self, *a, **k):
+                pass
+
+        job = {'rad': 'H-3', 'pmf': '1', 'N': 200, 'kB': KB_TYPICAL, 'V': 10,
+               'L_grid': [0.5, 1.0, 2.0], 'Smodel': True}
+        try:
+            rows = self.worker._run_curve(mod, job, _Sink())
+        finally:
+            lib.cleanup_record_files()
+        self.assertEqual(len(rows), 3)
+        for L, tdcr, eff_D, u_D, eff_T, u_T, eff_S, u_S in rows:
+            self.assertIn(L, job['L_grid'])
+            self.assertGreater(eff_D, 0)
+            if tdcr is not None:
+                self.assertGreaterEqual(tdcr, 0)
+                self.assertLessEqual(tdcr, 1.000001)
+
+    def test_run_curve_analytical_needs_no_record_file(self):
+        import tdcrpy.TDCRPy as mod
+        for p in (lib.record_file_path(i) for i in range(4)):
+            self.assertFalse(os.path.exists(p))
+
+        class _Sink:
+            def send(self, *a, **k):
+                pass
+
+        job = {'rad': 'H-3', 'pmf': '1', 'N': 50, 'kB': KB_TYPICAL, 'V': 10,
+               'L_grid': [0.5, 1.0], 'Smodel': False}
+        rows = self.worker._run_curve(mod, job, _Sink())
+        self.assertEqual(len(rows), 2)
+        for _L, _tdcr, _eD, u_D, _eT, u_T, _eS, u_S in rows:
+            self.assertIsNone(u_D)
+            self.assertIsNone(u_T)
+            self.assertIsNone(u_S)
+        for p in (lib.record_file_path(i) for i in range(4)):
+            self.assertFalse(os.path.exists(p),
+                             'the analytical branch must not touch the '
+                             'record files')
 
 
 if __name__ == '__main__':

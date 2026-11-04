@@ -143,6 +143,9 @@ def describe():
         'version': version('TDCRPy'),
         'cocktails': sorted(tl.COCKTAIL_DATA),
         'nuclides': nuclides,
+        # Absent before 2.20.34: the GUI then keeps a free-text field.
+        'sp_models': list(getattr(tl, 'STOPPING_POWER_MODELS', ())),
+        'Einterp_e': params[7],
         'config': {
             'ls_cocktail': tl.lsCocktail(),
             'fAq': params[9],
@@ -172,24 +175,50 @@ def describe():
 
 
 # --------------------------------------------------------------------------
-# the three calculations
+# the four calculations
 # --------------------------------------------------------------------------
+def _channel_rows(out, analytical):
+    """Rows for the seven channels of a 14-tuple ``(mean, u)`` result.
+
+    The analytical model has no sampling noise and reports its uncertainties
+    as 0.0; shown as such they would read as "exactly known", so they are
+    dropped instead.
+    """
+    return [(f'Efficiency {label}', out[2 * i],
+             None if analytical else out[2 * i + 1])
+            for i, (_key, label) in enumerate(CHANNELS)]
+
+
+def _analytical_channels(eff_S, eff_D, eff_T, symm):
+    """Expand ``effA()``'s three efficiencies into the seven channels.
+
+    ``effA()`` returns S, D and T only. For a symmetric counter the pair
+    efficiencies follow from ``D = AB + BC + AC - 2T`` with AB = BC = AC, and
+    the C/N doubles equal D -- the same expansion ``TDCRPy(Smodel=False)``
+    makes, done here from effA's own values so they stay consistent with the
+    fitted L. An asymmetric counter has no such closed form, so its pair
+    channels are left empty rather than filled with the symmetric guess.
+    """
+    pair = (eff_D + 2 * eff_T) / 3 if symm else None
+    return (eff_S, None, eff_D, None, eff_T, None,
+            pair, None, pair, None, pair, None,
+            eff_D if symm else None, None)
+
+
 def _run_efficiency(mod, job, emit):
     """``TDCRPy()``: efficiencies at a light yield the user supplies."""
     emit.send('stage', text='simulating decays')
+    smodel = bool(job.get('Smodel', True))
     out = mod.TDCRPy(
         job['L'], job['rad'], job['pmf'], int(job['N']),
         float(job['kB']), float(job['V']),
         mode='eff',
         display=bool(job.get('display')),
         barp=True,
-        Smodel=bool(job.get('Smodel', True)),
+        Smodel=smodel,
         uncData=bool(job.get('uncData')),
     )
-    rows = [('L (fixed)', job['L'], None)]
-    for i, (_key, label) in enumerate(CHANNELS):
-        rows.append((f'Efficiency {label}', out[2 * i], out[2 * i + 1]))
-    return rows
+    return [('L (fixed)', job['L'], None)] + _channel_rows(out, not smodel)
 
 
 def _run_fit(mod, job, emit, analytical):
@@ -201,21 +230,72 @@ def _run_fit(mod, job, emit, analytical):
         kwargs['Lbounds'] = tuple(job['Lbounds'])
 
     if analytical:
-        out = mod.effA(job['TD'], job['rad'], job['pmf'],
-                       float(job['kB']), float(job['V']), **kwargs)
+        # effA() returns (L0, L, eff_S, eff_D, eff_T) -- five values, not
+        # eff()'s seventeen -- and scripts index into it, so it is expanded
+        # here rather than changed there.
+        L0, L_opt, eff_S, eff_D, eff_T = mod.effA(
+            job['TD'], job['rad'], job['pmf'],
+            float(job['kB']), float(job['V']), **kwargs)
+        symm = not isinstance(job['TD'], (list, tuple))
+        out = _analytical_channels(eff_S, eff_D, eff_T, symm)
         u_L = None
+        if not symm:
+            emit.send('stage', text='analytical model, asymmetric counter: '
+                                    'pair efficiencies not available')
     else:
-        out = mod.eff(job['TD'], job['rad'], job['pmf'],
+        res = mod.eff(job['TD'], job['rad'], job['pmf'],
                       float(job['kB']), float(job['V']),
                       N=int(job['N']), **kwargs)
+        L0, L_opt, out = res[0], res[1], res[2:16]
         # u_L was appended in 2.20.23, so trust the length rather than a
         # version test: older builds simply do not report it.
-        u_L = out[16] if len(out) > 16 else None
+        u_L = res[16] if len(res) > 16 else None
 
-    rows = [('L (fitted)', out[0], u_L),
-            ('L_A, L_B, L_C', ', '.join(f'{v:.6g}' for v in out[1]), None)]
-    for i, (_key, label) in enumerate(CHANNELS):
-        rows.append((f'Efficiency {label}', out[2 + 2 * i], out[3 + 2 * i]))
+    rows = [('L (fitted)', L0, u_L),
+            ('L_A, L_B, L_C', ', '.join(f'{v:.6g}' for v in L_opt), None)]
+    return rows + _channel_rows(out, analytical)
+
+
+#: Columns of the efficiency-curve table, as (key, heading).
+CURVE_COLUMNS = (
+    ('L', 'L / keV⁻¹'), ('TDCR', 'TDCR'),
+    ('eff_D', 'ε_D'), ('u_eff_D', 'u(ε_D)'),
+    ('eff_T', 'ε_T'), ('u_eff_T', 'u(ε_T)'),
+    ('eff_S', 'ε_S'), ('u_eff_S', 'u(ε_S)'),
+)
+
+
+def _run_curve(mod, job, emit):
+    """``TDCRPy()`` over a grid of L: the efficiency curve ε_D vs TDCR.
+
+    The stochastic model simulates the decays once and replays the recorded
+    histories at every L, exactly as :func:`tdcrpy.TDCRPy.eff` does while
+    fitting, so a curve costs about one simulation rather than one per point
+    -- and every point sees the same decays, so the curve is smooth rather
+    than carrying independent Monte-Carlo scatter from point to point.
+    """
+    grid = [float(v) for v in job['L_grid']]
+    smodel = bool(job.get('Smodel', True))
+    args = (job['rad'], job['pmf'], int(job['N']),
+            float(job['kB']), float(job['V']))
+    if smodel:
+        emit.send('stage', text='simulating decays')
+        mod.TDCRPy(grid[0], *args, record=True, barp=True,
+                   display=bool(job.get('display')),
+                   uncData=bool(job.get('uncData')))
+        emit.send('stage', text=f'replaying them at {len(grid)} values of L')
+    rows = []
+    for i, L in enumerate(grid):
+        if smodel:
+            out = mod.TDCRPy(L, *args, readRecHist=True)
+        else:
+            out = mod.TDCRPy(L, *args, Smodel=False)
+        eff_S, u_S, eff_D, u_D, eff_T, u_T = out[:6]
+        if not smodel:
+            u_S = u_D = u_T = None
+        tdcr = eff_T / eff_D if eff_D > 1e-12 else None
+        rows.append([L, tdcr, eff_D, u_D, eff_T, u_T, eff_S, u_S])
+        emit.send('progress', pct=100.0 * (i + 1) / len(grid))
     return rows
 
 
@@ -223,6 +303,7 @@ _RUNNERS = {
     'efficiency': lambda m, j, e: _run_efficiency(m, j, e),
     'fit': lambda m, j, e: _run_fit(m, j, e, analytical=False),
     'fit_analytical': lambda m, j, e: _run_fit(m, j, e, analytical=True),
+    'curve': lambda m, j, e: _run_curve(m, j, e),
 }
 
 
@@ -245,7 +326,11 @@ def run(job, emit):
         raise ValueError(f'unknown task {job.get("task")!r}')
 
     rows = runner(mod, job, emit)
-    emit.send('result', rows=rows, task=job['task'])
+    if job['task'] == 'curve':
+        emit.send('result', rows=rows, task='curve',
+                  columns=[list(c) for c in CURVE_COLUMNS])
+    else:
+        emit.send('result', rows=rows, task=job['task'])
 
 
 def main(argv=None):

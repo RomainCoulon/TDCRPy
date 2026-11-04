@@ -670,11 +670,23 @@ def _refresh_config_globals():
     global micCorrAuto, micCorrECThreshold, micCorrBiasThreshold
     global delayedFluorescence, tau_prompt, tau_delayed, eta_delayed
     global tta_kq, tta_gamma, tta_Ac
+    global RHO, Z, A, sp_model, chou_param
     read_config_object()
     if _CONFIG_SECTION not in config:
         return
     inputs = config[_CONFIG_SECTION]
     try:
+        # The scintillator composition and the stopping-power settings, read
+        # by stoppingpower() and E_quench_e() at call time -- see
+        # _stopping_globals. globals().get, not the bare names: this can run
+        # before the module-level readParameters() has defined them.
+        g = globals()
+        RHO = inputs.getfloat("density", fallback=g.get("RHO", 0.96))
+        Z = inputs.getfloat("Z", fallback=g.get("Z", 5.2))
+        A = inputs.getfloat("A", fallback=g.get("A", 11.04))
+        sp_model = inputs.get("sp_model", fallback=g.get("sp_model", "tan_xia"))
+        chou_param = inputs.getfloat("chou_param",
+                                     fallback=g.get("chou_param", 0.0))
         fAq = inputs.getfloat("fAq", fallback=0.0)
         diam_micelle = inputs.getfloat("diam_micelle", fallback=4.0)
         sigma_micelle = inputs.getfloat("sigma_micelle", fallback=0.0)
@@ -706,6 +718,15 @@ def _micelle_globals():
     them.
     """
     return fAq, diam_micelle, sigma_micelle
+
+
+def _stopping_globals():
+    """Current ``(RHO, Z, A, sp_model, chou_param)``.
+
+    :func:`stoppingpower` names its own parameters ``Z`` and ``A``, which
+    shadow the module globals, so it reaches the current values through here.
+    """
+    return RHO, Z, A, sp_model, chou_param
 
 
 @lru_cache(maxsize=None)
@@ -2203,7 +2224,17 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 
 #========================   Nouveau modèle pour calculer le pouvoir d'arrête d'électron ========
 
-def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
+#: Low-energy electron stopping-power models understood by
+#: :func:`stoppingpower`, each with the energy (eV) above which the Bethe
+#: formula takes over from it.
+_SP_EMAX = {
+    'tan_xia': 20000, 'joy_luo': 20000, 'marchal': 400,
+    'ashley': 100, 'kossert_graucarles': 1000, 'rao_reddy': 413,
+}
+STOPPING_POWER_MODELS = tuple(_SP_EMAX)
+
+
+def stoppingpower(e,rho=None,Z=None,A=None,emin=0,file=data_TanXia_f,spmodel=None):
     """
     The stopping power of electrons between 20 keV and 1000 keV is a mixture of a radiative loss model [1], and a collision model [2] that has been validated agaisnt the NIST model ESTAR [3] recommanded by the ICRU Report 37 [4].
         
@@ -2223,11 +2254,14 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
     e : float
         Energy of the electron in eV.
     rho : float, optional
-        density of the source in g.cm-3. The default is 0.96.
+        density of the source in g.cm-3. ``None`` (the default) takes the
+        configured scintillator's.
     Z : float, optional
-        mean charge number of the source. The default is 5.2.
+        mean charge number of the source. ``None`` (the default) takes the
+        configured scintillator's.
     A : float, optional
-        mean mass number of the source. The default is 11.04.
+        mean mass number of the source. ``None`` (the default) takes the
+        configured scintillator's.
     emin : float, optional
         the minimal energy to consider. The default is 0.
     file : list, optional
@@ -2239,18 +2273,31 @@ def stoppingpower(e,rho=RHO,Z=Z,A=A,emin=0,file=data_TanXia_f,spmodel=sp_model):
         to the LS cocktail currently selected via :func:`lsCocktail`, and
         uses that scintillator's own reference density and mean ionisation
         potential (see :data:`TANXIA_COCKTAILS`).
+    spmodel : str, optional
+        One of :data:`STOPPING_POWER_MODELS`. ``None`` (the default) takes
+        the configured ``sp_model``.
 
     Returns
     -------
     dEdx : float
         Calculated stopping power in MeV.cm-1.
 
+    Notes
+    -----
+    .. versionchanged:: 2.20.34
+       ``rho``, ``Z``, ``A`` and ``spmodel`` defaulted to the values in
+       ``config.toml`` *when the module was imported*. A later
+       :func:`modifyLScocktail` or :func:`modifysp_model` therefore did not
+       reach the exact quenching integral (:func:`E_quench_e`), which calls
+       this with the defaults -- the late-binding trap the micelle kernel had
+       before v2.20.22. They are now resolved at call time.
     """
-    _emax_map = {
-        'tan_xia': 20000, 'joy_luo': 20000, 'marchal': 400,
-        'ashley': 100, 'kossert_graucarles': 1000, 'rao_reddy': 413,
-    }
-    emax = _emax_map.get(spmodel, 20000)
+    g_rho, g_Z, g_A, g_sp, _ = _stopping_globals()
+    rho = g_rho if rho is None else rho
+    Z = g_Z if Z is None else Z
+    A = g_A if A is None else A
+    spmodel = g_sp if spmodel is None else spmodel
+    emax = _SP_EMAX.get(spmodel, 20000)
 
     # e:eV ;rho: g.cm-3
     mc_2 = 0.5109989 #MeV
@@ -2569,7 +2616,7 @@ def readBetaSpectra(rad):
 
 #============================  Fonction quenching  =====================================
 
-def E_quench_e(ei,ed,kB,nE,kC=chou_param):
+def E_quench_e(ei,ed,kB,nE,kC=None):
     """
     This function calculate the quenched energy of electrons according to the Birks model of scintillation quenching.
     It also include the possibility to account biomolecular quenching with the Chou model.
@@ -2585,17 +2632,21 @@ def E_quench_e(ei,ed,kB,nE,kC=chou_param):
     nE : integer 
         number of points of the energy linear space
     kC : float
-        Chou quenching parameter in cm2/MeV2. Deafault kC = 0
-    
+        Chou quenching parameter in cm2/MeV2. ``None`` (the default) takes
+        the configured ``chou_param``, read at call time (see
+        :func:`stoppingpower`).
+
     Returns
     -------
     float
         Quenched energy in eV.
-    
+
     """
-    
+    if kC is None:
+        kC = _stopping_globals()[4]
     e_dis = np.linspace(ei-ed,ei,nE)
-    f = np.array([1.0/(1+kB*stoppingpower(i)+kC*stoppingpower(i)**2) for i in e_dis])
+    sp = np.array([stoppingpower(i) for i in e_dis])
+    f = 1.0/(1+kB*sp+kC*sp**2)
     # Trapezoidal rule: summing nE point samples each weighted by a delta
     # sized for (nE-1) intervals (as a plain Riemann sum would) overcounts
     # the integral by a factor ~nE/(nE-1); this keeps q <= ed always, as it
