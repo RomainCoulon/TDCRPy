@@ -145,16 +145,19 @@ The window is laid out like a desktop application:
 |---|---|
 | **Calculations** (sidebar) | Efficiency at a given L · Fit L to a TDCR (stochastic or analytical) · Efficiency curve ε_D vs TDCR |
 | **Data & plots** (sidebar) | **Decay data** — branches, γ rays and conversion electrons per decay, as read from PenNuc · **β spectrum** — any transition in the BetaShape archive · **Stopping power** — electrons (one model, or all six side by side) or α particles (ASTAR) · **Ionisation quenching** — Q(E) and Q/E for one or several kB |
-| **Input tabs** | Source, Data & plots, Scintillator, Micelles, Delayed fluorescence, Counter |
-| **Results** | *Table* (with uncertainties), *Plot* (zoom, pan, save) and *Log* (the model's own messages, including the reverse-micelle advisories) |
-| **Help menu** | Online documentation, example notebooks, the reference paper, the BIPM technical report, issue tracker, licence and *About* |
+| **Input tabs** | Source, Data & plots, Scintillator, Micelles, Delayed fluorescence, Counter. On *Source*, pick a nuclide from the list, give its activity fraction and press *Add*; repeat for a mixture (*Normalise* turns activities or ratios into fractions) |
+| **Results** | *Table* (with uncertainties), *Plot* (zoom, pan, save), *Sources* (where the decay data come from: DDEP evaluation date and LNHB tables, atomic-data evaluator, BetaShape version and citation of every spectrum) and *Log* (the model's own messages, including the reverse-micelle advisories) |
+| **Help menu** | Online documentation, example notebooks, the reference paper, the BIPM technical report, issue tracker, *Check for updates…*, licence and *About* |
 
 *Export CSV…* writes the table at full precision, UTF-8 so a spreadsheet shows β and γ correctly, preceded by `#` lines recording the TDCRPy version, the calculation and every setting used (`pandas.read_csv(path, comment='#')` skips them). *Save plot…* writes PNG, PDF or SVG at 300 dpi. F5 runs, Esc cancels, Ctrl+S exports.
 
-Two things worth knowing:
+The light yield L starts at the typical value for the chosen cocktail (see [Typical light yield per cocktail](#typical-light-yield-per-cocktail)), and follows the cocktail until you type a value of your own. *Propagate nuclear-data uncertainty* repeats the run M times, each on one random realisation of the emission probabilities, and reports the Monte-Carlo and nuclear-data components separately (see [Nuclear-data uncertainty](#nuclear-data-uncertainty)).
+
+Things worth knowing:
 
 * **Running writes your settings to the package `config.toml`**, which scripts and notebooks share. The window snapshots that file when it opens, and *Undo my config changes* puts it back; *Restore shipped defaults* replaces it with `configDefault.toml`.
 * Each calculation runs in a **separate process**, so the window stays responsive, *Cancel* is immediate, and a native crash in the Monte-Carlo kernel is reported rather than taking the interface with it.
+* **Help ▸ Check for updates…** asks PyPI for the latest release. *Update now* closes the window, lets a small helper install the new version with pip, and reopens it. The update has to happen after the window closes: on Windows, pip cannot replace files that a running program holds open, and a failed attempt leaves a half-uninstalled package. For the same reason the helper first checks that no other program (a Jupyter kernel, a script) still has TDCRPy open, and changes nothing if one does. A source checkout (editable install) is updated with `git pull` instead, and the window says so.
 
 The interface needs no extra dependency — `tkinter` ships with CPython — and the nuclide list, cocktail list and defaults are read from the installed library, never duplicated in the GUI.
 
@@ -212,6 +215,47 @@ Provide comma-separated nuclides and their relative activity fractions:
 
 ```python
 result = tdcrpy.TDCRPy.TDCRPy(L, "Co-60, H-3", "0.8, 0.2", N, kB, V)
+```
+
+### Typical light yield per cocktail
+
+`defaultL()` returns a typical L for a cocktail — a sensible fixed value, or the initial guess of a fit. The values are fitted to measured TDCR and pooled over Fe-55, S-35 and Tc-99 sources (mean ± spread, number of determinations):
+
+| Cocktail | L / keV⁻¹ |
+|---|---|
+| Ultima Gold (default) | 5.92 ± 0.26 (17) |
+| Ultima Gold AB | 5.83 ± 0.40 (12) |
+| Ultima Gold LLT | 5.72 ± 0.42 (11) |
+| ProSafe+ | 4.62 ± 0.36 (16) |
+| Hionic-Fluor | 3.90 ± 0.29 (16) |
+
+L depends on the counter as well as the cocktail, so these are starting points, not constants. A cocktail without a measured value gets the Ultima Gold one, flagged as a stand-in:
+
+```python
+L, spread, measured = tdcrpy.TDCR_model_lib.defaultL("ProSafe+")   # 4.62, 0.36, True
+```
+
+### Nuclear-data uncertainty
+
+With `uncData=True`, a run uses **one random realisation** of the nuclear data: each γ, conversion-electron, X-ray and Auger emission probability is drawn once from a normal distribution of its stated uncertainty (truncated at zero) and kept for all N decays. Branch (β, EC, α) intensities are not perturbed. The uncertainty is the spread of repeated runs, less their Monte-Carlo variance:
+
+```python
+import numpy as np
+runs = [tdcrpy.TDCRPy.TDCRPy(L, "I-125", "1", N, kB, V, uncData=True) for _ in range(20)]
+eff_D, u_mc = np.array([r[2] for r in runs]), np.array([r[3] for r in runs])
+u_data = np.sqrt(max(eff_D.var(ddof=1) - np.mean(u_mc**2), 0.0))
+```
+
+`eff()` takes `uncData` too. Before 2.20.37 the probabilities were redrawn for every decay, which averages back to the nominal data over a run — the option then propagated nothing. The data component is often small next to the Monte-Carlo noise: resolving it needs large N, and the window reports an upper bound when it is not resolved.
+
+### Decay-data provenance
+
+`decayDataInfo(rad)` says where the data of a nuclide come from, read from the shipped files themselves: the DDEP evaluation date and the LNHB tables, the evaluator and literature cut-off of the X-ray/Auger data, and the BetaShape version, transition type, end point and citation of every β spectrum.
+
+```python
+info = tdcrpy.TDCR_model_lib.decayDataInfo("Sr-90")
+info["nuclear"]["evaluation_date"]          # '10/05/2005'
+[b["program"] for b in info["beta"]]        # ['Beta Spectrum from BetaShape 2.4 (05/2024), ...', 'BetaShape 2.3.1 (12/2023)']
 ```
 
 ### Analytical Model (Pure Beta Emitters)

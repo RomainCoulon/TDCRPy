@@ -533,8 +533,22 @@ def TDCRPy(
         Read previously recorded decay histories from the temporary files
         instead of running a new MC simulation.  Default is ``False``.
     uncData : bool, optional
-        If ``True``, sample nuclear-data uncertainties for each trial
-        (propagation of nuclear-data uncertainty).  Default is ``False``.
+        If ``True``, this run uses ONE random realisation of the nuclear
+        data: every γ / conversion-electron emission probability (PenNuc)
+        and every X-ray / Auger probability (ENSDF) is drawn once from a
+        normal distribution of its stated standard uncertainty, truncated
+        at zero, and kept for all *N* decays. Branch (β, EC, α) intensities
+        are not perturbed. Default is ``False``.
+
+        One run is one realisation, so its efficiencies carry the data
+        uncertainty only as a shift; the uncertainty itself is the spread
+        of repeated runs, less their Monte-Carlo variance (JCGM 101).
+
+        .. versionchanged:: 2.20.37
+           Drawn once per run. Before, the probabilities were redrawn for
+           every decay, which averages back to the nominal data over a
+           run -- the option then propagated nothing -- and a draw below
+           zero corrupted the sampling.
     opticalTransport : bool or None, optional
         If ``True``, use the full optical Monte-Carlo transport model
         (:func:`~tdcrpy.TDCR_model_lib.detectProbabilitiesMC`) — photons
@@ -680,6 +694,15 @@ def TDCRPy(
     ) = decay_data
 
     # ------------------------------------------------------------------ #
+    # 7b. Nuclear-data uncertainty: one realisation for the whole run.     #
+    #     Redrawing per decay would average back to the nominal data.      #
+    # ------------------------------------------------------------------ #
+    tl.resetDataRealisation()
+    if uncData:
+        prob_trans = tl.perturbTransitionProbabilities(prob_trans,
+                                                       u_prob_trans)
+
+    # ------------------------------------------------------------------ #
     # 8. Monte Carlo main loop                                             #
     # ------------------------------------------------------------------ #
     eff_lists = {
@@ -718,7 +741,8 @@ def TDCRPy(
             e_branch, LevelDaughter, levelNumber, prob_trans, prob_branch,
             levelEnergy, transitionType, e_trans, next_level,
             Transition_prob_sum, trans_halfLife, u_prob_trans,
-            tau, uncData, display,
+            # False: prob_trans already IS this run's realisation (7b).
+            tau, False, display,
         )
 
         # -------------------------------------------------------------- #
@@ -1631,7 +1655,7 @@ def objectFct(L, TD, Rad, pmf_1, N, kB, V):
 
 def eff(TD, Rad, pmf_1, kB, V,
         N=10000, L=1, maxiter=20, xatol=1e-7,
-        disp=False, Lbounds=None):
+        disp=False, Lbounds=None, uncData=False):
     """
     Determine the free parameter *L* and detection efficiencies from a
     measured TDCR ratio, using the full stochastic Monte Carlo model.
@@ -1682,6 +1706,12 @@ def eff(TD, Rad, pmf_1, kB, V,
            monotonic in ``L`` (see :func:`_bracket_physical_L`), a bounded
            search over that span could settle on the falling branch and return
            an ``L`` reproducing the wrong ratio, silently.
+    uncData : bool, optional
+        Simulate the decays with one random realisation of the nuclear data
+        (see :func:`TDCRPy`). The fit and the efficiencies then belong to
+        that realisation; repeat the call to see their spread.
+
+        .. versionadded:: 2.20.37
 
     Returns
     -------
@@ -1739,7 +1769,7 @@ def eff(TD, Rad, pmf_1, kB, V,
     symm = not isinstance(TD, (tuple, list))
 
     # Step 1 — cache decay histories.
-    TDCRPy(L, Rad, pmf_1, N, kB, V, record=True)
+    TDCRPy(L, Rad, pmf_1, N, kB, V, record=True, uncData=uncData)
 
     # Step 2 — scalar optimisation for L (symmetric).
     td0 = TD if symm else TD[0]

@@ -26,9 +26,14 @@ for numba, stays responsive during a run that may take minutes, can cancel a
 run by killing it, and survives a native crash in the kernel.
 
 Nothing here keeps its own copy of the cocktail list, the nuclide list, the
-configuration defaults, the version or the licence: all are read from the
-installed package. A hardcoded copy would be one more thing to go stale,
-which this package has been bitten by repeatedly.
+configuration defaults, the typical light yields, the version or the
+licence: all are read from the installed package. A hardcoded copy would be
+one more thing to go stale, which this package has been bitten by
+repeatedly.
+
+Updating is handed to :mod:`tdcrpy._gui_updater`, run from a copy after the
+window has closed: on Windows pip cannot replace files a running process
+holds, and a failed attempt leaves a half-uninstalled package behind.
 """
 import csv
 import datetime
@@ -79,9 +84,11 @@ TASK_HELP = {
     'curve': 'ε_D against TDCR over a range of L: the decays are simulated '
              'once and replayed at every L, so the curve is smooth.',
     'decay_data': 'The decay scheme as the model reads it (PenNuc): decay '
-                  'branches, γ rays and conversion electrons, per decay.',
+                  'branches, γ rays and conversion electrons, per decay. '
+                  'The Sources tab says where the data come from.',
     'beta_spectrum': 'The emitted energy spectrum of one β transition, from '
-                     'the BetaShape archive the model samples.',
+                     'the BetaShape archive the model samples. The Sources '
+                     'tab gives its BetaShape version and citation.',
     'stopping_power': 'Stopping power dE/dx of electrons (every model side '
                       'by side, if wished) or α particles in the scintillator.',
     'quenching': 'Birks-quenched energy Q(E) and the quenching factor Q/E, '
@@ -99,6 +106,10 @@ E_DEFAULTS = {'electron': '0.1, 2000, 100', 'alpha': '100, 8000, 80'}
 #: Most kB values the quenching view overlays on one plot.
 MAX_KB_SERIES = 8
 
+#: Bounds on the number of nuclear-data realisations. Two is the least a
+#: spread can come from; below about ten its upper bound is loose.
+MIN_REPS, MAX_REPS = 2, 200
+
 # Web resources. Every one also appears in README.md or setup.py.
 REPO_URL = 'https://github.com/RomainCoulon/TDCRPy'
 DOCS_URL = REPO_URL + '#readme'
@@ -106,6 +117,8 @@ NOTEBOOKS_URL = REPO_URL + '/tree/main/notebooks'
 ISSUES_URL = REPO_URL + '/issues'
 LICENCE_URL = REPO_URL + '/blob/main/LICENCE.md'
 PYPI_URL = 'https://pypi.org/project/TDCRPy/'
+PYPI_JSON_URL = 'https://pypi.org/pypi/TDCRPy/json'
+HISTORY_URL = REPO_URL + '/commits/main'
 PAPER_URL = 'https://doi.org/10.1016/j.apradiso.2024.111518'
 REPORT_URL = 'http://dx.doi.org/10.13140/RG.2.2.15682.80321'
 BIPM_URL = 'https://www.bipm.org'
@@ -177,7 +190,7 @@ def parse_nuclides(text):
     """Split the nuclide field into labels, preserving the user's order."""
     rads = [s.strip() for s in str(text).split(',') if s.strip()]
     if not rads:
-        raise InputError('Nuclide: give at least one, e.g. "Fe-55".')
+        raise InputError('Source: add at least one nuclide, e.g. Fe-55.')
     return rads
 
 
@@ -205,6 +218,87 @@ def parse_fractions(text, n_rad):
         raise InputError(f'Fractions: they sum to {total:g}, not 1. '
                          f'Fix them, or give them as proportions of 1.')
     return vals
+
+
+def add_to_source(source, rad, frac_text, known=()):
+    """Add *rad* to the source mixture, or update its fraction.
+
+    Parameters
+    ----------
+    source : list of (str, float)
+        The mixture so far, in the order the user built it.
+    rad : str
+        The nuclide picked. Matched against *known* without regard to
+        case, and stored under the archive's spelling.
+    frac_text : str
+        Its activity fraction, as typed.
+    known : sequence of str
+        The nuclides the archive has; empty skips the check (the list has
+        not arrived yet).
+
+    Returns
+    -------
+    list of (str, float)
+        A new list; *source* is not modified.
+    """
+    rad = str(rad).strip()
+    if not rad:
+        raise InputError('Nuclide: pick one from the list.')
+    if known:
+        match = {k.lower(): k for k in known}.get(rad.lower())
+        if match is None:
+            raise InputError(f'Nuclide: {rad!r} is not in the decay-data '
+                             f'archive. Pick one from the list.')
+        rad = match
+    frac = parse_numbers(frac_text or '1', 'Fraction', count=1)[0]
+    if frac <= 0:
+        raise InputError('Fraction: must be greater than zero.')
+    out = list(source)
+    for i, (r, _f) in enumerate(out):
+        if r == rad:
+            out[i] = (rad, frac)
+            return out
+    return out + [(rad, frac)]
+
+
+def L_default_for(cocktail, defaults):
+    """The default light yield for *cocktail*, and a note saying where it
+    comes from.
+
+    *defaults* is ``describe()``'s ``L_defaults``: ``{cocktail: [L, spread,
+    measured]}``. Returns ``(None, '')`` when the library has no table.
+    """
+    entry = (defaults or {}).get(cocktail)
+    if not entry:
+        return None, ''
+    L, spread, measured = entry
+    if measured:
+        return f'{L:g}', (f'typical for {cocktail}: {L:g} ± {spread:g} '
+                          f'keV⁻¹ (measured)')
+    return f'{L:g}', (f'no measured value for {cocktail}: a stand-in '
+                      f'from the Ultima Gold family')
+
+
+def normalise_source(source):
+    """Scale the fractions so that they sum to 1."""
+    total = sum(f for _r, f in source)
+    if total <= 0:
+        return list(source)
+    return [(r, f / total) for r, f in source]
+
+
+def source_fields(source):
+    """The mixture as the comma-separated 'rad' and 'pmf' a job carries.
+
+    A single nuclide's fraction is 1 whatever was entered: there is
+    nothing for it to be a fraction of.
+    """
+    if not source:
+        return '', ''
+    rad = ', '.join(r for r, _f in source)
+    if len(source) == 1:
+        return rad, '1'
+    return rad, ', '.join(f'{f:.6g}' for _r, f in source)
 
 
 def _build_grid(text, field, log_spacing):
@@ -295,7 +389,7 @@ def build_job(form):
         }
 
     if task == 'beta_spectrum':
-        rad = parse_nuclides(form['rad'])[0]
+        rad = parse_nuclides(form.get('data_rad') or form['rad'])[0]
         return {
             'task': task,
             'rad': rad,
@@ -305,7 +399,8 @@ def build_job(form):
         }
 
     if task == 'decay_data':
-        return {'task': task, 'rad': parse_nuclides(form['rad'])[0],
+        return {'task': task,
+                'rad': parse_nuclides(form.get('data_rad') or form['rad'])[0],
                 'config': config}
 
     # ---- the model runs --------------------------------------------------
@@ -326,9 +421,20 @@ def build_job(form):
         'kB': kB,
         'V': V,
         'display': bool(form.get('display')),
-        'uncData': bool(form.get('uncData')),
         'config': config,
     }
+
+    # Nuclear-data uncertainty: only where repeated runs can measure it.
+    stochastic = task == 'fit' or (task == 'efficiency'
+                                   and bool(form.get('Smodel', True)))
+    if bool(form.get('uncData')) and stochastic:
+        M = parse_numbers(form.get('uncReps') or '10', 'Realisations M',
+                          count=1)[0]
+        if M != int(M) or not MIN_REPS <= M <= MAX_REPS:
+            raise InputError(f'Realisations M: a whole number from '
+                             f'{MIN_REPS} to {MAX_REPS}.')
+        job['uncData'] = True
+        job['uncReps'] = int(M)
 
     if task == 'efficiency':
         # One value is a symmetric counter; three set the PMTs separately.
@@ -385,13 +491,25 @@ def format_value(value, uncertainty):
     return val, unc, rel
 
 
-def format_cell(value):
+def format_cell(value, digits=5):
     """One cell of a curve or data table, for reading."""
     if value is None:
         return ''
     if isinstance(value, str):
         return value
-    return f'{value:.5g}'
+    return f'{value:.{digits}g}'
+
+
+def is_uncertainty_column(key):
+    """Columns holding an uncertainty: shown to 3 significant digits."""
+    return key == 'u' or key.startswith('u_')
+
+
+def numberish(text):
+    """Whether a string cell reads as a number ('< 0.03', '0.52 %'), and so
+    belongs right-aligned with the numbers."""
+    s = str(text).strip().lstrip('<').rstrip('%').strip()
+    return _is_number(s) if s else False
 
 
 def write_csv(path, rows, meta=()):
@@ -406,6 +524,16 @@ def write_csv(path, rows, meta=()):
         for line in meta:
             fh.write(f'# {line}\n')
         csv.writer(fh).writerows(rows)
+
+
+def provenance_lines(info):
+    """A result's provenance sections as plain lines, for a CSV header."""
+    lines = []
+    for section in info or ():
+        lines.append(section['title'])
+        for label, text, _url in section['items']:
+            lines.append(f'  {label}: {text}' if label else f'    {text}')
+    return lines
 
 
 def package_dir():
@@ -451,6 +579,109 @@ def licence_text():
 
 def task_label(key):
     return dict(TASKS).get(key, key)
+
+
+# --------------------------------------------------------------------------
+# updates
+# --------------------------------------------------------------------------
+def version_key(version):
+    """The numeric release part of a version, for comparison.
+
+    ``2.20.36`` -> ``(2, 20, 36)``. A suffix (``rc1``, ``.dev0``) is ignored,
+    which is all this needs: PyPI's ``info.version`` is the latest stable
+    release.
+    """
+    m = re.match(r'\s*v?(\d+(?:\.\d+)*)', str(version))
+    return tuple(int(p) for p in m.group(1).split('.')) if m else ()
+
+
+def is_newer(latest, current):
+    """Whether *latest* is a later release than *current*."""
+    a, b = version_key(latest), version_key(current)
+    return bool(a) and bool(b) and a > b
+
+
+def fetch_latest_release(timeout=10.0):
+    """Ask PyPI for the latest TDCRPy release: ``(version, upload date)``.
+
+    Only the package name goes out; the user-agent names the client and
+    nothing about the user.
+    """
+    import urllib.request
+    req = urllib.request.Request(PYPI_JSON_URL, headers={
+        'User-Agent': 'TDCRPy-gui', 'Accept': 'application/json'})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        data = json.loads(resp.read().decode('utf-8'))
+    latest = data['info']['version']
+    files = data.get('releases', {}).get(latest) or [{}]
+    date = (files[0].get('upload_time') or '')[:10]
+    return latest, date
+
+
+def install_kind():
+    """How this TDCRPy was installed: ``'pip'``, ``'editable'`` (a source
+    checkout, updated with git), another installer's name (``'conda'``...),
+    or ``'unknown'``."""
+    try:
+        dist = metadata.distribution('TDCRPy')
+    except metadata.PackageNotFoundError:
+        return 'unknown'
+    try:
+        direct = json.loads(dist.read_text('direct_url.json') or '{}')
+    except ValueError:
+        direct = {}
+    if direct.get('dir_info', {}).get('editable'):
+        return 'editable'
+    installer = (dist.read_text('INSTALLER') or '').strip().lower()
+    if installer in ('', 'pip', 'uv'):
+        return 'pip'
+    return installer
+
+
+def console_python():
+    """The interpreter running this window, as python.exe: pythonw.exe (what
+    the gui launcher uses) has no console for pip to report to."""
+    exe = sys.executable
+    if os.name == 'nt' and os.path.basename(exe).lower() == 'pythonw.exe':
+        alt = os.path.join(os.path.dirname(exe), 'python.exe')
+        if os.path.exists(alt):
+            return alt
+    return exe
+
+
+def launch_updater(version, current):
+    """Start the update helper on a copy of itself, then let the window
+    close: see :mod:`tdcrpy._gui_updater` for why it must run after.
+
+    Returns the path of the log the helper writes.
+    """
+    import sysconfig
+    import tempfile
+    pkg = package_dir()
+    tmp = tempfile.mkdtemp(prefix='tdcrpy-update-')
+    helper = os.path.join(tmp, 'tdcrpy_update.py')
+    shutil.copyfile(os.path.join(pkg, '_gui_updater.py'), helper)
+    log = os.path.join(tmp, 'update.log')
+    python = console_python()
+    runner = python
+    if os.name == 'nt':
+        w = os.path.join(os.path.dirname(python), 'pythonw.exe')
+        runner = w if os.path.exists(w) else python
+    launcher = os.path.join(sysconfig.get_path('scripts') or '',
+                            'tdcrpy-gui.exe' if os.name == 'nt'
+                            else 'tdcrpy-gui')
+    cmd = [runner, '-I', helper, '--pid', str(os.getpid()),
+           '--python', python, '--spec', f'TDCRPy=={version}',
+           '--from-version', current, '--package-dir', pkg,
+           '--log', log, '--relaunch']
+    if os.path.exists(launcher):
+        cmd += ['--launcher', launcher]
+    flags = 0
+    if os.name == 'nt':
+        flags = (getattr(subprocess, 'DETACHED_PROCESS', 0)
+                 | getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0))
+    subprocess.Popen(cmd, close_fds=True, creationflags=flags, cwd=tmp)
+    return log
 
 
 # --------------------------------------------------------------------------
@@ -540,6 +771,9 @@ class App(ttk.Frame):
         self._result_job = None
         self._figure = None
         self._canvas = None
+        self._L_shown = {}           # the default last written per L field
+        self._result_info = None
+        self._update_check = None
 
         self.vars = {}
         self._setup_style()
@@ -669,6 +903,8 @@ class App(ttk.Frame):
                       command=lambda: self._open(ISSUES_URL))
         m.add_command(label='TDCRPy on PyPI',
                       command=lambda: self._open(PYPI_URL))
+        m.add_command(label='Check for updates…',
+                      command=self._check_updates)
         m.add_separator()
         m.add_command(label='Licence', command=self._show_licence)
         m.add_command(label='About TDCRPy', command=self._show_about)
@@ -791,6 +1027,7 @@ class App(ttk.Frame):
         self.results.grid(row=0, column=0, sticky='nsew')
         self._tab_table(self.results)
         self._tab_plot(self.results)
+        self._tab_sources(self.results)
         self._tab_log(self.results)
         pane.add(right, weight=2)
 
@@ -813,65 +1050,113 @@ class App(ttk.Frame):
         f = ttk.Frame(nb, padding=12)
         nb.add(f, text='Source')
         self.tab_source = f
+        # The job still reads 'rad' and 'pmf' as comma-separated text; the
+        # list below is the only thing that writes them.
+        self._var('rad', 'Fe-55')
+        self._var('pmf', '1')
+        self.source = [('Fe-55', 1.0)]
 
-        ttk.Label(f, text='Nuclide(s)').grid(row=0, column=0, sticky='w')
-        self.nuclide_entry = ttk.Entry(
-            f, textvariable=self._var('rad', 'Fe-55'), width=28)
-        self.nuclide_entry.grid(row=0, column=1, sticky='w', pady=2)
-        ttk.Label(f, text='comma-separated for a mixture',
-                  style='Hint.TLabel').grid(row=0, column=2, sticky='w',
-                                            padx=(8, 0))
+        self._section(f, 0, 'Radionuclide source')
+        pick = ttk.Frame(f)
+        pick.grid(row=1, column=0, columnspan=3, sticky='w')
+        ttk.Label(pick, text='Nuclide').pack(side='left')
+        self.nuclide_box = ttk.Combobox(
+            pick, textvariable=self._var('pick_rad', 'Fe-55'), width=12,
+            values=())
+        self.nuclide_box.pack(side='left', padx=(6, 12))
+        self.nuclide_box.bind('<Return>', lambda e: self._add_nuclide())
+        self.nuclide_box.bind('<<ComboboxSelected>>',
+                              lambda e: self.frac_entry.focus_set())
+        ttk.Label(pick, text='Fraction').pack(side='left')
+        self.frac_entry = ttk.Entry(
+            pick, textvariable=self._var('pick_frac', '1'), width=8)
+        self.frac_entry.pack(side='left', padx=(6, 8))
+        self.frac_entry.bind('<Return>', lambda e: self._add_nuclide())
+        self.add_button = ttk.Button(pick, text='Add', width=6,
+                                     command=self._add_nuclide)
+        self.add_button.pack(side='left')
+        _Tooltip(self.add_button, 'Add the nuclide to the source, or update '
+                                  'its fraction if it is already there')
 
-        picker = ttk.Frame(f)
-        picker.grid(row=1, column=1, sticky='w', pady=(0, 6))
-        self.nuclide_box = ttk.Combobox(picker, width=14, state='disabled',
-                                        values=())
-        self.nuclide_box.pack(side='left')
-        ttk.Button(picker, text='Add', width=5,
-                   command=self._add_nuclide).pack(side='left', padx=4)
+        lst = ttk.Frame(f)
+        lst.grid(row=2, column=0, columnspan=3, sticky='ew', pady=(6, 0))
+        self.source_tree = ttk.Treeview(
+            lst, columns=('rad', 'frac'), show='headings', height=3,
+            selectmode='browse')
+        self.source_tree.heading('rad', text='Nuclide')
+        self.source_tree.heading('frac', text='Activity fraction')
+        self.source_tree.column('rad', width=self._px(110), anchor='w')
+        self.source_tree.column('frac', width=self._px(120), anchor='e')
+        self.source_tree.pack(side='left')
+        self.source_tree.bind('<<TreeviewSelect>>', self._on_source_select)
+        self.source_tree.bind('<Delete>', lambda e: self._remove_nuclide())
+        side = ttk.Frame(lst)
+        side.pack(side='left', fill='y', padx=(8, 0))
+        self.source_buttons = []
+        for text, cmd, tip in (
+                ('Remove', self._remove_nuclide, 'Remove the selected nuclide'),
+                ('Normalise', self._normalise_source,
+                 'Scale the fractions so that they sum to 1 — enter '
+                 'activities or ratios, then normalise'),
+                ('Clear', self._clear_source, 'Empty the source')):
+            b = ttk.Button(side, text=text, width=10, command=cmd)
+            b.pack(anchor='w', pady=(0, 3))
+            _Tooltip(b, tip)
+            self.source_buttons.append(b)
+        self.source_sum = ttk.Label(f, style='Hint.TLabel')
+        self.source_sum.grid(row=3, column=0, columnspan=3, sticky='w')
+        self._refresh_source()
 
-        self.pmf_entry = self._row(
-            f, 2, 'Activity fractions', 'pmf', '',
-            hint='blank for a single nuclide, else e.g. 0.8, 0.2')
-
-        self._section(f, 3, 'Light yield')
-        self.l_entry = self._row(f, 4, 'Light yield L', 'L', '1.0',
+        self._section(f, 4, 'Light yield')
+        self.l_entry = self._row(f, 5, 'Light yield L', 'L', '',
                                  hint='keV⁻¹; 3 values for asymmetric PMTs')
-        self.td_entry = self._row(f, 5, 'Measured TDCR', 'TD', '0.9',
+        self.L_hint = ttk.Label(f, style='Hint.TLabel')
+        self.L_hint.grid(row=6, column=1, columnspan=2, sticky='w')
+        self.td_entry = self._row(f, 7, 'Measured TDCR', 'TD', '0.9',
                                   hint='T/D; 4 values for an asymmetric '
                                        'counter')
-        self.guess_entry = self._row(f, 6, 'Initial L guess', 'L_guess', '1.0')
+        self.guess_entry = self._row(f, 8, 'Initial L guess', 'L_guess', '')
         self.bounds_entry = self._row(
-            f, 7, 'L bounds', 'Lbounds', '',
+            f, 9, 'L bounds', 'Lbounds', '',
             hint='blank lets the fit bracket the physical root itself')
         self.range_entry = self._row(
-            f, 8, 'L range', 'Lrange', '0.1, 10, 25',
+            f, 10, 'L range', 'Lrange', '0.1, 10, 25',
             hint='from, to, number of points (keV⁻¹)')
         self.log_check = ttk.Checkbutton(
             f, text='log spacing', variable=self._flag('Llog', True))
-        self.log_check.grid(row=9, column=1, sticky='w')
+        self.log_check.grid(row=11, column=1, sticky='w')
 
-        self._section(f, 10, 'Sample and statistics')
-        self.kb_entry = self._row(f, 11, 'Birks constant kB', 'kB', '1.0e-5',
+        self._section(f, 12, 'Sample and statistics')
+        self.kb_entry = self._row(f, 13, 'Birks constant kB', 'kB', '1.0e-5',
                                   hint='cm keV⁻¹')
-        self.v_entry = self._row(f, 12, 'Volume', 'V', '10', hint='mL')
-        self.n_entry = self._row(f, 13, 'Number of decays N', 'N', '10000',
+        self.v_entry = self._row(f, 14, 'Volume', 'V', '10', hint='mL')
+        self.n_entry = self._row(f, 15, 'Number of decays N', 'N', '10000',
                                  hint='≥ 10 000 recommended (JCGM 101)')
 
         self.smodel_check = ttk.Checkbutton(
             f, text='Stochastic model (uncheck for the analytical one, '
                     'valid for pure β emitters only)',
-            variable=self._flag('Smodel', True))
-        self.smodel_check.grid(row=14, column=0, columnspan=3, sticky='w',
+            variable=self._flag('Smodel', True),
+            command=self._on_task_change)
+        self.smodel_check.grid(row=16, column=0, columnspan=3, sticky='w',
                                pady=(8, 0))
         self.unc_check = ttk.Checkbutton(
             f, text='Propagate nuclear-data uncertainty',
-            variable=self._flag('uncData'))
-        self.unc_check.grid(row=15, column=0, columnspan=3, sticky='w')
+            variable=self._flag('uncData'), command=self._on_task_change)
+        self.unc_check.grid(row=17, column=0, columnspan=3, sticky='w')
+        _Tooltip(self.unc_check,
+                 'Repeats the run M times, each on one random realisation of '
+                 'the γ, conversion-electron, X-ray and Auger emission '
+                 'probabilities (drawn from their stated uncertainties). The '
+                 'spread between runs, less the Monte-Carlo noise, is the '
+                 'nuclear-data uncertainty. Takes M times as long.')
+        self.reps_entry = self._row(
+            f, 18, '      Realisations M', 'uncReps', '10', width=8,
+            hint='runs of N decays each; total time × M')
         self.display_check = ttk.Checkbutton(
             f, text='Verbose log (prints every decay)',
             variable=self._flag('display'))
-        self.display_check.grid(row=16, column=0, columnspan=3, sticky='w')
+        self.display_check.grid(row=19, column=0, columnspan=3, sticky='w')
 
     def _tab_data(self, nb):
         f = ttk.Frame(nb, padding=12)
@@ -879,10 +1164,11 @@ class App(ttk.Frame):
         self.tab_data = f
 
         ttk.Label(f, text='Nuclide').grid(row=0, column=0, sticky='w')
-        self.data_nuclide = ttk.Combobox(f, textvariable=self.vars['rad'],
-                                         width=16, values=())
+        self.data_nuclide = ttk.Combobox(
+            f, textvariable=self._var('data_rad', 'Fe-55'), width=16,
+            values=())
         self.data_nuclide.grid(row=0, column=1, sticky='w', pady=2)
-        ttk.Label(f, text='the first, for a mixture',
+        ttk.Label(f, text='decay data and β spectrum',
                   style='Hint.TLabel').grid(row=0, column=2, sticky='w',
                                             padx=(8, 0))
 
@@ -949,6 +1235,8 @@ class App(ttk.Frame):
             f, textvariable=self._var('ls_cocktail'), width=26,
             state='disabled', values=())
         self.cocktail_box.grid(row=0, column=1, sticky='w', pady=2)
+        self.cocktail_box.bind('<<ComboboxSelected>>',
+                               lambda e: self._apply_L_default())
         self._row(f, 1, 'Aqueous fraction fAq', 'fAq', '0.0',
                   hint='0 for an organic source')
         ttk.Label(f, text='Aqueous solvent').grid(row=2, column=0, sticky='w')
@@ -1067,6 +1355,56 @@ class App(ttk.Frame):
         self.plot_placeholder.place(relx=0.5, rely=0.5, anchor='center')
         self.tab_plot = f
 
+    def _tab_sources(self, nb):
+        """Where the data behind a decay-data or spectrum view come from."""
+        f = ttk.Frame(nb, padding=6)
+        nb.add(f, text='Sources')
+        f.columnconfigure(0, weight=1)
+        f.rowconfigure(0, weight=1)
+        self.sources_text = tk.Text(
+            f, wrap='word', relief='flat', state='disabled', background=WHITE,
+            padx=10, pady=8, font=tkfont.nametofont('TkDefaultFont'))
+        self.sources_text.grid(row=0, column=0, sticky='nsew')
+        ttk.Scrollbar(f, orient='vertical',
+                      command=self.sources_text.yview).grid(row=0, column=1,
+                                                            sticky='ns')
+        t = self.sources_text
+        t.tag_configure('title', font=self.f_bold, foreground=NAVY,
+                        spacing1=self._px(8), spacing3=self._px(3))
+        t.tag_configure('label', foreground=MUTED)
+        t.tag_configure('link', foreground=CYAN, underline=True)
+        t.tag_bind('link', '<Enter>', lambda e: t.configure(cursor='hand2'))
+        t.tag_bind('link', '<Leave>', lambda e: t.configure(cursor=''))
+        self._show_info(None)
+        self.tab_sources = f
+
+    def _show_info(self, info):
+        """Fill the Sources tab from a result's provenance sections."""
+        t = self.sources_text
+        t.configure(state='normal')
+        t.delete('1.0', 'end')
+        if not info:
+            t.insert('end', 'Decay data and β spectra list here where their '
+                            'data come from: the DDEP evaluation, the '
+                            'atomic-data evaluator and the BetaShape version '
+                            'of every spectrum.', 'label')
+        for i, section in enumerate(info or ()):
+            t.insert('end', section['title'] + '\n', 'title')
+            for label, text, url in section['items']:
+                if label:
+                    t.insert('end', f'{label}:  ', 'label')
+                else:
+                    t.insert('end', '      ')
+                if url:
+                    tag = f'url{i}_{t.index("end")}'
+                    t.insert('end', text, ('link', tag))
+                    t.tag_bind(tag, '<Button-1>',
+                               lambda e, u=url: self._open(u))
+                else:
+                    t.insert('end', text)
+                t.insert('end', '\n')
+        t.configure(state='disabled')
+
     def _tab_log(self, nb):
         f = ttk.Frame(nb, padding=6)
         nb.add(f, text='Log')
@@ -1095,9 +1433,10 @@ class App(ttk.Frame):
         sample = rows[:300]
         spec = []
         for i, (key, title) in enumerate(columns):
-            cells = [format_cell(r[i]) for r in sample if i < len(r)]
-            text = any(isinstance(r[i], str) and r[i] for r in sample
-                       if i < len(r))
+            digits = 3 if is_uncertainty_column(key) else 5
+            cells = [format_cell(r[i], digits) for r in sample if i < len(r)]
+            text = any(isinstance(r[i], str) and r[i] and not numberish(r[i])
+                       for r in sample if i < len(r))
             width = max([self.f_bold.measure(title)] +
                         [body.measure(c) for c in cells]) + 18
             # Already in screen pixels: undo the scaling _set_columns applies.
@@ -1271,27 +1610,36 @@ class App(ttk.Frame):
         quench = task == 'quenching'
         data = task in dict(DATA_TASKS)
         electron = self.vars['particle'].get() == 'electron'
-        for widget, shown in (
+        # Repeated runs can only measure the data uncertainty where there
+        # is sampling to repeat: not the analytical model, not the curve.
+        unc_ok = task == 'fit' or (task == 'efficiency'
+                                   and bool(self.vars['Smodel'].get()))
+        widgets = [
             (self.l_entry, task == 'efficiency'),
             (self.td_entry, fitting),
             (self.guess_entry, fitting),
             (self.bounds_entry, fitting),
             (self.range_entry, curve),
             (self.log_check, curve),
-            (self.pmf_entry, not data),
+            (self.nuclide_box, not data),
+            (self.frac_entry, not data),
+            (self.add_button, not data),
             (self.kb_entry, not data),
             (self.v_entry, not data),
             (self.n_entry, task != 'fit_analytical' and not data),
             (self.smodel_check, not fitting and not data),
-            (self.unc_check, not data),
+            (self.unc_check, unc_ok),
+            (self.reps_entry, unc_ok and bool(self.vars['uncData'].get())),
             (self.display_check, not data),
+        ] + [(b, not data) for b in self.source_buttons]
+        for widget, shown in widgets + [
             (self.data_nuclide, beta or decay),
             (self.beta_level_entry, beta),
             (self.erange_entry, stopping or quench),
             (self.elog_check, stopping or quench),
             (self.spcompare_check, stopping and electron),
             (self.kbq_entry, quench),
-        ):
+        ]:
             widget.configure(state='normal' if shown else 'disabled')
         for rb in self.particle_radios:
             rb.configure(state='normal' if stopping or quench else 'disabled')
@@ -1309,15 +1657,71 @@ class App(ttk.Frame):
         self._particle_shown = new
         self._on_task_change()
 
+    # ------------------------------------------------------------- source
+    def _known_nuclides(self):
+        return list(self.nuclide_box.cget('values') or ())
+
     def _add_nuclide(self):
-        pick = self.nuclide_box.get().strip()
-        if not pick:
+        """Add the picked nuclide with its fraction, or update its fraction
+        if it is already in the source."""
+        try:
+            self.source = add_to_source(
+                self.source, self.vars['pick_rad'].get(),
+                self.vars['pick_frac'].get(), self._known_nuclides())
+        except InputError as exc:
+            messagebox.showerror('Check the source', str(exc))
             return
-        current = self.vars['rad'].get().strip()
-        parts = [p.strip() for p in current.split(',') if p.strip()]
-        if pick not in parts:
-            parts.append(pick)
-        self.vars['rad'].set(', '.join(parts))
+        self._refresh_source()
+        self.nuclide_box.focus_set()
+        self.nuclide_box.selection_range(0, 'end')
+
+    def _remove_nuclide(self):
+        sel = self.source_tree.selection()
+        if not sel:
+            return
+        rad = self.source_tree.item(sel[0], 'values')[0]
+        self.source = [(r, f) for r, f in self.source if r != rad]
+        self._refresh_source()
+
+    def _clear_source(self):
+        self.source = []
+        self._refresh_source()
+
+    def _normalise_source(self):
+        self.source = normalise_source(self.source)
+        self._refresh_source()
+
+    def _on_source_select(self, _event=None):
+        """Load the selected row into the picker, ready to edit."""
+        sel = self.source_tree.selection()
+        if sel:
+            rad, frac = self.source_tree.item(sel[0], 'values')
+            self.vars['pick_rad'].set(rad)
+            self.vars['pick_frac'].set(frac)
+
+    def _refresh_source(self):
+        """Redraw the source list and write it into 'rad' and 'pmf'."""
+        tree = self.source_tree
+        tree.delete(*tree.get_children())
+        for rad, frac in self.source:
+            tree.insert('', 'end', values=(rad, f'{frac:g}'))
+        rad, pmf = source_fields(self.source)
+        self.vars['rad'].set(rad)
+        self.vars['pmf'].set(pmf)
+        total = sum(f for _r, f in self.source)
+        if not self.source:
+            text = 'Add at least one nuclide.'
+        elif len(self.source) == 1:
+            text = 'Single nuclide: its fraction is 1 whatever is entered.'
+        elif abs(total - 1.0) > 0.02:
+            text = (f'Fractions sum to {total:g}, not 1 — press Normalise '
+                    f'if they are activities or ratios.')
+        else:
+            text = f'Fractions sum to {total:g}.'
+        self.source_sum.configure(text=text)
+        if self.source and 'data_rad' in self.vars \
+                and not self.vars['data_rad'].get().strip():
+            self.vars['data_rad'].set(self.source[0][0])
 
     def _open(self, url):
         try:
@@ -1380,6 +1784,8 @@ class App(ttk.Frame):
             parts.append(f'E={g[0]:g}…{g[-1]:g} keV ({len(g)} points)')
         if 'mode' in job:
             parts.append(f'{job["mode"]}  level={job.get("level")}')
+        if job.get('uncData'):
+            parts.append(f'nuclear data: {job.get("uncReps")} realisations')
         return '  '.join(parts)
 
     def _run(self):
@@ -1433,6 +1839,8 @@ class App(ttk.Frame):
                     self._handle_message(payload)
                 elif kind == 'exit':
                     self._handle_exit(payload)
+                elif kind == 'update':
+                    self._show_update(payload)
         except queue.Empty:
             pass
         self.after(80, self._drain)
@@ -1462,6 +1870,8 @@ class App(ttk.Frame):
             self._apply_describe(msg)
         elif event == 'result':
             self._result_job = self._last_job
+            self._result_info = msg.get('info')
+            self._show_info(self._result_info)
             if msg.get('columns'):
                 self._show_curve(msg['columns'], msg.get('rows') or [],
                                  msg.get('plot') or {})
@@ -1481,7 +1891,8 @@ class App(ttk.Frame):
             self.cocktail_box.configure(values=cocktails, state='readonly')
         nuclides = msg.get('nuclides') or []
         if nuclides:
-            self.nuclide_box.configure(values=nuclides, state='readonly')
+            # Editable, so a name can be typed; Add checks it is in the list.
+            self.nuclide_box.configure(values=nuclides)
             self.data_nuclide.configure(values=nuclides)
         sp_models = msg.get('sp_models') or []
         if sp_models:
@@ -1497,10 +1908,25 @@ class App(ttk.Frame):
                 var.set(bool(value))
             else:
                 var.set('' if value is None else str(value))
+        self._apply_L_default()
         self._append_log(f'TDCRPy {msg.get("version", self.version)}: '
                          f'configuration loaded from the installed package '
                          f'({len(nuclides)} nuclides, '
                          f'{len(cocktails)} cocktails)')
+
+    def _apply_L_default(self):
+        """Put the cocktail's typical L into the L fields -- unless the
+        user has typed a value of their own there."""
+        defaults = (self._describe or {}).get('L_defaults') or {}
+        value, hint = L_default_for(self.vars['ls_cocktail'].get(), defaults)
+        if value is None:                     # a library without the table
+            value, hint = '1.0', ''
+        for name in ('L', 'L_guess'):
+            current = self.vars[name].get().strip()
+            if not current or current == self._L_shown.get(name):
+                self.vars[name].set(value)
+                self._L_shown[name] = value
+        self.L_hint.configure(text=hint)
 
     def _caption(self, nrows):
         job = self._result_job or {}
@@ -1527,14 +1953,20 @@ class App(ttk.Frame):
         self._set_columns(self._column_spec(columns, rows), stretch=False)
         # Full precision in the saved file; the table is for reading.
         self._rows = [[key for key, _title in columns]]
+        digits = [3 if is_uncertainty_column(k) else 5 for k, _t in columns]
         for i, row in enumerate(rows):
-            self.tree.insert('', 'end', values=[format_cell(v) for v in row],
+            self.tree.insert('', 'end',
+                             values=[format_cell(v, d)
+                                     for v, d in zip(row, digits)],
                              tags=('odd',) if i % 2 else ())
             self._rows.append(['' if v is None else
                                (v if isinstance(v, str) else repr(v))
                                for v in row])
         self.caption.configure(text=self._caption(len(rows)))
         self.status.configure(text='done')
+        if not plot:                        # a table, nothing to draw
+            self.results.select(self.tab_table)
+            return
         try:
             self._plot([k for k, _t in columns], rows, plot)
         except ImportError as exc:
@@ -1762,6 +2194,7 @@ class App(ttk.Frame):
         if cfg:
             meta.append('configuration: ' + '; '.join(
                 f'{k}={v}' for k, v in sorted(cfg.items())))
+        meta += provenance_lines(self._result_info)
         try:
             write_csv(path, self._rows, [m for m in meta if m])
         except OSError as exc:
@@ -1850,9 +2283,98 @@ class App(ttk.Frame):
         ttk.Button(buttons, text='Licence…',
                    command=lambda: (win.destroy(), self._show_licence())
                    ).pack(side='left', padx=4)
+        ttk.Button(buttons, text='Check for updates',
+                   command=lambda: (win.destroy(), self._check_updates())
+                   ).pack(side='left', padx=4)
         ttk.Button(buttons, text='Close', command=win.destroy).pack(
             side='left', padx=4)
         win.grab_set()
+
+    # -------------------------------------------------------------- updates
+    def _check_updates(self):
+        """Ask PyPI, off the main thread, for the latest release."""
+        if self._update_check is not None and self._update_check.is_alive():
+            return
+        self.status.configure(text='checking for updates…')
+        q = self._queue
+
+        def ask():
+            try:
+                latest, date = fetch_latest_release()
+                q.put(('update', {'latest': latest, 'date': date}))
+            except Exception as exc:       # network, proxy, PyPI down...
+                q.put(('update', {'error': f'{type(exc).__name__}: {exc}'}))
+
+        self._update_check = threading.Thread(target=ask, daemon=True)
+        self._update_check.start()
+
+    def _show_update(self, info):
+        if self.status.cget('text') == 'checking for updates…':
+            self.status.configure(text='ready')
+        if info.get('error'):
+            messagebox.showerror(
+                'Check for updates', 'Could not reach PyPI to check for a '
+                f'new version.\n\n{info["error"]}\n\nCheck the network '
+                f'connection (or proxy), or look at {PYPI_URL}')
+            return
+        latest, current = info['latest'], self.version
+        self._append_log(f'latest TDCRPy on PyPI: {latest} '
+                         f'({info.get("date") or "date unknown"}); '
+                         f'this one: {current}')
+        if not is_newer(latest, current):
+            messagebox.showinfo('Check for updates',
+                                f'TDCRPy {current} is up to date — the latest '
+                                f'release on PyPI is {latest}.')
+            return
+
+        kind = install_kind()
+        win = self._dialog('Update available')
+        pad = self._px(20)
+        tk.Label(win, text=f'TDCRPy {latest} is available', font=self.f_title,
+                 fg=NAVY, bg=WHITE).pack(padx=pad, pady=(pad, 4))
+        when = f'Released {info["date"]}. ' if info.get('date') else ''
+        tk.Label(win, text=f'{when}You have {current}.', font=self.f_sub,
+                 fg=MUTED, bg=WHITE).pack(padx=pad)
+        if kind == 'pip':
+            note = ('Update now closes this window, installs the new version '
+                    'with pip and reopens it — about a minute.\nClose any '
+                    'notebook or script using TDCRPy first: Windows locks '
+                    'the files it has open.')
+        elif kind == 'editable':
+            note = ('This TDCRPy runs from a source checkout (an editable '
+                    'install), so pip must not replace it.\nUpdate it with '
+                    '"git pull" in that folder.')
+        else:
+            note = (f'This TDCRPy was installed by {kind}; update it with '
+                    f'{kind}, so that {kind} keeps track of it.')
+        tk.Label(win, text=note, font=self.f_sub, fg=INK, bg=WHITE,
+                 justify='left', wraplength=self._px(420)).pack(
+            padx=pad, pady=(12, 8))
+        self._link(win, 'What changed (commit history)', HISTORY_URL).pack()
+        buttons = tk.Frame(win, bg=WHITE)
+        buttons.pack(pady=(14, pad))
+        if kind == 'pip':
+            ttk.Button(buttons, text='Update now',
+                       command=lambda: (win.destroy(),
+                                        self._start_update(latest))
+                       ).pack(side='left', padx=4)
+        ttk.Button(buttons, text='Later', command=win.destroy).pack(
+            side='left', padx=4)
+        win.grab_set()
+
+    def _start_update(self, version):
+        if self._worker is not None:
+            messagebox.showinfo('TDCRPy', 'Wait for the calculation to '
+                                          'finish, or cancel it, then update.')
+            return
+        try:
+            log = launch_updater(version, self.version)
+        except Exception as exc:
+            messagebox.showerror('TDCRPy', f'Could not start the update:'
+                                           f'\n{exc}')
+            return
+        self._append_log(f'update to {version} handed over; log: {log}')
+        self.master.destroy()
 
     def _show_licence(self):
         text = licence_text()

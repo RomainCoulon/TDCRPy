@@ -2849,7 +2849,7 @@ class TestGuiWorkerDiagnostics(unittest.TestCase):
     def test_run_beta_spectrum_pure_emitter(self):
         job = {'task': 'beta_spectrum', 'rad': 'H-3', 'mode': 'beta-',
               'level': 'tot', 'config': {}}
-        rows, columns, plot = self.worker._run_beta_spectrum(
+        rows, columns, plot, _info = self.worker._run_beta_spectrum(
             TDCRPy_mod, job, self._Sink())
         self.assertEqual([k for k, _t in columns], ['E_keV', 'p'])
         self.assertGreater(len(rows), 10)
@@ -2862,7 +2862,7 @@ class TestGuiWorkerDiagnostics(unittest.TestCase):
     def test_run_beta_spectrum_named_transition(self):
         job = {'task': 'beta_spectrum', 'rad': 'Co-60', 'mode': 'beta-',
               'level': '1', 'config': {}}
-        rows, _columns, _plot = self.worker._run_beta_spectrum(
+        rows, _columns, _plot, _info = self.worker._run_beta_spectrum(
             TDCRPy_mod, job, self._Sink())
         self.assertGreater(len(rows), 0)
 
@@ -3006,7 +3006,7 @@ class TestGuiDataViews(unittest.TestCase):
 
     # ---- the worker -------------------------------------------------------
     def test_decay_data_intensities_are_per_decay(self):
-        rows, columns, plot = self.worker._run_decay_data(
+        rows, columns, plot, _info = self.worker._run_decay_data(
             TDCRPy_mod, {'rad': 'Am-241'}, self._Sink())
         col = {k: i for i, (k, _t) in enumerate(columns)}
         g59 = [r for r in rows if r[col['type']] == 'γ'
@@ -3069,6 +3069,294 @@ class TestGuiDataViews(unittest.TestCase):
         self.assertIs(type(out[0][0]), float)
         json_line = __import__('json').dumps(out)
         self.assertNotIn('"48.7"', json_line)
+
+
+class TestNuclearDataRealisation(unittest.TestCase):
+    """uncData draws ONE realisation of the data per run (v2.20.37).
+
+    Before, the probabilities were redrawn for every decay: over a run that
+    averages back to the nominal data, so the option propagated nothing,
+    and an untruncated draw below zero corrupted the sampling.
+    """
+
+    def _iodine(self):
+        dd = TDCRPy_mod._load_decay_data(['I-125'])
+        p, u = dd[5], dd[15]
+        lev = next(i for i, x in enumerate(p[0][0]) if x)
+        return p, u, lev
+
+    def test_draws_are_never_negative_and_keep_the_nesting(self):
+        for rad in ('Co-60', 'Ba-133', 'Zn-65', 'Th-231', 'Cs-137'):
+            dd = TDCRPy_mod._load_decay_data([rad])
+            p, u = dd[5], dd[15]
+            q = lib.perturbTransitionProbabilities(p, u)
+            for a, b in zip(p[0], q[0]):
+                for x, y in zip(a, b):
+                    self.assertEqual(len(x), len(y), rad)
+                    self.assertTrue(all(v >= 0 for v in y), rad)
+
+    def test_draws_spread_by_the_stated_uncertainty(self):
+        np.random.seed(7)
+        p, u, lev = self._iodine()
+        g = [lib.perturbTransitionProbabilities(p, u)[0][0][lev][0]
+             for _ in range(2000)]
+        self.assertAlmostEqual(np.mean(g), p[0][0][lev][0], places=4)
+        self.assertAlmostEqual(np.std(g) / u[0][0][lev][0], 1.0, delta=0.1)
+
+    def test_a_tiny_probability_with_a_huge_uncertainty_stays_positive(self):
+        out = lib._truncated_normal_draw([1e-9, 0.5], [1e-3, 0.0])
+        self.assertGreaterEqual(out[0], 0.0)
+        self.assertEqual(out[1], 0.5)              # no uncertainty: kept
+
+    def test_TDCRPy_perturbs_the_data_once_per_run_not_per_decay(self):
+        from unittest import mock
+        calls = []
+        real = lib.perturbTransitionProbabilities
+
+        def spy(p, u):
+            calls.append(1)
+            return real(p, u)
+
+        with mock.patch.object(lib, 'perturbTransitionProbabilities', spy):
+            TDCRPy_mod.TDCRPy(5.0, 'Co-60', '1', 20, 1e-5, 10, uncData=True)
+        self.assertEqual(len(calls), 1)
+
+    def test_atomic_realisation_is_fixed_within_a_run_and_new_per_run(self):
+        lib.resetDataRealisation()
+        lib.relaxation_atom('TE125', 'I-125', 'Atom_K', uncData=True)
+        first = lib._DATA_REALISATION[('I-125', 'TE125')].copy()
+        lib.relaxation_atom('TE125', 'I-125', 'Atom_L', uncData=True)
+        np.testing.assert_array_equal(
+            first, lib._DATA_REALISATION[('I-125', 'TE125')])
+        lib.resetDataRealisation()
+        lib.relaxation_atom('TE125', 'I-125', 'Atom_K', uncData=True)
+        self.assertFalse(np.array_equal(
+            first, lib._DATA_REALISATION[('I-125', 'TE125')]))
+        lib.resetDataRealisation()
+
+    def test_eff_accepts_uncData(self):
+        self.assertIn('uncData', inspect.signature(TDCRPy_mod.eff).parameters)
+
+
+class TestGuiSourceDefaultsAndUpdates(unittest.TestCase):
+    """The source list, per-cocktail L, provenance and the updater
+    (v2.20.37)."""
+
+    def setUp(self):
+        from tdcrpy import gui, _gui_worker
+        self.gui, self.worker = gui, _gui_worker
+
+    class _Sink:
+        def send(self, *a, **k):
+            pass
+
+    # ---- source list ----------------------------------------------------
+    def test_add_to_source_matches_the_archive_spelling(self):
+        known = ['Co-60', 'H-3']
+        src = self.gui.add_to_source([], 'h-3', '0.7', known)
+        src = self.gui.add_to_source(src, 'Co-60', '0.3', known)
+        self.assertEqual(src, [('H-3', 0.7), ('Co-60', 0.3)])
+        self.assertEqual(self.gui.source_fields(src), ('H-3, Co-60', '0.7, 0.3'))
+
+    def test_adding_a_nuclide_again_updates_its_fraction_in_place(self):
+        src = [('H-3', 0.7), ('Co-60', 0.3)]
+        self.assertEqual(self.gui.add_to_source(src, 'H-3', '2'),
+                         [('H-3', 2.0), ('Co-60', 0.3)])
+        self.assertEqual(src, [('H-3', 0.7), ('Co-60', 0.3)])   # untouched
+
+    def test_add_to_source_refuses_what_the_model_cannot_run(self):
+        with self.assertRaises(self.gui.InputError):
+            self.gui.add_to_source([], 'Xx-1', '1', ['H-3'])
+        with self.assertRaises(self.gui.InputError):
+            self.gui.add_to_source([], 'H-3', '0', ['H-3'])
+        with self.assertRaises(self.gui.InputError):
+            self.gui.add_to_source([], '', '1', ['H-3'])
+
+    def test_single_nuclide_fraction_is_one_and_normalise_sums_to_one(self):
+        self.assertEqual(self.gui.source_fields([('Fe-55', 7.0)]),
+                         ('Fe-55', '1'))
+        out = self.gui.normalise_source([('A', 3.0), ('B', 1.0)])
+        self.assertEqual(out, [('A', 0.75), ('B', 0.25)])
+
+    def test_data_views_use_their_own_nuclide(self):
+        job = self.gui.build_job({'task': 'decay_data', 'rad': 'H-3, Co-60',
+                                  'data_rad': 'Sr-90'})
+        self.assertEqual(job['rad'], 'Sr-90')
+
+    # ---- nuclear-data uncertainty in the job ------------------------------
+    def _form(self, **kw):
+        form = {'task': 'efficiency', 'rad': 'Fe-55', 'pmf': '1',
+                'kB': '1e-5', 'V': '10', 'N': '1000', 'L': '5.92',
+                'Smodel': True, 'uncData': True, 'uncReps': '10'}
+        form.update(kw)
+        return form
+
+    def test_uncData_reaches_only_runs_that_can_repeat_it(self):
+        self.assertEqual(self.gui.build_job(self._form())['uncReps'], 10)
+        self.assertNotIn('uncData', self.gui.build_job(self._form(
+            Smodel=False)))
+        self.assertNotIn('uncData', self.gui.build_job(self._form(
+            task='curve', Lrange='1, 10, 3')))
+        self.assertNotIn('uncData', self.gui.build_job(self._form(
+            task='fit_analytical', TD='0.9')))
+        self.assertTrue(self.gui.build_job(self._form(task='fit',
+                                                      TD='0.9'))['uncData'])
+
+    def test_realisation_count_is_bounded(self):
+        for bad in ('1', '2.5', '1000'):
+            with self.assertRaises(self.gui.InputError):
+                self.gui.build_job(self._form(uncReps=bad))
+
+    def test_combine_resolves_a_data_spread_well_above_the_noise(self):
+        rng = np.random.default_rng(3)
+        runs = [[('eff', 0.5 + d, 0.001)] for d in rng.normal(0, 0.01, 40)]
+        q, mean, u, rel, u_mc, u_data = \
+            self.worker.combine_realisations(runs)[0]
+        self.assertIsInstance(u_data, float)
+        self.assertAlmostEqual(u_data, 0.01, delta=0.003)
+        self.assertAlmostEqual(u_mc, 0.001 / 40 ** 0.5)
+        self.assertAlmostEqual(u, (u_mc ** 2 + u_data ** 2) ** 0.5)
+
+    def test_combine_reports_a_bound_when_noise_hides_the_data(self):
+        rng = np.random.default_rng(4)
+        runs = [[('eff', 0.5 + d, 0.01)] for d in rng.normal(0, 0.01, 10)]
+        row = self.worker.combine_realisations(runs)[0]
+        self.assertIsInstance(row[5], str)
+        self.assertTrue(row[5] == '0' or row[5].startswith('< '))
+
+    def test_combine_keeps_a_repeated_input_exact(self):
+        runs = [[('L (fixed)', 5.92, None)]] * 3
+        self.assertEqual(self.worker.combine_realisations(runs)[0][1], 5.92)
+
+    # ---- per-cocktail L ---------------------------------------------------
+    def test_default_L_per_cocktail(self):
+        self.assertEqual(lib.defaultL('Ultima Gold'), (5.92, 0.26, True))
+        self.assertEqual(lib.defaultL('Hionic-Fluor'), (3.90, 0.29, True))
+        L, _s, measured = lib.defaultL('Toluene')
+        self.assertEqual(L, 5.92)
+        self.assertFalse(measured)
+        for name in lib.COCKTAIL_L_DEFAULT:
+            self.assertIn(name, lib.COCKTAIL_DATA)     # no orphan entries
+
+    def test_the_window_shows_the_default_and_says_where_it_comes_from(self):
+        table = {'Ultima Gold': [5.92, 0.26, True],
+                 'Toluene': [5.92, 0.26, False]}
+        value, hint = self.gui.L_default_for('Ultima Gold', table)
+        self.assertEqual(value, '5.92')
+        self.assertIn('measured', hint)
+        value, hint = self.gui.L_default_for('Toluene', table)
+        self.assertIn('stand-in', hint)
+        self.assertEqual(self.gui.L_default_for('X', {}), (None, ''))
+
+    # ---- decay-data provenance --------------------------------------------
+    def test_decay_data_info_reads_the_archives_own_provenance(self):
+        info = lib.decayDataInfo('Co-60')
+        self.assertEqual(info['nuclear']['evaluation_date'], '13/01/2006')
+        self.assertEqual(info['nuclear']['daughters'][0][:3],
+                         ('NI60', 1.0, 2823.07))
+        self.assertTrue(info['nuclear']['tables_url'].endswith(
+            'Co-60_tables.pdf'))
+        self.assertEqual(info['atomic']['cutoff'], '16-Jan-2006')
+        levels = [b['level'] for b in info['beta']]
+        self.assertEqual(levels[:4], ['tot', 'tot_myEstep', '0', '0_myEstep'])
+        self.assertIn('2021', info['beta_alternatives'])
+        self.assertTrue(all(b.get('program') for b in info['beta']))
+
+    def test_beta_provenance_names_the_version_and_shape_factor(self):
+        info = lib.decayDataInfo('Sr-90')
+        b0 = next(b for b in info['beta'] if b['level'] == '0')
+        self.assertTrue(b0['program'].startswith('BetaShape '))
+        self.assertIn('shape_factor', b0)
+        self.assertIn('Mougeot', b0['cite'])
+
+    def test_every_nuclide_has_readable_provenance(self):
+        names = sorted(n.split('.')[0] for n in lib.z_PenNuc.namelist()
+                       if n.endswith('.PenNuc.txt'))
+        for rad in names:
+            info = lib.decayDataInfo(rad)
+            self.assertTrue(info['nuclear']['daughters'], rad)
+
+    def test_provenance_sections_and_csv_lines(self):
+        _r, _c, _p, info = self.worker._run_beta_spectrum(
+            TDCRPy_mod, {'rad': 'Sr-90', 'mode': 'beta-', 'level': '0'},
+            self._Sink())
+        titles = [s['title'] for s in info]
+        self.assertEqual(len(titles), 3)
+        beta = info[-1]['items']
+        self.assertTrue(beta[0][0].endswith('transition 0'))
+        lines = self.gui.provenance_lines(info)
+        self.assertIn('Nuclear decay data — PenNuc', lines)
+        self.assertTrue(any('BetaShape' in l for l in lines))
+
+    def test_describe_offers_the_L_table(self):
+        d = self.worker.describe()
+        self.assertEqual(d['L_defaults']['Ultima Gold'][0], 5.92)
+        self.assertEqual(set(d['L_defaults']), set(d['cocktails']))
+
+    # ---- updates ------------------------------------------------------------
+    def test_version_comparison(self):
+        self.assertTrue(self.gui.is_newer('2.20.37', '2.20.36'))
+        self.assertTrue(self.gui.is_newer('2.21.0', '2.20.99'))
+        self.assertFalse(self.gui.is_newer('2.20.36', '2.20.36'))
+        self.assertFalse(self.gui.is_newer('2.20.9', '2.20.10'))
+        self.assertFalse(self.gui.is_newer('garbage', '2.20.36'))
+
+    def test_install_kind_is_one_the_dialog_knows(self):
+        self.assertIsInstance(self.gui.install_kind(), str)
+
+    def test_updater_never_imports_the_package_it_replaces(self):
+        import ast
+        path = os.path.join(self.gui.package_dir(), '_gui_updater.py')
+        with open(path, encoding='utf-8') as fh:
+            tree = ast.parse(fh.read())
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names = [a.name for a in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                names = [node.module or '']
+            else:
+                continue
+            self.assertFalse(any(n.split('.')[0] == 'tdcrpy' for n in names))
+
+    def test_launch_updater_runs_a_copy_outside_the_package(self):
+        from unittest import mock
+        with mock.patch.object(self.gui.subprocess, 'Popen') as popen:
+            log = self.gui.launch_updater('9.9.9', '2.20.37')
+        cmd = popen.call_args[0][0]
+        helper = cmd[cmd.index('-I') + 1]
+        self.assertTrue(os.path.exists(helper))
+        self.assertFalse(os.path.abspath(helper).startswith(
+            os.path.abspath(self.gui.package_dir())))
+        self.assertEqual(cmd[cmd.index('--spec') + 1], 'TDCRPy==9.9.9')
+        self.assertEqual(cmd[cmd.index('--pid') + 1], str(os.getpid()))
+        self.assertEqual(os.path.dirname(log), os.path.dirname(helper))
+
+    @unittest.skipUnless(os.name == 'nt', 'file locks are a Windows matter')
+    def test_updater_stops_before_pip_when_files_are_held_open(self):
+        import subprocess
+        import sys
+        from tdcrpy import _gui_updater as up
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, 'decayData'))
+            held = os.path.join(d, 'decayData', 'x.zip')
+            with open(held, 'wb') as fh:
+                fh.write(b'zip')
+            gone = subprocess.Popen([sys.executable, '-c', 'pass'])
+            gone.wait()
+            log = os.path.join(d, 'update.log')
+            with open(held, 'rb'):
+                self.assertTrue(up.is_locked(held))
+                rc = up.main(['--pid', str(gone.pid), '--python',
+                              sys.executable, '--spec',
+                              'tdcrpy-no-such-package-xyz',
+                              '--package-dir', d, '--log', log,
+                              '--no-dialog'])
+            self.assertEqual(rc, 2)
+            with open(log, encoding='utf-8') as fh:
+                text = fh.read()
+            self.assertIn('still in use', text)
+            self.assertNotIn('running:', text)          # pip never started
+            self.assertFalse(up.is_locked(held))
 
 
 if __name__ == '__main__':

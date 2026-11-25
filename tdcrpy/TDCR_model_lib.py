@@ -206,6 +206,60 @@ COCKTAIL_DATA = {
     }
 }
 
+#: Light yield L (keV^-1) fitted to measured TDCR, per cocktail, pooled over
+#: Fe-55, S-35 and Tc-99 sources: (mean, spread, number of determinations).
+#: Per nuclide, for the record:
+#:
+#:     Cocktail          Fe-55             S-35              Tc-99
+#:     Ultima Gold       6.08 ± 0.08 (6)   6.00 ± 0.26 (5)   5.69 ± 0.22 (6)
+#:     Ultima Gold AB    6.01 ± 0.02 (2)   6.12 ± 0.32 (4)   5.59 ± 0.38 (6)
+#:     Ultima Gold LLT   5.85 ± 0.03 (2)   6.05 ± 0.35 (4)   5.41 ± 0.33 (5)*
+#:     ProSafe+          4.91 ± 0.10 (6)   4.69 ± 0.25 (4)   4.28 ± 0.30 (6)
+#:     Hionic-Fluor      4.08 ± 0.04 (6)   4.10 ± 0.13 (4)   3.59 ± 0.21 (6)
+#:
+#: (* flagged in the source table; the pooled LLT value carries the flag.)
+#: L depends on the counter as well as the cocktail, so these are starting
+#: points -- an initial guess for a fit, a sensible fixed L -- not constants.
+COCKTAIL_L_DEFAULT = {
+    'Ultima Gold': (5.92, 0.26, 17),
+    'Ultima Gold AB': (5.83, 0.40, 12),
+    'Ultima Gold LLT': (5.72, 0.42, 11),
+    'ProSafe+': (4.62, 0.36, 16),
+    'Hionic-Fluor': (3.90, 0.29, 16),
+}
+
+#: The cocktail whose L stands in for one that was never measured.
+_L_FALLBACK_COCKTAIL = 'Ultima Gold'
+
+
+def defaultL(cocktail=None):
+    """Typical light yield L for a cocktail, from :data:`COCKTAIL_L_DEFAULT`.
+
+    Parameters
+    ----------
+    cocktail : str, optional
+        Cocktail name as :func:`lsCocktail` reports it. Defaults to the
+        configured one.
+
+    Returns
+    -------
+    L : float
+        keV^-1.
+    spread : float
+        Spread of the determinations the value pools, keV^-1.
+    measured : bool
+        ``False`` when no source was measured in this cocktail and the
+        Ultima Gold value stands in for it.
+    """
+    if cocktail is None:
+        cocktail = lsCocktail()
+    name = str(cocktail).strip()
+    if name in COCKTAIL_L_DEFAULT:
+        L, spread, _n = COCKTAIL_L_DEFAULT[name]
+        return L, spread, True
+    L, spread, _n = COCKTAIL_L_DEFAULT[_L_FALLBACK_COCKTAIL]
+    return L, spread, False
+
 # ---------------------------------------------------------------------------
 # Tan & Xia (2012) reference data for the low-energy electron stopping-power
 # model ('tan_xia'):
@@ -2570,6 +2624,160 @@ def readBetaShapeInfo(rad,mode,level,z=z_betashape):
     return out
 
 
+#: Where the DDEP recommended data of a nuclide are published (LNHB).
+DDEP_TABLES_URL = 'http://www.lnhb.fr/nuclides/{rad}_tables.pdf'
+DDEP_COMMENTS_URL = 'http://www.lnhb.fr/nuclides/{rad}_com.pdf'
+
+_ENSDF_MONTHS = ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG',
+                 'SEP', 'OCT', 'NOV', 'DEC')
+
+
+def _zip_text(z, name):
+    with z.open(name) as fh:
+        return fh.read().decode('latin-1').splitlines()
+
+
+def _betashape_file_info(name, lines):
+    """What one BetaShape file says about how it was made."""
+    stem = name.rsplit('/', 1)[-1][:-3]               # beta-_Sr90_trans0
+    mode, _rad, level = stem.split('_', 2)
+    info = {'file': name, 'mode': mode,
+            'level': level[len('trans'):] if level.startswith('trans')
+            else level}
+    text = [l.strip() for l in lines]
+    if 'BetaShape' in text[:6]:
+        # The code's own header: version, citation, transition description.
+        for l in text[:40]:
+            if l.startswith('Version:'):
+                info['program'] = 'BetaShape ' + l.split(':', 1)[1].strip()
+            elif l.startswith('Please cite:'):
+                info['cite'] = l.split(':', 1)[1].strip()
+            elif l.startswith('Calculation of the'):
+                info['transition'] = l[len('Calculation of the'):].strip()
+            elif l.startswith('Parent nucleus:'):
+                info['nuclei'] = ' '.join(l.split())
+            elif l.startswith('End-point energy:'):
+                info['end_point'] = l.split(':', 1)[1].split('Energy step')[0].strip()
+            elif l.startswith('Transition energy:'):
+                info['end_point'] = l.split(':', 1)[1].strip()
+            elif l.startswith('An experimental shape factor'):
+                info['shape_factor'] = l.split(':', 1)[1].strip()
+            elif l.startswith('E(keV)'):
+                break
+    else:
+        # A spectrum assembled outside BetaShape says where it came from in
+        # its first non-rule line.
+        for l in text[:8]:
+            if l and not set(l) <= {'-'}:
+                info['program'] = l
+                break
+    return info
+
+
+def decayDataInfo(rad):
+    """Provenance of the decay data TDCRPy uses for one nuclide.
+
+    Read from the shipped archives themselves, so it describes exactly the
+    files a run samples -- not what a newer evaluation might say.
+
+    Parameters
+    ----------
+    rad : str
+        Nuclide, e.g. ``'Sr-90'``.
+
+    Returns
+    -------
+    dict
+        ``nuclide``;
+        ``nuclear``: the PenNuc file (DDEP evaluation) -- ``evaluation_date``,
+        ``notes`` (its other comment lines), ``daughters`` as
+        ``(name, probability, Q / keV, u(Q) / keV)``, and the LNHB
+        ``tables_url`` and ``comments_url``;
+        ``atomic``: the ENSDF-format X-ray and Auger file -- ``decays``
+        (its title lines, with half-lives), ``evaluator``, ``cutoff`` and
+        ``type`` (``FUL`` full evaluation, ``UPD`` update) -- or ``None``;
+        ``beta``: one dict per BetaShape file (``mode``, ``level``,
+        ``program`` with its version, and when stated ``cite``,
+        ``transition``, ``nuclei``, ``end_point``, ``shape_factor``);
+        ``beta_alternatives``: older spectrum sets kept in sub-folders and
+        not used by default (e.g. ``'2021'``).
+
+    Raises
+    ------
+    KeyError
+        If *rad* is not in the PenNuc archive.
+    """
+    pen = _zip_text(z_PenNuc, rad + '.PenNuc.txt')
+    date, notes = None, []
+    for l in pen:
+        if not l.startswith('COM'):
+            continue
+        body = l[3:].strip()
+        m = re.search(r'Evaluation Date:\s*([0-9/]+)', body)
+        if m:
+            date = m.group(1)
+        elif body and 'Separator' not in body and not set(body) <= {'*'}:
+            notes.append(body.strip('* '))
+    daughters = []
+    name = None
+    for l in pen:
+        if l.startswith('DAU'):
+            name = l[3:].strip()
+        elif l.startswith('DDE') and name is not None:
+            p = l[3:].split(';')[0].strip()
+            daughters.append([name, float(p) if p else None, None, None])
+        elif l.startswith('Q ') and daughters:
+            parts = [s.strip() for s in l[1:].split(';')]
+            daughters[-1][2] = float(parts[0]) if parts[0] else None
+            daughters[-1][3] = (float(parts[1])
+                                if len(parts) > 1 and parts[1] else None)
+    plain = '-' in rad            # combined cascades have no DDEP page
+    nuclear = {
+        'source': 'DDEP recommended data (LNHB), in PenNuc format',
+        'evaluation_date': date,
+        'notes': notes,
+        'daughters': [tuple(d) for d in daughters],
+        'tables_url': DDEP_TABLES_URL.format(rad=rad) if plain else None,
+        'comments_url': DDEP_COMMENTS_URL.format(rad=rad) if plain else None,
+    }
+
+    atomic = None
+    if rad + '.txt' in z_ensdf.namelist():
+        lines = _zip_text(z_ensdf, rad + '.txt')
+        atomic = {'decays': [], 'evaluator': None, 'cutoff': None,
+                  'type': None}
+        for l in lines:
+            if 'DECAY' in l and l[5:9].strip() == '':
+                atomic['decays'].append(' '.join(l[9:].split()))
+            m = re.search(r'TYP=(\w+)\$AUT=([^$]*)\$CUT=([^$]*)\$', l)
+            if m and atomic['evaluator'] is None:
+                atomic['type'] = m.group(1)
+                atomic['evaluator'] = m.group(2).title()
+                atomic['cutoff'] = m.group(3).title()
+
+    tag = rad.replace('-', '')
+    beta, alternatives = [], set()
+    for n in z_betashape.namelist():
+        if not n.startswith(tag + '/') or not n.endswith('.bs'):
+            continue
+        parts = n.split('/')
+        if len(parts) > 2:
+            alternatives.add(parts[1])
+            continue
+        beta.append(_betashape_file_info(n, _zip_text(z_betashape, n)))
+
+    def _order(b):
+        # tot, tot_myEstep, then 0, 0_myEstep, 1, 1_myEstep, ...
+        m = re.match(r'(\d+)(.*)', b['level'])
+        if m is None:
+            return (b['mode'], 0, 0, b['level'])
+        return (b['mode'], 1, int(m.group(1)), m.group(2))
+
+    beta.sort(key=_order)
+    return {'nuclide': rad, 'nuclear': nuclear, 'atomic': atomic,
+            'beta': beta, 'beta_alternatives': sorted(alternatives)}
+
+
 _readBetaSpectra_cache: dict = {}
 
 def readBetaSpectra(rad):
@@ -4092,6 +4300,76 @@ def incer(prob,incer):
 
 
 
+#: The nuclear-data realisation of the current run, keyed by
+#: (nuclide, daughter): one perturbed probability vector each. Emptied at the
+#: start of every TDCRPy() call, so each run draws its own.
+_DATA_REALISATION: dict = {}
+
+
+def resetDataRealisation():
+    """Forget the current run's nuclear-data realisation (``uncData``)."""
+    _DATA_REALISATION.clear()
+
+
+def _truncated_normal_draw(p, u):
+    """One draw of each probability from N(p, u), truncated at zero.
+
+    Truncated by redrawing, not by clipping: clipping would put the whole
+    lower tail at exactly zero, switching an emission off in a fraction of
+    the realisations. A probability with no stated uncertainty is kept as
+    it is. Before 2.20.37 the draw was not truncated at all, and a negative
+    probability made the cumulative sum non-monotonic, which ``sampling``
+    (a binary search) silently mishandles.
+    """
+    p = np.asarray(p, dtype=float)
+    u = np.nan_to_num(np.asarray(u, dtype=float))
+    out = p.copy()
+    todo = u > 0
+    for _ in range(100):
+        if not todo.any():
+            break
+        draw = np.random.normal(p[todo], u[todo])
+        ok = draw >= 0
+        idx = np.flatnonzero(todo)
+        out[idx[ok]] = draw[ok]
+        todo[idx[ok]] = False
+    out[todo] = p[todo]           # pathological u >> p: keep the nominal value
+    return out
+
+
+def perturbTransitionProbabilities(prob_trans, u_prob_trans):
+    """One realisation of the PenNuc γ / conversion-electron probabilities.
+
+    Parameters
+    ----------
+    prob_trans, u_prob_trans : list
+        As built by ``TDCRPy._load_decay_data``: per nuclide, per daughter,
+        per level, the transition probabilities and their standard
+        uncertainties.
+
+    Returns
+    -------
+    list
+        Same nesting as *prob_trans*, each probability drawn once from a
+        normal distribution truncated at zero. A level whose draws all
+        vanish keeps its nominal probabilities, so it can still de-excite.
+    """
+    out = []
+    for p_rad, u_rad in zip(prob_trans, u_prob_trans):
+        r = []
+        for p_d, u_d in zip(p_rad, u_rad):
+            d = []
+            for p_l, u_l in zip(p_d, u_d):
+                if not p_l:
+                    d.append(p_l)
+                    continue
+                draw = _truncated_normal_draw(p_l, u_l)
+                d.append(list(draw) if draw.sum() > 0 else list(p_l))
+            r.append(d)
+        out.append(r)
+    return out
+
+
 #============  traiter la relaxation ===============
 def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
     """ This function simulates the atomic rearangement following a missing electron an inner shell of the daughter atom.
@@ -4125,7 +4403,15 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
     type_augerK = Type_K[index_daug]
     u_probability = np.array(incertitude[index_daug])
     energie_augerK = np.array(Energie_augerK[index_daug])
-    
+    if uncData and len(probability) > 0:
+        # This run's realisation of the X-ray / Auger probabilities, drawn on
+        # first use and kept until resetDataRealisation() (see there).
+        key = (rad, daugther)
+        if key not in _DATA_REALISATION:
+            _DATA_REALISATION[key] = _truncated_normal_draw(probability,
+                                                            u_probability)
+        probability = _DATA_REALISATION[key]
+
     if len(probability) > 0:                      # le cas où le vecteur de proba/energie/type n'est pas vide
         if 'L' in lacune:                         # traiter le transition de couche L
             prob_2 = []
@@ -4133,10 +4419,7 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
             type_2 = []
             for il, pl in enumerate(type_transi):
                 if 'L' in pl:
-                    if uncData:
-                        prob_2.append(np.random.normal(probability[il],u_probability[il],1)[0])    # enregistrer les proba de transition L
-                    else:
-                        prob_2.append(probability[il])    # enregistrer les proba de transition L
+                    prob_2.append(probability[il])    # enregistrer les proba de transition L
                     energy_2.append(Energie[il])      # enregistrer les energies de transition L
                     type_2.append(type_transi[il])    # enregistrer les types de transition L
 
@@ -4144,12 +4427,9 @@ def relaxation_atom(daugther,rad,lacune='defaut',uncData=False):
             prob_2 = []
             energy_2 = []
             type_2 = []
-            for ik, pk in enumerate(type_transi):     
+            for ik, pk in enumerate(type_transi):
                 if 'K' in pk:
-                    if uncData:
-                        prob_2.append(np.random.normal(probability[ik],u_probability[ik],1)[0])
-                    else:
-                        prob_2.append(probability[ik])    # enregistrer les proba de transition K
+                    prob_2.append(probability[ik])    # enregistrer les proba de transition K
                     energy_2.append(Energie[ik])      # enregistrer les energie de transition K
                     type_2.append(type_transi[ik])    # enregistrer les type de transition K
 

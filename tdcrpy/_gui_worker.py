@@ -139,9 +139,14 @@ def describe():
         if n.endswith('.PenNuc.txt')
     )
     params = tl.readParameters()
+    # Typical L per cocktail (2.20.37+): {name: [L, spread, measured]}.
+    default_L = getattr(tl, 'defaultL', None)
+    L_defaults = ({name: list(default_L(name)) for name in tl.COCKTAIL_DATA}
+                  if default_L else {})
     return {
         'version': version('TDCRPy'),
         'cocktails': sorted(tl.COCKTAIL_DATA),
+        'L_defaults': L_defaults,
         'nuclides': nuclides,
         # Absent before 2.20.34: the GUI then keeps a free-text field.
         'sp_models': list(getattr(tl, 'STOPPING_POWER_MODELS', ())),
@@ -205,7 +210,7 @@ def _analytical_channels(eff_S, eff_D, eff_T, symm):
             eff_D if symm else None, None)
 
 
-def _run_efficiency(mod, job, emit):
+def _run_efficiency(mod, job, emit, unc_data=False):
     """``TDCRPy()``: efficiencies at a light yield the user supplies."""
     emit.send('stage', text='simulating decays')
     smodel = bool(job.get('Smodel', True))
@@ -216,18 +221,103 @@ def _run_efficiency(mod, job, emit):
         display=bool(job.get('display')),
         barp=True,
         Smodel=smodel,
-        uncData=bool(job.get('uncData')),
+        uncData=unc_data,
     )
     return [('L (fixed)', job['L'], None)] + _channel_rows(out, not smodel)
 
 
-def _run_fit(mod, job, emit, analytical):
+#: Columns of a result propagated over realisations of the nuclear data.
+DATA_UNC_COLUMNS = (
+    ('quantity', 'Quantity'), ('value', 'Value'), ('u', 'u (combined)'),
+    ('u_rel', 'u / value'), ('u_MC', 'u (Monte Carlo)'),
+    ('u_data', 'u (nuclear data)'),
+)
+
+
+def combine_realisations(runs):
+    """Combine M runs, each on its own realisation of the nuclear data.
+
+    *runs* is a list of row lists ``(quantity, value, u)``, one per run, all
+    in the same order. For each quantity, with run-to-run variance ``s^2``
+    and mean Monte-Carlo variance ``ū^2`` of a single run:
+
+    * value     -- the mean over the runs;
+    * u(MC)     -- ``ū / sqrt(M)``, the counting noise left in that mean;
+    * u(data)   -- ``sqrt(s^2 - ū^2)``: what the data add to a single run's
+      scatter (JCGM 101). An input uncertainty, so not divided by sqrt(M).
+
+    ``s^2 - ū^2`` is a difference of two noisy numbers. Unless it exceeds
+    twice the standard error of ``s^2`` it is not resolved, and the 95 %
+    upper bound is reported instead, as the string ``'< x'``: claiming a
+    value there would be reporting Monte-Carlo noise as a data effect.
+
+    Returns
+    -------
+    list of list
+        ``[quantity, value, u, u_rel, u_MC, u_data]`` per quantity.
+    """
+    import numpy as np
+    from scipy.stats import chi2
+    M = len(runs)
+    out = []
+    for k, first in enumerate(runs[0]):
+        quantity = first[0]
+        values = [r[k][1] for r in runs]
+        if isinstance(values[0], (list, tuple)):          # three L values
+            mean = [float(np.mean(c)) for c in zip(*values)]
+            out.append([quantity, ', '.join(f'{v:.6g}' for v in mean),
+                        None, None, None, None])
+            continue
+        if not all(isinstance(v, (int, float)) for v in values):
+            out.append([quantity, values[0], None, None, None, None])
+            continue
+        v = np.asarray(values, dtype=float)
+        # An input repeated unchanged (the fixed L) stays exactly itself.
+        mean = float(v[0]) if np.all(v == v[0]) else float(v.mean())
+        us = [r[k][2] for r in runs]
+        if any(u is None for u in us):
+            out.append([quantity, mean, None, None, None, None])
+            continue
+        ubar2 = float(np.mean(np.square(us)))
+        s2 = float(v.var(ddof=1))
+        u_mc = (ubar2 / M) ** 0.5
+        excess = s2 - ubar2
+        if excess > 2.0 * s2 * (2.0 / (M - 1)) ** 0.5:
+            u_data = excess ** 0.5
+            u = (u_mc ** 2 + excess) ** 0.5
+            shown = u_data
+        else:
+            upper = s2 * (M - 1) / chi2.ppf(0.05, M - 1) - ubar2
+            u = u_mc
+            shown = f'< {max(upper, 0.0) ** 0.5:.2g}' if upper > 0 else '0'
+        rel = f'{100.0 * u / mean:.2f} %' if mean else ''
+        out.append([quantity, mean, u, rel, u_mc, shown])
+    return out
+
+
+def _run_data_realisations(mod, job, emit, once):
+    """Repeat *once* over M realisations of the nuclear data and combine."""
+    M = int(job.get('uncReps', 10))
+    runs = []
+    for i in range(M):
+        emit.send('stage', text=f'nuclear-data realisation {i + 1} of {M}')
+        runs.append(once())
+        emit.send('progress', pct=100.0 * (i + 1) / M)
+    emit.send('stage', text=f'combined {M} realisations of {job["N"]} decays '
+                            f'each; u (nuclear data) shown as "< x" is not '
+                            f'resolved above the Monte-Carlo noise')
+    return combine_realisations(runs), DATA_UNC_COLUMNS
+
+
+def _run_fit(mod, job, emit, analytical, unc_data=False):
     """``eff()`` / ``effA()``: fit the light yield to a measured TDCR."""
     emit.send('stage', text='fitting L to the measured TDCR')
     kwargs = dict(L=float(job.get('L_guess', 1.0)),
                   disp=bool(job.get('display')))
     if job.get('Lbounds'):
         kwargs['Lbounds'] = tuple(job['Lbounds'])
+    if unc_data:
+        kwargs['uncData'] = True
 
     if analytical:
         # effA() returns (L0, L, eff_S, eff_D, eff_T) -- five values, not
@@ -252,7 +342,7 @@ def _run_fit(mod, job, emit, analytical):
         u_L = res[16] if len(res) > 16 else None
 
     rows = [('L (fitted)', L0, u_L),
-            ('L_A, L_B, L_C', ', '.join(f'{v:.6g}' for v in L_opt), None)]
+            ('L_A, L_B, L_C', [float(v) for v in L_opt], None)]
     return rows + _channel_rows(out, analytical)
 
 
@@ -280,9 +370,10 @@ def _run_curve(mod, job, emit):
             float(job['kB']), float(job['V']))
     if smodel:
         emit.send('stage', text='simulating decays')
+        # No uncData: one realisation of the data would shift the whole
+        # curve and look like a result; its spread needs repeated curves.
         mod.TDCRPy(grid[0], *args, record=True, barp=True,
-                   display=bool(job.get('display')),
-                   uncData=bool(job.get('uncData')))
+                   display=bool(job.get('display')))
         emit.send('stage', text=f'replaying them at {len(grid)} values of L')
     rows = []
     for i, L in enumerate(grid):
@@ -355,7 +446,8 @@ def _run_beta_spectrum(mod, job, emit):
     rows = [[ei, pi] for ei, pi in zip(e, p)]
     plot = {'x': 'E_keV', 'y': ['p'], 'yerr': [None],
             'xlabel': 'E / keV', 'ylabel': 'p(E) / keV⁻¹'}
-    return rows, BETA_SPECTRUM_COLUMNS, plot
+    return (rows, BETA_SPECTRUM_COLUMNS, plot,
+            _decay_info(tl, rad, emit, only=(mode, str(level))))
 
 
 def _run_stopping_power(mod, job, emit):
@@ -487,6 +579,86 @@ def decay_data_rows(out):
     return rows
 
 
+#: How BetaShape's decay-mode prefixes read.
+_BETA_MODE_LABEL = {'beta-': 'β⁻', 'beta+': 'β⁺', 'capt': 'EC'}
+
+
+def _beta_level_label(level):
+    fine = level.endswith('_myEstep')
+    base = level[:-len('_myEstep')] if fine else level
+    text = 'total spectrum' if base == 'tot' else f'transition {base}'
+    return text + (', fine energy step' if fine else '')
+
+
+def provenance(info, only=None):
+    """Turn :func:`decayDataInfo` into sections of ``[label, text, url]``.
+
+    *only* ``(mode, level)`` keeps just that BetaShape file, for the
+    spectrum view.
+    """
+    nuc = info['nuclear']
+    items = [['Source', nuc['source'], None],
+             ['DDEP evaluation date', nuc['evaluation_date'] or
+              'not stated in the file', None]]
+    for name, p, q, uq in nuc['daughters']:
+        text = f'{name}: P = {p:g}' if p is not None else name
+        if q is not None:
+            text += f', Q = {q:g}' + (f' ± {uq:g}' if uq else '') + ' keV'
+        items.append(['Daughter', text, None])
+    for note in nuc['notes']:
+        items.append(['Note', note, None])
+    if nuc['tables_url']:
+        items.append(['DDEP tables (LNHB)', nuc['tables_url'],
+                      nuc['tables_url']])
+        items.append(['DDEP evaluation comments', nuc['comments_url'],
+                      nuc['comments_url']])
+    sections = [{'title': 'Nuclear decay data — PenNuc', 'items': items}]
+
+    atomic = info['atomic']
+    if atomic:
+        items = [['Decay', d, None] for d in atomic['decays']]
+        if atomic['evaluator']:
+            kind = {'FUL': 'full evaluation', 'UPD': 'update'}.get(
+                atomic['type'], atomic['type'])
+            items.append(['Evaluator', f'{atomic["evaluator"]} ({kind}, '
+                                       f'literature cut-off '
+                                       f'{atomic["cutoff"]})', None])
+        sections.append({'title': 'X-rays and Auger electrons — ENSDF '
+                                  'format', 'items': items})
+
+    items = []
+    for b in info['beta']:
+        if only and (b['mode'], b['level']) != only:
+            continue
+        head = (f'{_BETA_MODE_LABEL.get(b["mode"], b["mode"])}, '
+                f'{_beta_level_label(b["level"])}')
+        items.append([head, b.get('program', '?'), None])
+        for key, label in (('transition', 'calculated as'),
+                           ('end_point', 'end point'),
+                           ('shape_factor', 'experimental shape factor'),
+                           ('cite', 'cite')):
+            if b.get(key):
+                items.append(['', f'{label}: {b[key]}', None])
+    if info['beta_alternatives']:
+        items.append(['Also archived', 'earlier spectrum set(s) '
+                      + ', '.join(info['beta_alternatives'])
+                      + ' — not used by default', None])
+    if items:
+        sections.append({'title': 'β spectra — BetaShape', 'items': items})
+    return sections
+
+
+def _decay_info(tl, rad, emit, only=None):
+    """Provenance sections, or ``None`` on a build without decayDataInfo."""
+    if not hasattr(tl, 'decayDataInfo'):
+        return None
+    try:
+        return provenance(tl.decayDataInfo(rad), only)
+    except Exception as exc:                  # never lose the data over it
+        emit.send('stage', text=f'provenance unavailable: {exc}')
+        return None
+
+
 def _run_decay_data(mod, job, emit):
     """``readPenNuc2()``: the decay scheme as the model reads it."""
     import tdcrpy.TDCR_model_lib as tl
@@ -503,13 +675,20 @@ def _run_decay_data(mod, job, emit):
     plot = {'kind': 'stem', 'x': 'E_keV', 'y': ['P'], 'group': 'line',
             'xlabel': 'E / keV', 'ylabel': 'emission probability per decay',
             'ylog': True}
-    return rows, DECAY_DATA_COLUMNS, plot
+    return rows, DECAY_DATA_COLUMNS, plot, _decay_info(tl, rad, emit)
 
 
 #: Tasks whose result is a curve to plot, rather than a single set of
 #: quantities: the result carries 'columns' and 'plot' alongside 'rows'.
 PLOT_TASKS = {'curve', 'beta_spectrum', 'stopping_power', 'quenching',
               'decay_data'}
+
+#: Calculations that can be repeated over realisations of the nuclear data.
+DATA_UNC_TASKS = {
+    'efficiency': lambda m, j, e: _run_efficiency(m, j, e, unc_data=True),
+    'fit': lambda m, j, e: _run_fit(m, j, e, analytical=False,
+                                    unc_data=True),
+}
 
 _RUNNERS = {
     'efficiency': lambda m, j, e: _run_efficiency(m, j, e),
@@ -541,7 +720,14 @@ def run(job, emit):
     except KeyError:
         raise ValueError(f'unknown task {job.get("task")!r}')
 
-    if job['task'] == 'curve':
+    if job.get('uncData') and job['task'] in DATA_UNC_TASKS \
+            and job.get('Smodel', True):
+        once = DATA_UNC_TASKS[job['task']]
+        rows, columns = _run_data_realisations(
+            mod, job, emit, lambda: plain_rows(once(mod, job, emit)))
+        emit.send('result', rows=plain_rows(rows), task=job['task'],
+                  columns=[list(c) for c in columns], plot=None)
+    elif job['task'] == 'curve':
         rows = runner(mod, job, emit)
         emit.send('result', rows=plain_rows(rows), task='curve',
                   columns=[list(c) for c in CURVE_COLUMNS],
@@ -549,9 +735,10 @@ def run(job, emit):
                         'xlabel': 'TDCR  (T/D)', 'ylabel': 'ε_D',
                         'annotate': 'L'})
     elif job['task'] in PLOT_TASKS:
-        rows, columns, plot = runner(mod, job, emit)
+        rows, columns, plot, *extra = runner(mod, job, emit)
         emit.send('result', rows=plain_rows(rows), task=job['task'],
-                  columns=[list(c) for c in columns], plot=plot)
+                  columns=[list(c) for c in columns], plot=plot,
+                  info=extra[0] if extra else None)
     else:
         rows = runner(mod, job, emit)
         emit.send('result', rows=plain_rows(rows), task=job['task'])

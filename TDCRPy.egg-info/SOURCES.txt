@@ -15,6 +15,7 @@ tdcrpy/TDCR_model_lib.py
 tdcrpy/TDCR_model_lib_0.py
 tdcrpy/TDCRoptimize_0.py
 tdcrpy/__init__.py
+tdcrpy/_gui_updater.py
 tdcrpy/_gui_worker.py
 tdcrpy/config.toml
 tdcrpy/configDefault.toml
