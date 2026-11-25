@@ -82,6 +82,16 @@ tdcrpy/Quenching/TandataUG.txt
 tdcrpy/Quenching/alpha_toulene.txt
 tdcrpy/Quenching/inputVecteurAlpha.txt
 tdcrpy/Quenching/inputVecteurElectron.txt
+tdcrpy/assets/bipm_logo.png
+tdcrpy/assets/bipm_logo_2x.png
+tdcrpy/assets/tdcrpy_icon_16.png
+tdcrpy/assets/tdcrpy_icon_256.png
+tdcrpy/assets/tdcrpy_icon_32.png
+tdcrpy/assets/tdcrpy_icon_48.png
+tdcrpy/assets/tdcrpy_logo_about.png
+tdcrpy/assets/tdcrpy_logo_about_2x.png
+tdcrpy/assets/tdcrpy_logo_header.png
+tdcrpy/assets/tdcrpy_logo_header_2x.png
 tdcrpy/decayData/All-nuclides_BetaShape.zip
 tdcrpy/decayData/All-nuclides_Ensdf.zip
 tdcrpy/decayData/All-nuclides_PenNuc.zip

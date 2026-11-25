@@ -2181,20 +2181,26 @@ def readPenNuc2(rad,z1=z_PenNuc):
 
 #================================== StoppingPower for alpha particle ===========================================
 
-def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
+def stoppingpowerA(e,rho=None,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
     """
     Estimation of the stopping power of alpha particles using tabulated values form the ASTAR code
-    
+
     ref:
-     
+
         https://dx.doi.org/10.18434/T4NC7P
-    
+
     Parameters
     ----------
     e : float
         energy of the alpha particle in keV.
     rho : float, optional
-        density of the source in g.cm-3. The default is 0.96.
+        density of the source in g.cm-3. ``None`` (the default) takes the
+        configured scintillator's, read at call time.
+
+        .. versionchanged:: 2.20.36
+           Was bound to the density configured at import, so a later
+           :func:`modifyLScocktail` did not reach alpha stopping power or
+           :func:`E_quench_a` -- the trap fixed for electrons in 2.20.34.
     energy_alpha : list, optional
         the list of energy (in keV) for which the stopping power was calculated with ASTAR. The default is energy_alph.
     dEdx_alpha : list, optional
@@ -2207,6 +2213,8 @@ def stoppingpowerA(e,rho=RHO,energy_alpha=energy_alph,dEdx_alpha=dEdx_alph):
 
     """
 
+    if rho is None:
+        rho = _stopping_globals()[0]
     energy_alpha = np.array(energy_alpha)
     dEdx_alpha = np.array(dEdx_alpha)
     if e<=1:

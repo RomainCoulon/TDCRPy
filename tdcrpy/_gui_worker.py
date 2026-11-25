@@ -175,7 +175,7 @@ def describe():
 
 
 # --------------------------------------------------------------------------
-# the six calculations
+# the calculations and data views
 # --------------------------------------------------------------------------
 def _channel_rows(out, analytical):
     """Rows for the seven channels of a 14-tuple ``(mean, u)`` result.
@@ -359,19 +359,25 @@ def _run_beta_spectrum(mod, job, emit):
 
 
 def _run_stopping_power(mod, job, emit):
-    """``stoppingpower()``: electron dE/dx over an energy grid, for the
-    scintillator currently configured -- or, with ``compare_models``, for
-    every model the library knows, at that same density/Z/A so the
-    comparison is apples to apples.
+    """Stopping power over an energy grid, for the configured scintillator.
+
+    Electrons use ``stoppingpower()`` -- with ``compare_models``, every model
+    the library knows, at the same density/Z/A so the comparison is apples to
+    apples. Alphas use ``stoppingpowerA()`` (ASTAR), converted from keV cm⁻¹
+    to the same MeV cm⁻¹ so the two plots read on one scale.
     """
     import tdcrpy.TDCR_model_lib as tl
     grid = [float(v) for v in job['E_grid']]            # keV
-    compare = bool(job.get('compare_models'))
-    models = list(tl.STOPPING_POWER_MODELS) if compare else [None]
     emit.send('stage', text='evaluating the stopping power')
-    rows = [[E] + [tl.stoppingpower(E * 1e3, spmodel=m) for m in models]
-            for E in grid]
-    labels = models if compare else [tl._stopping_globals()[3]]
+    if job.get('particle', 'electron') == 'alpha':
+        rows = [[E, tl.stoppingpowerA(E) * 1e-3] for E in grid]
+        labels = ['alpha (ASTAR)']
+    else:
+        compare = bool(job.get('compare_models'))
+        models = list(tl.STOPPING_POWER_MODELS) if compare else [None]
+        rows = [[E] + [tl.stoppingpower(E * 1e3, spmodel=m) for m in models]
+                for E in grid]
+        labels = models if compare else [tl._stopping_globals()[3]]
     columns = (('E_keV', 'E / keV'),) + tuple((lab, lab) for lab in labels)
     plot = {'x': 'E_keV', 'y': list(labels), 'yerr': [None] * len(labels),
             'xlabel': 'E / keV', 'ylabel': 'dE/dx / MeV cm⁻¹',
@@ -379,9 +385,131 @@ def _run_stopping_power(mod, job, emit):
     return rows, columns, plot
 
 
+def _run_quenching(mod, job, emit):
+    """Birks-quenched energy Q(E) and the quenching factor Q/E.
+
+    Computed with ``Em_e()`` / ``Em_a()``, the very functions the model
+    calls -- exact integral below the interpolation threshold, the shipped
+    tables above it -- so the curve is what a run actually uses. One series
+    per Birks constant, to compare kB values on one plot.
+    """
+    import tdcrpy.TDCR_model_lib as tl
+    grid = [float(v) for v in job['E_grid']]            # keV
+    kBs = [float(k) for k in job['kB_list']]            # cm/keV
+    alpha = job.get('particle', 'electron') == 'alpha'
+    params = tl.readParameters()
+    nE_e, nE_a, E_int_a, E_int_e = params[0], params[1], params[6], params[7]
+
+    def quenched(E, kB):
+        if alpha:
+            return tl.Em_a(E, kB, nE_a, Et=E_int_a)
+        # Em_e works in eV and cm/MeV, as TDCRPy() calls it.
+        return tl.Em_e(E * 1e3, E * 1e3, kB * 1e3, nE_e,
+                       Et=E_int_e * 1e3) * 1e-3
+
+    emit.send('stage', text='integrating the Birks quenching function')
+    rows = []
+    for i, E in enumerate(grid):
+        row = [E]
+        for kB in kBs:
+            q = quenched(E, kB)
+            row += [q, q / E]
+        rows.append(row)
+        emit.send('progress', pct=100.0 * (i + 1) / len(grid))
+    columns = [('E_keV', 'E / keV')]
+    for kB in kBs:
+        columns += [(f'Q_{kB:g}', f'Q / keV  (kB={kB:g})'),
+                    (f'QE_{kB:g}', f'Q/E  (kB={kB:g})')]
+    keys = [f'QE_{kB:g}' for kB in kBs]
+    plot = {'x': 'E_keV', 'y': keys, 'yerr': [None] * len(keys),
+            'labels': [f'kB = {kB:g} cm/keV' for kB in kBs],
+            'xlabel': 'E / keV', 'ylabel': 'Q(E) / E',
+            'xlog': True}
+    return rows, tuple(columns), plot
+
+
+#: How PenNuc's record codes read in the table.
+_BRANCH_LABEL = {'beta': 'β⁻', 'beta+': 'β⁺', 'alpha': 'α',
+                 'Atom_K': 'EC (K)', 'Atom_L': 'EC (L)', 'Atom_L1': 'EC (L1)',
+                 'Atom_L2': 'EC (L2)', 'Atom_L3': 'EC (L3)',
+                 'Atom_M': 'EC (M)', 'Atom_N': 'EC (N)', 'Atom_O': 'EC (O)'}
+_TRANSITION_LABEL = {'GA': 'γ', 'EK': 'CE K', 'EL': 'CE L', 'EL1': 'CE L1',
+                     'EL2': 'CE L2', 'EL3': 'CE L3', 'EM': 'CE M',
+                     'EN': 'CE N'}
+
+#: Columns of the decay-data table, as (key, heading).
+DECAY_DATA_COLUMNS = (
+    ('daughter', 'Daughter'), ('record', 'Record'), ('type', 'Type'),
+    ('E_keV', 'E / keV'), ('P', 'P per decay'), ('u_P', 'u(P)'),
+    ('from_keV', 'From level / keV'), ('to_keV', 'To level / keV'),
+    ('line', 'Discrete line'),
+)
+
+
+def decay_data_rows(out):
+    """Flatten ``readPenNuc2()`` into one row per decay branch and per
+    de-excitation transition.
+
+    Every probability in PenNuc is per decay of the parent: the branch
+    probabilities of a daughter sum to its own probability (K-40, Bi-212),
+    and the transition probabilities are absolute emission intensities
+    (the 59.54 keV γ of Am-241 is 0.3592). The 'line' column names the
+    discrete emissions -- α, γ and conversion electrons -- which are the
+    ones a line plot can show; a β entry is the end point of a continuum.
+    """
+    (daughters, _p_daug, _Q, b_type, b_energy, b_prob, b_level, _pb,
+     t_type, t_energy, t_prob, t_level, t_level_end, level_energy,
+     _pt, _hl, t_unc) = out[:17]
+    rows = []
+    for d, name in enumerate(daughters):
+        # Level index -> energy, from the de-excitation blocks; 0 is ground.
+        energy_of = {0: 0.0}
+        for lev, en in zip(t_level[d], level_energy[d]):
+            if lev and en:
+                energy_of[lev[0]] = en[0]
+        for types, energies, probs, levels in zip(b_type[d], b_energy[d],
+                                                 b_prob[d], b_level[d]):
+            for t, e, p, lev in zip(types, energies, probs, levels):
+                label = _BRANCH_LABEL.get(t, t)
+                rows.append([name, 'decay', label, e, p, None, None,
+                             energy_of.get(lev), 'α' if t == 'alpha' else ''])
+        for lev, types, energies, probs, uncs, ends in zip(
+                t_level[d], t_type[d], t_energy[d], t_prob[d], t_unc[d],
+                t_level_end[d]):
+            if not lev:
+                continue
+            for t, e, p, u, end in zip(types, energies, probs, uncs, ends):
+                label = _TRANSITION_LABEL.get(t, t)
+                line = 'γ' if t == 'GA' else 'conversion e⁻'
+                rows.append([name, 'de-excitation', label, e, p, u,
+                             energy_of.get(lev[0]), energy_of.get(end),
+                             line])
+    return rows
+
+
+def _run_decay_data(mod, job, emit):
+    """``readPenNuc2()``: the decay scheme as the model reads it."""
+    import tdcrpy.TDCR_model_lib as tl
+    rad = job['rad']
+    emit.send('stage', text=f'reading the PenNuc decay data of {rad}')
+    try:
+        out = tl.readPenNuc2(rad)
+    except KeyError:
+        raise ValueError(f'{rad} is not in the PenNuc decay-data archive.')
+    rows = decay_data_rows(out)
+    emit.send('stage', text='β energies are end points; EC energies are the '
+                            'transition energy. X-rays and Auger electrons '
+                            'come from atomic relaxation and are not listed.')
+    plot = {'kind': 'stem', 'x': 'E_keV', 'y': ['P'], 'group': 'line',
+            'xlabel': 'E / keV', 'ylabel': 'emission probability per decay',
+            'ylog': True}
+    return rows, DECAY_DATA_COLUMNS, plot
+
+
 #: Tasks whose result is a curve to plot, rather than a single set of
 #: quantities: the result carries 'columns' and 'plot' alongside 'rows'.
-PLOT_TASKS = {'curve', 'beta_spectrum', 'stopping_power'}
+PLOT_TASKS = {'curve', 'beta_spectrum', 'stopping_power', 'quenching',
+              'decay_data'}
 
 _RUNNERS = {
     'efficiency': lambda m, j, e: _run_efficiency(m, j, e),
@@ -390,6 +518,8 @@ _RUNNERS = {
     'curve': lambda m, j, e: _run_curve(m, j, e),
     'beta_spectrum': lambda m, j, e: _run_beta_spectrum(m, j, e),
     'stopping_power': lambda m, j, e: _run_stopping_power(m, j, e),
+    'quenching': lambda m, j, e: _run_quenching(m, j, e),
+    'decay_data': lambda m, j, e: _run_decay_data(m, j, e),
 }
 
 
@@ -413,18 +543,37 @@ def run(job, emit):
 
     if job['task'] == 'curve':
         rows = runner(mod, job, emit)
-        emit.send('result', rows=rows, task='curve',
+        emit.send('result', rows=plain_rows(rows), task='curve',
                   columns=[list(c) for c in CURVE_COLUMNS],
                   plot={'x': 'TDCR', 'y': ['eff_D'], 'yerr': ['u_eff_D'],
                         'xlabel': 'TDCR  (T/D)', 'ylabel': 'ε_D',
                         'annotate': 'L'})
     elif job['task'] in PLOT_TASKS:
         rows, columns, plot = runner(mod, job, emit)
-        emit.send('result', rows=rows, task=job['task'],
+        emit.send('result', rows=plain_rows(rows), task=job['task'],
                   columns=[list(c) for c in columns], plot=plot)
     else:
         rows = runner(mod, job, emit)
-        emit.send('result', rows=rows, task=job['task'])
+        emit.send('result', rows=plain_rows(rows), task=job['task'])
+
+
+def _plain(v):
+    """A numpy scalar or 0-d array as a Python float; anything else as is.
+
+    ``json.dumps(default=str)`` would otherwise send ``Em_a()``'s 0-d arrays
+    as strings, which the window can neither format nor plot.
+    """
+    if isinstance(v, (str, bool)) or v is None:
+        return v
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return v
+
+
+def plain_rows(rows):
+    """Apply :func:`_plain` to every cell of every row."""
+    return [[_plain(v) for v in row] for row in rows]
 
 
 def main(argv=None):

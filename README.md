@@ -64,7 +64,7 @@ python -m unittest tdcrpy.test.test_tdcrpy
 
 ## 🖥 Graphical interface
 
-If you would rather not write a script, there is a window. It offers six calculations: efficiency at a light yield you give it, the light yield fitted to a measured TDCR (stochastic or analytical model), the efficiency curve ε_D vs TDCR over a range of light yields, the emitted beta spectrum of one nuclide, and the electron stopping power dE/dx vs energy — the last three plotted with `matplotlib` (already a dependency, so nothing extra to install).
+If you would rather not write a script, there is a window. It runs the model — efficiency at a given light yield, the light yield fitted to a measured TDCR (stochastic or analytical), the efficiency curve ε_D vs TDCR — and shows the data the model rests on: decay data, β spectra, stopping powers and the Birks quenching function. Every result can be exported as CSV and every curve is plotted in the window, ready to save as PNG, PDF or SVG (`matplotlib` is already a dependency, so there is nothing extra to install).
 
 ```bash
 tdcrpy-gui            # or: python -m tdcrpy.gui
@@ -139,7 +139,17 @@ start "" pythonw -m tdcrpy.gui
 | `crashed (code …)` in the status bar | A fault inside the Monte-Carlo kernel, not a problem with your inputs. Re-running usually succeeds. |
 | Results differ slightly between identical runs | Expected: the model is a Monte Carlo. Raise *Number of decays N*; the reported uncertainties scale as 1/√N. |
 
-It offers six calculations — efficiencies at a light yield you supply; `L` fitted to a measured TDCR by either the stochastic or the analytical model; the efficiency curve ε_D vs TDCR over a range of `L`; the emitted beta spectrum of one nuclide and transition; and the electron stopping power dE/dx vs energy, for the configured scintillator or every model side by side — with the scintillator, micelle, delayed-fluorescence and counter settings on tabs, a results table with uncertainties, a plot window for the curve-shaped results, and a log that shows the model's own warnings (including the reverse-micelle advisories). Results can be saved as CSV.
+The window is laid out like a desktop application:
+
+| Area | What it holds |
+|---|---|
+| **Calculations** (sidebar) | Efficiency at a given L · Fit L to a TDCR (stochastic or analytical) · Efficiency curve ε_D vs TDCR |
+| **Data & plots** (sidebar) | **Decay data** — branches, γ rays and conversion electrons per decay, as read from PenNuc · **β spectrum** — any transition in the BetaShape archive · **Stopping power** — electrons (one model, or all six side by side) or α particles (ASTAR) · **Ionisation quenching** — Q(E) and Q/E for one or several kB |
+| **Input tabs** | Source, Data & plots, Scintillator, Micelles, Delayed fluorescence, Counter |
+| **Results** | *Table* (with uncertainties), *Plot* (zoom, pan, save) and *Log* (the model's own messages, including the reverse-micelle advisories) |
+| **Help menu** | Online documentation, example notebooks, the reference paper, the BIPM technical report, issue tracker, licence and *About* |
+
+*Export CSV…* writes the table at full precision, UTF-8 so a spreadsheet shows β and γ correctly, preceded by `#` lines recording the TDCRPy version, the calculation and every setting used (`pandas.read_csv(path, comment='#')` skips them). *Save plot…* writes PNG, PDF or SVG at 300 dpi. F5 runs, Esc cancels, Ctrl+S exports.
 
 Two things worth knowing:
 

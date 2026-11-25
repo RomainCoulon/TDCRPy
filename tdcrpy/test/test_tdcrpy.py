@@ -666,6 +666,17 @@ class TestStoppingPowerResolvesAtCallTime(unittest.TestCase):
                         'a higher Chou parameter must quench more, and '
                         'modifyChou_param must reach E_quench_e live')
 
+    def test_alpha_stopping_power_follows_the_density(self):
+        """stoppingpowerA() bound rho at import until v2.20.36, so alpha
+        quenching ignored a cocktail change."""
+        self.assertIsNone(
+            inspect.signature(lib.stoppingpowerA).parameters['rho'].default)
+        lib.modifyDensity(0.90)
+        s1 = lib.stoppingpowerA(1000)
+        lib.modifyDensity(1.80)
+        s2 = lib.stoppingpowerA(1000)
+        self.assertAlmostEqual(s2 / s1, 2.0, places=6)
+
 
 class TestEnergyDeposition(unittest.TestCase):
     """Tests for energy deposition functions."""
@@ -2611,8 +2622,9 @@ class TestGuiInputs(unittest.TestCase):
         self.assertEqual(job['E_grid'],
                          self.gui.build_E_grid('0.1, 2000, 50'))
         self.assertTrue(job['compare_models'])
-        self.assertEqual(set(job), {'task', 'E_grid', 'compare_models',
-                                    'config'})
+        self.assertEqual(set(job), {'task', 'particle', 'E_grid',
+                                    'compare_models', 'config'})
+        self.assertEqual(job['particle'], 'electron')
 
     def test_build_E_grid_log_spacing_hits_the_endpoints_exactly(self):
         grid = self.gui.build_E_grid('0.1, 2000, 10')
@@ -2903,6 +2915,160 @@ class TestGuiWorkerDiagnostics(unittest.TestCase):
         self.assertIn('columns', result)
         self.assertIn('plot', result)
         self.assertEqual(result['task'], 'stopping_power')
+
+
+class TestGuiDataViews(unittest.TestCase):
+    """Decay data, quenching and α stopping power, the export, and the
+    window's own provenance (v2.20.36)."""
+
+    def setUp(self):
+        from tdcrpy import gui, _gui_worker
+        self.gui, self.worker = gui, _gui_worker
+
+    class _Sink:
+        def send(self, *a, **k):
+            pass
+
+    # ---- the form -------------------------------------------------------
+    def test_every_task_has_a_label_and_a_one_line_help(self):
+        keys = [k for k, _ in self.gui.TASKS]
+        self.assertEqual(len(keys), len(set(keys)))
+        self.assertEqual(set(keys), set(self.gui.TASK_HELP))
+        self.assertEqual(set(keys) - {'efficiency', 'fit', 'fit_analytical',
+                                      'curve'},
+                         set(self.worker.PLOT_TASKS) - {'curve'})
+
+    def test_particle_is_validated(self):
+        self.assertEqual(self.gui.parse_particle('Alpha'), 'alpha')
+        self.assertEqual(self.gui.parse_particle(''), 'electron')
+        with self.assertRaises(self.gui.InputError):
+            self.gui.parse_particle('proton')
+
+    def test_alpha_stopping_power_never_compares_electron_models(self):
+        job = self.gui.build_job({'task': 'stopping_power',
+                                  'particle': 'alpha', 'spCompare': True,
+                                  'Erange': '100, 8000, 5'})
+        self.assertFalse(job['compare_models'])
+
+    def test_quenching_job_takes_several_kB(self):
+        job = self.gui.build_job({'task': 'quenching', 'particle': 'electron',
+                                  'Erange': '1, 100, 5',
+                                  'kBq': '0.8e-5, 1e-5, 1.2e-5'})
+        self.assertEqual(job['kB_list'], [0.8e-5, 1e-5, 1.2e-5])
+        with self.assertRaises(self.gui.InputError):
+            self.gui.build_job({'task': 'quenching', 'Erange': '1, 100, 5',
+                                'kBq': '-1e-5'})
+        with self.assertRaises(self.gui.InputError):
+            self.gui.build_job({'task': 'quenching', 'Erange': '1, 100, 5',
+                                'kBq': ','.join(['1e-5'] * 9)})
+
+    def test_decay_data_job_needs_only_a_nuclide(self):
+        job = self.gui.build_job({'task': 'decay_data', 'rad': 'Am-241, H-3'})
+        self.assertEqual(job, {'task': 'decay_data', 'rad': 'Am-241',
+                               'config': {}})
+
+    def test_format_value_handles_three_light_yields(self):
+        """The 'L (fixed)' row holds a list for an asymmetric counter; it
+        used to crash the results table."""
+        self.assertEqual(self.gui.format_value([1.0, 2.0, 3.5], None),
+                         ('1, 2, 3.5', '', ''))
+
+    def test_format_cell(self):
+        self.assertEqual(self.gui.format_cell(None), '')
+        self.assertEqual(self.gui.format_cell('γ'), 'γ')
+        self.assertEqual(self.gui.format_cell(0.123456789), '0.12346')
+
+    # ---- export and provenance -----------------------------------------
+    def test_csv_round_trip_with_provenance(self):
+        import csv as _csv
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, 'out.csv')
+            self.gui.write_csv(path, [['type', 'E_keV'], ['γ', '59.54']],
+                               ['TDCRPy 9.9', 'Decay data'])
+            with open(path, encoding='utf-8-sig') as fh:
+                lines = fh.read().splitlines()
+            self.assertEqual(lines[:2], ['# TDCRPy 9.9', '# Decay data'])
+            rows = list(_csv.reader(lines[2:]))
+            self.assertEqual(rows, [['type', 'E_keV'], ['γ', '59.54']])
+
+    def test_version_and_licence_come_from_the_installed_package(self):
+        from importlib.metadata import version
+        self.assertEqual(self.gui.installed_version(), version('TDCRPy'))
+        text = self.gui.licence_text()
+        self.assertIsNotNone(text)
+        self.assertIn('MIT', text)
+
+    def test_the_gui_assets_ship_with_the_package(self):
+        assets = os.path.join(self.gui.package_dir(), 'assets')
+        for name in ('tdcrpy_logo_header.png', 'tdcrpy_logo_about.png',
+                     'bipm_logo.png', 'tdcrpy_icon_32.png'):
+            self.assertTrue(os.path.exists(os.path.join(assets, name)), name)
+
+    # ---- the worker -------------------------------------------------------
+    def test_decay_data_intensities_are_per_decay(self):
+        rows, columns, plot = self.worker._run_decay_data(
+            TDCRPy_mod, {'rad': 'Am-241'}, self._Sink())
+        col = {k: i for i, (k, _t) in enumerate(columns)}
+        g59 = [r for r in rows if r[col['type']] == 'γ'
+               and abs(r[col['E_keV']] - 59.54) < 0.01]
+        self.assertEqual(len(g59), 1)
+        self.assertAlmostEqual(g59[0][col['P']], 0.3592, places=4)
+        self.assertAlmostEqual(g59[0][col['from_keV']], 59.54, places=1)
+        self.assertEqual(g59[0][col['to_keV']], 0.0)
+        alpha = [r for r in rows if r[col['type']] == 'α']
+        self.assertAlmostEqual(sum(r[col['P']] for r in alpha), 1.0, places=2)
+        self.assertEqual(plot['kind'], 'stem')
+
+    def test_decay_data_branches_sum_to_each_daughter(self):
+        """K-40: 10.75 % to Ar-40 (EC/β⁺), 89.25 % to Ca-40 (β⁻)."""
+        out = lib.readPenNuc2('K-40')
+        rows = self.worker.decay_data_rows(out)
+        for daughter, p in zip(out[0], out[1]):
+            branch = sum(r[4] for r in rows
+                         if r[0] == daughter and r[1] == 'decay')
+            self.assertAlmostEqual(branch, p, places=3)
+
+    def test_decay_data_unknown_nuclide_is_a_clear_error(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.worker._run_decay_data(TDCRPy_mod, {'rad': 'Xx-999'},
+                                        self._Sink())
+        self.assertIn('Xx-999', str(ctx.exception))
+
+    def test_quenching_factor_is_below_one_and_falls_with_kB(self):
+        rows, columns, plot = self.worker._run_quenching(
+            TDCRPy_mod, {'E_grid': [2.0, 20.0, 200.0],
+                         'kB_list': [0.8e-5, 1.5e-5],
+                         'particle': 'electron'}, self._Sink())
+        for E, q1, qe1, q2, qe2 in rows:
+            self.assertLess(qe1, 1.0)
+            self.assertLess(qe2, qe1)
+            self.assertAlmostEqual(qe1, q1 / E)
+        self.assertEqual(plot['y'], ['QE_8e-06', 'QE_1.5e-05'])
+        self.assertEqual(len(plot['labels']), 2)
+
+    def test_alpha_quenching_is_much_stronger_than_electron(self):
+        args = {'E_grid': [1000.0], 'kB_list': [1e-5]}
+        e = self.worker._run_quenching(
+            TDCRPy_mod, dict(args, particle='electron'), self._Sink())[0]
+        a = self.worker._run_quenching(
+            TDCRPy_mod, dict(args, particle='alpha'), self._Sink())[0]
+        self.assertLess(a[0][2], 0.5 * e[0][2])
+
+    def test_alpha_stopping_power_in_MeV_per_cm(self):
+        rows, columns, _plot = self.worker._run_stopping_power(
+            TDCRPy_mod, {'E_grid': [1000.0], 'particle': 'alpha'},
+            self._Sink())
+        self.assertEqual(len(columns), 2)
+        self.assertAlmostEqual(rows[0][1], lib.stoppingpowerA(1000.0) * 1e-3)
+
+    def test_numpy_cells_reach_the_window_as_floats(self):
+        """Em_a() returns 0-d arrays, which JSON would send as strings."""
+        out = self.worker.plain_rows([[np.array(48.7), np.float64(1.5),
+                                       'γ', None, [1, 2]]])
+        self.assertEqual(out, [[48.7, 1.5, 'γ', None, [1, 2]]])
+        self.assertIs(type(out[0][0]), float)
+        json_line = __import__('json').dumps(out)
+        self.assertNotIn('"48.7"', json_line)
 
 
 if __name__ == '__main__':

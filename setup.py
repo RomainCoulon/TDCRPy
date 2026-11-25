@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 import os
 
-VERSION = "2.20.35"
+VERSION = "2.20.36"
 DESCRIPTION = "TDCR model — Monte Carlo efficiency estimation for liquid scintillation counting"
 
 # Read long description from README
@@ -76,6 +76,7 @@ setup(
             "MCNP-MATRIX/Spectra_for_analytical_model/*.txt",
             "EfficiencyCurves/*/*.txt",
             "Micelle/*.csv",
+            "assets/*.png",
         ]
     },
 )

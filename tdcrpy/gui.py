@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-"""A window for driving TDCRPy, for people who would rather not write a script.
+"""TDCRPy — a window for driving the TDCR model without writing a script.
 
 Start it with ``tdcrpy-gui``, or ``python -m tdcrpy.gui``.
 
-Six calculations are offered: efficiencies at a light yield you supply
-(:func:`tdcrpy.TDCRPy.TDCRPy`); the light yield fitted to a measured TDCR
-ratio by either the stochastic (:func:`~tdcrpy.TDCRPy.eff`) or the analytical
-(:func:`~tdcrpy.TDCRPy.effA`) model, both reported over the same seven
-channels; the efficiency curve, ε_D against TDCR, over a range of light
-yields; the emitted beta spectrum of one nuclide and transition
-(:func:`~tdcrpy.TDCR_model_lib.readBetaShape`); and the electron stopping
-power dE/dx against energy (:func:`~tdcrpy.TDCR_model_lib.stoppingpower`),
-for the configured scintillator or for every model side by side.
+Calculations
+    efficiencies at a light yield you supply (:func:`tdcrpy.TDCRPy.TDCRPy`);
+    the light yield fitted to a measured TDCR ratio by the stochastic
+    (:func:`~tdcrpy.TDCRPy.eff`) or the analytical
+    (:func:`~tdcrpy.TDCRPy.effA`) model; and the efficiency curve, ε_D
+    against TDCR, over a range of light yields.
+Data & plots
+    the decay data the model reads (PenNuc); the emitted beta spectrum of a
+    transition (BetaShape); the stopping power of electrons (every model) or
+    alpha particles (ASTAR); and the Birks ionisation-quenching function.
+
+Every result can be exported as CSV, and every curve-shaped one is plotted
+in the window and can be saved as PNG, PDF or SVG.
 
 Design notes
 ------------
@@ -21,11 +25,13 @@ the initial enquiry that fills the widgets, runs in a separate process
 for numba, stays responsive during a run that may take minutes, can cancel a
 run by killing it, and survives a native crash in the kernel.
 
-Nothing here keeps its own copy of the cocktail list, the nuclide list or the
-configuration defaults: all three are read from the library at start-up. A
-hardcoded copy would be one more thing to go stale, which this package has
-been bitten by repeatedly.
+Nothing here keeps its own copy of the cocktail list, the nuclide list, the
+configuration defaults, the version or the licence: all are read from the
+installed package. A hardcoded copy would be one more thing to go stale,
+which this package has been bitten by repeatedly.
 """
+import csv
+import datetime
 import json
 import os
 import queue
@@ -34,26 +40,89 @@ import shutil
 import subprocess
 import sys
 import threading
+import traceback
+import webbrowser
 import tkinter as tk
+from importlib import metadata
 from importlib.util import find_spec
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, font as tkfont, messagebox, ttk
 
 #: Matches the percentage tqdm prints, so the progress bar can follow the
 #: Monte-Carlo loop without the model needing to report anything.
 _TQDM_PCT = re.compile(r'(\d{1,3})%')
 
-TASKS = (
-    ('efficiency', 'Efficiency at L'),
+#: The model runs proper: each needs a source and a counting geometry.
+CALC_TASKS = (
+    ('efficiency', 'Efficiency at a given L'),
     ('fit', 'Fit L to a TDCR — stochastic'),
     ('fit_analytical', 'Fit L to a TDCR — analytical'),
-    ('curve', 'Curve ε_D vs TDCR over an L range'),
-    ('beta_spectrum', 'Beta spectrum'),
-    ('stopping_power', 'Stopping power'),
+    ('curve', 'Efficiency curve ε_D vs TDCR'),
 )
+#: Views of the data and sub-models the calculations rest on. None runs the
+#: Monte Carlo, so they return in seconds.
+DATA_TASKS = (
+    ('decay_data', 'Decay data'),
+    ('beta_spectrum', 'β spectrum'),
+    ('stopping_power', 'Stopping power'),
+    ('quenching', 'Ionisation quenching'),
+)
+TASKS = CALC_TASKS + DATA_TASKS
 
-#: Most points any plotted grid (L, or energy for the stopping power) may
-#: have; on the efficiency curve each one costs one replay.
+#: One sentence under the heading, saying what the selected item does.
+TASK_HELP = {
+    'efficiency': 'Detection efficiencies of the seven coincidence channels '
+                  'for a light yield L you supply.',
+    'fit': 'Fits the light yield L to a measured TDCR with the stochastic '
+           'model, then reports the efficiencies at that L.',
+    'fit_analytical': 'Fits L to a measured TDCR with the analytical model '
+                      '— fast, valid for pure β emitters only.',
+    'curve': 'ε_D against TDCR over a range of L: the decays are simulated '
+             'once and replayed at every L, so the curve is smooth.',
+    'decay_data': 'The decay scheme as the model reads it (PenNuc): decay '
+                  'branches, γ rays and conversion electrons, per decay.',
+    'beta_spectrum': 'The emitted energy spectrum of one β transition, from '
+                     'the BetaShape archive the model samples.',
+    'stopping_power': 'Stopping power dE/dx of electrons (every model side '
+                      'by side, if wished) or α particles in the scintillator.',
+    'quenching': 'Birks-quenched energy Q(E) and the quenching factor Q/E, '
+                 'for one or several kB values.',
+}
+
+#: Most points any plotted grid (L, or energy) may have; on the efficiency
+#: curve each one costs one replay.
 CURVE_MAX_POINTS = 500
+
+#: Default energy range per particle: β energies of interest run from eV to
+#: MeV, α energies from 0.1 to 8 MeV (the end of the ASTAR table).
+E_DEFAULTS = {'electron': '0.1, 2000, 100', 'alpha': '100, 8000, 80'}
+
+#: Most kB values the quenching view overlays on one plot.
+MAX_KB_SERIES = 8
+
+# Web resources. Every one also appears in README.md or setup.py.
+REPO_URL = 'https://github.com/RomainCoulon/TDCRPy'
+DOCS_URL = REPO_URL + '#readme'
+NOTEBOOKS_URL = REPO_URL + '/tree/main/notebooks'
+ISSUES_URL = REPO_URL + '/issues'
+LICENCE_URL = REPO_URL + '/blob/main/LICENCE.md'
+PYPI_URL = 'https://pypi.org/project/TDCRPy/'
+PAPER_URL = 'https://doi.org/10.1016/j.apradiso.2024.111518'
+REPORT_URL = 'http://dx.doi.org/10.13140/RG.2.2.15682.80321'
+BIPM_URL = 'https://www.bipm.org'
+
+# The palette of the TDCRPy logo.
+NAVY = '#0B2A55'
+CYAN = '#1EA7E1'
+INK = '#1F2A37'
+MUTED = '#5B6B80'
+PANEL = '#F3F6FA'
+RULE = '#D5DDE8'
+SELECTED = '#DCEAF8'
+WHITE = '#FFFFFF'
+STRIPE = '#F6F8FB'
+#: Series colours for plots, navy and cyan first.
+PLOT_COLORS = ('#0B2A55', '#1EA7E1', '#E07A1F', '#2E9E5B', '#B03A48',
+               '#7A5CC2', '#8C8C8C', '#C9A227')
 
 
 class InputError(ValueError):
@@ -167,8 +236,17 @@ def build_L_grid(text, log_spacing=True):
 
 
 def build_E_grid(text, log_spacing=True):
-    """Energies (keV) to evaluate the stopping power at."""
+    """Energies (keV) to evaluate the stopping power or quenching at."""
     return _build_grid(text, 'Energy range', log_spacing)
+
+
+def parse_particle(text):
+    """The particle a stopping-power or quenching view is for."""
+    particle = str(text or 'electron').strip().lower()
+    if particle not in E_DEFAULTS:
+        raise InputError(f'Particle: {text!r} is neither an electron nor an '
+                         f'alpha particle.')
+    return particle
 
 
 def build_job(form):
@@ -182,16 +260,38 @@ def build_job(form):
         costs no process start-up and no numba import.
     """
     task = form['task']
+    config = form.get('config') or {}
 
+    # ---- data views: no source mixture, no counting geometry ------------
     if task == 'stopping_power':
-        # No nuclide, no Monte Carlo: dE/dx is a property of the
-        # scintillator (set via 'config') and the model alone.
+        # dE/dx is a property of the scintillator (set via 'config') and the
+        # model alone.
+        particle = parse_particle(form.get('particle'))
         return {
             'task': task,
+            'particle': particle,
             'E_grid': build_E_grid(form.get('Erange', ''),
                                    bool(form.get('Elog', True))),
-            'compare_models': bool(form.get('spCompare', False)),
-            'config': form.get('config') or {},
+            'compare_models': (particle == 'electron'
+                               and bool(form.get('spCompare', False))),
+            'config': config,
+        }
+
+    if task == 'quenching':
+        kBs = parse_numbers(form.get('kBq') or form.get('kB', ''),
+                            'Birks constant(s) kB')
+        if any(k < 0 for k in kBs):
+            raise InputError('Birks constant(s) kB: cannot be negative.')
+        if len(kBs) > MAX_KB_SERIES:
+            raise InputError(f'Birks constant(s) kB: at most {MAX_KB_SERIES} '
+                             f'values on one plot.')
+        return {
+            'task': task,
+            'particle': parse_particle(form.get('particle')),
+            'E_grid': build_E_grid(form.get('Erange', ''),
+                                   bool(form.get('Elog', True))),
+            'kB_list': kBs,
+            'config': config,
         }
 
     if task == 'beta_spectrum':
@@ -201,9 +301,14 @@ def build_job(form):
             'rad': rad,
             'mode': form.get('betaMode') or 'beta-',
             'level': (form.get('betaLevel') or 'tot').strip(),
-            'config': form.get('config') or {},
+            'config': config,
         }
 
+    if task == 'decay_data':
+        return {'task': task, 'rad': parse_nuclides(form['rad'])[0],
+                'config': config}
+
+    # ---- the model runs --------------------------------------------------
     rads = parse_nuclides(form['rad'])
     fracs = parse_fractions(form.get('pmf', ''), len(rads))
 
@@ -222,7 +327,7 @@ def build_job(form):
         'V': V,
         'display': bool(form.get('display')),
         'uncData': bool(form.get('uncData')),
-        'config': form.get('config') or {},
+        'config': config,
     }
 
     if task == 'efficiency':
@@ -269,12 +374,38 @@ def format_value(value, uncertainty):
         return value, '', ''
     if value is None:
         return '', '', ''
+    if isinstance(value, (list, tuple)):
+        # Three light yields, one per PMT, for an asymmetric counter.
+        return ', '.join(f'{v:.6g}' for v in value), '', ''
     val = f'{value:.6g}'
     if uncertainty in (None, ''):
         return val, '', ''
     unc = f'{uncertainty:.3g}'
     rel = f'{100.0 * uncertainty / value:.2f} %' if value else ''
     return val, unc, rel
+
+
+def format_cell(value):
+    """One cell of a curve or data table, for reading."""
+    if value is None:
+        return ''
+    if isinstance(value, str):
+        return value
+    return f'{value:.5g}'
+
+
+def write_csv(path, rows, meta=()):
+    """Write a results table, its header first, with ``# ``-prefixed
+    provenance lines above it.
+
+    UTF-8 with a byte-order mark, so a spreadsheet opens β, γ and ε_D
+    correctly; ``pandas.read_csv(path, comment='#')`` skips the
+    provenance.
+    """
+    with open(path, 'w', encoding='utf-8-sig', newline='') as fh:
+        for line in meta:
+            fh.write(f'# {line}\n')
+        csv.writer(fh).writerows(rows)
 
 
 def package_dir():
@@ -287,6 +418,39 @@ def package_dir():
     if spec is None or not spec.submodule_search_locations:
         return None
     return spec.submodule_search_locations[0]
+
+
+def installed_version():
+    """The installed TDCRPy version, from its metadata."""
+    try:
+        return metadata.version('TDCRPy')
+    except metadata.PackageNotFoundError:
+        return '?'
+
+
+def licence_text():
+    """The licence shipped with the installed package, or ``None``.
+
+    Read from the distribution's files; an editable install keeps it beside
+    the package instead.
+    """
+    try:
+        for f in metadata.distribution('TDCRPy').files or ():
+            if f.name.upper().startswith('LICEN'):
+                return f.read_text(encoding='utf-8')
+    except (metadata.PackageNotFoundError, OSError):
+        pass
+    d = package_dir()
+    if d:
+        path = os.path.join(os.path.dirname(d), 'LICENCE.md')
+        if os.path.exists(path):
+            with open(path, encoding='utf-8') as fh:
+                return fh.read()
+    return None
+
+
+def task_label(key):
+    return dict(TASKS).get(key, key)
 
 
 # --------------------------------------------------------------------------
@@ -353,8 +517,13 @@ class Worker:
 class App(ttk.Frame):
 
     def __init__(self, master):
-        super().__init__(master, padding=8)
-        self.master.title('TDCRPy')
+        super().__init__(master)
+        self.version = installed_version()
+        # Pixels per 96-dpi pixel: images, column widths and the minimum
+        # size are in pixels and must follow the screen; fonts already do.
+        self.s = max(1.0, master.winfo_fpixels('1i') / 96.0)
+        master.title(f'TDCRPy {self.version} — TDCR model for liquid '
+                     f'scintillation counting')
         self.grid(sticky='nsew')
         master.columnconfigure(0, weight=1)
         master.rowconfigure(0, weight=1)
@@ -368,13 +537,23 @@ class App(ttk.Frame):
         self._config_snapshot = None
         self._cancelled = False
         self._last_job = None
-        self._plot_win = None
+        self._result_job = None
+        self._figure = None
+        self._canvas = None
 
         self.vars = {}
+        self._setup_style()
+        self._load_images()
+        self._build_menu()
         self._build_header()
-        self._build_inputs()
-        self._build_output()
-        self._build_footer()
+        self._build_sidebar()
+        self._build_body()
+        self._build_actions()
+        self._build_statusbar()
+        self._bind_keys()
+
+        master.protocol('WM_DELETE_WINDOW', self._quit)
+        master.report_callback_exception = self._on_tk_error
 
         self._snapshot_config()
         self._on_task_change()
@@ -382,6 +561,9 @@ class App(ttk.Frame):
         self._enquire()
 
     # ---------------------------------------------------------------- setup
+    def _px(self, n):
+        return int(round(n * self.s))
+
     def _var(self, name, value=''):
         v = tk.StringVar(value=str(value))
         self.vars[name] = v
@@ -392,29 +574,225 @@ class App(ttk.Frame):
         self.vars[name] = v
         return v
 
-    def _build_header(self):
-        bar = ttk.Frame(self)
-        bar.grid(row=0, column=0, columnspan=2, sticky='ew', pady=(0, 8))
-        ttk.Label(bar, text='Calculation', font=('', 10, 'bold')).pack(
-            side='left', padx=(0, 10))
-        self._var('task', TASKS[0][0])
-        for key, label in TASKS:
-            ttk.Radiobutton(bar, text=label, value=key,
-                            variable=self.vars['task'],
-                            command=self._on_task_change).pack(side='left',
-                                                               padx=6)
-        self.version_label = ttk.Label(bar, text='starting…',
-                                       foreground='#666')
-        self.version_label.pack(side='right')
+    def _setup_style(self):
+        base = tkfont.nametofont('TkDefaultFont')
+        family = base.actual('family')
+        size = base.actual('size')
+        self.f_title = tkfont.Font(family=family, size=15, weight='bold')
+        self.f_sub = tkfont.Font(family=family, size=9)
+        self.f_heading = tkfont.Font(family=family, size=13, weight='bold')
+        self.f_section = tkfont.Font(family=family, size=8, weight='bold')
+        self.f_nav = tkfont.Font(family=family, size=max(10, size))
+        self.f_bold = tkfont.Font(family=family, size=max(9, size),
+                                  weight='bold')
 
-    def _build_inputs(self):
-        nb = ttk.Notebook(self)
-        nb.grid(row=1, column=0, sticky='nsew', padx=(0, 8))
-        self._tab_source(nb)
-        self._tab_scintillator(nb)
-        self._tab_micelles(nb)
-        self._tab_delayed(nb)
-        self._tab_counter(nb)
+        style = ttk.Style(self.master)
+        if os.name != 'nt' and 'clam' in style.theme_names():
+            style.theme_use('clam')   # the X11 'default' theme looks dated
+        style.configure('Treeview', rowheight=self._px(22))
+        style.configure('Treeview.Heading', font=self.f_bold)
+        style.configure('Hint.TLabel', foreground=MUTED)
+        style.configure('Section.TLabel', foreground=NAVY, font=self.f_bold)
+        style.configure('Heading.TLabel', foreground=NAVY,
+                        font=self.f_heading)
+        style.configure('Status.TLabel', foreground=MUTED)
+
+    def _load_images(self):
+        """The logos and window icon from ``tdcrpy/assets``; any missing
+        file just leaves its place empty."""
+        self.img = {}
+        d = package_dir()
+        assets = os.path.join(d, 'assets') if d else None
+        hidpi = self.s >= 1.75
+
+        def load(name):
+            if not assets:
+                return None
+            for candidate in ((f'{name}_2x.png', f'{name}.png') if hidpi
+                              else (f'{name}.png',)):
+                path = os.path.join(assets, candidate)
+                if os.path.exists(path):
+                    try:
+                        return tk.PhotoImage(file=path)
+                    except tk.TclError:
+                        return None
+            return None
+
+        for name in ('tdcrpy_logo_header', 'tdcrpy_logo_about', 'bipm_logo'):
+            self.img[name] = load(name)
+        icons = [load(f'tdcrpy_icon_{n}') for n in (256, 48, 32, 16)]
+        icons = [i for i in icons if i is not None]
+        if icons:
+            try:
+                self.master.iconphoto(True, *icons)
+            except tk.TclError:
+                pass
+        self.img['icons'] = icons
+
+    def _build_menu(self):
+        bar = tk.Menu(self.master)
+        m = tk.Menu(bar, tearoff=False)
+        m.add_command(label='Export results as CSV…', accelerator='Ctrl+S',
+                      command=self._save)
+        m.add_command(label='Save plot as image…', command=self._save_plot)
+        m.add_separator()
+        m.add_command(label='Exit', accelerator='Ctrl+Q', command=self._quit)
+        bar.add_cascade(label='File', menu=m)
+
+        m = tk.Menu(bar, tearoff=False)
+        m.add_command(label='Run', accelerator='F5', command=self._run)
+        m.add_command(label='Cancel', accelerator='Esc', command=self._cancel)
+        bar.add_cascade(label='Run', menu=m)
+
+        m = tk.Menu(bar, tearoff=False)
+        m.add_command(label='Undo my configuration changes',
+                      command=self._restore_snapshot)
+        m.add_command(label='Restore shipped defaults',
+                      command=self._restore_defaults)
+        m.add_separator()
+        m.add_command(label='Open the configuration folder',
+                      command=self._open_config_folder)
+        bar.add_cascade(label='Tools', menu=m)
+
+        m = tk.Menu(bar, tearoff=False)
+        m.add_command(label='Documentation (online)',
+                      command=lambda: self._open(DOCS_URL))
+        m.add_command(label='Example notebooks',
+                      command=lambda: self._open(NOTEBOOKS_URL))
+        m.add_separator()
+        m.add_command(label='Reference paper — Appl. Radiat. Isot. (2024)',
+                      command=lambda: self._open(PAPER_URL))
+        m.add_command(label='BIPM technical report',
+                      command=lambda: self._open(REPORT_URL))
+        m.add_separator()
+        m.add_command(label='Report an issue…',
+                      command=lambda: self._open(ISSUES_URL))
+        m.add_command(label='TDCRPy on PyPI',
+                      command=lambda: self._open(PYPI_URL))
+        m.add_separator()
+        m.add_command(label='Licence', command=self._show_licence)
+        m.add_command(label='About TDCRPy', command=self._show_about)
+        bar.add_cascade(label='Help', menu=m)
+        self.master.configure(menu=bar)
+
+    def _bind_keys(self):
+        root = self.master
+        root.bind('<F5>', lambda e: self._run())
+        root.bind('<Escape>', lambda e: self._cancel())
+        root.bind('<Control-s>', lambda e: self._save())
+        root.bind('<Control-q>', lambda e: self._quit())
+
+    # ------------------------------------------------------------- header
+    def _build_header(self):
+        head = tk.Frame(self, bg=WHITE)
+        head.grid(row=0, column=0, columnspan=2, sticky='ew')
+        head.columnconfigure(2, weight=1)
+
+        logo = self.img.get('tdcrpy_logo_header')
+        if logo is not None:
+            mark = tk.Label(head, image=logo, bg=WHITE, cursor='hand2')
+            mark.grid(row=0, column=0, rowspan=2,
+                      padx=(self._px(14), self._px(12)), pady=self._px(8))
+            mark.bind('<Button-1>', lambda e: self._show_about())
+        else:
+            tk.Label(head, text='TDCRPy', font=self.f_title, fg=NAVY,
+                     bg=WHITE).grid(row=0, column=0, rowspan=2,
+                                    padx=self._px(14), pady=self._px(8))
+
+        tk.Label(head, text='Liquid scintillation counting — TDCR model',
+                 font=self.f_title, fg=NAVY, bg=WHITE, anchor='w').grid(
+            row=0, column=1, sticky='sw')
+        tk.Label(head, text=f'Version {self.version}   ·   '
+                            f'Photo-physical stochastic model   ·   '
+                            f'MIT licence',
+                 font=self.f_sub, fg=MUTED, bg=WHITE, anchor='w').grid(
+            row=1, column=1, sticky='nw')
+
+        bipm = self.img.get('bipm_logo')
+        if bipm is not None:
+            mark = tk.Label(head, image=bipm, bg=WHITE, cursor='hand2')
+        else:
+            mark = tk.Label(head, text='BIPM', font=self.f_title, fg=NAVY,
+                            bg=WHITE, cursor='hand2')
+        mark.grid(row=0, column=3, rowspan=2, padx=self._px(16))
+        mark.bind('<Button-1>', lambda e: self._open(BIPM_URL))
+        _Tooltip(mark, 'Developed and maintained by the Bureau International '
+                       'des Poids et Mesures — open bipm.org')
+
+        tk.Frame(self, bg=CYAN, height=self._px(3)).grid(
+            row=0, column=0, columnspan=2, sticky='sew')
+
+    # ------------------------------------------------------------ sidebar
+    def _build_sidebar(self):
+        side = tk.Frame(self, bg=PANEL, width=self._px(220))
+        side.grid(row=1, column=0, rowspan=2, sticky='nsw')
+        side.grid_propagate(False)
+        side.columnconfigure(0, weight=1)
+        self._var('task', TASKS[0][0])
+
+        r = 0
+        for title, tasks in (('CALCULATIONS', CALC_TASKS),
+                             ('DATA & PLOTS', DATA_TASKS)):
+            tk.Label(side, text=title, font=self.f_section, fg=MUTED,
+                     bg=PANEL, anchor='w').grid(
+                row=r, column=0, sticky='ew', padx=self._px(16),
+                pady=(self._px(16), self._px(4)))
+            r += 1
+            for key, label in tasks:
+                tk.Radiobutton(
+                    side, text=label, value=key, variable=self.vars['task'],
+                    command=self._on_task_change, indicatoron=False,
+                    anchor='w', justify='left', font=self.f_nav,
+                    fg=INK, bg=PANEL, activebackground=SELECTED,
+                    selectcolor=SELECTED, relief='flat', offrelief='flat',
+                    bd=0, highlightthickness=0, cursor='hand2',
+                    padx=self._px(18), pady=self._px(5),
+                ).grid(row=r, column=0, sticky='ew')
+                r += 1
+
+        side.rowconfigure(r, weight=1)
+        r += 1
+        self.side_help = tk.Label(
+            side, font=self.f_sub, fg=MUTED, bg=PANEL, anchor='nw',
+            justify='left', wraplength=self._px(190),
+            text='F5 runs the selected item.\nEvery result can be exported '
+                 'as CSV, and every plot saved as PNG, PDF or SVG.')
+        self.side_help.grid(row=r, column=0, sticky='ew', padx=self._px(16),
+                            pady=self._px(12))
+
+    # --------------------------------------------------------------- body
+    def _build_body(self):
+        pane = ttk.PanedWindow(self, orient='horizontal')
+        pane.grid(row=1, column=1, sticky='nsew', padx=self._px(10),
+                  pady=(self._px(10), 0))
+
+        left = ttk.Frame(pane)
+        left.columnconfigure(0, weight=1)
+        left.rowconfigure(2, weight=1)
+        self.heading = ttk.Label(left, text='', style='Heading.TLabel')
+        self.heading.grid(row=0, column=0, sticky='w')
+        self.subheading = ttk.Label(left, text='', style='Hint.TLabel',
+                                    wraplength=self._px(470), justify='left')
+        self.subheading.grid(row=1, column=0, sticky='w', pady=(0, 6))
+        self.inputs = ttk.Notebook(left)
+        self.inputs.grid(row=2, column=0, sticky='nsew')
+        self._tab_source(self.inputs)
+        self._tab_data(self.inputs)
+        self._tab_scintillator(self.inputs)
+        self._tab_micelles(self.inputs)
+        self._tab_delayed(self.inputs)
+        self._tab_counter(self.inputs)
+        pane.add(left, weight=1)
+
+        right = ttk.Frame(pane)
+        right.columnconfigure(0, weight=1)
+        right.rowconfigure(0, weight=1)
+        self.results = ttk.Notebook(right)
+        self.results.grid(row=0, column=0, sticky='nsew')
+        self._tab_table(self.results)
+        self._tab_plot(self.results)
+        self._tab_log(self.results)
+        pane.add(right, weight=2)
 
     def _row(self, parent, r, label, name, default='', width=16, hint=None):
         ttk.Label(parent, text=label).grid(row=r, column=0, sticky='w',
@@ -423,18 +801,26 @@ class App(ttk.Frame):
                       width=width)
         e.grid(row=r, column=1, sticky='w', pady=2)
         if hint:
-            ttk.Label(parent, text=hint, foreground='#666').grid(
+            ttk.Label(parent, text=hint, style='Hint.TLabel').grid(
                 row=r, column=2, sticky='w', padx=(8, 0))
         return e
 
+    def _section(self, parent, r, text):
+        ttk.Label(parent, text=text, style='Section.TLabel').grid(
+            row=r, column=0, columnspan=3, sticky='w', pady=(10, 2))
+
     def _tab_source(self, nb):
-        f = ttk.Frame(nb, padding=10)
+        f = ttk.Frame(nb, padding=12)
         nb.add(f, text='Source')
+        self.tab_source = f
 
         ttk.Label(f, text='Nuclide(s)').grid(row=0, column=0, sticky='w')
         self.nuclide_entry = ttk.Entry(
             f, textvariable=self._var('rad', 'Fe-55'), width=28)
         self.nuclide_entry.grid(row=0, column=1, sticky='w', pady=2)
+        ttk.Label(f, text='comma-separated for a mixture',
+                  style='Hint.TLabel').grid(row=0, column=2, sticky='w',
+                                            padx=(8, 0))
 
         picker = ttk.Frame(f)
         picker.grid(row=1, column=1, sticky='w', pady=(0, 6))
@@ -443,19 +829,14 @@ class App(ttk.Frame):
         self.nuclide_box.pack(side='left')
         ttk.Button(picker, text='Add', width=5,
                    command=self._add_nuclide).pack(side='left', padx=4)
-        ttk.Label(f, text='comma-separated for a mixture',
-                  foreground='#666').grid(row=0, column=2, sticky='w',
-                                          padx=(8, 0))
 
         self.pmf_entry = self._row(
             f, 2, 'Activity fractions', 'pmf', '',
             hint='blank for a single nuclide, else e.g. 0.8, 0.2')
-        ttk.Separator(f, orient='horizontal').grid(
-            row=3, column=0, columnspan=3, sticky='ew', pady=8)
 
+        self._section(f, 3, 'Light yield')
         self.l_entry = self._row(f, 4, 'Light yield L', 'L', '1.0',
-                                 hint='keV⁻¹; 3 values for '
-                                      'asymmetric PMTs')
+                                 hint='keV⁻¹; 3 values for asymmetric PMTs')
         self.td_entry = self._row(f, 5, 'Measured TDCR', 'TD', '0.9',
                                   hint='T/D; 4 values for an asymmetric '
                                        'counter')
@@ -463,7 +844,6 @@ class App(ttk.Frame):
         self.bounds_entry = self._row(
             f, 7, 'L bounds', 'Lbounds', '',
             hint='blank lets the fit bracket the physical root itself')
-
         self.range_entry = self._row(
             f, 8, 'L range', 'Lrange', '0.1, 10, 25',
             hint='from, to, number of points (keV⁻¹)')
@@ -471,37 +851,88 @@ class App(ttk.Frame):
             f, text='log spacing', variable=self._flag('Llog', True))
         self.log_check.grid(row=9, column=1, sticky='w')
 
-        self.kb_entry = self._row(f, 10, 'Birks constant kB', 'kB', '1.0e-5',
+        self._section(f, 10, 'Sample and statistics')
+        self.kb_entry = self._row(f, 11, 'Birks constant kB', 'kB', '1.0e-5',
                                   hint='cm keV⁻¹')
-        self.v_entry = self._row(f, 11, 'Volume', 'V', '10', hint='mL')
-        self.n_entry = self._row(f, 12, 'Number of decays N', 'N', '10000',
+        self.v_entry = self._row(f, 12, 'Volume', 'V', '10', hint='mL')
+        self.n_entry = self._row(f, 13, 'Number of decays N', 'N', '10000',
                                  hint='≥ 10 000 recommended (JCGM 101)')
 
         self.smodel_check = ttk.Checkbutton(
             f, text='Stochastic model (uncheck for the analytical one, '
                     'valid for pure β emitters only)',
             variable=self._flag('Smodel', True))
-        self.smodel_check.grid(row=13, column=0, columnspan=3, sticky='w',
+        self.smodel_check.grid(row=14, column=0, columnspan=3, sticky='w',
                                pady=(8, 0))
-        ttk.Checkbutton(f, text='Propagate nuclear-data uncertainty',
-                        variable=self._flag('uncData')).grid(
-            row=14, column=0, columnspan=3, sticky='w')
-        ttk.Checkbutton(f, text='Verbose log (prints every decay)',
-                        variable=self._flag('display')).grid(
-            row=15, column=0, columnspan=3, sticky='w')
+        self.unc_check = ttk.Checkbutton(
+            f, text='Propagate nuclear-data uncertainty',
+            variable=self._flag('uncData'))
+        self.unc_check.grid(row=15, column=0, columnspan=3, sticky='w')
+        self.display_check = ttk.Checkbutton(
+            f, text='Verbose log (prints every decay)',
+            variable=self._flag('display'))
+        self.display_check.grid(row=16, column=0, columnspan=3, sticky='w')
 
-        ttk.Separator(f, orient='horizontal').grid(
-            row=16, column=0, columnspan=3, sticky='ew', pady=8)
-        ttk.Label(f, text='Beta decay mode').grid(row=17, column=0,
-                                                   sticky='w', pady=2)
+    def _tab_data(self, nb):
+        f = ttk.Frame(nb, padding=12)
+        nb.add(f, text='Data & plots')
+        self.tab_data = f
+
+        ttk.Label(f, text='Nuclide').grid(row=0, column=0, sticky='w')
+        self.data_nuclide = ttk.Combobox(f, textvariable=self.vars['rad'],
+                                         width=16, values=())
+        self.data_nuclide.grid(row=0, column=1, sticky='w', pady=2)
+        ttk.Label(f, text='the first, for a mixture',
+                  style='Hint.TLabel').grid(row=0, column=2, sticky='w',
+                                            padx=(8, 0))
+
+        self._section(f, 1, 'β spectrum')
+        ttk.Label(f, text='Decay mode').grid(row=2, column=0, sticky='w',
+                                             pady=2)
         self.beta_mode_box = ttk.Combobox(
             f, textvariable=self._var('betaMode', 'beta-'), width=10,
             values=('beta-', 'beta+'), state='readonly')
-        self.beta_mode_box.grid(row=17, column=1, sticky='w', pady=2)
+        self.beta_mode_box.grid(row=2, column=1, sticky='w', pady=2)
         self.beta_level_entry = self._row(
-            f, 18, 'Transition level', 'betaLevel', 'tot',
-            hint="the daughter level before the transition, or 'tot' "
-                 "for a pure beta emitter")
+            f, 3, 'Transition level', 'betaLevel', 'tot',
+            hint="daughter level, or 'tot' for a pure β emitter")
+
+        self._section(f, 4, 'Stopping power and quenching')
+        ttk.Label(f, text='Particle').grid(row=5, column=0, sticky='w',
+                                           pady=2)
+        prow = ttk.Frame(f)
+        prow.grid(row=5, column=1, columnspan=2, sticky='w')
+        self._var('particle', 'electron')
+        self.particle_radios = [
+            ttk.Radiobutton(prow, text=text, value=value,
+                            variable=self.vars['particle'],
+                            command=self._on_particle_change)
+            for value, text in (('electron', 'electron'),
+                                ('alpha', 'α particle'))]
+        for rb in self.particle_radios:
+            rb.pack(side='left', padx=(0, 12))
+        self._particle_shown = 'electron'
+
+        self.erange_entry = self._row(
+            f, 6, 'Energy range', 'Erange', E_DEFAULTS['electron'],
+            hint='from, to, number of points (keV)')
+        self.elog_check = ttk.Checkbutton(
+            f, text='log spacing', variable=self._flag('Elog', True))
+        self.elog_check.grid(row=7, column=1, sticky='w')
+        self.spcompare_check = ttk.Checkbutton(
+            f, text='overlay every electron stopping-power model',
+            variable=self._flag('spCompare', False))
+        self.spcompare_check.grid(row=8, column=0, columnspan=3, sticky='w')
+        self.kbq_entry = self._row(
+            f, 9, 'Birks constant(s) kB', 'kBq', '1.0e-5', width=24,
+            hint='cm keV⁻¹; several, comma-separated, to compare')
+
+        ttk.Label(
+            f, style='Hint.TLabel', wraplength=self._px(430),
+            justify='left',
+            text='Stopping power and quenching use the cocktail and '
+                 'stopping-power model set on the Scintillator tab.',
+        ).grid(row=10, column=0, columnspan=3, sticky='w', pady=(12, 0))
 
     #: Where the stopping-power choice acts. Said in the window because the
     #: answer -- not everywhere -- is not what the field suggests.
@@ -511,7 +942,7 @@ class App(ttk.Frame):
                'interpolated and are not recomputed.')
 
     def _tab_scintillator(self, nb):
-        f = ttk.Frame(nb, padding=10)
+        f = ttk.Frame(nb, padding=12)
         nb.add(f, text='Scintillator')
         ttk.Label(f, text='Cocktail').grid(row=0, column=0, sticky='w')
         self.cocktail_box = ttk.Combobox(
@@ -526,8 +957,7 @@ class App(ttk.Frame):
                      width=14).grid(row=2, column=1, sticky='w', pady=2)
         self._row(f, 3, 'Solvent concentration', 'solvantConc', '0.0',
                   hint='mol L⁻¹')
-        ttk.Separator(f, orient='horizontal').grid(
-            row=4, column=0, columnspan=3, sticky='ew', pady=8)
+        self._section(f, 4, 'Stopping power and quenching')
         ttk.Label(f, text='Stopping-power model').grid(row=5, column=0,
                                                        sticky='w')
         # Editable until the library says which models it has; read-only
@@ -536,7 +966,8 @@ class App(ttk.Frame):
             f, textvariable=self._var('sp_model', 'tan_xia'), width=20,
             values=())
         self.sp_box.grid(row=5, column=1, sticky='w', pady=2)
-        self.sp_note = ttk.Label(f, wraplength=430, foreground='#666',
+        self.sp_note = ttk.Label(f, wraplength=self._px(430),
+                                 style='Hint.TLabel', justify='left',
                                  text=self.SP_NOTE.format(where='Einterp_e'))
         self.sp_note.grid(row=6, column=0, columnspan=3, sticky='w',
                           pady=(0, 6))
@@ -545,24 +976,11 @@ class App(ttk.Frame):
         self._row(f, 8, 'Electron quench bins', 'nE_electron', '1000')
         self._row(f, 9, 'Alpha quench bins', 'nE_alpha', '1000')
 
-        ttk.Separator(f, orient='horizontal').grid(
-            row=10, column=0, columnspan=3, sticky='ew', pady=8)
-        self.erange_entry = self._row(
-            f, 11, 'Energy range (plot)', 'Erange', '0.1, 2000, 100',
-            hint='from, to, number of points (keV)')
-        self.elog_check = ttk.Checkbutton(
-            f, text='log spacing', variable=self._flag('Elog', True))
-        self.elog_check.grid(row=12, column=1, sticky='w')
-        self.spcompare_check = ttk.Checkbutton(
-            f, text='overlay every stopping-power model (same ρ, Z, A)',
-            variable=self._flag('spCompare', False))
-        self.spcompare_check.grid(row=13, column=0, columnspan=3, sticky='w')
-
     def _tab_micelles(self, nb):
-        f = ttk.Frame(nb, padding=10)
+        f = ttk.Frame(nb, padding=12)
         nb.add(f, text='Micelles')
         ttk.Label(
-            f, wraplength=430, foreground='#444',
+            f, wraplength=self._px(430), style='Hint.TLabel', justify='left',
             text='With an aqueous fraction the source sits in water droplets, '
                  'and an electron slow enough to stop inside one never '
                  'reaches the solvent. Left on, the correction switches '
@@ -586,10 +1004,10 @@ class App(ttk.Frame):
                   hint='nm; 0 is monodisperse')
 
     def _tab_delayed(self, nb):
-        f = ttk.Frame(nb, padding=10)
+        f = ttk.Frame(nb, padding=12)
         nb.add(f, text='Delayed fluorescence')
         ttk.Label(
-            f, wraplength=430, foreground='#444',
+            f, wraplength=self._px(430), style='Hint.TLabel', justify='left',
             text='Prompt plus delayed (triplet-triplet annihilation) light, '
                  'which makes the yield depend on the coincidence resolving '
                  'time. This is a different model, not a refinement: turning '
@@ -605,7 +1023,7 @@ class App(ttk.Frame):
                   hint='reset by the cocktail choice')
 
     def _tab_counter(self, nb):
-        f = ttk.Frame(nb, padding=10)
+        f = ttk.Frame(nb, padding=12)
         nb.add(f, text='Counter')
         self._row(f, 0, 'Coincidence resolving time', 'tau', '50', hint='ns')
         self._row(f, 1, 'Extended dead time', 'extDT', '30',
@@ -618,75 +1036,133 @@ class App(ttk.Frame):
                         variable=self._flag('opticalTransport')).grid(
             row=4, column=0, columnspan=3, sticky='w', pady=(8, 0))
 
-    def _build_output(self):
-        right = ttk.Frame(self)
-        right.grid(row=1, column=1, sticky='nsew')
-        right.columnconfigure(0, weight=1)
-        right.rowconfigure(0, weight=3)
-        right.rowconfigure(2, weight=2)
-
-        self.tree = ttk.Treeview(right, show='headings', height=10)
+    # ------------------------------------------------------------ results
+    def _tab_table(self, nb):
+        f = ttk.Frame(nb, padding=6)
+        nb.add(f, text='Table')
+        f.columnconfigure(0, weight=1)
+        f.rowconfigure(1, weight=1)
+        self.caption = ttk.Label(f, text='No results yet.',
+                                 style='Hint.TLabel')
+        self.caption.grid(row=0, column=0, sticky='w', pady=(0, 4))
+        self.tree = ttk.Treeview(f, show='headings', height=12)
+        self.tree.tag_configure('odd', background=STRIPE)
         self._set_columns(self.QUANTITY_COLUMNS)
-        self.tree.grid(row=0, column=0, sticky='nsew')
-        ttk.Scrollbar(right, orient='vertical',
-                      command=self.tree.yview).grid(row=0, column=1,
-                                                    sticky='ns')
+        self.tree.grid(row=1, column=0, sticky='nsew')
+        ttk.Scrollbar(f, orient='vertical', command=self.tree.yview).grid(
+            row=1, column=1, sticky='ns')
+        xs = ttk.Scrollbar(f, orient='horizontal', command=self.tree.xview)
+        xs.grid(row=2, column=0, sticky='ew')
+        self.tree.configure(xscrollcommand=xs.set)
+        self.tab_table = f
 
-        ttk.Label(right, text='Log', foreground='#666').grid(
-            row=1, column=0, sticky='w', pady=(8, 2))
-        self.log = tk.Text(right, height=10, wrap='none',
-                           font=('Consolas', 9), state='disabled')
-        self.log.grid(row=2, column=0, sticky='nsew')
-        ttk.Scrollbar(right, orient='vertical',
-                      command=self.log.yview).grid(row=2, column=1,
-                                                   sticky='ns')
+    def _tab_plot(self, nb):
+        f = ttk.Frame(nb)
+        nb.add(f, text='Plot')
+        self.plot_frame = f
+        self.plot_placeholder = ttk.Label(
+            f, style='Hint.TLabel', justify='center',
+            text='Plots appear here.\n\nRun the efficiency curve, or any '
+                 'item under Data & plots.')
+        self.plot_placeholder.place(relx=0.5, rely=0.5, anchor='center')
+        self.tab_plot = f
+
+    def _tab_log(self, nb):
+        f = ttk.Frame(nb, padding=6)
+        nb.add(f, text='Log')
+        f.columnconfigure(0, weight=1)
+        f.rowconfigure(0, weight=1)
+        self.log = tk.Text(f, height=10, wrap='none', relief='flat',
+                           font=('Consolas', 9), state='disabled',
+                           background=STRIPE, padx=6, pady=4)
+        self.log.grid(row=0, column=0, sticky='nsew')
+        ttk.Scrollbar(f, orient='vertical', command=self.log.yview).grid(
+            row=0, column=1, sticky='ns')
+        self.tab_log = f
 
     #: Results table for a single calculation: one quantity per row.
     QUANTITY_COLUMNS = (
-        ('quantity', 'Quantity', 210, 'w'),
-        ('value', 'Value', 120, 'e'),
-        ('u', 'u', 100, 'e'),
-        ('rel', 'u / value', 90, 'e'),
+        ('quantity', 'Quantity', 200, 'w'),
+        ('value', 'Value', 110, 'e'),
+        ('u', 'u', 90, 'e'),
+        ('rel', 'u / value', 80, 'e'),
     )
 
-    def _set_columns(self, spec):
+    def _column_spec(self, columns, rows):
+        """Columns sized to their heading and content; text columns read
+        left-aligned, numbers right-aligned."""
+        body = tkfont.nametofont('TkDefaultFont')
+        sample = rows[:300]
+        spec = []
+        for i, (key, title) in enumerate(columns):
+            cells = [format_cell(r[i]) for r in sample if i < len(r)]
+            text = any(isinstance(r[i], str) and r[i] for r in sample
+                       if i < len(r))
+            width = max([self.f_bold.measure(title)] +
+                        [body.measure(c) for c in cells]) + 18
+            # Already in screen pixels: undo the scaling _set_columns applies.
+            spec.append((key, title, width / self.s, 'w' if text else 'e'))
+        return spec
+
+    def _set_columns(self, spec, stretch=True):
         """Rebuild the results table's columns from (key, title, width,
-        anchor) tuples."""
+        anchor) tuples. Without *stretch* the columns keep their width and
+        a wide table scrolls sideways instead of squeezing its last ones."""
         self.tree.configure(columns=[c[0] for c in spec])
         for key, title, width, anchor in spec:
             self.tree.heading(key, text=title)
-            self.tree.column(key, width=width, anchor=anchor, stretch=True)
+            self.tree.column(key, width=self._px(width), anchor=anchor,
+                             stretch=stretch, minwidth=20)
 
-    def _build_footer(self):
-        bar = ttk.Frame(self)
-        bar.grid(row=2, column=0, columnspan=2, sticky='ew', pady=(8, 0))
-        bar.columnconfigure(3, weight=1)
+    # ------------------------------------------------- action and status bar
+    def _build_actions(self):
+        bar = ttk.Frame(self, padding=(self._px(10), self._px(8)))
+        bar.grid(row=2, column=1, sticky='ew')
+        bar.columnconfigure(5, weight=1)
 
-        self.run_button = ttk.Button(bar, text='Run', command=self._run)
+        self.run_button = tk.Button(
+            bar, text='▶  Run', command=self._run, font=self.f_bold,
+            fg=WHITE, bg=NAVY, activeforeground=WHITE, activebackground=CYAN,
+            disabledforeground='#9FB0C6', relief='flat', bd=0,
+            padx=self._px(18), pady=self._px(4), cursor='hand2')
         self.run_button.grid(row=0, column=0)
+        _Tooltip(self.run_button, 'Run the selected item (F5)')
         self.cancel_button = ttk.Button(bar, text='Cancel', state='disabled',
                                         command=self._cancel)
-        self.cancel_button.grid(row=0, column=1, padx=4)
-        ttk.Button(bar, text='Save results…',
-                   command=self._save).grid(row=0, column=2, padx=4)
+        self.cancel_button.grid(row=0, column=1, padx=(6, 0))
+        ttk.Separator(bar, orient='vertical').grid(row=0, column=2,
+                                                   sticky='ns', padx=10)
+        self.export_button = ttk.Button(bar, text='Export CSV…',
+                                        command=self._save, state='disabled')
+        self.export_button.grid(row=0, column=3)
+        self.saveplot_button = ttk.Button(bar, text='Save plot…',
+                                          command=self._save_plot,
+                                          state='disabled')
+        self.saveplot_button.grid(row=0, column=4, padx=(6, 0))
 
-        self.progress = ttk.Progressbar(bar, mode='determinate', length=200)
-        self.progress.grid(row=0, column=3, sticky='e', padx=8)
-        self.status = ttk.Label(bar, text='ready')
-        self.status.grid(row=0, column=4, sticky='e')
+        self.progress = ttk.Progressbar(bar, mode='determinate',
+                                        length=self._px(180))
+        self.progress.grid(row=0, column=6, sticky='e', padx=8)
+        self.status = ttk.Label(bar, text='ready', width=28, anchor='e')
+        self.status.grid(row=0, column=7, sticky='e')
 
-        tools = ttk.Frame(self)
-        tools.grid(row=3, column=0, columnspan=2, sticky='ew', pady=(6, 0))
-        ttk.Button(tools, text='Undo my config changes',
-                   command=self._restore_snapshot).pack(side='left')
-        ttk.Button(tools, text='Restore shipped defaults',
-                   command=self._restore_defaults).pack(side='left', padx=6)
-        ttk.Label(
-            tools, foreground='#666', wraplength=700,
-            text='Running writes these settings to the package config.toml, '
-                 'which other scripts share. The snapshot taken when this '
-                 'window opened can be put back at any time.',
-        ).pack(side='left', padx=8)
+    def _build_statusbar(self):
+        bar = tk.Frame(self, bg=PANEL)
+        bar.grid(row=3, column=0, columnspan=2, sticky='ew')
+        tk.Frame(bar, bg=RULE, height=1).pack(side='top', fill='x')
+        tk.Label(bar, bg=PANEL, fg=MUTED, font=self.f_sub, anchor='w',
+                 text='Running writes these settings to the package '
+                      'config.toml, shared with scripts and notebooks — '
+                      'Tools ▸ Undo my configuration changes puts it back.'
+                 ).pack(side='left', padx=self._px(12), pady=self._px(4))
+        for text, action in (('MIT licence', self._show_licence),
+                             ('BIPM', lambda: self._open(BIPM_URL)),
+                             ('Documentation',
+                              lambda: self._open(DOCS_URL))):
+            link = tk.Label(bar, text=text, bg=PANEL, fg=NAVY,
+                            font=self.f_sub, cursor='hand2')
+            link.pack(side='right', padx=(0, self._px(12)))
+            link.bind('<Button-1>', lambda e, a=action: a())
 
     # -------------------------------------------------------------- config
     def _config_paths(self):
@@ -747,6 +1223,18 @@ class App(ttk.Frame):
         self._append_log('config.toml replaced with the shipped defaults')
         self._enquire()
 
+    def _open_config_folder(self):
+        d = package_dir()
+        if not d:
+            return
+        try:
+            if os.name == 'nt':
+                os.startfile(d)
+            else:
+                webbrowser.open('file://' + d)
+        except OSError as exc:
+            messagebox.showerror('TDCRPy', f'Could not open {d}:\n{exc}')
+
     def collect_config(self):
         """Gather the configuration fields as the worker expects them."""
         name = ('ls_cocktail', 'fAq', 'solvantType', 'solvantConc',
@@ -769,15 +1257,20 @@ class App(ttk.Frame):
 
     # ----------------------------------------------------------- behaviour
     def _on_task_change(self):
-        """Show only the fields the chosen calculation uses."""
+        """Show only the fields the chosen item uses, and bring its inputs
+        forward."""
         task = self.vars['task'].get()
+        self.heading.configure(text=task_label(task))
+        self.subheading.configure(text=TASK_HELP.get(task, ''))
+
         fitting = task in ('fit', 'fit_analytical')
         curve = task == 'curve'
         beta = task == 'beta_spectrum'
+        decay = task == 'decay_data'
         stopping = task == 'stopping_power'
-        # Neither reads a nuclide mixture, runs a Monte Carlo, nor needs a
-        # counting geometry: both are a direct plot of a library function.
-        diagnostic = beta or stopping
+        quench = task == 'quenching'
+        data = task in dict(DATA_TASKS)
+        electron = self.vars['particle'].get() == 'electron'
         for widget, shown in (
             (self.l_entry, task == 'efficiency'),
             (self.td_entry, fitting),
@@ -785,20 +1278,36 @@ class App(ttk.Frame):
             (self.bounds_entry, fitting),
             (self.range_entry, curve),
             (self.log_check, curve),
-            (self.pmf_entry, not diagnostic),
-            (self.kb_entry, not diagnostic),
-            (self.v_entry, not diagnostic),
-            (self.n_entry, task != 'fit_analytical' and not diagnostic),
-            (self.smodel_check, not fitting and not diagnostic),
-            (self.nuclide_entry, not stopping),
+            (self.pmf_entry, not data),
+            (self.kb_entry, not data),
+            (self.v_entry, not data),
+            (self.n_entry, task != 'fit_analytical' and not data),
+            (self.smodel_check, not fitting and not data),
+            (self.unc_check, not data),
+            (self.display_check, not data),
+            (self.data_nuclide, beta or decay),
             (self.beta_level_entry, beta),
-            (self.erange_entry, stopping),
-            (self.elog_check, stopping),
-            (self.spcompare_check, stopping),
+            (self.erange_entry, stopping or quench),
+            (self.elog_check, stopping or quench),
+            (self.spcompare_check, stopping and electron),
+            (self.kbq_entry, quench),
         ):
             widget.configure(state='normal' if shown else 'disabled')
+        for rb in self.particle_radios:
+            rb.configure(state='normal' if stopping or quench else 'disabled')
         # A combobox, not an entry: 'normal' would let free text through.
         self.beta_mode_box.configure(state='readonly' if beta else 'disabled')
+        self.inputs.select(self.tab_data if data else self.tab_source)
+
+    def _on_particle_change(self):
+        """Swap the energy range to the new particle's default -- unless the
+        user typed one of their own."""
+        new = self.vars['particle'].get()
+        old = self._particle_shown
+        if self.vars['Erange'].get().strip() == E_DEFAULTS.get(old):
+            self.vars['Erange'].set(E_DEFAULTS[new])
+        self._particle_shown = new
+        self._on_task_change()
 
     def _add_nuclide(self):
         pick = self.nuclide_box.get().strip()
@@ -809,6 +1318,12 @@ class App(ttk.Frame):
         if pick not in parts:
             parts.append(pick)
         self.vars['rad'].set(', '.join(parts))
+
+    def _open(self, url):
+        try:
+            webbrowser.open(url)
+        except webbrowser.Error as exc:
+            messagebox.showerror('TDCRPy', f'Could not open {url}:\n{exc}')
 
     #: Lines kept in the log pane. "Verbose" prints every decay, so a run of
     #: 10 000 can emit hundreds of thousands of lines; an unbounded Text
@@ -843,13 +1358,16 @@ class App(ttk.Frame):
 
     def _run_summary(self, job):
         """One log line describing the job -- built field by field, since
-        the diagnostic tasks (beta spectrum, stopping power) carry none of
-        'rad', 'kB', 'V' or 'N'."""
+        the data views carry none of 'rad', 'kB', 'V' or 'N'."""
         parts = [f'run: {job["task"]}']
         if 'rad' in job:
             parts.append(job['rad'])
+        if 'particle' in job:
+            parts.append(job['particle'])
         if 'kB' in job:
             parts.append(f'kB={job["kB"]:g}')
+        if 'kB_list' in job:
+            parts.append('kB=' + ', '.join(f'{k:g}' for k in job['kB_list']))
         if 'V' in job:
             parts.append(f'V={job["V"]:g}')
         if 'N' in job:
@@ -866,9 +1384,12 @@ class App(ttk.Frame):
 
     def _run(self):
         if self._worker is not None:
-            messagebox.showinfo(
-                'TDCRPy', 'A calculation is already running. Wait for it, or '
-                          'press Cancel.')
+            if self._last_job is None and self._describe is None:
+                self.status.configure(text='still loading — one moment')
+            else:
+                messagebox.showinfo(
+                    'TDCRPy', 'A calculation is already running. Wait for '
+                              'it, or press Cancel.')
             return
         form = {k: v.get() for k, v in self.vars.items()}
         form['config'] = self.collect_config()
@@ -878,8 +1399,6 @@ class App(ttk.Frame):
             messagebox.showerror('Check the inputs', str(exc))
             return
 
-        self.tree.delete(*self.tree.get_children())
-        self._rows = []
         self._append_log('-' * 68)
         self._append_log(self._run_summary(job))
         self._last_job = job
@@ -932,7 +1451,7 @@ class App(ttk.Frame):
     def _handle_message(self, msg):
         event = msg.get('event')
         if event == 'stage':
-            self.status.configure(text=msg.get('text', ''))
+            self.status.configure(text=msg.get('text', '')[:60])
             self._append_log(f'• {msg.get("text", "")}')
         elif event == 'progress':
             if str(self.progress.cget('mode')) == 'indeterminate':
@@ -942,25 +1461,28 @@ class App(ttk.Frame):
         elif event == 'describe':
             self._apply_describe(msg)
         elif event == 'result':
+            self._result_job = self._last_job
             if msg.get('columns'):
                 self._show_curve(msg['columns'], msg.get('rows') or [],
                                  msg.get('plot') or {})
             else:
                 self._show_result(msg.get('rows') or [])
+            self.export_button.configure(state='normal')
         elif event == 'error':
             self._append_log(msg.get('traceback') or msg.get('message', ''))
+            self.results.select(self.tab_log)
             messagebox.showerror('TDCRPy failed', msg.get('message',
                                                           'unknown error'))
 
     def _apply_describe(self, msg):
         self._describe = msg
-        self.version_label.configure(text=f'TDCRPy {msg.get("version", "?")}')
         cocktails = msg.get('cocktails') or []
         if cocktails:
             self.cocktail_box.configure(values=cocktails, state='readonly')
         nuclides = msg.get('nuclides') or []
         if nuclides:
             self.nuclide_box.configure(values=nuclides, state='readonly')
+            self.data_nuclide.configure(values=nuclides)
         sp_models = msg.get('sp_models') or []
         if sp_models:
             self.sp_box.configure(values=sp_models, state='readonly')
@@ -975,104 +1497,161 @@ class App(ttk.Frame):
                 var.set(bool(value))
             else:
                 var.set('' if value is None else str(value))
-        self._append_log(f'configuration loaded from the installed package '
+        self._append_log(f'TDCRPy {msg.get("version", self.version)}: '
+                         f'configuration loaded from the installed package '
                          f'({len(nuclides)} nuclides, '
                          f'{len(cocktails)} cocktails)')
 
+    def _caption(self, nrows):
+        job = self._result_job or {}
+        what = task_label(job.get('task', ''))
+        subject = job.get('rad') or job.get('particle', '')
+        return f'{what} — {subject}   ·   {nrows} row(s)'
+
     def _show_result(self, rows):
+        self.tree.delete(*self.tree.get_children())
         self._set_columns(self.QUANTITY_COLUMNS)
         self._rows = [['quantity', 'value', 'u', 'u_rel']]
-        for quantity, value, unc in rows:
+        for i, (quantity, value, unc) in enumerate(rows):
             cells = (quantity,) + format_value(value, unc)
-            self.tree.insert('', 'end', values=cells)
+            self.tree.insert('', 'end', values=cells,
+                             tags=('odd',) if i % 2 else ())
             self._rows.append(list(cells))
+        self.caption.configure(text=self._caption(len(rows)))
         self.status.configure(text='done')
+        self.results.select(self.tab_table)
 
     def _show_curve(self, columns, rows, plot):
-        """Fill the table with the curve, and draw it."""
-        self._set_columns([(key, title, 82, 'e') for key, title in columns])
+        """Fill the table with the curve or data, and draw it."""
+        self.tree.delete(*self.tree.get_children())
+        self._set_columns(self._column_spec(columns, rows), stretch=False)
         # Full precision in the saved file; the table is for reading.
         self._rows = [[key for key, _title in columns]]
-        for row in rows:
-            self.tree.insert('', 'end', values=[
-                '' if v is None else f'{v:.5g}' for v in row])
-            self._rows.append(['' if v is None else repr(v) for v in row])
+        for i, row in enumerate(rows):
+            self.tree.insert('', 'end', values=[format_cell(v) for v in row],
+                             tags=('odd',) if i % 2 else ())
+            self._rows.append(['' if v is None else
+                               (v if isinstance(v, str) else repr(v))
+                               for v in row])
+        self.caption.configure(text=self._caption(len(rows)))
         self.status.configure(text='done')
         try:
-            self._plot_curve([k for k, _t in columns], rows, plot)
+            self._plot([k for k, _t in columns], rows, plot)
         except ImportError as exc:
             self._append_log(f'no plot: matplotlib is not importable ({exc})')
+            self.results.select(self.tab_table)
+            return
+        self.results.select(self.tab_plot)
+
+    # --------------------------------------------------------------- plots
+    def _ensure_canvas(self):
+        """Create the plot area the first time it is needed.
+
+        matplotlib is imported here, not at the top: the window opens
+        without paying for it, and many sessions never draw.
+        """
+        if self._canvas is not None:
+            return
+        from matplotlib.figure import Figure
+        from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
+                                                       NavigationToolbar2Tk)
+        self.plot_placeholder.place_forget()
+        self._figure = Figure(figsize=(6.4, 4.6), dpi=100)
+        self._canvas = FigureCanvasTkAgg(self._figure, master=self.plot_frame)
+        try:
+            toolbar = NavigationToolbar2Tk(self._canvas, self.plot_frame,
+                                           pack_toolbar=False)
+            toolbar.pack(side='bottom', fill='x')
+        except TypeError:            # matplotlib < 3.3
+            toolbar = NavigationToolbar2Tk(self._canvas, self.plot_frame)
+        toolbar.update()
+        self._canvas.get_tk_widget().pack(side='top', fill='both',
+                                          expand=True)
 
     def _plot_title(self, job):
         """A one-line caption naming what is actually plotted."""
         task = job.get('task')
+        cocktail = (job.get('config') or {}).get('ls_cocktail', '')
         if task == 'curve':
             model = 'stochastic' if job.get('Smodel', True) else 'analytical'
             return (f'{job.get("rad", "")}   kB = {job.get("kB", 0):g} '
-                   f'cm/keV   {model}')
+                    f'cm/keV   {model}')
         if task == 'beta_spectrum':
             return (f'{job.get("rad", "")}   {job.get("mode", "beta-")}   '
-                   f'level {job.get("level", "tot")}')
+                    f'level {job.get("level", "tot")}   (BetaShape)')
+        if task == 'decay_data':
+            return f'{job.get("rad", "")} — discrete emissions (PenNuc)'
         if task == 'stopping_power':
-            return 'electron stopping power'
+            return f'{job.get("particle", "electron")} stopping power   ' \
+                   f'{cocktail}'
+        if task == 'quenching':
+            return f'Birks quenching, {job.get("particle", "electron")}s   ' \
+                   f'{cocktail}'
         return ''
 
-    def _plot_curve(self, keys, rows, plot):
-        """One or more y-columns against one x-column, in a window of its
-        own, with matplotlib's toolbar for zoom and Save.
+    def _plot(self, keys, rows, plot):
+        """Draw *rows* as *plot* says.
 
-        *plot* names which columns to draw and how: ``x``, ``y`` (a list --
-        more than one overlays several series with a legend, used for
-        'overlay every stopping-power model'), optionally ``yerr`` (same
-        length as ``y``, entries ``None`` where there is no uncertainty),
-        ``xlabel``, ``ylabel``, ``xlog``/``ylog``, and ``annotate`` (a column
-        to label at the first and last point, used for L on the efficiency
-        curve).
-
-        Imported here, not at the top: the window is meant to open without
-        paying for matplotlib, and most runs never draw a curve.
+        *plot* names the columns and the style: ``x``, ``y`` (a list; more
+        than one overlays several series with a legend), optional ``labels``
+        (legend text per ``y``), ``yerr`` (same length as ``y``, ``None``
+        where there is no uncertainty), ``xlabel``, ``ylabel``,
+        ``xlog``/``ylog``, ``annotate`` (a column to label at the first and
+        last point, used for L on the efficiency curve), and ``kind`` --
+        ``'stem'`` draws vertical lines per discrete emission, one colour per
+        value of the ``group`` column, skipping rows where it is empty.
         """
-        from matplotlib.figure import Figure
-        from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
-                                                       NavigationToolbar2Tk)
+        self._ensure_canvas()
         col = {k: i for i, k in enumerate(keys)}
         xk = plot['x']
-        pts = [r for r in rows if r[col[xk]] is not None]
-        x = [r[col[xk]] for r in pts]
-        y_keys = plot['y']
-        yerr_keys = plot.get('yerr') or [None] * len(y_keys)
-        multi = len(y_keys) > 1
-
-        if self._plot_win is None or not self._plot_win.winfo_exists():
-            win = tk.Toplevel(self.master)
-            win.title('TDCRPy — plot')
-            fig = Figure(figsize=(6.4, 4.6), dpi=100)
-            canvas = FigureCanvasTkAgg(fig, master=win)
-            NavigationToolbar2Tk(canvas, win).update()
-            canvas.get_tk_widget().pack(fill='both', expand=True)
-            self._plot_win, self._plot_fig, self._plot_canvas = win, fig, canvas
-        fig = self._plot_fig
+        fig = self._figure
         fig.clear()
         ax = fig.add_subplot(111)
-        for yk, ek in zip(y_keys, yerr_keys):
-            y = [r[col[yk]] for r in pts]
-            if ek and any(r[col[ek]] is not None for r in pts):
-                yerr = [r[col[ek]] or 0.0 for r in pts]
-                ax.errorbar(x, y, yerr=yerr, fmt='o-', ms=3, lw=1, capsize=2,
-                            label=yk if multi else None)
-            else:
-                style = 'o-' if len(x) <= 60 else '-'
-                ax.plot(x, y, style, ms=3, lw=1, label=yk if multi else None)
+        for side in ('top', 'right'):
+            ax.spines[side].set_visible(False)
+
+        if plot.get('kind') == 'stem':
+            self._plot_stems(ax, col, rows, plot)
+        else:
+            self._plot_lines(ax, col, rows, plot)
+
         if plot.get('xlog'):
             ax.set_xscale('log')
         if plot.get('ylog'):
             ax.set_yscale('log')
         ax.set_xlabel(plot.get('xlabel', xk))
         ax.set_ylabel(plot.get('ylabel', ''))
-        ax.grid(alpha=0.3, which='both')
+        ax.grid(alpha=0.25, which='both')
+        ax.set_title(self._plot_title(self._result_job or {}), fontsize=10,
+                     color=NAVY, loc='left')
+        fig.text(0.995, 0.005, f'TDCRPy {self.version}', ha='right',
+                 va='bottom', fontsize=7, color='#9AA5B1')
+        fig.tight_layout()
+        self._canvas.draw()
+        self.saveplot_button.configure(state='normal')
+
+    def _plot_lines(self, ax, col, rows, plot):
+        xk = plot['x']
+        pts = [r for r in rows if r[col[xk]] is not None]
+        x = [r[col[xk]] for r in pts]
+        y_keys = plot['y']
+        yerr_keys = plot.get('yerr') or [None] * len(y_keys)
+        labels = plot.get('labels') or y_keys
+        multi = len(y_keys) > 1
+        for i, (yk, ek, lab) in enumerate(zip(y_keys, yerr_keys, labels)):
+            color = PLOT_COLORS[i % len(PLOT_COLORS)]
+            y = [r[col[yk]] for r in pts]
+            if ek and any(r[col[ek]] is not None for r in pts):
+                yerr = [r[col[ek]] or 0.0 for r in pts]
+                ax.errorbar(x, y, yerr=yerr, fmt='o-', ms=3, lw=1.2,
+                            capsize=2, color=color,
+                            label=lab if multi else None)
+            else:
+                style = 'o-' if len(x) <= 60 else '-'
+                ax.plot(x, y, style, ms=3, lw=1.4, color=color,
+                        label=lab if multi else None)
         if multi:
-            ax.legend(fontsize=8)
-        ax.set_title(self._plot_title(self._last_job or {}), fontsize=10)
+            ax.legend(fontsize=8, framealpha=0.92, edgecolor=RULE)
         akey = plot.get('annotate')
         if akey and pts:
             y0 = [r[col[y_keys[0]]] for r in pts]
@@ -1081,11 +1660,59 @@ class App(ttk.Frame):
                                  (pts[-1], y0[-1], -6, 'right')):
                 ax.annotate(f'{akey} = {r[col[akey]]:.3g}', (r[col[xk]], yv),
                             textcoords='offset points', xytext=(dx, -12),
-                            ha=ha, fontsize=8, color='#555')
-        fig.tight_layout()
-        self._plot_canvas.draw()
-        self._plot_win.lift()
+                            ha=ha, fontsize=8, color=MUTED)
 
+    def _plot_stems(self, ax, col, rows, plot):
+        xk, yk, gk = plot['x'], plot['y'][0], plot['group']
+        groups = []
+        for r in rows:
+            g = r[col[gk]]
+            if g and g not in groups:
+                groups.append(g)
+        positive = [r[col[yk]] for r in rows
+                    if r[col[gk]] and r[col[yk]] and r[col[yk]] > 0]
+        if not positive:
+            ax.text(0.5, 0.5, 'No discrete emissions in the decay data.',
+                    ha='center', va='center', transform=ax.transAxes,
+                    color=MUTED)
+            return
+        base = min(positive) / 3.0 if plot.get('ylog') else 0.0
+        for i, g in enumerate(groups):
+            pts = [r for r in rows if r[col[gk]] == g
+                   and r[col[yk]] and r[col[yk]] > 0]
+            x = [r[col[xk]] for r in pts]
+            y = [r[col[yk]] for r in pts]
+            color = PLOT_COLORS[i % len(PLOT_COLORS)]
+            ax.vlines(x, base, y, colors=color, lw=1.2, label=g)
+            ax.plot(x, y, 'o', ms=3, color=color)
+        ax.set_ylim(bottom=base)
+        ax.legend(fontsize=8, framealpha=0.92, edgecolor=RULE,
+                  loc='upper center')
+
+    def _save_plot(self):
+        if self._figure is None or not self._figure.axes:
+            messagebox.showinfo('TDCRPy', 'There is no plot to save yet.')
+            return
+        job = self._result_job or {}
+        stem = '_'.join(str(p) for p in (job.get('task', 'plot'),
+                                         job.get('rad') or
+                                         job.get('particle', ''))
+                        if p).replace(', ', '-')
+        path = filedialog.asksaveasfilename(
+            title='Save plot', defaultextension='.png',
+            initialfile=f'{stem}.png',
+            filetypes=[('PNG image', '*.png'), ('PDF document', '*.pdf'),
+                       ('SVG drawing', '*.svg')])
+        if not path:
+            return
+        try:
+            self._figure.savefig(path, dpi=300, bbox_inches='tight')
+        except (OSError, ValueError) as exc:
+            messagebox.showerror('TDCRPy', f'Could not save the plot:\n{exc}')
+            return
+        self._append_log(f'plot written to {path}')
+
+    # ------------------------------------------------------------- endings
     def _handle_exit(self, rc):
         cancelled, self._cancelled = self._cancelled, False
         self._worker = None
@@ -1096,39 +1723,177 @@ class App(ttk.Frame):
             self.status.configure(text='cancelled')
             return
         if rc == 0:
-            self.status.configure(text='done' if self._rows else 'ready')
+            if self.status.cget('text') in ('reading configuration…',
+                                            'running…'):
+                self.status.configure(text='ready')
             return
-        # A crash inside the numba kernel is a real possibility in this
-        # package, not a mishap to hide behind "failed": name it, so nobody
-        # hunts for a mistake in their inputs.
+        # A negative code is a signal on POSIX; on Windows a native crash in
+        # the numba kernel shows up as an NTSTATUS such as 0xC0000005.
         if rc < 0 or rc in (128 + 9, 139, 3221225477):
             self.status.configure(text=f'crashed (code {rc})')
-            self._append_log(
-                f'the worker died with code {rc}, which is a crash inside '
-                f'the Monte-Carlo kernel rather than a problem with the '
-                f'inputs. Re-running usually succeeds.')
+            self._append_log(f'the worker crashed (code {rc}); this is a '
+                             f'fault in the Monte-Carlo kernel, not in the '
+                             f'inputs, and re-running usually succeeds')
         else:
             self.status.configure(text=f'failed (code {rc})')
-            self._append_log(f'worker exited with code {rc}')
+        self.results.select(self.tab_log)
 
     def _save(self):
-        if not self._rows:
-            messagebox.showinfo('TDCRPy', 'There are no results to save yet.')
+        if len(self._rows) < 2:
+            messagebox.showinfo('TDCRPy', 'There are no results to export '
+                                          'yet.')
             return
+        job = self._result_job or {}
+        stem = '_'.join(str(p) for p in (job.get('task', 'results'),
+                                         job.get('rad') or
+                                         job.get('particle', ''))
+                        if p).replace(', ', '-')
         path = filedialog.asksaveasfilename(
-            title='Save results', defaultextension='.csv',
+            title='Export results as CSV', defaultextension='.csv',
+            initialfile=f'{stem}.csv',
             filetypes=[('CSV', '*.csv'), ('All files', '*.*')])
         if not path:
             return
+        meta = [f'TDCRPy {self.version}',
+                f'{task_label(job.get("task", ""))}',
+                self._run_summary(job) if job else '',
+                f'exported {datetime.datetime.now().isoformat(timespec="seconds")}']
+        cfg = job.get('config') or {}
+        if cfg:
+            meta.append('configuration: ' + '; '.join(
+                f'{k}={v}' for k, v in sorted(cfg.items())))
         try:
-            with open(path, 'w', encoding='utf-8', newline='') as fh:
-                import csv
-                # First row is the header, built with the table.
-                csv.writer(fh).writerows(self._rows)
+            write_csv(path, self._rows, [m for m in meta if m])
         except OSError as exc:
             messagebox.showerror('TDCRPy', f'Could not save:\n{exc}')
             return
         self._append_log(f'results written to {path}')
+
+    def _quit(self):
+        if self._worker is not None and self._last_job is not None:
+            if not messagebox.askyesno(
+                    'TDCRPy', 'A calculation is running. Stop it and quit?'):
+                return
+        if self._worker is not None:
+            self._worker.cancel()
+        self.master.destroy()
+
+    def _on_tk_error(self, exc_type, exc, tb):
+        """An error in the window's own code: say so instead of vanishing
+        (under pythonw there is no console for the traceback)."""
+        text = ''.join(traceback.format_exception(exc_type, exc, tb))
+        try:
+            self._append_log(text)
+        except tk.TclError:
+            pass
+        messagebox.showerror('TDCRPy — internal error',
+                             f'{exc_type.__name__}: {exc}\n\nThe full '
+                             f'traceback is in the Log tab. Please report it '
+                             f'at {ISSUES_URL}')
+
+    # ------------------------------------------------------------- dialogs
+    def _dialog(self, title):
+        win = tk.Toplevel(self.master)
+        win.title(title)
+        win.transient(self.master)
+        win.resizable(False, False)
+        win.configure(bg=WHITE)
+        win.bind('<Escape>', lambda e: win.destroy())
+        return win
+
+    def _link(self, parent, text, url):
+        lab = tk.Label(parent, text=text, fg=CYAN, bg=WHITE, cursor='hand2',
+                       font=self.f_sub)
+        lab.bind('<Button-1>', lambda e: self._open(url))
+        return lab
+
+    def _show_about(self):
+        win = self._dialog('About TDCRPy')
+        pad = self._px(22)
+        logo = self.img.get('tdcrpy_logo_about')
+        if logo is not None:
+            tk.Label(win, image=logo, bg=WHITE).pack(pady=(pad, 4))
+        tk.Label(win, text=f'TDCRPy {self.version}', font=self.f_title,
+                 fg=NAVY, bg=WHITE).pack()
+        tk.Label(win, text='A photo-physical stochastic model for liquid '
+                           'scintillation counting\n(TDCR and CIEMAT/NIST '
+                           'methods)',
+                 font=self.f_sub, fg=INK, bg=WHITE, justify='center').pack(
+            pady=(4, 12))
+        try:
+            author = metadata.metadata('TDCRPy').get('Author')
+        except metadata.PackageNotFoundError:
+            author = None
+        if author:
+            tk.Label(win, text=f'Author: {author}', font=self.f_sub,
+                     fg=MUTED, bg=WHITE).pack()
+        bipm = self.img.get('bipm_logo')
+        if bipm is not None:
+            mark = tk.Label(win, image=bipm, bg=WHITE, cursor='hand2')
+            mark.pack(pady=(12, 2))
+            mark.bind('<Button-1>', lambda e: self._open(BIPM_URL))
+        tk.Label(win, text='Developed and maintained by the Bureau '
+                           'International des Poids et Mesures',
+                 font=self.f_sub, fg=MUTED, bg=WHITE).pack(pady=(2, 10))
+        links = tk.Frame(win, bg=WHITE)
+        links.pack()
+        for text, url in (('Documentation', DOCS_URL),
+                          ('Reference paper', PAPER_URL),
+                          ('Source code', REPO_URL),
+                          ('Report an issue', ISSUES_URL)):
+            self._link(links, text, url).pack(side='left', padx=8)
+        tk.Label(win, text='Released under the MIT licence. Provided "as is", '
+                           'without warranty of any kind.',
+                 font=self.f_sub, fg=MUTED, bg=WHITE).pack(pady=(12, 4))
+        buttons = tk.Frame(win, bg=WHITE)
+        buttons.pack(pady=(6, pad))
+        ttk.Button(buttons, text='Licence…',
+                   command=lambda: (win.destroy(), self._show_licence())
+                   ).pack(side='left', padx=4)
+        ttk.Button(buttons, text='Close', command=win.destroy).pack(
+            side='left', padx=4)
+        win.grab_set()
+
+    def _show_licence(self):
+        text = licence_text()
+        win = self._dialog('TDCRPy — licence')
+        if text is None:
+            tk.Label(win, text='TDCRPy is released under the MIT licence.',
+                     bg=WHITE, fg=INK).pack(padx=20, pady=(20, 6))
+            self._link(win, 'Read it online', LICENCE_URL).pack(pady=(0, 20))
+            return
+        box = tk.Text(win, width=78, height=24, wrap='word', relief='flat',
+                      font=('Consolas', 9), padx=12, pady=10, bg=STRIPE)
+        box.insert('1.0', text)
+        box.configure(state='disabled')
+        box.pack(padx=12, pady=(12, 6))
+        ttk.Button(win, text='Close', command=win.destroy).pack(pady=(0, 12))
+
+
+class _Tooltip:
+    """A small hint shown while the pointer rests on a widget."""
+
+    def __init__(self, widget, text):
+        self.widget, self.text, self.tip = widget, text, None
+        widget.bind('<Enter>', self._show, add='+')
+        widget.bind('<Leave>', self._hide, add='+')
+
+    def _show(self, _event=None):
+        if self.tip is not None:
+            return
+        x = self.widget.winfo_rootx() + 10
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 4
+        self.tip = tk.Toplevel(self.widget)
+        self.tip.wm_overrideredirect(True)
+        self.tip.wm_geometry(f'+{x}+{y}')
+        tk.Label(self.tip, text=self.text, bg='#FFFFE8', fg=INK,
+                 relief='solid', bd=1, padx=6, pady=3,
+                 wraplength=320, justify='left').pack()
+
+    def _hide(self, _event=None):
+        if self.tip is not None:
+            self.tip.destroy()
+            self.tip = None
 
 
 def _report(text, title='TDCRPy'):
@@ -1157,6 +1922,18 @@ def _report(text, title='TDCRPy'):
         pass
 
 
+def _dpi_aware():
+    """Ask Windows for real pixels, so text is sharp on a scaled display
+    instead of bitmap-stretched. Harmless elsewhere."""
+    if os.name != 'nt':
+        return
+    try:
+        import ctypes
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+    except (AttributeError, OSError):
+        pass
+
+
 def main(argv=None):
     """Open the window. Returns the process exit status."""
     argv = list(sys.argv[1:] if argv is None else argv)
@@ -1166,8 +1943,7 @@ def main(argv=None):
         _report(__doc__.strip(), 'TDCRPy — help')
         return 0
     if any(a in ('-V', '--version') for a in argv):
-        from importlib.metadata import version
-        _report(f'TDCRPy {version("TDCRPy")}', 'TDCRPy — version')
+        _report(f'TDCRPy {installed_version()}', 'TDCRPy — version')
         return 0
     if argv:
         _report(f'tdcrpy-gui takes no arguments (got {" ".join(argv)}). '
@@ -1177,8 +1953,9 @@ def main(argv=None):
     if package_dir() is None:
         _report('TDCRPy is not importable from this interpreter.')
         return 1
+    _dpi_aware()
     try:
-        root = tk.Tk()
+        root = tk.Tk(className='TDCRPy')
     except tk.TclError as exc:
         # Nearly always a Python built without tcl/tk, or a headless session.
         _report(f'Could not open a window: {exc}\n\n'
@@ -1186,8 +1963,11 @@ def main(argv=None):
                 f'the "tcl/tk and IDLE" option. Check with:\n'
                 f'    python -c "import tkinter"')
         return 1
-    App(root)
-    root.minsize(1040, 700)
+    app = App(root)
+    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+    w, h = min(app._px(1360), sw - 40), min(app._px(860), sh - 90)
+    root.minsize(min(app._px(1100), w), min(app._px(680), h))
+    root.geometry(f'{w}x{h}+{max(0, (sw - w) // 2)}+{max(0, (sh - h - 40) // 2)}')
     root.mainloop()
     return 0
 
