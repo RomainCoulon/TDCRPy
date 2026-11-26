@@ -3359,5 +3359,129 @@ class TestGuiSourceDefaultsAndUpdates(unittest.TestCase):
             self.assertFalse(up.is_locked(held))
 
 
+class TestDecayTrace(unittest.TestCase):
+    """TDCRPy(trace=): the structured decay history behind the GUI's Decay
+    view, and the wording the view gives it."""
+
+    def setUp(self):
+        from tdcrpy import gui, _gui_worker
+        self.gui, self.worker = gui, _gui_worker
+
+    def _trace(self, rad, N=8, L=1.5):
+        trace = []
+        TDCRPy_mod.TDCRPy(L, rad, '1', N, KB_TYPICAL, 10, trace=trace)
+        return trace
+
+    def test_one_record_per_decay_with_consistent_energies(self):
+        for rad in ('Co-60', 'Fe-55', 'Am-241', 'Na-22'):
+            trace = self._trace(rad)
+            self.assertEqual(len(trace), 8, rad)
+            for i, rec in enumerate(trace):
+                self.assertEqual(rec['decay'], i + 1)
+                self.assertEqual(rec['nuclide'], rad)
+                self.assertTrue(rec['steps'], f'{rad}: no decay step')
+                self.assertEqual(rec['windows'][0]['label'], 'prompt')
+                self.assertEqual(len(rec['windows']), rec['evenement'])
+                for win in rec['windows']:
+                    q = sum(p['E_q'] for p in win['particles'])
+                    self.assertAlmostEqual(win['Q'], q, places=9)
+                    for p in win['particles']:
+                        self.assertFalse(p['type'].startswith('Atom'))
+                        self.assertNotEqual(p['type'], 'NON')
+                        self.assertGreaterEqual(p['E_dep'], 0.0)
+                        self.assertLessEqual(p['E_q'], p['E_dep'] + 1e-9)
+                        self.assertIn(p['fate'], self.gui.FATE_LABEL)
+                self.assertEqual(set(rec['signal']),
+                                 set(self.worker.SIGNAL_KEYS))
+
+    def test_signal_follows_from_the_light_as_the_view_explains(self):
+        """The view writes P(PMT fires) = 1 - exp(-L mu Q / 3); a decay's
+        triple probability must be exactly that, cubed."""
+        for rec in self._trace('Fe-55', N=20):
+            if rec['pulses'] != 1:
+                continue
+            lam = self.gui.photoelectrons(rec, rec['windows'][0]['Q'])
+            p = 1.0 - math.exp(-lam[0])
+            self.assertAlmostEqual(rec['signal']['T'], p ** 3, places=12)
+            self.assertAlmostEqual(rec['signal']['D'],
+                                   3 * p ** 2 - 2 * p ** 3, places=12)
+
+    def test_trace_is_capped(self):
+        saved = TDCRPy_mod.TRACE_MAX
+        TDCRPy_mod.TRACE_MAX = 3
+        try:
+            self.assertEqual(len(self._trace('H-3', N=7)), 3)
+        finally:
+            TDCRPy_mod.TRACE_MAX = saved
+
+    def test_gamma_fates_are_physical(self):
+        trace = self._trace('Co-60', N=30)
+        fates = {p['fate'] for r in trace for w in r['windows']
+                 for p in w['particles'] if p['origin'] == 'gamma'}
+        self.assertTrue(fates <= {'escaped', 'compton', 'photoelectric',
+                                  'pair'}, fates)
+        for r in trace:
+            for p in r['windows'][0]['particles']:
+                if p['fate'] == 'escaped':
+                    self.assertEqual(p['E_dep'], 0.0)
+
+    def test_resignal_moves_only_the_signal(self):
+        trace = self._trace('Fe-55', N=10, L=1.0)
+        before = [[dict(p) for w in r['windows'] for p in w['particles']]
+                  for r in trace]
+        self.worker.resignal(TDCRPy_mod, trace, 4.0)
+        for rec, parts in zip(trace, before):
+            self.assertEqual(rec['L'], 4.0)
+            self.assertEqual(parts, [p for w in rec['windows']
+                                     for p in w['particles']])
+            if rec['pulses'] == 1:
+                lam = self.gui.photoelectrons(rec, rec['windows'][0]['Q'])
+                self.assertAlmostEqual(
+                    rec['signal']['T'], (1 - math.exp(-lam[0])) ** 3,
+                    places=12)
+
+    def test_worker_sends_the_trace_only_when_verbose(self):
+        sent = []
+
+        class Emit:
+            def send(self, event, **fields):
+                sent.append(dict(fields, event=event))
+
+        job = {'task': 'efficiency', 'rad': 'Fe-55', 'pmf': '1', 'L': 1.2,
+               'N': 6, 'kB': KB_TYPICAL, 'V': 10}
+        self.worker.run(dict(job, display=True), Emit())
+        result = [m for m in sent if m['event'] == 'result'][-1]
+        self.assertEqual(len(result['trace']), 6)
+        sent.clear()
+        self.worker.run(job, Emit())
+        result = [m for m in sent if m['event'] == 'result'][-1]
+        self.assertNotIn('trace', result)
+
+    def test_wording(self):
+        g = self.gui
+        self.assertEqual(g.nuclide_name('NI60'), 'Ni-60')
+        self.assertEqual(g.nuclide_name('TC99M'), 'Tc-99m')
+        self.assertEqual(g.particle_label('beta'), 'β⁻')
+        self.assertEqual(g.particle_label('Auger KLL'), 'Auger e⁻ (KLL)')
+        self.assertEqual(g.particle_label('XKA'), 'X-ray Kα')
+        self.assertEqual(g.particle_label('secondary', 'positron'), 'pair e⁺')
+        self.assertEqual(g.format_time(255.0), '255 ns')
+        self.assertEqual(g.format_time(1.97e10), '19.7 s')
+        self.assertIn('electron capture (K shell)', g.step_label(
+            {'kind': 'branch', 'particle': 'Atom_K', 'energy': 231.21,
+             'level': 0.0}))
+        self.assertIn('delayed, t = 255 ns', g.step_label(
+            {'kind': 'transition', 'type': 'EL2', 'energy': 37.94,
+             'from_keV': 59.54, 'window': 'delayed', 't_ns': 255.0}))
+        rec = {'windows': [{'label': 'prompt'}, {'label': 'delayed'}],
+               'pulses': 1}
+        self.assertEqual(len(g.counted_windows(rec)), 1)
+        self.assertEqual(len(g.counted_windows(dict(rec, pulses=2))), 2)
+        self.assertEqual(g.blend('#000000', '#ffffff', 0.5), '#808080')
+        self.assertIsNone(g.photoelectrons({'optical': True}, 1.0))
+        lam = g.photoelectrons({'L': [1.0, 2.0, 3.0], 'mu': [0.3] * 3}, 3.0)
+        self.assertEqual([round(v, 12) for v in lam], [0.3, 0.6, 0.9])
+
+
 if __name__ == '__main__':
     unittest.main()

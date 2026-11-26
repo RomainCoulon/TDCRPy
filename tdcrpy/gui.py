@@ -17,6 +17,10 @@ Data & plots
 Every result can be exported as CSV, and every curve-shaped one is plotted
 in the window and can be saved as PNG, PDF or SVG.
 
+With the verbose switch on, a calculation also returns its first decays as
+structured records (``TDCRPy(trace=)``), drawn in the Decay view tab as the
+chain the model follows: decay, emission, deposition, quenching, signal.
+
 Design notes
 ------------
 This module deliberately does not import ``tdcrpy``. Every calculation, and
@@ -38,6 +42,7 @@ holds, and a failed attempt leaves a half-uninstalled package behind.
 import csv
 import datetime
 import json
+import math
 import os
 import queue
 import re
@@ -536,6 +541,113 @@ def provenance_lines(info):
     return lines
 
 
+# --------------------------------------------------------------------------
+# the decay view: wording for the records of TDCRPy(trace=)
+# --------------------------------------------------------------------------
+_X_RAY_LABEL = {'XKA': 'X-ray Kα', 'XKB': 'X-ray Kβ', 'XL': 'X-ray L'}
+_EMITTER_LABEL = {'beta': 'β⁻', 'beta+': 'β⁺', 'alpha': 'α', 'gamma': 'γ',
+                  'electron': 'conversion e⁻',
+                  'annihilation': 'annihilation γ'}
+#: What the interaction step did to a particle, as the view says it.
+FATE_LABEL = {'escaped': 'escaped the vial', 'compton': 'Compton scattered',
+              'photoelectric': 'photoabsorbed', 'pair': 'pair production',
+              'partial': 'partly absorbed (wall)', 'absorbed': ''}
+
+
+def particle_label(origin, kind=None):
+    """How one particle of a trace reads: its origin as emitted (β⁻, Auger
+    e⁻ (KLL), X-ray Kα...), or what a secondary turned into."""
+    o = origin or ''
+    if o in _EMITTER_LABEL:
+        return _EMITTER_LABEL[o]
+    if o == 'secondary':
+        return 'pair e⁺' if kind == 'positron' else 'secondary e⁻'
+    if o.startswith('Auger'):
+        rest = o[len('Auger'):].strip()
+        return f'Auger e⁻ ({rest})' if rest else 'Auger e⁻'
+    if o in _X_RAY_LABEL:
+        return _X_RAY_LABEL[o]
+    if o.startswith('X'):
+        return f'X-ray {o[1:]}'
+    return o
+
+
+def nuclide_name(code):
+    """PenNuc's upper-case daughter code as a nuclide name: NI60 -> Ni-60."""
+    m = re.fullmatch(r'([A-Z]{1,2})(\d+)([A-Z]*)', code or '')
+    if not m:
+        return code or ''
+    sym, mass, tail = m.groups()
+    return f'{sym.capitalize()}-{mass}{tail.lower()}'
+
+
+def format_time(ns):
+    """A delay in ns, in the unit that reads best."""
+    for scale, unit in ((1e9, 's'), (1e6, 'ms'), (1e3, 'µs')):
+        if ns >= scale:
+            return f'{ns / scale:.3g} {unit}'
+    return f'{ns:.3g} ns'
+
+
+def _keV(value):
+    return '?' if value is None else f'{value:.6g} keV'
+
+
+def step_label(step):
+    """One sampled step of the decay (branch or transition) as a sentence."""
+    if step.get('kind') == 'branch':
+        p, level = step.get('particle'), step.get('level')
+        to = f'level {level:g}' if level else 'ground state'
+        if p is None:
+            return ('isomeric transition: no particle emitted' if level
+                    else 'no particle and no level: nothing is deposited')
+        if p.startswith('Atom_'):
+            return (f'electron capture ({p[5:]} shell), '
+                    f'{_keV(step.get("energy"))} → {to}')
+        name = _EMITTER_LABEL.get(p, p)
+        what = 'end point ' if p in ('beta', 'beta+') else ''
+        return f'{name} emission, {what}{_keV(step.get("energy"))} → {to}'
+    if step.get('kind') == 'transition':
+        t = step.get('type', '')
+        name = 'γ' if t == 'GA' else f'conversion e⁻ ({t[1:]} shell)'
+        text = f'{name} {_keV(step.get("energy"))}'
+        if step.get('from_keV') is not None:
+            text += f', from the level at {step["from_keV"]:.6g} keV'
+        if step.get('window') == 'delayed':
+            text += f'  —  delayed, t = {format_time(step.get("t_ns", 0.0))}'
+        return text
+    return str(step)
+
+
+def photoelectrons(rec, Q):
+    """Mean photoelectron number per PMT (A, B, C) for light *Q* keV, as the
+    semi-analytical detection model computes it: ``L · μ · Q / 3``. ``None``
+    for the optical model, which samples photons instead."""
+    if rec.get('optical'):
+        return None
+    mu = rec.get('mu') or []
+    L = rec.get('L')
+    if isinstance(L, (list, tuple)):
+        return [l * m * Q / 3.0 for l, m in zip(L, mu)]
+    m = sum(mu) / len(mu) if mu else 1.0
+    return [L * m * Q / 3.0] * 3
+
+
+def counted_windows(rec):
+    """The windows the detection model counts: the prompt one, plus the
+    delayed one when it is a pulse of its own."""
+    windows = rec.get('windows') or []
+    return windows[:max(1, int(rec.get('pulses', 1)))]
+
+
+def blend(c0, c1, f):
+    """Mix two #rrggbb colours: f = 0 gives c0, 1 gives c1."""
+    f = min(1.0, max(0.0, f))
+    a = [int(c0[i:i + 2], 16) for i in (1, 3, 5)]
+    b = [int(c1[i:i + 2], 16) for i in (1, 3, 5)]
+    return '#' + ''.join(f'{round(x + (y - x) * f):02x}' for x, y in zip(a, b))
+
+
 def package_dir():
     """Locate the installed package without importing it.
 
@@ -774,6 +886,9 @@ class App(ttk.Frame):
         self._L_shown = {}           # the default last written per L field
         self._result_info = None
         self._update_check = None
+        self._trace = []             # decay records for the Decay view
+        self._trace_i = 0
+        self._trace_job = None
 
         self.vars = {}
         self._setup_style()
@@ -1027,6 +1142,7 @@ class App(ttk.Frame):
         self.results.grid(row=0, column=0, sticky='nsew')
         self._tab_table(self.results)
         self._tab_plot(self.results)
+        self._tab_decay(self.results)
         self._tab_sources(self.results)
         self._tab_log(self.results)
         pane.add(right, weight=2)
@@ -1154,9 +1270,15 @@ class App(ttk.Frame):
             f, 18, '      Realisations M', 'uncReps', '10', width=8,
             hint='runs of N decays each; total time × M')
         self.display_check = ttk.Checkbutton(
-            f, text='Verbose log (prints every decay)',
+            f, text='Verbose log and decay view (every decay)',
             variable=self._flag('display'))
         self.display_check.grid(row=19, column=0, columnspan=3, sticky='w')
+        _Tooltip(self.display_check,
+                 'Prints every decay to the Log tab, and draws the first '
+                 'ones in the Decay view tab: the sampled decay, the '
+                 'particles emitted, the energy they deposit, the light '
+                 'left after quenching and the PMT signal. Slows a run '
+                 'down; keep N small.')
 
     def _tab_data(self, nb):
         f = ttk.Frame(nb, padding=12)
@@ -1354,6 +1476,379 @@ class App(ttk.Frame):
                  'item under Data & plots.')
         self.plot_placeholder.place(relx=0.5, rely=0.5, anchor='center')
         self.tab_plot = f
+
+    # ------------------------------------------------------- decay view
+    #: Colours of the energy stages, shared by the stage strip and the bars.
+    C_EMIT, C_DEP, C_LIGHT = '#9AA9BD', CYAN, '#E07A1F'
+
+    def _tab_decay(self, nb):
+        """One simulated decay at a time, drawn as the chain the model
+        follows: decay -> emission -> deposition -> quenching -> signal."""
+        f = ttk.Frame(nb, padding=6)
+        nb.add(f, text='Decay view')
+        f.columnconfigure(0, weight=1)
+        f.rowconfigure(1, weight=1)
+
+        bar = ttk.Frame(f)
+        bar.grid(row=0, column=0, columnspan=2, sticky='ew', pady=(0, 4))
+        self.trace_prev = ttk.Button(bar, text='◀', width=3,
+                                     command=lambda: self._step_trace(-1))
+        self.trace_prev.pack(side='left')
+        ttk.Label(bar, text=' Decay ').pack(side='left')
+        self.trace_pos = tk.StringVar(value='1')
+        self.trace_spin = ttk.Spinbox(bar, from_=1, to=1, width=6,
+                                      textvariable=self.trace_pos,
+                                      command=self._on_trace_pos)
+        self.trace_spin.pack(side='left')
+        self.trace_spin.bind('<Return>', self._on_trace_pos)
+        self.trace_spin.bind('<FocusOut>', self._on_trace_pos)
+        self.trace_count = ttk.Label(bar, text=' of 0 ')
+        self.trace_count.pack(side='left')
+        self.trace_next = ttk.Button(bar, text='▶', width=3,
+                                     command=lambda: self._step_trace(1))
+        self.trace_next.pack(side='left')
+        self.trace_info = ttk.Label(bar, text='', style='Hint.TLabel')
+        self.trace_info.pack(side='left', padx=(12, 0))
+        self.trace_save = ttk.Button(bar, text='Save decays…',
+                                     command=self._save_trace)
+        self.trace_save.pack(side='right')
+        _Tooltip(self.trace_save, 'Every recorded decay as JSON: steps, '
+                                  'particles with emitted, deposited and '
+                                  'quenched energies, and the detection '
+                                  'probabilities.')
+
+        c = tk.Canvas(f, background=WHITE, highlightthickness=0)
+        c.grid(row=1, column=0, sticky='nsew')
+        ys = ttk.Scrollbar(f, orient='vertical', command=c.yview)
+        ys.grid(row=1, column=1, sticky='ns')
+        xs = ttk.Scrollbar(f, orient='horizontal', command=c.xview)
+        xs.grid(row=2, column=0, sticky='ew')
+        c.configure(yscrollcommand=ys.set, xscrollcommand=xs.set)
+        c.bind('<MouseWheel>', lambda e: c.yview_scroll(
+            int(-e.delta / 120) or (-1 if e.delta > 0 else 1), 'units'))
+        c.bind('<Button-4>', lambda e: c.yview_scroll(-1, 'units'))
+        c.bind('<Button-5>', lambda e: c.yview_scroll(1, 'units'))
+        c.bind('<Button-1>', lambda e: c.focus_set())
+        c.bind('<Left>', lambda e: self._step_trace(-1))
+        c.bind('<Right>', lambda e: self._step_trace(1))
+        c.bind('<Configure>', self._on_decay_resize)
+        self.trace_canvas = c
+        self.tab_decay = f
+        self._show_trace([], None)
+
+    def _show_trace(self, trace, job):
+        """Take a new set of decay records and draw the first."""
+        self._trace = list(trace or [])
+        self._trace_job = job
+        self._trace_i = 0
+        n = len(self._trace)
+        self.trace_spin.configure(to=max(1, n))
+        self.trace_pos.set('1')
+        self.trace_count.configure(text=f' of {n} ')
+        state = 'normal' if n else 'disabled'
+        for w in (self.trace_prev, self.trace_next, self.trace_spin,
+                  self.trace_save):
+            w.configure(state=state)
+        self._draw_decay()
+        self.trace_canvas.yview_moveto(0)
+        self.trace_canvas.xview_moveto(0)
+        if n:
+            self.results.select(self.tab_decay)
+
+    def _step_trace(self, delta):
+        if self._trace:
+            self._goto_trace(self._trace_i + delta)
+
+    def _on_trace_pos(self, _event=None):
+        try:
+            self._goto_trace(int(float(self.trace_pos.get())) - 1)
+        except ValueError:
+            self.trace_pos.set(str(self._trace_i + 1))
+
+    def _goto_trace(self, i):
+        if not self._trace:
+            return
+        self._trace_i = min(len(self._trace) - 1, max(0, i))
+        self.trace_pos.set(str(self._trace_i + 1))
+        self._draw_decay()
+
+    def _draw_decay(self):
+        """Draw the current decay record, laid out for the canvas width."""
+        c = self.trace_canvas
+        c.delete('all')
+        px = self._px
+        font = tkfont.nametofont('TkDefaultFont')
+        width = max(c.winfo_width(), px(600))
+        self._decay_drawn_width = c.winfo_width()
+        x0, right = px(14), width - px(14)
+        if not self._trace:
+            c.create_text(
+                px(20), px(20), anchor='nw', fill=MUTED, font=font,
+                width=min(px(620), right - px(20)),
+                text='Each simulated decay is drawn here, from the decay '
+                     'itself through energy deposition and quenching to '
+                     'the PMT signal.\n\nTick "Verbose log and decay view" '
+                     'on the Source tab, keep N small, and run Efficiency, '
+                     'Fit L (stochastic) or the Efficiency curve. The '
+                     'analytical model does not simulate decays one by '
+                     'one, so it has nothing to show here.')
+            self.trace_info.configure(text='')
+            c.configure(scrollregion=c.bbox('all'))
+            return
+
+        rec = self._trace[self._trace_i]
+        job = self._trace_job or {}
+        L = rec.get('L')
+        L_text = (', '.join(f'{v:.4g}' for v in L)
+                  if isinstance(L, (list, tuple)) else f'{L:.4g}')
+        where = {'fit': ' (fitted)', 'curve': ' (first point of the curve)'}
+        self.trace_info.configure(
+            text=f'{rec.get("nuclide")}  ·  L = {L_text} keV⁻¹'
+                 f'{where.get(job.get("task"), "")}  ·  '
+                 f'{len(self._trace)} decay(s) recorded'
+                 + (f' of N = {job["N"]}' if job.get('N')
+                    and int(job['N']) > len(self._trace) else ''))
+
+        def text(x, y, s, wrap=None, **kw):
+            """Draw text; return the y just below it."""
+            kw.setdefault('font', font)
+            kw.setdefault('fill', INK)
+            item = c.create_text(x, y, anchor='nw', text=s,
+                                 width=wrap or 0, **kw)
+            return c.bbox(item)[3]
+
+        y = px(10)
+        # ---- the five stages, as a strip of boxes with arrows between
+        kB, V = job.get('kB'), job.get('V')
+        stages = (
+            ('1  Decay', 'PenNuc data', NAVY),
+            ('2  Emission', 'relaxation, β spectra', self.C_EMIT),
+            ('3  Deposition', f'in {V:g} mL' if V else 'in the vial',
+             self.C_DEP),
+            ('4  Quenching', f'Birks, kB = {kB:g}' if kB else 'Birks',
+             self.C_LIGHT),
+            ('5  Signal', 'PMTs A, B, C', NAVY),
+        )
+        gap = px(18)
+        w = (right - x0 - 4 * gap) / 5
+        # Text first, so the boxes can be as tall as the longest wraps.
+        bottom = y + px(40)
+        for i, (title, sub, colour) in enumerate(stages):
+            xa = x0 + i * (w + gap)
+            c.create_text(xa + px(11), y + px(5), anchor='nw', text=title,
+                          font=self.f_bold, fill=NAVY)
+            item = c.create_text(xa + px(11), y + px(25), anchor='nw',
+                                 text=sub, font=self.f_sub, fill=MUTED,
+                                 width=w - px(14))
+            bottom = max(bottom, c.bbox(item)[3])
+        h = bottom - y + px(6)
+        for i, (_title, _sub, colour) in enumerate(stages):
+            xa = x0 + i * (w + gap)
+            box = c.create_rectangle(xa, y, xa + w, y + h, fill=PANEL,
+                                     outline=RULE)
+            strip = c.create_rectangle(xa, y, xa + px(5), y + h,
+                                       fill=colour, outline=colour)
+            c.tag_lower(strip)
+            c.tag_lower(box)
+            if i:
+                c.create_line(xa - gap + px(3), y + h / 2, xa - px(3),
+                              y + h / 2, arrow='last', fill=MUTED,
+                              width=px(2))
+        y += h + px(18)
+        wrap = right - x0 - px(28)
+        xt = x0 + px(28)
+
+        # ---- 1 decay
+        y = self._decay_heading(
+            c, x0, y, '1', NAVY,
+            f'Decay {rec.get("decay")}:  {rec.get("nuclide")}  →  '
+            f'{nuclide_name(rec.get("daughter"))}')
+        for step in rec.get('steps') or ():
+            y = text(xt, y, '→  ' + step_label(step), wrap) + px(3)
+        y += px(10)
+
+        # ---- 2, 3, 4 per coincidence window
+        emit_r = xt + px(268)               # right edge of the Emitted column
+        dep_x = emit_r + px(16)
+        group = max(px(120), (right - dep_x) / 2)
+        light_x = dep_x + group
+        # The bar gives way to its label, "0.1936 keV  (34 %)".
+        bw = max(px(40), min(px(150), group - px(150)))
+        for win in rec.get('windows') or ():
+            delayed = win.get('label') == 'delayed'
+            title = ('Prompt' if not delayed else
+                     f'Delayed, t = {format_time(rec.get("t1", 0) * 1e9)} '
+                     f'after the decay')
+            y = self._decay_heading(c, x0, y, '2', self.C_DEP,
+                                    f'{title}:  emitted → deposited → light')
+            for x, head, anchor in ((xt, 'Particle', 'nw'),
+                                    (emit_r, 'Emitted', 'ne'),
+                                    (dep_x, 'Deposited', 'nw'),
+                                    (light_x, 'Light after quenching',
+                                     'nw')):
+                c.create_text(x, y, anchor=anchor, text=head,
+                              font=self.f_section, fill=MUTED)
+            y += px(18)
+            parts = win.get('particles') or ()
+            if not parts:
+                y = text(xt, y, 'nothing emitted in this window',
+                         fill=MUTED) + px(6)
+            for p in parts:
+                e0, ed, eq = p['E0'], p['E_dep'], p['E_q']
+                name = particle_label(p['origin'], p['type'])
+                c.create_text(xt, y, anchor='nw', text=name, font=font,
+                              fill=INK)
+                note = FATE_LABEL.get(p.get('fate'), '')
+                if note:
+                    c.create_text(xt + font.measure(name) + px(8),
+                                  y + px(2), anchor='nw', text=note,
+                                  font=self.f_sub, fill=MUTED)
+                c.create_text(emit_r, y, anchor='ne', font=font, fill=INK,
+                              text=f'{e0:.4g} keV')
+                self._energy_bar(c, dep_x, y, bw, ed, e0, self.C_DEP,
+                                 f'{ed:.4g} keV')
+                share = f'  ({100 * eq / ed:.0f} %)' if ed > 0 else ''
+                self._energy_bar(c, light_x, y, bw, eq, e0, self.C_LIGHT,
+                                 f'{eq:.4g} keV{share}' if ed > 0 else '—')
+                y += px(22)
+            c.create_line(xt, y, right, y, fill=RULE)
+            y = text(light_x, y + px(4),
+                     f'Q = {win.get("Q", 0.0):.4g} keV of light',
+                     font=self.f_bold, fill=self.C_LIGHT) + px(12)
+        y = text(xt, y, 'Bars: share of the energy each particle was '
+                        'emitted with. Deposited light is quenched by the '
+                        'Birks law; the percentage is what survives.',
+                 wrap, font=self.f_sub, fill=MUTED) + px(14)
+
+        # ---- 5 signal
+        y = self._decay_heading(c, x0, y, '5', NAVY,
+                                'Signal:  photoelectrons and coincidences')
+        windows = rec.get('windows') or []
+        counted = counted_windows(rec)
+        if len(windows) > len(counted):
+            y = text(xt, y, 'The delayed light is not counted: it arrives '
+                            'within the extended dead time after the prompt '
+                            'pulse, or after the end of the count.',
+                     wrap, fill=MUTED) + px(8)
+        elif len(counted) > 1:
+            y = text(xt, y, 'Two pulses: the delayed light comes after the '
+                            'dead time, so it can be counted again. The '
+                            'values below add both up and can exceed 1.',
+                     wrap, fill=MUTED) + px(8)
+
+        mu = rec.get('mu') or []
+        spacing = min(px(170), (right - xt) / 3)
+        for win in counted:
+            lam = photoelectrons(rec, win.get('Q', 0.0))
+            label = ('Delayed pulse' if win.get('label') == 'delayed'
+                     else 'Prompt pulse')
+            if lam is None:
+                y = text(xt, y, f'{label}: optical transport model. The '
+                                f'photons are sampled to each PMT, so there '
+                                f'is no mean photoelectron number to show.',
+                         wrap) + px(8)
+                continue
+            if isinstance(L, (list, tuple)):
+                formula = (f'{label}:  λ_i = L_i · μ_i · Q / 3,  with '
+                           f'Q = {win["Q"]:.4g} keV')
+            else:
+                m = sum(mu) / len(mu) if mu else 1.0
+                formula = (f'{label}:  λ = L · μ · Q / 3 = {L:.4g} × '
+                           f'{m:.3g} × {win["Q"]:.4g} / 3 = {lam[0]:.3g} '
+                           f'photoelectrons per PMT, on average')
+            y = text(xt, y, formula, wrap) + px(8)
+            r = px(20)
+            for k, (name, lm) in enumerate(zip('ABC', lam)):
+                p_fire = 1.0 - math.exp(-lm)
+                cx = xt + r + k * spacing
+                c.create_oval(cx - r, y, cx + r, y + 2 * r,
+                              fill=blend(WHITE, CYAN, p_fire), outline=NAVY,
+                              width=px(2))
+                c.create_text(cx, y + r, text=name, font=self.f_bold,
+                              fill=NAVY)
+                c.create_text(cx + r + px(6), y + px(4), anchor='nw',
+                              font=self.f_sub, fill=INK,
+                              text=f'λ = {lm:.3g}\nP(fires) = '
+                                   f'{100 * p_fire:.1f} %')
+            y += 2 * r + px(14)
+
+        sig = rec.get('signal') or {}
+        scale = max(1.0, float(len(counted)))
+        rows = (('S', 'Single: at least one PMT'),
+                ('D', 'Double (logical sum): two or more'),
+                ('T', 'Triple: all three PMTs'),
+                ('D2', 'Double, C/N counter'))
+        bar_x = xt + max(font.measure(t) for _k, t in rows) + px(14)
+        bar_w = max(px(60), min(px(280), right - bar_x - px(70)))
+        for key, label in rows:
+            v = float(sig.get(key, 0.0))
+            c.create_text(xt, y, anchor='nw', font=font, fill=INK,
+                          text=label)
+            self._energy_bar(c, bar_x, y, bar_w, v, scale, NAVY, f'{v:.4f}')
+            y += px(22)
+        d = sig.get('D', 0.0)
+        if d > 0:
+            text(xt, y + px(4),
+                 f'T / D for this decay = {sig.get("T", 0.0) / d:.4f}. The '
+                 f'efficiencies of the run are these probabilities averaged '
+                 f'over all N decays.', wrap, font=self.f_sub, fill=MUTED)
+        bbox = c.bbox('all')
+        c.configure(scrollregion=(0, 0, bbox[2] + px(10), bbox[3] + px(16)))
+
+    def _on_decay_resize(self, event):
+        """Lay the drawing out again when the pane changes width."""
+        if abs(event.width - getattr(self, '_decay_drawn_width', 0)) > 4:
+            self._draw_decay()
+
+    def _decay_heading(self, c, x, y, number, colour, text):
+        """A numbered section heading in the decay view; returns the next y."""
+        px = self._px
+        c.create_rectangle(x, y + px(2), x + px(18), y + px(18),
+                           fill=colour, outline=colour)
+        c.create_text(x + px(28), y, anchor='nw', text=text,
+                      font=self.f_bold, fill=NAVY)
+        c.create_text(x + px(9), y + px(10), text=number[0],
+                      font=self.f_section, fill=WHITE)
+        return y + px(24)
+
+    def _energy_bar(self, c, x, y, width, value, full, colour, text):
+        """A horizontal bar for value/full with its label to the right."""
+        px = self._px
+        top, bottom = y + px(3), y + px(15)
+        c.create_rectangle(x, top, x + width, bottom, fill=STRIPE,
+                           outline=RULE)
+        frac = value / full if full and full > 0 else 0.0
+        if frac > 0:
+            c.create_rectangle(x, top, x + max(px(1), width *
+                                                min(1.0, frac)), bottom,
+                               fill=colour, outline=colour)
+        c.create_text(x + width + px(6), y, anchor='nw', text=text,
+                      font=self.f_sub, fill=INK)
+
+    def _save_trace(self):
+        if not self._trace:
+            return
+        job = self._trace_job or {}
+        stem = '_'.join(str(p) for p in ('decays', job.get('rad', ''))
+                        if p).replace(', ', '-')
+        path = filedialog.asksaveasfilename(
+            title='Save the recorded decays', defaultextension='.json',
+            initialfile=f'{stem}.json',
+            filetypes=[('JSON', '*.json'), ('All files', '*.*')])
+        if not path:
+            return
+        payload = {'tdcrpy': self.version,
+                   'run': self._run_summary(job) if job else '',
+                   'saved': datetime.datetime.now().isoformat(
+                       timespec='seconds'),
+                   'decays': self._trace}
+        try:
+            with open(path, 'w', encoding='utf-8') as fh:
+                json.dump(payload, fh, indent=1, ensure_ascii=False)
+        except OSError as exc:
+            messagebox.showerror('TDCRPy', f'Could not save:\n{exc}')
+            return
+        self._append_log(f'{len(self._trace)} decay(s) written to {path}')
 
     def _tab_sources(self, nb):
         """Where the data behind a decay-data or spectrum view come from."""
@@ -1878,6 +2373,11 @@ class App(ttk.Frame):
             else:
                 self._show_result(msg.get('rows') or [])
             self.export_button.configure(state='normal')
+            task = (self._result_job or {}).get('task')
+            if 'trace' in msg:
+                self._show_trace(msg['trace'] or [], self._result_job)
+            elif task in dict(CALC_TASKS):
+                self._show_trace([], None)      # never a stale decay
         elif event == 'error':
             self._append_log(msg.get('traceback') or msg.get('message', ''))
             self.results.select(self.tab_log)

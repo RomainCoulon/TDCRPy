@@ -22,7 +22,10 @@ Protocol
 ``--run``
     Read one JSON job from stdin, emit JSON lines on stdout:
     ``{"event": "stage", ...}`` for progress, then exactly one of
-    ``{"event": "result", ...}`` or ``{"event": "error", ...}``.
+    ``{"event": "result", ...}`` or ``{"event": "error", ...}``. With
+    ``display`` set, a calculation's result also carries ``trace``: the
+    first decays as structured records (see ``TDCRPy(trace=)``), which the
+    GUI draws in its Decay view.
 
 Anything the model prints, and anything ``warnings`` emits, goes to stderr,
 which the GUI shows in its log pane. stdout carries only the protocol: the
@@ -210,7 +213,7 @@ def _analytical_channels(eff_S, eff_D, eff_T, symm):
             eff_D if symm else None, None)
 
 
-def _run_efficiency(mod, job, emit, unc_data=False):
+def _run_efficiency(mod, job, emit, unc_data=False, trace=None):
     """``TDCRPy()``: efficiencies at a light yield the user supplies."""
     emit.send('stage', text='simulating decays')
     smodel = bool(job.get('Smodel', True))
@@ -222,6 +225,7 @@ def _run_efficiency(mod, job, emit, unc_data=False):
         barp=True,
         Smodel=smodel,
         uncData=unc_data,
+        trace=trace,
     )
     return [('L (fixed)', job['L'], None)] + _channel_rows(out, not smodel)
 
@@ -309,7 +313,7 @@ def _run_data_realisations(mod, job, emit, once):
     return combine_realisations(runs), DATA_UNC_COLUMNS
 
 
-def _run_fit(mod, job, emit, analytical, unc_data=False):
+def _run_fit(mod, job, emit, analytical, unc_data=False, trace=None):
     """``eff()`` / ``effA()``: fit the light yield to a measured TDCR."""
     emit.send('stage', text='fitting L to the measured TDCR')
     kwargs = dict(L=float(job.get('L_guess', 1.0)),
@@ -333,10 +337,17 @@ def _run_fit(mod, job, emit, analytical, unc_data=False):
             emit.send('stage', text='analytical model, asymmetric counter: '
                                     'pair efficiencies not available')
     else:
+        if trace is not None:
+            kwargs['trace'] = trace
         res = mod.eff(job['TD'], job['rad'], job['pmf'],
                       float(job['kB']), float(job['V']),
                       N=int(job['N']), **kwargs)
         L0, L_opt, out = res[0], res[1], res[2:16]
+        if trace:
+            # Traced at the starting L; show the signal at the fitted one.
+            symm = not isinstance(job['TD'], (list, tuple))
+            resignal(mod, trace, float(L0) if symm
+                     else tuple(float(v) for v in L_opt))
         # u_L was appended in 2.20.23, so trust the length rather than a
         # version test: older builds simply do not report it.
         u_L = res[16] if len(res) > 16 else None
@@ -344,6 +355,30 @@ def _run_fit(mod, job, emit, analytical, unc_data=False):
     rows = [('L (fitted)', L0, u_L),
             ('L_A, L_B, L_C', [float(v) for v in L_opt], None)]
     return rows + _channel_rows(out, analytical)
+
+
+#: The detection probabilities of a trace record, in detectProbabilities()'s
+#: order.
+SIGNAL_KEYS = ('S', 'D', 'T', 'AB', 'BC', 'AC', 'D2')
+
+
+def resignal(mod, trace, L):
+    """Re-evaluate the detection probabilities of traced decays at *L*.
+
+    Everything up to the quenched energy is independent of L, so only the
+    last stage changes -- computed by the same detection function, from the
+    same per-window light, with the same dead-time rule.
+    """
+    import tdcrpy.TDCR_model_lib as tl
+    _cfg, _tau, ext_dt, meas_time = mod._read_config()[:4]
+    for rec in trace:
+        fn = (tl.detectProbabilitiesMC if rec.get('optical')
+              else tl.detectProbabilities)
+        q1 = [rec['windows'][0]['Q']]
+        q2 = [w['Q'] for w in rec['windows'][1:]]
+        out = fn(L, q1, q2, rec['t1'], rec['evenement'], ext_dt, meas_time)
+        rec['signal'] = {k: float(v) for k, v in zip(SIGNAL_KEYS, out)}
+        rec['L'] = list(L) if isinstance(L, tuple) else float(L)
 
 
 #: Columns of the efficiency-curve table, as (key, heading).
@@ -355,7 +390,7 @@ CURVE_COLUMNS = (
 )
 
 
-def _run_curve(mod, job, emit):
+def _run_curve(mod, job, emit, trace=None):
     """``TDCRPy()`` over a grid of L: the efficiency curve ε_D vs TDCR.
 
     The stochastic model simulates the decays once and replays the recorded
@@ -373,7 +408,7 @@ def _run_curve(mod, job, emit):
         # No uncData: one realisation of the data would shift the whole
         # curve and look like a result; its spread needs repeated curves.
         mod.TDCRPy(grid[0], *args, record=True, barp=True,
-                   display=bool(job.get('display')))
+                   display=bool(job.get('display')), trace=trace)
         emit.send('stage', text=f'replaying them at {len(grid)} values of L')
     rows = []
     for i, L in enumerate(grid):
@@ -685,16 +720,21 @@ PLOT_TASKS = {'curve', 'beta_spectrum', 'stopping_power', 'quenching',
 
 #: Calculations that can be repeated over realisations of the nuclear data.
 DATA_UNC_TASKS = {
-    'efficiency': lambda m, j, e: _run_efficiency(m, j, e, unc_data=True),
-    'fit': lambda m, j, e: _run_fit(m, j, e, analytical=False,
-                                    unc_data=True),
+    'efficiency': lambda m, j, e, t=None: _run_efficiency(
+        m, j, e, unc_data=True, trace=t),
+    'fit': lambda m, j, e, t=None: _run_fit(m, j, e, analytical=False,
+                                            unc_data=True, trace=t),
 }
 
+#: Calculations that simulate decays one by one, and so can be traced.
+TRACE_TASKS = ('efficiency', 'fit', 'curve')
+
 _RUNNERS = {
-    'efficiency': lambda m, j, e: _run_efficiency(m, j, e),
-    'fit': lambda m, j, e: _run_fit(m, j, e, analytical=False),
+    'efficiency': lambda m, j, e, t=None: _run_efficiency(m, j, e, trace=t),
+    'fit': lambda m, j, e, t=None: _run_fit(m, j, e, analytical=False,
+                                            trace=t),
     'fit_analytical': lambda m, j, e: _run_fit(m, j, e, analytical=True),
-    'curve': lambda m, j, e: _run_curve(m, j, e),
+    'curve': lambda m, j, e, t=None: _run_curve(m, j, e, trace=t),
     'beta_spectrum': lambda m, j, e: _run_beta_spectrum(m, j, e),
     'stopping_power': lambda m, j, e: _run_stopping_power(m, j, e),
     'quenching': lambda m, j, e: _run_quenching(m, j, e),
@@ -720,28 +760,49 @@ def run(job, emit):
     except KeyError:
         raise ValueError(f'unknown task {job.get("task")!r}')
 
+    # The decay view: structured records of the first decays, asked for by
+    # the same switch as the printed history. Only the stochastic model
+    # simulates decays one by one.
+    trace = ([] if job.get('display') and job['task'] in TRACE_TASKS
+             and job.get('Smodel', True) else None)
+    extra_fields = {}
+
     if job.get('uncData') and job['task'] in DATA_UNC_TASKS \
             and job.get('Smodel', True):
         once = DATA_UNC_TASKS[job['task']]
-        rows, columns = _run_data_realisations(
-            mod, job, emit, lambda: plain_rows(once(mod, job, emit)))
-        emit.send('result', rows=plain_rows(rows), task=job['task'],
-                  columns=[list(c) for c in columns], plot=None)
+        pending = [trace]                 # traced: the first realisation
+
+        def one():
+            t = pending.pop() if pending else None
+            return plain_rows(once(mod, job, emit, t))
+
+        rows, columns = _run_data_realisations(mod, job, emit, one)
+        result = dict(rows=plain_rows(rows), task=job['task'],
+                      columns=[list(c) for c in columns], plot=None)
     elif job['task'] == 'curve':
-        rows = runner(mod, job, emit)
-        emit.send('result', rows=plain_rows(rows), task='curve',
-                  columns=[list(c) for c in CURVE_COLUMNS],
-                  plot={'x': 'TDCR', 'y': ['eff_D'], 'yerr': ['u_eff_D'],
-                        'xlabel': 'TDCR  (T/D)', 'ylabel': 'ε_D',
-                        'annotate': 'L'})
+        rows = runner(mod, job, emit, trace)
+        result = dict(rows=plain_rows(rows), task='curve',
+                      columns=[list(c) for c in CURVE_COLUMNS],
+                      plot={'x': 'TDCR', 'y': ['eff_D'], 'yerr': ['u_eff_D'],
+                            'xlabel': 'TDCR  (T/D)', 'ylabel': 'ε_D',
+                            'annotate': 'L'})
     elif job['task'] in PLOT_TASKS:
         rows, columns, plot, *extra = runner(mod, job, emit)
-        emit.send('result', rows=plain_rows(rows), task=job['task'],
-                  columns=[list(c) for c in columns], plot=plot,
-                  info=extra[0] if extra else None)
+        result = dict(rows=plain_rows(rows), task=job['task'],
+                      columns=[list(c) for c in columns], plot=plot,
+                      info=extra[0] if extra else None)
     else:
-        rows = runner(mod, job, emit)
-        emit.send('result', rows=plain_rows(rows), task=job['task'])
+        rows = (runner(mod, job, emit, trace) if job['task'] in TRACE_TASKS
+                else runner(mod, job, emit))
+        result = dict(rows=plain_rows(rows), task=job['task'])
+
+    if trace is not None:
+        extra_fields['trace'] = trace
+        emit.send('stage', text=f'decay view: {len(trace)} decay(s) recorded'
+                                + (' (the first ones)'
+                                   if len(trace) < int(job.get('N', 0))
+                                   else ''))
+    emit.send('result', **result, **extra_fields)
 
 
 def _plain(v):

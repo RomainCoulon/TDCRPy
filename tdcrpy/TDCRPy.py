@@ -50,6 +50,10 @@ _PURE_BETA_NUCLIDES = [
 #: Matching discretisation counts (energy bins) for each pure-beta nuclide.
 _PURE_BETA_NE = [7000, 1000, 1000, 500, 2000, 500, 200, 500, 1000, 7000]
 
+#: Most decays a ``trace`` list receives in one run: enough to browse, and a
+#: bound on memory when a long run is traced by mistake.
+TRACE_MAX = 1000
+
 
 # ---------------------------------------------------------------------------
 # Private helpers
@@ -485,6 +489,7 @@ def TDCRPy(
     opticalTransport=None,
     # Legacy capitalisation aliases kept for backward compatibility.
     Display=None,
+    trace=None,
 ):
     """
     Core TDCRPy calculation: stochastic or analytical detection-efficiency
@@ -566,6 +571,27 @@ def TDCRPy(
     Display : bool or None, optional
         *Deprecated alias* for *display*.  If not ``None``, overrides
         *display*.
+    trace : list or None, optional
+        If a list, one dict per simulated decay is appended to it -- the
+        structured counterpart of the *display* printout, for drawing the
+        decay -> deposition -> quenching -> signal chain (the GUI's Decay
+        view does). At most :data:`TRACE_MAX` decays are recorded. Keys:
+
+        * ``decay``, ``nuclide``, ``daughter``;
+        * ``steps`` -- the sampled branch and de-excitation transitions;
+        * ``windows`` -- prompt and, if any, delayed: each with its
+          ``particles`` (``origin``, ``type``, ``E0`` emitted, ``E_dep``
+          deposited, ``E_q`` quenched, all keV, and ``fate``: escaped,
+          compton, photoelectric, pair, absorbed or partial) and ``Q``,
+          the sum of ``E_q``;
+        * ``L``, ``mu`` (quantum efficiencies), ``t1``, ``evenement``,
+          ``pulses`` (1, or 2 when the delayed window is counted as a
+          pulse of its own), ``optical`` and ``signal``: the seven
+          detection probabilities (summed over the pulses).
+
+        Ignored by the analytical model and when replaying histories.
+
+        .. versionadded:: 2.20.38
 
     Returns
     -------
@@ -716,9 +742,15 @@ def TDCRPy(
         else range(N)
     )
 
+    mu_live = tl._live_effQuantic() if trace is not None else None
+
     for idec in iterator:
         particle_vec = []
         energy_vec = []
+        # Per-decay record for *trace*: None once full, so a traced run
+        # beyond TRACE_MAX decays costs one comparison per decay.
+        steps = ([] if trace is not None and len(trace) < TRACE_MAX
+                 else None)
 
         # -------------------------------------------------------------- #
         # 8.0  Sample radionuclide from mixture                           #
@@ -742,7 +774,7 @@ def TDCRPy(
             levelEnergy, transitionType, e_trans, next_level,
             Transition_prob_sum, trans_halfLife, u_prob_trans,
             # False: prob_trans already IS this run's realisation (7b).
-            tau, False, display,
+            tau, False, display, steps=steps,
         )
 
         # -------------------------------------------------------------- #
@@ -763,6 +795,8 @@ def TDCRPy(
             )
             if display:
                 _print_relaxation("Delayed", particle_vec2, energy_vec2)
+        if steps is not None:
+            origin1, origin2 = list(particle_vec), list(particle_vec2)
 
         # -------------------------------------------------------------- #
         # 8.3  Beta-particle spectrum sampling                             #
@@ -776,6 +810,8 @@ def TDCRPy(
             )
 
         energy_vec_initial = energy_vec.copy()
+        if steps is not None:
+            emitted1, emitted2 = list(energy_vec), list(energy_vec2)
 
         # -------------------------------------------------------------- #
         # 8.3a  Optional: record initial energies                         #
@@ -803,6 +839,12 @@ def TDCRPy(
             )
             if display:
                 _print_interaction("Delayed", particle_vec2, energy_vec2)
+
+        if steps is not None:
+            deposit1 = (list(particle_vec), list(energy_vec_initial),
+                        list(energy_vec))
+            deposit2 = ((list(particle_vec2), list(energy_vec_initial2),
+                         list(energy_vec2)) if evenement != 1 else None)
 
         # -------------------------------------------------------------- #
         # 8.4a  Optional: record deposited energies                       #
@@ -858,6 +900,35 @@ def TDCRPy(
         eff_lists["BC"].append(eff0_BC)
         eff_lists["AC"].append(eff0_AC)
         eff_lists["D2"].append(eff0_D2)
+
+        if steps is not None:
+            windows = [_trace_window("prompt", origin1, emitted1, *deposit1,
+                                     e_quenching)]
+            if evenement != 1:
+                windows.append(_trace_window("delayed", origin2, emitted2,
+                                             *deposit2, e_quenching2))
+            trace.append({
+                "decay": idec + 1,
+                "nuclide": rad_i,
+                "daughter": DaughterVec[index_rad][iDaughter],
+                "steps": steps,
+                "windows": windows,
+                "L": [float(v) for v in L] if not symm else float(L),
+                "mu": mu_live,
+                "t1": float(t1),
+                "evenement": int(evenement),
+                # The detection model's own test: a delayed window is a
+                # second pulse only between the dead time and the end of
+                # the count; otherwise its light is not counted at all.
+                "pulses": 2 if (evenement != 1
+                                and ext_dt * 1e-6 < t1 < meas_time * 60)
+                          else 1,
+                "optical": bool(opticalTransport),
+                "signal": dict(zip(
+                    ("S", "D", "T", "AB", "BC", "AC", "D2"),
+                    (float(v) for v in (eff0_S, eff0_D, eff0_T, eff0_AB,
+                                        eff0_BC, eff0_AC, eff0_D2)))),
+            })
 
         # -------------------------------------------------------------- #
         # 8.6a  Optional: record detection probabilities                  #
@@ -946,10 +1017,13 @@ def _sample_nuclear_decay(
     e_branch, LevelDaughter, levelNumber, prob_trans, prob_branch,
     levelEnergy, transitionType, e_trans, next_level,
     Transition_prob_sum, trans_halfLife, u_prob_trans,
-    tau, unc_data, display,
+    tau, unc_data, display, steps=None,
 ):
     """
     Sample one complete nuclear decay event.
+
+    *steps*, if a list, receives one dict per sampled step (the branch, then
+    each de-excitation transition) for the ``trace`` of :func:`TDCRPy`.
 
     Performs daughter selection, branch selection, and the full isomeric
     transition cascade for both prompt and (if applicable) delayed events.
@@ -1006,6 +1080,10 @@ def _sample_nuclear_decay(
 
         if display:
             _print_branch(particle_branch, energy_branch, levelOftheDaughter)
+        if steps is not None:
+            steps.append({"kind": "branch", "particle": particle_branch,
+                          "energy": _num(energy_branch),
+                          "level": _num(levelOftheDaughter)})
 
         particle_vec.append(particle_branch)
         energy_vec.append(energy_branch)
@@ -1031,6 +1109,9 @@ def _sample_nuclear_decay(
             levelOftheDaughter = levels[it][0]
         else:
             levelOftheDaughter = 0
+        if steps is not None:
+            steps.append({"kind": "branch", "particle": None, "energy": None,
+                          "level": _num(levelOftheDaughter)})
         if display:
             if levelOftheDaughter:
                 print("\t Sampled branch: isomeric transition — no particle emitted")
@@ -1073,6 +1154,15 @@ def _sample_nuclear_decay(
                     levelEnergy[index_rad][iDaughter][i_level][0], t_type, e_t,
                     next_level[index_rad][iDaughter][i_level][index_t],
                 )
+            if steps is not None:
+                steps.append({
+                    "kind": "transition", "type": t_type,
+                    "energy": _num(e_t),
+                    "from_keV": _num(
+                        levelEnergy[index_rad][iDaughter][i_level][0]),
+                    "window": "delayed" if evenement != 1 else "prompt",
+                    "t_ns": float(t1) * 1e9,
+                })
 
             # Append to the correct event window.
             target_pv = particle_vec2 if evenement != 1 else particle_vec
@@ -1095,6 +1185,65 @@ def _sample_nuclear_decay(
         evenement, t1,
         level_before_trans, iDaughter,
     )
+
+
+def _num(v):
+    """A PenNuc number as a plain float for a trace, ``None`` if it is not
+    one."""
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+#: Trace origins the interaction step treats as photons.
+_PHOTON_ORIGINS = ("gamma", "XKA", "XKB", "XL", "annihilation")
+
+
+def _trace_window(label, origin, emitted, particles, initial, deposited,
+                  quenched):
+    """One coincidence window of a trace record.
+
+    The lists line up by index: relaxation and beta sampling only replace or
+    append (*origin* is the list just before beta sampling, so it still says
+    ``beta``), and the interaction step does the same, appending the
+    secondaries of photoabsorption and pair production at the end. Vacancy
+    markers (``Atom_*``) and PenNuc's empty ``NON`` entries carry no energy
+    and are left out.
+    """
+    out = []
+    for i, p in enumerate(particles):
+        if p.startswith("Atom") or p == "NON":
+            continue
+        if i < len(origin):
+            src = origin[i]
+        elif i < len(emitted):
+            src = "annihilation"            # the two 511 keV of a beta+
+        else:
+            src = "secondary"
+        e0 = float(emitted[i] if i < len(emitted) else initial[i])
+        e_dep = float(deposited[i])
+        # What the interaction step did, read from how it left the lists:
+        # photoabsorption rewrites the initial energy to the photoelectron's,
+        # Compton scattering leaves it at the photon energy.
+        if src in _PHOTON_ORIGINS:
+            if e_dep <= 0:
+                fate = "escaped"
+            elif e0 > 1022 and abs(e_dep - (e0 - 1022) / 2) < 1e-6:
+                fate = "pair"
+            elif abs(float(initial[i]) - e0) < 1e-9:
+                fate = "compton"
+            else:
+                fate = "photoelectric"
+        else:
+            fate = "partial" if e_dep < e0 * (1 - 1e-9) else "absorbed"
+        out.append({
+            "origin": src, "type": p, "E0": e0, "E_dep": e_dep,
+            "E_q": float(quenched[i]) if i < len(quenched) else 0.0,
+            "fate": fate,
+        })
+    return {"label": label, "particles": out,
+            "Q": float(sum(x["E_q"] for x in out))}
 
 
 def _score_transition(t_type, e_t, particle_vec, energy_vec):
@@ -1655,7 +1804,7 @@ def objectFct(L, TD, Rad, pmf_1, N, kB, V):
 
 def eff(TD, Rad, pmf_1, kB, V,
         N=10000, L=1, maxiter=20, xatol=1e-7,
-        disp=False, Lbounds=None, uncData=False):
+        disp=False, Lbounds=None, uncData=False, trace=None):
     """
     Determine the free parameter *L* and detection efficiencies from a
     measured TDCR ratio, using the full stochastic Monte Carlo model.
@@ -1712,6 +1861,11 @@ def eff(TD, Rad, pmf_1, kB, V,
         that realisation; repeat the call to see their spread.
 
         .. versionadded:: 2.20.37
+    trace : list or None, optional
+        Passed to the simulating :func:`TDCRPy` call (see there). Its
+        detection probabilities are at the starting *L*, not the fitted one.
+
+        .. versionadded:: 2.20.38
 
     Returns
     -------
@@ -1769,7 +1923,10 @@ def eff(TD, Rad, pmf_1, kB, V,
     symm = not isinstance(TD, (tuple, list))
 
     # Step 1 — cache decay histories.
-    TDCRPy(L, Rad, pmf_1, N, kB, V, record=True, uncData=uncData)
+    # *trace* records these decays at the starting L: the decay chain does
+    # not depend on L, the detection probabilities do.
+    TDCRPy(L, Rad, pmf_1, N, kB, V, record=True, uncData=uncData,
+           trace=trace)
 
     # Step 2 — scalar optimisation for L (symmetric).
     td0 = TD if symm else TD[0]
